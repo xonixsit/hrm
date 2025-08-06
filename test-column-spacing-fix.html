@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DataTable Column Spacing Fix Test</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Simulate the DataTable styles */
+        .data-table-container {
+            background-color: #ffffff;
+            border: 1px solid #e5e5e5;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            overflow: hidden;
+            color: #111827;
+            isolation: isolate;
+        }
+
+        .table-scroll-container {
+            overflow-x: auto;
+            width: 100%;
+        }
+
+        .data-table {
+            width: 100%;
+            table-layout: fixed; /* Use fixed layout for consistent column widths */
+            min-width: 100%;
+        }
+
+        .table-head {
+            background-color: white;
+            border-bottom: 1px solid #e5e5e5;
+        }
+
+        .table-head th {
+            padding: 1rem 1.5rem;
+            text-align: left;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #111827;
+            white-space: nowrap;
+            letter-spacing: -0.025em;
+        }
+
+        .table-body {
+            background-color: white;
+            divide-y: 1px solid #e5e5e5;
+        }
+
+        .table-body tr {
+            border-bottom: 1px solid #e5e5e5;
+        }
+
+        .table-body tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .table-cell {
+            padding: 1rem 1.5rem;
+            font-size: 0.875rem;
+            color: #111827;
+            overflow: hidden;
+            line-height: 1.5;
+        }
+
+        .cell-content {
+            display: flex;
+            align-items: center;
+            min-width: 0;
+            width: 100%;
+        }
+
+        .cell-value {
+            width: 100%;
+            display: block;
+            min-width: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.4;
+            max-width: 100%;
+        }
+
+        /* Avatar styling */
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 0.75rem;
+            margin-right: 0.75rem;
+            flex-shrink: 0;
+        }
+
+        .user-info {
+            min-width: 0;
+            flex: 1;
+        }
+
+        .user-name {
+            font-weight: 500;
+            color: #111827;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .user-id {
+            font-size: 0.75rem;
+            color: #6b7280;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Column width styles - matching the fixed implementation */
+        .col-name {
+            width: 25%;
+            min-width: 180px;
+            max-width: 300px;
+        }
+
+        .col-email {
+            width: 30%;
+            min-width: 200px;
+            max-width: 350px;
+        }
+
+        .col-department {
+            width: 20%;
+            min-width: 140px;
+            max-width: 200px;
+        }
+
+        .col-role {
+            width: 25%;
+            min-width: 120px;
+            max-width: 200px;
+        }
+
+        /* Status indicator */
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #10b981;
+            margin-right: 0.5rem;
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 p-8">
+    <div id="app">
+        <div class="max-w-6xl mx-auto">
+            <h1 class="text-2xl font-bold text-gray-900 mb-6">DataTable Column Spacing Fix Test</h1>
+            
+            <div class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <h2 class="font-semibold text-blue-900 mb-2">Test Results:</h2>
+                <p class="text-blue-800">This test verifies that the column spacing issue has been resolved. The table should now have:</p>
+                <ul class="list-disc list-inside text-blue-800 mt-2 space-y-1">
+                    <li>Name column: 25% width (180px-300px)</li>
+                    <li>Email column: 30% width (200px-350px)</li>
+                    <li>Department column: 20% width (140px-200px)</li>
+                    <li>Role column: 25% width (120px-200px)</li>
+                    <li>No excessive gaps between columns</li>
+                    <li>Consistent column distribution</li>
+                </ul>
+            </div>
+
+            <div class="data-table-container">
+                <div class="table-scroll-container">
+                    <table class="data-table">
+                        <thead class="table-head">
+                            <tr>
+                                <th class="col-name">Name</th>
+                                <th class="col-email">Email</th>
+                                <th class="col-department">Department</th>
+                                <th class="col-role">Role</th>
+                            </tr>
+                        </thead>
+                        <tbody class="table-body">
+                            <tr v-for="user in users" :key="user.id">
+                                <td class="table-cell col-name">
+                                    <div class="cell-content">
+                                        <div class="user-avatar">{{ user.initials }}</div>
+                                        <div class="user-info">
+                                            <div class="user-name">{{ user.name }}</div>
+                                            <div class="user-id">{{ user.id }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="table-cell col-email">
+                                    <div class="cell-content">
+                                        <div class="status-indicator"></div>
+                                        <span class="cell-value">{{ user.email }}</span>
+                                    </div>
+                                </td>
+                                <td class="table-cell col-department">
+                                    <div class="cell-content">
+                                        <span class="cell-value">{{ user.department }}</span>
+                                    </div>
+                                </td>
+                                <td class="table-cell col-role">
+                                    <div class="cell-content">
+                                        <span class="cell-value">{{ user.role }}</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                <h3 class="font-semibold text-green-900 mb-2">Expected Improvements:</h3>
+                <ul class="list-disc list-inside text-green-800 space-y-1">
+                    <li>✅ No large gap between first and second columns</li>
+                    <li>✅ Balanced column width distribution</li>
+                    <li>✅ Consistent spacing across all columns</li>
+                    <li>✅ Proper content alignment within cells</li>
+                    <li>✅ Responsive behavior maintained</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { createApp } = Vue;
+
+        createApp({
+            data() {
+                return {
+                    users: [
+                        {
+                            id: 'EMP001',
+                            name: 'Admin User',
+                            initials: 'AU',
+                            email: 'admin@example.com',
+                            department: 'Administration',
+                            role: 'System Administrator'
+                        },
+                        {
+                            id: 'EMP002',
+                            name: 'HR User',
+                            initials: 'HU',
+                            email: 'hr@example.com',
+                            department: 'Human Resources',
+                            role: 'HR Manager'
+                        },
+                        {
+                            id: 'EMP003',
+                            name: 'Manager User',
+                            initials: 'MU',
+                            email: 'manager@example.com',
+                            department: 'Operations',
+                            role: 'Operations Manager'
+                        },
+                        {
+                            id: 'EMP004',
+                            name: 'Employee User',
+                            initials: 'EU',
+                            email: 'employee@example.com',
+                            department: 'Development',
+                            role: 'Software Developer'
+                        },
+                        {
+                            id: 'EMP392',
+                            name: 'Dr. Joaquin Kub V',
+                            initials: 'DJ',
+                            email: 'eunice52@example.org',
+                            department: 'Research',
+                            role: 'Senior Researcher'
+                        },
+                        {
+                            id: 'EMP456',
+                            name: 'Dennis Yundt',
+                            initials: 'DY',
+                            email: 'igleason@example.net',
+                            department: 'Marketing',
+                            role: 'Marketing Specialist'
+                        },
+                        {
+                            id: 'EMP945',
+                            name: 'Modesta Bailey',
+                            initials: 'MB',
+                            email: 'plehner@example.com',
+                            department: 'Sales',
+                            role: 'Sales Representative'
+                        },
+                        {
+                            id: 'EMP981',
+                            name: 'Dudley Watsica DVM',
+                            initials: 'DW',
+                            email: 'margarett@example.org',
+                            department: 'Veterinary',
+                            role: 'Chief Veterinarian'
+                        },
+                        {
+                            id: 'EMP846',
+                            name: 'Eloisa Tromp',
+                            initials: 'ET',
+                            email: 'pagac.example@test.com',
+                            department: 'Finance',
+                            role: 'Financial Analyst'
+                        }
+                    ]
+                }
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>

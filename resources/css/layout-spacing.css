@@ -1,0 +1,403 @@
+/* Layout and Content Area Spacing System */
+
+/* CSS Custom Properties for Dynamic Layout Spacing */
+:root {
+  /* Navigation dimensions */
+  --sidebar-width-expanded: 256px;
+  --sidebar-width-collapsed: 64px;
+  --mobile-header-height: 64px;
+  --mobile-bottom-nav-height: 80px;
+  
+  /* Transition timing */
+  --layout-transition-duration: 300ms;
+  --layout-transition-easing: cubic-bezier(0.4, 0, 0.2, 1);
+  
+  /* Content spacing */
+  --content-padding-desktop: 24px;
+  --content-padding-mobile: 16px;
+  
+  /* Safe area insets for mobile devices */
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-left: env(safe-area-inset-left, 0px);
+  --safe-area-right: env(safe-area-inset-right, 0px);
+}
+
+/* Base Layout Container */
+.layout-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Main Content Area Base Styles */
+.main-content-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0; /* Allow flex shrinking */
+  position: relative;
+  
+  /* Base transition for all layout changes */
+  transition: 
+    margin-left var(--layout-transition-duration) var(--layout-transition-easing),
+    padding-top var(--layout-transition-duration) var(--layout-transition-easing),
+    padding-bottom var(--layout-transition-duration) var(--layout-transition-easing),
+    transform var(--layout-transition-duration) var(--layout-transition-easing);
+  
+  /* Prevent layout shifts during transitions */
+  will-change: margin-left, padding-top, padding-bottom, transform;
+}
+
+/* Desktop Layout Spacing */
+@media (min-width: 1024px) {
+  .main-content-area.desktop-layout {
+    /* Default expanded sidebar spacing */
+    margin-left: var(--sidebar-width-expanded);
+    padding-top: 0;
+    padding-bottom: 0;
+    
+    /* Ensure full height usage */
+    min-height: 100vh;
+  }
+  
+  .main-content-area.desktop-layout.sidebar-collapsed {
+    margin-left: var(--sidebar-width-collapsed);
+  }
+  
+  .main-content-area.desktop-layout.sidebar-expanded {
+    margin-left: var(--sidebar-width-expanded);
+  }
+  
+  /* Desktop content inner spacing */
+  .main-content-area.desktop-layout .content-inner {
+    padding: var(--content-padding-desktop);
+    max-width: none;
+    width: 100%;
+  }
+  
+  /* Desktop header spacing when present */
+  .main-content-area.desktop-layout.has-header {
+    padding-top: 0; /* Header is part of the content flow */
+  }
+}
+
+/* Mobile Layout Spacing */
+@media (max-width: 1023px) {
+  .main-content-area.mobile-layout {
+    margin-left: 0;
+    
+    /* Account for mobile header */
+    padding-top: calc(var(--mobile-header-height) + var(--safe-area-top));
+    
+    /* Account for mobile bottom navigation */
+    padding-bottom: calc(var(--mobile-bottom-nav-height) + var(--safe-area-bottom));
+    
+    /* Ensure full width usage */
+    width: 100%;
+    min-height: calc(100vh - var(--mobile-header-height) - var(--mobile-bottom-nav-height));
+  }
+  
+  /* Mobile content inner spacing */
+  .main-content-area.mobile-layout .content-inner {
+    padding: var(--content-padding-mobile);
+    max-width: 100%;
+    width: 100%;
+  }
+  
+  /* Mobile drawer overlay state */
+  .main-content-area.mobile-layout.drawer-open {
+    transform: translateX(0);
+    opacity: 0.5;
+    pointer-events: none;
+    
+    /* Prevent scrolling when drawer is open */
+    overflow: hidden;
+  }
+  
+  /* Mobile drawer push effect (alternative to overlay) */
+  .main-content-area.mobile-layout.drawer-push {
+    transform: translateX(280px);
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+/* Transition States */
+.main-content-area.transitioning {
+  /* Enhanced transition during navigation type changes */
+  transition-duration: calc(var(--layout-transition-duration) * 1.2);
+  
+  /* Prevent interaction during transitions */
+  pointer-events: none;
+}
+
+.main-content-area.transition-complete {
+  /* Re-enable interactions after transition */
+  pointer-events: auto;
+  
+  /* Reset will-change for performance */
+  will-change: auto;
+}
+
+/* Content Area Variants */
+
+/* Full width content (no sidebar spacing) */
+.main-content-area.full-width {
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+/* Centered content with max width */
+.main-content-area.centered {
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Fluid content that adapts to sidebar */
+.main-content-area.fluid {
+  /* Uses default responsive behavior */
+}
+
+/* Content Inner Container */
+.content-inner {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  
+  /* Smooth scrolling */
+  scroll-behavior: smooth;
+  
+  /* Optimize scrolling performance */
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* Header Integration */
+.content-header {
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  
+  /* Backdrop blur for modern browsers */
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  
+  /* Transition for theme changes */
+  transition: background-color var(--layout-transition-duration) var(--layout-transition-easing);
+}
+
+/* Main Content Body */
+.content-body {
+  flex: 1;
+  min-height: 0;
+  
+  /* Enable scrolling */
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Footer Integration */
+.content-footer {
+  flex-shrink: 0;
+  margin-top: auto;
+}
+
+/* Responsive Breakpoint Adjustments */
+
+/* Small mobile devices */
+@media (max-width: 375px) {
+  :root {
+    --content-padding-mobile: 12px;
+    --mobile-header-height: 56px;
+    --mobile-bottom-nav-height: 72px;
+  }
+  
+  .main-content-area.mobile-layout {
+    padding-top: calc(var(--mobile-header-height) + var(--safe-area-top));
+    padding-bottom: calc(var(--mobile-bottom-nav-height) + var(--safe-area-bottom));
+  }
+}
+
+/* Large mobile devices and small tablets */
+@media (min-width: 640px) and (max-width: 1023px) {
+  :root {
+    --content-padding-mobile: 20px;
+    --mobile-header-height: 68px;
+    --mobile-bottom-nav-height: 84px;
+  }
+}
+
+/* Large desktop screens */
+@media (min-width: 1440px) {
+  :root {
+    --content-padding-desktop: 32px;
+    --sidebar-width-expanded: 280px;
+  }
+}
+
+/* Ultra-wide screens */
+@media (min-width: 1920px) {
+  :root {
+    --content-padding-desktop: 40px;
+    --sidebar-width-expanded: 320px;
+  }
+  
+  .main-content-area.desktop-layout .content-inner {
+    max-width: 1600px;
+    margin: 0 auto;
+  }
+}
+
+/* Landscape Mobile Adjustments */
+@media (max-height: 500px) and (orientation: landscape) {
+  .main-content-area.mobile-layout {
+    /* Reduce bottom padding in landscape */
+    padding-bottom: calc(var(--mobile-bottom-nav-height) * 0.8 + var(--safe-area-bottom));
+  }
+  
+  /* Hide bottom navigation in landscape if needed */
+  .mobile-bottom-nav {
+    display: none;
+  }
+  
+  .main-content-area.mobile-layout.landscape-no-bottom-nav {
+    padding-bottom: var(--safe-area-bottom);
+  }
+}
+
+/* Print Styles */
+@media print {
+  .main-content-area {
+    margin: 0 !important;
+    padding: 0 !important;
+    min-height: auto !important;
+    transition: none !important;
+  }
+  
+  .content-inner {
+    padding: 0 !important;
+  }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  .main-content-area {
+    transition: none !important;
+  }
+  
+  .content-header {
+    transition: none !important;
+  }
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+  .main-content-area {
+    border-left: 2px solid currentColor;
+  }
+  
+  .content-header {
+    border-bottom: 2px solid currentColor;
+  }
+}
+
+/* Dark Mode Adjustments */
+@media (prefers-color-scheme: dark) {
+  .content-header {
+    backdrop-filter: blur(8px) saturate(180%);
+    -webkit-backdrop-filter: blur(8px) saturate(180%);
+  }
+}
+
+/* Focus Management During Transitions */
+.main-content-area:focus-within {
+  /* Ensure focus is visible during layout changes */
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+}
+
+/* Accessibility Improvements */
+.main-content-area[aria-hidden="true"] {
+  /* Hide content from screen readers during transitions */
+  visibility: hidden;
+}
+
+.main-content-area[aria-hidden="false"] {
+  visibility: visible;
+}
+
+/* Performance Optimizations */
+.main-content-area.gpu-accelerated {
+  /* Force GPU acceleration for smooth transitions */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Layout Debug Utilities (Development Only) */
+.layout-debug .main-content-area {
+  outline: 2px dashed red;
+  outline-offset: -2px;
+}
+
+.layout-debug .content-inner {
+  outline: 2px dashed blue;
+  outline-offset: -2px;
+}
+
+.layout-debug .content-header {
+  outline: 2px dashed green;
+  outline-offset: -2px;
+}
+
+.layout-debug .content-body {
+  outline: 2px dashed orange;
+  outline-offset: -2px;
+}
+
+/* Utility Classes for Dynamic Layout Control */
+.layout-spacing-none { margin: 0 !important; padding: 0 !important; }
+.layout-spacing-sm { padding: 12px !important; }
+.layout-spacing-md { padding: 24px !important; }
+.layout-spacing-lg { padding: 32px !important; }
+.layout-spacing-xl { padding: 48px !important; }
+
+.layout-margin-auto { margin-left: auto !important; margin-right: auto !important; }
+.layout-width-full { width: 100% !important; }
+.layout-width-constrained { max-width: 1200px !important; margin: 0 auto !important; }
+
+/* Animation Classes for Layout Transitions */
+.layout-slide-in {
+  animation: layoutSlideIn var(--layout-transition-duration) var(--layout-transition-easing);
+}
+
+.layout-fade-in {
+  animation: layoutFadeIn var(--layout-transition-duration) var(--layout-transition-easing);
+}
+
+@keyframes layoutSlideIn {
+  from {
+    transform: translateX(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes layoutFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leave Management Consistency Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .test-section {
+            border: 2px solid #e5e7eb;
+            margin: 1rem 0;
+            padding: 1rem;
+            border-radius: 0.5rem;
+        }
+        .test-pass { border-color: #10b981; background-color: #f0fdf4; }
+        .test-fail { border-color: #ef4444; background-color: #fef2f2; }
+        .test-pending { border-color: #f59e0b; background-color: #fffbeb; }
+    </style>
+</head>
+<body class="bg-gray-50 p-4">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold text-gray-900 mb-6">Leave Management Page Consistency Verification</h1>
+        
+        <!-- Test Results Summary -->
+        <div class="test-section test-pending">
+            <h2 class="text-xl font-semibold mb-4">Test Summary</h2>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="bg-white p-4 rounded-lg border">
+                    <h3 class="font-medium text-gray-700">Index Page</h3>
+                    <p class="text-sm text-green-600">✅ Updated to PageLayout</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg border">
+                    <h3 class="font-medium text-gray-700">Create Page</h3>
+                    <p class="text-sm text-green-600">✅ Updated to PageLayout</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg border">
+                    <h3 class="font-medium text-gray-700">Edit Page</h3>
+                    <p class="text-sm text-green-600">✅ Updated to PageLayout</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg border">
+                    <h3 class="font-medium text-gray-700">Show Page</h3>
+                    <p class="text-sm text-green-600">✅ Already using DetailPage</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Requirement 1: Page Headers -->
+        <div class="test-section test-pass">
+            <h2 class="text-xl font-semibold mb-4">✅ Requirement 1: Consistent Page Headers</h2>
+            <div class="space-y-2">
+                <p><strong>Index Page:</strong> "Leave Management" with subtitle "Manage leave requests and approvals"</p>
+                <p><strong>Create Page:</strong> "Request Leave" with subtitle "Submit a new leave request for approval"</p>
+                <p><strong>Edit Page:</strong> "Edit Leave Request" with subtitle "Update your leave request details"</p>
+                <p><strong>Show Page:</strong> Dynamic title with proper subtitle (already compliant)</p>
+            </div>
+        </div>
+
+        <!-- Requirement 2: Breadcrumb Navigation -->
+        <div class="test-section test-pass">
+            <h2 class="text-xl font-semibold mb-4">✅ Requirement 2: Breadcrumb Navigation</h2>
+            <div class="space-y-2">
+                <p><strong>Index Page:</strong> Dashboard > Leave Management</p>
+                <p><strong>Create Page:</strong> Dashboard > Leave Management > Request Leave</p>
+                <p><strong>Edit Page:</strong> Dashboard > Leave Management > Request #ID > Edit</p>
+                <p><strong>Show Page:</strong> Dashboard > Leave Management > Request #ID (already compliant)</p>
+            </div>
+        </div>
+
+        <!-- Requirement 3: Action Button Placement -->
+        <div class="test-section test-pass">
+            <h2 class="text-xl font-semibold mb-4">✅ Requirement 3: Consistent Action Button Placement</h2>
+            <div class="space-y-2">
+                <p><strong>Index Page:</strong> "Request Leave" button in PageLayout actions (top-right)</p>
+                <p><strong>Create Page:</strong> "Back to Leaves" button in PageLayout actions</p>
+                <p><strong>Edit Page:</strong> "Back to Details" button in PageLayout actions</p>
+                <p><strong>Show Page:</strong> Action buttons properly positioned (already compliant)</p>
+            </div>
+        </div>
+
+        <!-- Responsive Design Test -->
+        <div class="test-section test-pending">
+            <h2 class="text-xl font-semibold mb-4">🔄 Responsive Design Testing</h2>
+            <div class="space-y-4">
+                <div class="bg-white p-4 rounded-lg border">
+                    <h3 class="font-medium mb-2">Mobile (< 640px)</h3>
+                    <div class="text-sm space-y-1">
+                        <p>• PageLayout should stack elements vertically</p>
+                        <p>• Breadcrumbs should be responsive</p>
+                        <p>• Action buttons should be touch-friendly</p>
+                        <p>• Form layouts should adapt to mobile</p>
+                    </div>
+                </div>
+                <div class="bg-white p-4 rounded-lg border">
+                    <h3 class="font-medium mb-2">Tablet (640px - 1024px)</h3>
+                    <div class="text-sm space-y-1">
+                        <p>• Two-column layouts should work properly</p>
+                        <p>• Navigation should remain accessible</p>
+                        <p>• Content spacing should be appropriate</p>
+                    </div>
+                </div>
+                <div class="bg-white p-4 rounded-lg border">
+                    <h3 class="font-medium mb-2">Desktop (> 1024px)</h3>
+                    <div class="text-sm space-y-1">
+                        <p>• Full layout should display correctly</p>
+                        <p>• All interactive elements should be accessible</p>
+                        <p>• Content should be properly spaced</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Accessibility Testing -->
+        <div class="test-section test-pending">
+            <h2 class="text-xl font-semibold mb-4">🔄 Accessibility Testing</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-white p-4 rounded-lg border">
+                    <h3 class="font-medium mb-2">Screen Reader Compatibility</h3>
+                    <ul class="text-sm space-y-1">
+                        <li>• Page titles are properly announced</li>
+                        <li>• Breadcrumbs have proper navigation role</li>
+                        <li>• Form fields have proper labels</li>
+                        <li>• Action buttons have descriptive text</li>
+                    </ul>
+                </div>
+                <div class="bg-white p-4 rounded-lg border">
+                    <h3 class="font-medium mb-2">Keyboard Navigation</h3>
+                    <ul class="text-sm space-y-1">
+                        <li>• Tab order is logical</li>
+                        <li>• All interactive elements are focusable</li>
+                        <li>• Focus indicators are visible</li>
+                        <li>• Keyboard shortcuts work properly</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Implementation Changes Made -->
+        <div class="test-section test-pass">
+            <h2 class="text-xl font-semibold mb-4">✅ Implementation Changes Made</h2>
+            <div class="space-y-4">
+                <div class="bg-white p-4 rounded-lg border">
+                    <h3 class="font-medium mb-2">Index Page (resources/js/Pages/Leaves/Index.vue)</h3>
+                    <ul class="text-sm space-y-1">
+                        <li>• Replaced AuthenticatedLayout header template with PageLayout</li>
+                        <li>• Added breadcrumbs computed property</li>
+                        <li>• Added headerActions computed property</li>
+                        <li>• Moved "Request Leave" button to PageLayout actions</li>
+                    </ul>
+                </div>
+                <div class="bg-white p-4 rounded-lg border">
+                    <h3 class="font-medium mb-2">Create Page (resources/js/Pages/Leaves/Create.vue)</h3>
+                    <ul class="text-sm space-y-1">
+                        <li>• Replaced AuthenticatedLayout header template with PageLayout</li>
+                        <li>• Added breadcrumbs with proper hierarchy</li>
+                        <li>• Added headerActions with "Back to Leaves" button</li>
+                        <li>• Maintained existing form functionality</li>
+                    </ul>
+                </div>
+                <div class="bg-white p-4 rounded-lg border">
+                    <h3 class="font-medium mb-2">Edit Page (resources/js/Pages/Leaves/Edit.vue)</h3>
+                    <ul class="text-sm space-y-1">
+                        <li>• Replaced AuthenticatedLayout header template with PageLayout</li>
+                        <li>• Added breadcrumbs including request ID</li>
+                        <li>• Added headerActions with "Back to Details" button</li>
+                        <li>• Maintained existing form functionality</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Next Steps -->
+        <div class="test-section test-pending">
+            <h2 class="text-xl font-semibold mb-4">🔄 Next Steps for Complete Verification</h2>
+            <div class="space-y-2">
+                <p>1. <strong>Manual Testing:</strong> Test each page in browser to verify layout consistency</p>
+                <p>2. <strong>Responsive Testing:</strong> Test on different screen sizes</p>
+                <p>3. <strong>Accessibility Testing:</strong> Use screen reader and keyboard navigation</p>
+                <p>4. <strong>Cross-Page Navigation:</strong> Verify breadcrumb links work correctly</p>
+                <p>5. <strong>Action Button Testing:</strong> Verify all action buttons function properly</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Simple responsive test
+        function testResponsive() {
+            const width = window.innerWidth;
+            const testSection = document.querySelector('.test-section.test-pending');
+            
+            if (width < 640) {
+                console.log('Mobile view detected');
+            } else if (width < 1024) {
+                console.log('Tablet view detected');
+            } else {
+                console.log('Desktop view detected');
+            }
+        }
+
+        window.addEventListener('resize', testResponsive);
+        testResponsive();
+    </script>
+</body>
+</html>

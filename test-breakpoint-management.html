@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Breakpoint Management Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .status-panel {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .status-item {
+            margin: 5px 0;
+            padding: 5px 10px;
+            border-radius: 3px;
+        }
+        
+        .desktop-mode { background: #d4edda; color: #155724; }
+        .mobile-mode { background: #d1ecf1; color: #0c5460; }
+        .transitioning { background: #fff3cd; color: #856404; }
+        
+        .controls {
+            margin: 20px 0;
+        }
+        
+        .controls button {
+            margin: 5px;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            background: #007bff;
+            color: white;
+            cursor: pointer;
+        }
+        
+        .controls button:hover {
+            background: #0056b3;
+        }
+        
+        .resize-handle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #28a745;
+            color: white;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        
+        .history {
+            max-height: 200px;
+            overflow-y: auto;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        
+        .history-item {
+            font-size: 12px;
+            margin: 2px 0;
+            padding: 2px 5px;
+            border-left: 3px solid #007bff;
+            background: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Breakpoint Management System Test</h1>
+        <p>This page demonstrates the robust breakpoint management system with smooth transitions, state preservation, and conflict prevention.</p>
+        
+        <div class="status-panel">
+            <h3>Current Status</h3>
+            <div id="current-status"></div>
+        </div>
+        
+        <div class="controls">
+            <h3>Test Controls</h3>
+            <button onclick="simulateResize(800)">Simulate Mobile (800px)</button>
+            <button onclick="simulateResize(1024)">Simulate Breakpoint (1024px)</button>
+            <button onclick="simulateResize(1200)">Simulate Desktop (1200px)</button>
+            <button onclick="simulateRapidResize()">Rapid Resize Test</button>
+            <button onclick="simulateDeviceRotation()">Device Rotation</button>
+            <button onclick="debugBreakpoints()">Debug Info</button>
+            <button onclick="clearHistory()">Clear History</button>
+        </div>
+        
+        <div class="history">
+            <h4>Transition History</h4>
+            <div id="history-log"></div>
+        </div>
+        
+        <div class="resize-handle" id="resize-info">
+            Resize window to test breakpoints
+        </div>
+    </div>
+
+    <script type="module">
+        // Simulate the breakpoint management system
+        class BreakpointManager {
+            constructor() {
+                this.NAVIGATION_BREAKPOINT = 1024;
+                this.DEBOUNCE_DELAY = 150;
+                this.TRANSITION_DELAY = 200;
+                
+                this.windowWidth = window.innerWidth;
+                this.windowHeight = window.innerHeight;
+                this.isTransitioning = false;
+                this.stateHistory = [];
+                this.preservedState = {};
+                
+                this.init();
+            }
+            
+            init() {
+                this.updateDimensions();
+                this.setupEventListeners();
+                this.updateStatus();
+                this.logTransition('System initialized', this.navigationMode);
+            }
+            
+            get navigationMode() {
+                return this.windowWidth >= this.NAVIGATION_BREAKPOINT ? 'desktop' : 'mobile';
+            }
+            
+            get isDesktopBreakpoint() {
+                return this.windowWidth >= this.NAVIGATION_BREAKPOINT;
+            }
+            
+            get isMobileBreakpoint() {
+                return this.windowWidth < this.NAVIGATION_BREAKPOINT;
+            }
+            
+            get orientation() {
+                return this.windowWidth > this.windowHeight ? 'landscape' : 'portrait';
+            }
+            
+            updateDimensions() {
+                const previousMode = this.navigationMode;
+                this.windowWidth = window.innerWidth;
+                this.windowHeight = window.innerHeight;
+                
+                if (previousMode !== this.navigationMode) {
+                    this.handleBreakpointChange(previousMode, this.navigationMode);
+                }
+                
+                this.updateStatus();
+            }
+            
+            async handleBreakpointChange(fromMode, toMode) {
+                if (this.isTransitioning) {
+                    console.warn('Transition already in progress, skipping');
+                    return;
+                }
+                
+                this.isTransitioning = true;
+                this.updateStatus();
+                
+                try {
+                    // Preserve current state
+                    this.preserveCurrentState({
+                        fromMode,
+                        toMode,
+                        transitionReason: 'breakpoint_change'
+                    });
+                    
+                    this.logTransition(`Breakpoint change: ${fromMode} → ${toMode}`, toMode);
+                    
+                    // Simulate transition delay
+                    await new Promise(resolve => setTimeout(resolve, this.TRANSITION_DELAY));
+                    
+                    // Restore preserved state
+                    this.restorePreservedState();
+                    
+                } catch (error) {
+                    console.error('Transition error:', error);
+                } finally {
+                    this.isTransitioning = false;
+                    this.updateStatus();
+                }
+            }
+            
+            preserveCurrentState(additionalState = {}) {
+                const currentState = {
+                    currentRoute: window.location.pathname,
+                    scrollPosition: window.scrollY || 0,
+                    timestamp: Date.now(),
+                    breakpoint: this.windowWidth,
+                    navigationMode: this.navigationMode,
+                    ...additionalState
+                };
+                
+                this.preservedState = currentState;
+                
+                // Add to history (keep last 10 states)
+                this.stateHistory.unshift(currentState);
+                if (this.stateHistory.length > 10) {
+                    this.stateHistory = this.stateHistory.slice(0, 10);
+                }
+                
+                return currentState;
+            }
+            
+            restorePreservedState() {
+                if (!this.preservedState.timestamp) return null;
+                
+                try {
+                    // Restore scroll position
+                    if (this.preservedState.scrollPosition) {
+                        window.scrollTo(0, this.preservedState.scrollPosition);
+                    }
+                    
+                    return this.preservedState;
+                } catch (error) {
+                    console.error('Error restoring state:', error);
+                    return null;
+                }
+            }
+            
+            setupEventListeners() {
+                const debouncedResize = this.debounce(() => {
+                    this.updateDimensions();
+                }, this.DEBOUNCE_DELAY);
+                
+                window.addEventListener('resize', debouncedResize);
+                window.addEventListener('orientationchange', () => {
+                    setTimeout(() => this.updateDimensions(), 100);
+                });
+            }
+            
+            debounce(func, wait) {
+                let timeout;
+                return function executedFunction(...args) {
+                    const later = () => {
+                        clearTimeout(timeout);
+                        func(...args);
+                    };
+                    clearTimeout(timeout);
+                    timeout = setTimeout(later, wait);
+                };
+            }
+            
+            updateStatus() {
+                const statusEl = document.getElementById('current-status');
+                const resizeEl = document.getElementById('resize-info');
+                
+                const modeClass = this.navigationMode === 'desktop' ? 'desktop-mode' : 'mobile-mode';
+                const transitionClass = this.isTransitioning ? 'transitioning' : '';
+                
+                statusEl.innerHTML = `
+                    <div class="status-item ${modeClass}">
+                        <strong>Navigation Mode:</strong> ${this.navigationMode.toUpperCase()}
+                    </div>
+                    <div class="status-item">
+                        <strong>Window Size:</strong> ${this.windowWidth}x${this.windowHeight}
+                    </div>
+                    <div class="status-item">
+                        <strong>Orientation:</strong> ${this.orientation}
+                    </div>
+                    <div class="status-item">
+                        <strong>Breakpoint:</strong> ${this.NAVIGATION_BREAKPOINT}px
+                    </div>
+                    <div class="status-item ${transitionClass}">
+                        <strong>Transitioning:</strong> ${this.isTransitioning ? 'YES' : 'NO'}
+                    </div>
+                    <div class="status-item">
+                        <strong>Distance from Breakpoint:</strong> ${this.windowWidth - this.NAVIGATION_BREAKPOINT}px
+                    </div>
+                `;
+                
+                resizeEl.textContent = `${this.windowWidth}x${this.windowHeight} (${this.navigationMode})`;
+            }
+            
+            logTransition(message, mode) {
+                const historyEl = document.getElementById('history-log');
+                const timestamp = new Date().toLocaleTimeString();
+                const modeClass = mode === 'desktop' ? 'desktop-mode' : 'mobile-mode';
+                
+                const logItem = document.createElement('div');
+                logItem.className = 'history-item';
+                logItem.innerHTML = `<span style="color: #666;">[${timestamp}]</span> ${message}`;
+                
+                historyEl.insertBefore(logItem, historyEl.firstChild);
+                
+                // Keep only last 20 log entries
+                while (historyEl.children.length > 20) {
+                    historyEl.removeChild(historyEl.lastChild);
+                }
+            }
+            
+            getBreakpointInfo() {
+                return {
+                    currentWidth: this.windowWidth,
+                    currentHeight: this.windowHeight,
+                    navigationBreakpoint: this.NAVIGATION_BREAKPOINT,
+                    navigationMode: this.navigationMode,
+                    isTransitioning: this.isTransitioning,
+                    orientation: this.orientation,
+                    breakpointDistance: this.windowWidth - this.NAVIGATION_BREAKPOINT,
+                    stateHistoryLength: this.stateHistory.length
+                };
+            }
+        }
+        
+        // Initialize breakpoint manager
+        const breakpointManager = new BreakpointManager();
+        
+        // Global functions for testing
+        window.simulateResize = (width) => {
+            // Simulate window resize by temporarily changing the reported width
+            const originalWidth = window.innerWidth;
+            Object.defineProperty(window, 'innerWidth', {
+                writable: true,
+                configurable: true,
+                value: width
+            });
+            
+            breakpointManager.updateDimensions();
+            breakpointManager.logTransition(`Simulated resize to ${width}px`, breakpointManager.navigationMode);
+            
+            // Restore original width after a delay
+            setTimeout(() => {
+                Object.defineProperty(window, 'innerWidth', {
+                    writable: true,
+                    configurable: true,
+                    value: originalWidth
+                });
+            }, 1000);
+        };
+        
+        window.simulateRapidResize = async () => {
+            const sizes = [800, 900, 1000, 1100, 1200, 1000, 800];
+            breakpointManager.logTransition('Starting rapid resize test...', breakpointManager.navigationMode);
+            
+            for (const size of sizes) {
+                window.simulateResize(size);
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+            
+            breakpointManager.logTransition('Rapid resize test completed', breakpointManager.navigationMode);
+        };
+        
+        window.simulateDeviceRotation = () => {
+            const currentWidth = window.innerWidth;
+            const currentHeight = window.innerHeight;
+            
+            // Swap dimensions to simulate rotation
+            Object.defineProperty(window, 'innerWidth', {
+                writable: true,
+                configurable: true,
+                value: currentHeight
+            });
+            Object.defineProperty(window, 'innerHeight', {
+                writable: true,
+                configurable: true,
+                value: currentWidth
+            });
+            
+            breakpointManager.updateDimensions();
+            breakpointManager.logTransition('Device rotation simulated', breakpointManager.navigationMode);
+            
+            // Restore original dimensions after a delay
+            setTimeout(() => {
+                Object.defineProperty(window, 'innerWidth', {
+                    writable: true,
+                    configurable: true,
+                    value: currentWidth
+                });
+                Object.defineProperty(window, 'innerHeight', {
+                    writable: true,
+                    configurable: true,
+                    value: currentHeight
+                });
+                breakpointManager.updateDimensions();
+            }, 2000);
+        };
+        
+        window.debugBreakpoints = () => {
+            const info = breakpointManager.getBreakpointInfo();
+            console.group('🔧 Breakpoint Manager Debug Info');
+            console.log('Breakpoint info:', info);
+            console.log('State history:', breakpointManager.stateHistory);
+            console.log('Preserved state:', breakpointManager.preservedState);
+            console.groupEnd();
+            
+            breakpointManager.logTransition('Debug info logged to console', breakpointManager.navigationMode);
+        };
+        
+        window.clearHistory = () => {
+            document.getElementById('history-log').innerHTML = '';
+            breakpointManager.stateHistory = [];
+            breakpointManager.logTransition('History cleared', breakpointManager.navigationMode);
+        };
+        
+        // Update status every second
+        setInterval(() => {
+            breakpointManager.updateStatus();
+        }, 1000);
+        
+        console.log('🔧 Breakpoint Management Test initialized');
+        console.log('Resize the window or use the test controls to see the system in action');
+    </script>
+</body>
+</html>

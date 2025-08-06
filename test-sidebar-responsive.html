@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sidebar Responsive Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .sidebar-transition {
+            transition: all 0.3s ease-in-out;
+        }
+
+        .tooltip {
+            position: absolute;
+            z-index: 1000;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100">
+    <div class="flex min-h-screen">
+        <!-- Sidebar -->
+        <div id="sidebar" class="sidebar-transition bg-white shadow-lg w-64 flex flex-col">
+            <!-- Header -->
+            <div class="p-4 border-b border-gray-200 flex items-center justify-between">
+                <h1 id="sidebar-title" class="text-lg font-semibold text-gray-900">Navigation</h1>
+                <button id="toggle-btn" class="p-1 rounded hover:bg-gray-100">
+                    <svg id="chevron-icon" class="w-5 h-5 transform transition-transform" fill="none"
+                        stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7">
+                        </path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Navigation Items -->
+            <nav class="flex-1 p-4 space-y-2">
+                <div class="nav-item flex items-center p-3 rounded-lg hover:bg-gray-100 cursor-pointer"
+                    data-tooltip="Dashboard">
+                    <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"></path>
+                    </svg>
+                    <span class="nav-text ml-3 text-gray-700">Dashboard</span>
+                </div>
+
+                <div class="nav-item flex items-center p-3 rounded-lg hover:bg-gray-100 cursor-pointer"
+                    data-tooltip="Projects">
+                    <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 7a2 2 0 012-2h10a2 2 0 012 2v2M7 7h10">
+                        </path>
+                    </svg>
+                    <span class="nav-text ml-3 text-gray-700">Projects</span>
+                </div>
+
+                <div class="nav-item flex items-center p-3 rounded-lg hover:bg-gray-100 cursor-pointer"
+                    data-tooltip="Employees">
+                    <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z">
+                        </path>
+                    </svg>
+                    <span class="nav-text ml-3 text-gray-700">Employees</span>
+                </div>
+
+                <div class="nav-item flex items-center p-3 rounded-lg hover:bg-gray-100 cursor-pointer"
+                    data-tooltip="Leaves">
+                    <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2-2v16a2 2 0 002 2z">
+                        </path>
+                    </svg>
+                    <span class="nav-text ml-3 text-gray-700">Leaves</span>
+                </div>
+
+                <div class="nav-item flex items-center p-3 rounded-lg hover:bg-gray-100 cursor-pointer"
+                    data-tooltip="Feedback">
+                    <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M7 8h10m0 0V6a2 2 0 00-2-2H9a2 2 0 00-2 2v2m10 0v10a2 2 0 01-2 2H9a2 2 0 01-2-2V8m10 0H7">
+                        </path>
+                    </svg>
+                    <span class="nav-text ml-3 text-gray-700">Feedback</span>
+                </div>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 p-8">
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-2xl font-bold mb-4">Sidebar Responsive Test</h2>
+                <div class="space-y-4">
+                    <div class="p-4 bg-blue-50 rounded-lg">
+                        <h3 class="font-semibold text-blue-900">Test Features:</h3>
+                        <ul class="mt-2 space-y-1 text-blue-800">
+                            <li>✅ Click toggle button to collapse/expand</li>
+                            <li>✅ Keyboard shortcut: Ctrl+B</li>
+                            <li>✅ Hover tooltips in collapsed state</li>
+                            <li>✅ Responsive auto-collapse below 1024px</li>
+                            <li>✅ State persistence with localStorage</li>
+                        </ul>
+                    </div>
+
+                    <div class="p-4 bg-green-50 rounded-lg">
+                        <h3 class="font-semibold text-green-900">Instructions:</h3>
+                        <ol class="mt-2 space-y-1 text-green-800 list-decimal list-inside">
+                            <li>Click the chevron button to toggle sidebar</li>
+                            <li>Try Ctrl+B keyboard shortcut</li>
+                            <li>Hover over icons when collapsed</li>
+                            <li>Resize window below 1024px width</li>
+                            <li>Refresh page to test persistence</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tooltip -->
+    <div id="tooltip" class="tooltip hidden bg-gray-900 text-white px-2 py-1 rounded text-sm"></div>
+
+    <script>
+        const sidebar = document.getElementById('sidebar');
+        const toggleBtn = document.getElementById('toggle-btn');
+        const chevronIcon = document.getElementById('chevron-icon');
+        const sidebarTitle = document.getElementById('sidebar-title');
+        const navTexts = document.querySelectorAll('.nav-text');
+        const navItems = document.querySelectorAll('.nav-item');
+        const tooltip = document.getElementById('tooltip');
+
+        let isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+
+        function updateSidebar() {
+            if (isCollapsed) {
+                sidebar.classList.remove('w-64');
+                sidebar.classList.add('w-16');
+                chevronIcon.style.transform = 'rotate(180deg)';
+                sidebarTitle.style.display = 'none';
+                navTexts.forEach(text => text.style.display = 'none');
+            } else {
+                sidebar.classList.remove('w-16');
+                sidebar.classList.add('w-64');
+                chevronIcon.style.transform = 'rotate(0deg)';
+                sidebarTitle.style.display = 'block';
+                navTexts.forEach(text => text.style.display = 'block');
+            }
+            localStorage.setItem('sidebarCollapsed', isCollapsed);
+        }
+
+        function toggleSidebar() {
+            isCollapsed = !isCollapsed;
+            updateSidebar();
+        }
+
+        // Initialize
+        updateSidebar();
+
+        // Toggle button
+        toggleBtn.addEventListener('click', toggleSidebar);
+
+        // Keyboard shortcut
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'b') {
+                e.preventDefault();
+                toggleSidebar();
+            }
+        });
+
+        // Responsive behavior
+        function handleResize() {
+            if (window.innerWidth < 1024) {
+                if (!isCollapsed) {
+                    isCollapsed = true;
+                    updateSidebar();
+                }
+            }
+        }
+
+        window.addEventListener('resize', handleResize);
+        handleResize(); // Check on load
+
+        // Tooltip functionality
+        navItems.forEach(item => {
+            item.addEventListener('mouseenter', (e) => {
+                if (isCollapsed) {
+                    const tooltipText = item.getAttribute('data-tooltip');
+                    tooltip.textContent = tooltipText;
+                    tooltip.classList.remove('hidden');
+
+                    const rect = item.getBoundingClientRect();
+                    tooltip.style.left = rect.right + 10 + 'px';
+                    tooltip.style.top = rect.top + (rect.height / 2) - (tooltip.offsetHeight / 2) + 'px';
+                }
+            });
+
+            item.addEventListener('mouseleave', () => {
+                tooltip.classList.add('hidden');
+            });
+        });
+    </script>
+</body>
+
+</html>
