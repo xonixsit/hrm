@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple API Test</title>
+</head>
+<body>
+    <h1>Testing Attendance API</h1>
+    <button onclick="testAPI()">Test Current Status API</button>
+    <button onclick="testClockIn()">Test Clock In API</button>
+    <div id="results"></div>
+
+    <script>
+        function log(message) {
+            document.getElementById('results').innerHTML += '<p>' + message + '</p>';
+            console.log(message);
+        }
+
+        async function testAPI() {
+            log('🔄 Testing /api/attendance/current...');
+            
+            try {
+                const response = await fetch('/api/attendance/current', {
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || 'no-token'
+                    }
+                });
+                
+                log('Response status: ' + response.status);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log('✅ API Response: ' + JSON.stringify(data, null, 2));
+                    log('Clocked in: ' + data.clocked_in);
+                } else {
+                    const errorText = await response.text();
+                    log('❌ API Error: ' + errorText);
+                }
+            } catch (error) {
+                log('❌ Network Error: ' + error.message);
+            }
+        }
+
+        async function testClockIn() {
+            log('🔄 Testing /api/attendance/clock-in...');
+            
+            try {
+                const response = await fetch('/api/attendance/clock-in', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || 'no-token'
+                    },
+                    body: JSON.stringify({
+                        timestamp: new Date().toISOString()
+                    })
+                });
+                
+                log('Response status: ' + response.status);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log('✅ Clock In Response: ' + JSON.stringify(data, null, 2));
+                } else {
+                    const errorText = await response.text();
+                    log('❌ Clock In Error: ' + errorText);
+                }
+            } catch (error) {
+                log('❌ Network Error: ' + error.message);
+            }
+        }
+
+        // Test CSRF token
+        const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        log('CSRF Token: ' + (token ? 'Found ✅' : 'Missing ❌'));
+    </script>
+</body>
+</html>

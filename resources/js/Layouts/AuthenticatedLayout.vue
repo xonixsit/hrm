@@ -1,10 +1,11 @@
 <script setup>
-import { ref, computed, useSlots } from 'vue';
+import { ref, computed, useSlots, onMounted } from 'vue';
 import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
 import NavigationErrorDisplay from '@/Components/NavigationErrorDisplay.vue';
 import NavigationController from '@/Components/Navigation/NavigationController.vue';
 import NotificationContainer from '@/Components/Notifications/NotificationContainer.vue';
+import FloatingAttendanceWidget from '@/Components/Navigation/FloatingAttendanceWidget.vue';
 import SkipLinks from '@/Components/Accessibility/SkipLinks.vue';
 import LiveRegion from '@/Components/Accessibility/LiveRegion.vue';
 import { useAuth } from '@/composables/useAuth';
@@ -25,8 +26,13 @@ const { user, isAuthenticated, hasRole, getUserProperty, getAuthError } = useAut
 // Use responsive composable for device detection
 const { isMobile, isDesktop } = useResponsive();
 
-// Use theme composable
-const { isDark } = useTheme();
+// Use theme composable and initialize theme system
+const { isDark, initializeTheme } = useTheme();
+
+// Initialize theme system on mount
+onMounted(() => {
+  initializeTheme();
+});
 
 // Use layout spacing composable for enhanced layout management
 const {
@@ -225,6 +231,9 @@ const contentOverlayClasses = computed(() => {
         
         <!-- Notification Container -->
         <NotificationContainer />
+        
+        <!-- Floating Attendance Widget -->
+        <FloatingAttendanceWidget />
         
         <!-- Error handling for missing authentication data -->
         <div v-if="hasAuthError" class="p-4 bg-red-100 border border-red-400 text-red-700 z-50 relative">

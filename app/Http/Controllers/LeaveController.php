@@ -54,6 +54,18 @@ class LeaveController extends Controller
     public function show(Leave $leave)
     {
         $leave->load(['employee.user', 'leaveType']);
+        
+        // Debug: Log the leave data being passed to the frontend
+        if (config('app.debug')) {
+            \Log::info('Leave data being passed to frontend:', [
+                'leave_id' => $leave->id,
+                'leave_type' => $leave->leaveType ? $leave->leaveType->name : 'No leave type',
+                'employee' => $leave->employee ? $leave->employee->user->name ?? 'No user' : 'No employee',
+                'dates' => ['from' => $leave->from_date, 'to' => $leave->to_date],
+                'status' => $leave->status
+            ]);
+        }
+        
         return Inertia::render('Leaves/Show', ['leave' => $leave]);
     }
 

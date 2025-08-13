@@ -1,5 +1,5 @@
 <template>
-  <div class="data-table-container" :data-theme="theme">
+  <div class="data-table-container">
     <!-- Table Header with Search and Filters -->
     <TableHeader
       v-if="showHeader"
@@ -337,7 +337,7 @@ const props = defineProps({
     default: 'id'
   },
   
-  // Theme Control
+  // Theme Control - FORCE LIGHT THEME ALWAYS
   theme: {
     type: String,
     default: 'light',
@@ -537,7 +537,7 @@ const getColumnStyles = (column) => {
     return styles;
   }
   
-  // Handle flex-based system
+  // Handle flex-based system properly
   if (column.flex) {
     const totalFlexUnits = props.columns
       .filter(col => col.flex)
@@ -546,14 +546,9 @@ const getColumnStyles = (column) => {
     if (totalFlexUnits > 0) {
       const percentage = (parseFloat(column.flex) / totalFlexUnits) * 100;
       styles.width = `${percentage}%`;
-      styles.maxWidth = `${percentage}%`;
     }
     
     styles.minWidth = column.minWidth || '120px';
-    // Force strict width constraints for flex columns
-    styles.overflow = 'hidden';
-    styles.textOverflow = 'ellipsis';
-    styles.whiteSpace = 'nowrap';
     return styles;
   }
   
@@ -565,58 +560,9 @@ const getColumnStyles = (column) => {
     return styles;
   }
   
-  // Improved column width distribution to prevent large gaps
-  const columnIndex = props.columns.indexOf(column);
-  const totalColumns = props.columns.length;
-  
-  // Use a more balanced approach for column widths
-  // Name column - needs space for avatar + text but not excessive
-  if (columnIndex === 0 || column.key === 'name') {
-    styles.width = '25%';
-    styles.minWidth = '180px';
-    styles.maxWidth = '300px';
-  }
-  // Email column - flexible but constrained
-  else if (column.key === 'email') {
-    styles.width = '30%';
-    styles.minWidth = '200px';
-    styles.maxWidth = '350px';
-  }
-  // Department, job title - medium width
-  else if (['department', 'job_title', 'contract_type'].includes(column.key)) {
-    styles.width = '20%';
-    styles.minWidth = '140px';
-    styles.maxWidth = '200px';
-  }
-  // Date columns - compact
-  else if (column.key.includes('date') || column.key.includes('time')) {
-    styles.width = '15%';
-    styles.minWidth = '120px';
-    styles.maxWidth = '160px';
-  }
-  // Default columns - distribute remaining space evenly
-  else {
-    // Calculate remaining width after name (25%) and email (30%) columns
-    const nameWidth = 25;
-    const emailWidth = 30;
-    const departmentWidth = 20; // For department columns
-    
-    // Count different column types
-    const nameColumns = props.columns.filter((col, idx) => idx === 0 || col.key === 'name').length;
-    const emailColumns = props.columns.filter(col => col.key === 'email').length;
-    const departmentColumns = props.columns.filter(col => ['department', 'job_title', 'contract_type'].includes(col.key)).length;
-    const dateColumns = props.columns.filter(col => col.key.includes('date') || col.key.includes('time')).length;
-    
-    // Calculate used width
-    const usedWidth = (nameColumns * nameWidth) + (emailColumns * emailWidth) + (departmentColumns * departmentWidth) + (dateColumns * 15);
-    const remainingColumns = totalColumns - nameColumns - emailColumns - departmentColumns - dateColumns;
-    const remainingWidth = Math.max(100 - usedWidth, 15);
-    const columnWidth = remainingColumns > 0 ? remainingWidth / remainingColumns : 15;
-    
-    styles.width = `${Math.max(columnWidth, 15)}%`;
-    styles.minWidth = '120px';
-    styles.maxWidth = '200px';
-  }
+  // Default auto-sizing for columns without specific configuration
+  styles.width = 'auto';
+  styles.minWidth = '120px';
   
   if (column.maxWidth) {
     styles.maxWidth = column.maxWidth;
@@ -745,359 +691,303 @@ watch(() => filteredData.value.length, () => {
 </script>
 
 <style scoped>
-/* DataTable Component - Theme Independent with CSS Custom Properties */
+/* DataTable Component - Clean Design System Implementation */
 .data-table-container {
-  /* Set component-level CSS custom properties for light theme */
-  --dt-bg-primary: #ffffff;
-  --dt-bg-secondary: #fafafa;
-  --dt-border-color: #e5e5e5;
-  --dt-text-primary: #111827;
-  --dt-text-secondary: #6b7280;
-  --dt-text-muted: #9ca3af;
-  
-  /* Apply light theme as component default */
-  background-color: var(--dt-bg-primary);
-  border: 1px solid var(--dt-border-color);
-  border-radius: 0.5rem;
-  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  background-color: var(--color-neutral-50);
+  border: 1px solid var(--color-neutral-200);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
   overflow: hidden;
-  color: var(--dt-text-primary);
-  
-  /* Isolate from global theme inheritance */
-  isolation: isolate;
 }
 
-/* Child components inherit theme from DataTable container */
-
-/* Theme variants - only applied when explicitly set */
-.data-table-container[data-theme="light"] {
-  background-color: #ffffff;
-  border-color: #e5e5e5;
-  color: #111827;
+/* Theme-aware container */
+.theme-light .data-table-container {
+  background-color: var(--color-neutral-50);
+  color: var(--color-neutral-900);
 }
 
-.data-table-container[data-theme="dark"] {
-  background-color: #262626;
-  border-color: #404040;
-  color: #e5e5e5;
+.theme-dark .data-table-container {
+  background-color: var(--color-neutral-900);
+  color: var(--color-neutral-50);
+  border-color: var(--color-neutral-700);
 }
 
 .table-wrapper {
-  @apply relative;
+  position: relative;
 }
 
 .table-wrapper.loading {
-  @apply opacity-75;
+  opacity: 0.75;
 }
 
 .table-scroll-container {
-  @apply overflow-x-auto;
+  overflow-x: auto;
   width: 100%;
 }
 
+/* Clean table layout using design system */
 .data-table {
-  @apply w-full;
-  table-layout: fixed; /* Use fixed layout for consistent column widths */
-  min-width: 100%;
-  width: 100%; /* Full width to prevent gaps */
-  border-collapse: collapse; /* Ensure no spacing between cells */
-  /* Force table to behave more strictly */
-  display: table;
-  table-layout: fixed !important;
-}
-
-/* Flexible column widths - smart content handling */
-.table-head th,
-.table-body td {
-  /* Force columns to respect their calculated widths */
-  word-wrap: break-word;
-  word-break: normal;
-  hyphens: auto;
-  white-space: normal;
-  overflow: hidden !important; /* Prevent content from expanding beyond column width */
-  position: relative;
-  /* Force width constraints */
-  box-sizing: border-box;
-  max-width: 0 !important; /* This forces the table to respect the width calculations */
-  /* Additional constraints to force table behavior */
-  vertical-align: top;
-  padding-left: 1.5rem !important;
-  padding-right: 1.5rem !important;
-}
-
-/* Force all cell content to respect column boundaries */
-.table-head th > *,
-.table-body td > * {
-  max-width: 100%;
-  overflow: hidden;
-}
-
-/* Specifically target flex containers in cells */
-.table-body td .flex {
-  max-width: 100%;
-  min-width: 0;
   width: 100%;
+  table-layout: auto;
+  border-collapse: collapse;
 }
 
-/* Force flex children to respect boundaries */
-.table-body td .flex > * {
-  min-width: 0;
-  max-width: 100%;
-}
-
-/* Specifically handle the name cell flex layout */
-.table-body td .flex .flex-1 {
-  min-width: 0;
-  max-width: 100%;
-  overflow: hidden;
-}
-
-/* Ensure text content in flex containers is constrained */
-.table-body td .flex .truncate {
-  max-width: 100%;
-}
-
-/* Cell content styling */
-.cell-value {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  line-height: 1.4;
-  max-width: 100%;
-}
-
-/* Email column - show full content without truncation */
-.cell-email .cell-value {
-  overflow: visible;
-  text-overflow: clip;
-  white-space: nowrap;
-  min-width: 250px;
-}
-
-/* Name column - show full content for avatar + name */
-.cell-name .cell-value {
-  overflow: visible;
-  text-overflow: clip;
-  white-space: nowrap;
-  min-width: 200px;
-}
-
-/* Remove conflicting CSS - let JavaScript handle column widths */
-
-/* Modern Table Header - Default light theme */
+/* Table header using design tokens */
 .table-head {
-  @apply bg-white border-b border-neutral-200;
+  background-color: var(--color-neutral-100);
+  border-bottom: 1px solid var(--color-neutral-200);
 }
 
-/* Theme-aware table header */
-.data-table-container[data-theme="light"] .table-head,
-.data-table-container:not([data-theme="dark"]) .table-head {
-  @apply bg-white border-b border-neutral-200;
-}
-
-.data-table-container[data-theme="dark"] .table-head {
-  @apply bg-neutral-900 border-b border-neutral-700;
+.theme-dark .table-head {
+  background-color: var(--color-neutral-800);
+  border-bottom-color: var(--color-neutral-700);
 }
 
 .table-head th {
-  @apply px-6 py-4 text-left text-sm font-semibold text-neutral-900;
-  @apply whitespace-nowrap;
-  letter-spacing: -0.025em;
+  padding: var(--spacing-4) var(--spacing-6);
+  text-align: left;
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--color-neutral-900);
+  white-space: nowrap;
 }
 
-/* Theme-aware table header cells */
-.data-table-container[data-theme="light"] .table-head th,
-.data-table-container:not([data-theme="dark"]) .table-head th {
-  @apply text-neutral-900;
+.theme-dark .table-head th {
+  color: var(--color-neutral-100);
 }
 
-.data-table-container[data-theme="dark"] .table-head th {
-  @apply text-neutral-400;
-}
-
-.table-head th.text-center {
-  text-align: center;
-}
-
-.table-head th.text-right {
-  text-align: right;
-}
-
-.column-header {
-  @apply flex items-center justify-between;
-}
-
-.sortable .column-header {
-  @apply cursor-pointer select-none;
-}
-
-.sortable:hover .column-header {
-  @apply text-neutral-700;
-}
-
-.sort-indicator {
-  @apply ml-2 flex-shrink-0;
-}
-
-.sort-icon {
-  @apply w-4 h-4 text-neutral-400;
-}
-
-.sort-icon.active {
-  @apply text-neutral-600;
-}
-
-/* Table Body - Default light theme */
+/* Table body using design tokens */
 .table-body {
-  @apply bg-white divide-y divide-neutral-200;
+  background-color: var(--color-neutral-50);
 }
 
-/* Theme-aware table body */
-.data-table-container[data-theme="light"] .table-body,
-.data-table-container:not([data-theme="dark"]) .table-body {
-  @apply bg-white divide-y divide-neutral-200;
+.theme-dark .table-body {
+  background-color: var(--color-neutral-900);
 }
 
-.data-table-container[data-theme="dark"] .table-body {
-  @apply bg-neutral-800 divide-neutral-700;
+.table-body tr {
+  border-bottom: 1px solid var(--color-neutral-200);
 }
 
-.table-row {
-  @apply transition-colors duration-150;
+.theme-dark .table-body tr {
+  border-bottom-color: var(--color-neutral-700);
 }
 
-.table-hoverable .table-row:hover {
-  @apply bg-neutral-50;
+.table-body tr:hover {
+  background-color: var(--color-neutral-100);
 }
 
-.table-hoverable .table-row:hover {
-  @apply bg-neutral-50;
+.theme-dark .table-body tr:hover {
+  background-color: var(--color-neutral-800);
 }
 
-.table-striped .table-row:nth-child(even) {
-  @apply bg-neutral-50;
-}
-
-.row-selected {
-  @apply bg-primary-50 border-primary-200;
-}
-
-.row-clickable {
-  @apply cursor-pointer;
-}
-
+/* Table cells using design tokens */
 .table-cell {
-  @apply px-6 py-4 text-sm text-neutral-900;
-  @apply overflow-hidden;
-  line-height: 1.5;
+  padding: var(--spacing-4) var(--spacing-6);
+  font-size: var(--text-sm);
+  color: var(--color-neutral-900);
+  line-height: var(--leading-relaxed);
+  vertical-align: top;
 }
 
-/* Theme-aware table cells */
-.data-table-container[data-theme="light"] .table-cell,
-.data-table-container:not([data-theme="dark"]) .table-cell {
-  @apply text-neutral-900;
+.theme-dark .table-cell {
+  color: var(--color-neutral-100);
 }
 
-.data-table-container[data-theme="dark"] .table-cell {
-  @apply text-neutral-200;
-}
-
-.table-cell.text-center {
-  text-align: center;
-}
-
-.table-cell.text-right {
-  text-align: right;
-}
-
+/* Cell content - clean and simple */
 .cell-content {
-  @apply flex items-center;
-  @apply min-w-0;
-  width: 100%;
-  max-width: 100%;
-  overflow: hidden;
-  /* Force content to respect column boundaries */
-  flex-shrink: 1;
-  flex-grow: 0;
-}
-
-.table-cell.text-center .cell-content {
-  @apply justify-center;
-}
-
-.table-cell.text-right .cell-content {
-  @apply justify-end;
-}
-
-.cell-value {
-  width: 100%;
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
   min-width: 0;
 }
 
-/* Special Columns */
+.cell-value {
+  line-height: var(--leading-normal);
+  color: var(--color-neutral-900);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.theme-dark .cell-value {
+  color: var(--color-neutral-100);
+}
+
+/* Column header styling */
+.column-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sortable .column-header {
+  cursor: pointer;
+  user-select: none;
+}
+
+.sortable:hover .column-header {
+  color: var(--color-neutral-700);
+}
+
+.theme-dark .sortable:hover .column-header {
+  color: var(--color-neutral-300);
+}
+
+.sort-indicator {
+  margin-left: var(--spacing-2);
+  flex-shrink: 0;
+}
+
+.sort-icon {
+  width: 16px;
+  height: 16px;
+  color: var(--color-neutral-400);
+}
+
+.sort-icon.active {
+  color: var(--color-neutral-600);
+}
+
+.theme-dark .sort-icon.active {
+  color: var(--color-neutral-400);
+}
+
+/* Table row styling */
+.table-row {
+  transition: background-color var(--duration-fast) var(--easing-ease-out);
+}
+
+.table-hoverable .table-row:hover {
+  background-color: var(--color-neutral-100);
+}
+
+.theme-dark .table-hoverable .table-row:hover {
+  background-color: var(--color-neutral-800);
+}
+
+.table-striped .table-row:nth-child(even) {
+  background-color: var(--color-neutral-50);
+}
+
+.theme-dark .table-striped .table-row:nth-child(even) {
+  background-color: var(--color-neutral-850);
+}
+
+.row-selected {
+  background-color: var(--color-primary-50);
+  border-color: var(--color-primary-200);
+}
+
+.theme-dark .row-selected {
+  background-color: var(--color-primary-900);
+  border-color: var(--color-primary-700);
+}
+
+.row-clickable {
+  cursor: pointer;
+}
+
+/* Text alignment */
+.text-center {
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.text-center .cell-content {
+  justify-content: center;
+}
+
+.text-right .cell-content {
+  justify-content: flex-end;
+}
+
+/* Special columns */
 .select-column {
-  @apply w-12 px-4 py-3;
+  width: 48px;
+  padding: var(--spacing-3) var(--spacing-4);
 }
 
 .actions-column {
-  @apply w-16 px-4 py-3;
+  width: 64px;
+  padding: var(--spacing-3) var(--spacing-4);
 }
 
 .row-actions {
-  @apply flex justify-end;
+  display: flex;
+  justify-content: flex-end;
 }
 
 .action-trigger {
-  @apply p-1 rounded-md text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100;
-  @apply focus:outline-none focus:ring-2 focus:ring-primary-500;
+  padding: var(--spacing-1);
+  border-radius: var(--radius-md);
+  color: var(--color-neutral-400);
+  transition: all var(--duration-fast) var(--easing-ease-out);
 }
 
-/* Table Footer - Default light theme */
+.action-trigger:hover {
+  color: var(--color-neutral-600);
+  background-color: var(--color-neutral-100);
+}
+
+.theme-dark .action-trigger:hover {
+  color: var(--color-neutral-300);
+  background-color: var(--color-neutral-800);
+}
+
+.action-trigger:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-primary-500);
+}
+
+/* Table footer */
 .table-footer {
-  @apply flex items-center justify-between px-4 py-3 bg-neutral-50 border-t border-neutral-200;
+  background-color: var(--color-neutral-100);
+  border-top: 1px solid var(--color-neutral-200);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-4) var(--spacing-6);
 }
 
-/* Theme-aware table footer */
-.data-table-container[data-theme="light"] .table-footer,
-.data-table-container:not([data-theme="dark"]) .table-footer {
-  @apply bg-neutral-50 border-t border-neutral-200;
-}
-
-.data-table-container[data-theme="dark"] .table-footer {
-  @apply bg-neutral-900 border-t border-neutral-700;
+.theme-dark .table-footer {
+  background-color: var(--color-neutral-800);
+  border-top-color: var(--color-neutral-700);
 }
 
 .footer-info {
-  @apply flex items-center space-x-4 text-sm text-neutral-700;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-4);
+  font-size: var(--text-sm);
+  color: var(--color-neutral-500);
 }
 
-/* Theme-aware footer info */
-.data-table-container[data-theme="light"] .footer-info,
-.data-table-container:not([data-theme="dark"]) .footer-info {
-  @apply text-neutral-700;
-}
-
-.data-table-container[data-theme="dark"] .footer-info {
-  @apply text-neutral-400;
+.theme-dark .footer-info {
+  color: var(--color-neutral-400);
 }
 
 .selection-info {
-  @apply text-primary-600 font-medium;
+  color: var(--color-primary-600);
+  font-weight: 500;
 }
 
 /* Size Variants */
 .table-sm .table-cell,
 .table-sm .table-head th {
-  @apply px-3 py-2 text-xs;
+  padding: var(--spacing-2) var(--spacing-3);
+  font-size: var(--text-xs);
 }
 
 .table-lg .table-cell,
 .table-lg .table-head th {
-  @apply px-6 py-4 text-base;
+  padding: var(--spacing-6) var(--spacing-8);
+  font-size: var(--text-base);
 }
 
-/* Responsive Design - HFI Principles */
+/* Responsive Design */
 @media (max-width: 1200px) {
   /* Hide medium priority columns on smaller screens */
   .table-head th[data-priority="medium"],
@@ -1114,40 +1004,43 @@ watch(() => filteredData.value.length, () => {
   }
   
   .data-table {
-    font-size: 0.875rem;
+    font-size: var(--text-sm);
   }
   
   .table-cell {
-    @apply px-3 py-2;
+    padding: var(--spacing-2) var(--spacing-3);
   }
   
   .table-head th {
-    @apply px-3 py-2 text-xs;
+    padding: var(--spacing-2) var(--spacing-3);
+    font-size: var(--text-xs);
   }
 }
 
 @media (max-width: 640px) {
   /* Mobile optimization */
   .table-mobile {
-    @apply text-xs;
+    font-size: var(--text-xs);
   }
   
   .table-mobile .table-cell,
   .table-mobile .table-head th {
-    @apply px-2 py-2;
+    padding: var(--spacing-2);
   }
   
   .column-header {
-    @apply flex-col items-start space-y-1;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-1);
   }
   
   .sort-indicator {
-    @apply ml-0;
+    margin-left: 0;
   }
   
   /* Stack layout for very small screens */
   .data-table-container {
-    @apply overflow-x-auto;
+    overflow-x: auto;
   }
   
   .data-table {
@@ -1157,46 +1050,32 @@ watch(() => filteredData.value.length, () => {
 
 /* Dropdown Actions */
 .dropdown-action-item {
-  @apply block w-full px-4 py-2 text-left text-sm text-neutral-700;
-  @apply hover:bg-neutral-100 focus:bg-neutral-100 focus:outline-none;
-  @apply transition-colors duration-150 ease-in-out;
-  @apply disabled:opacity-50 disabled:cursor-not-allowed;
+  display: block;
+  width: 100%;
+  padding: var(--spacing-2) var(--spacing-4);
+  text-align: left;
+  font-size: var(--text-sm);
+  color: var(--color-neutral-700);
+  transition: all var(--duration-fast) var(--easing-ease-out);
 }
 
-/* Component-level theme control - no global theme dependencies */
-
-/* Fallback styles for missing or corrupted theme classes */
-.data-table-container:not([class*="theme-"]) {
-  /* Force light theme when no theme class is detected */
-  @apply bg-white border border-neutral-200 rounded-lg shadow-sm overflow-hidden;
+.dropdown-action-item:hover,
+.dropdown-action-item:focus {
+  background-color: var(--color-neutral-100);
+  outline: none;
 }
 
-.table-head:not([class*="theme-"]) {
-  /* Force light theme for table header when no theme class is detected */
-  @apply bg-white border-b border-neutral-200;
+.dropdown-action-item:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
-.table-head:not([class*="theme-"]) th {
-  @apply text-neutral-900;
+.theme-dark .dropdown-action-item {
+  color: var(--color-neutral-300);
 }
 
-.table-body:not([class*="theme-"]) {
-  /* Force light theme for table body when no theme class is detected */
-  @apply bg-white divide-y divide-neutral-200;
+.theme-dark .dropdown-action-item:hover,
+.theme-dark .dropdown-action-item:focus {
+  background-color: var(--color-neutral-800);
 }
-
-.table-cell:not([class*="theme-"]) {
-  @apply text-neutral-900;
-}
-
-.table-footer:not([class*="theme-"]) {
-  /* Force light theme for table footer when no theme class is detected */
-  @apply bg-neutral-50 border-t border-neutral-200;
-}
-
-.footer-info:not([class*="theme-"]) {
-  @apply text-neutral-700;
-}
-
-/* Clean fallback - no overrides needed with proper component isolation */
 </style>

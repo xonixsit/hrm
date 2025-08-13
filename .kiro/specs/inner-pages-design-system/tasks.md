@@ -314,7 +314,74 @@
     - Write migration tests to ensure functionality preservation
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 2.1, 2.2, 2.3, 2.4, 2.5_
 
-  - [ ] 12.2 Implement responsive design across all pages
+  - [x] 12.2 Integrate design system for Tasks creation page
+
+
+
+    - Replace basic HTML form with modern FormLayout and FormSection components
+    - Implement proper PageLayout with breadcrumbs and header actions
+    - Update form inputs to use BaseInput, BaseSelect, and BaseTextarea components
+    - Add proper form validation display and error handling
+    - Implement consistent styling with design tokens and theme system
+    - Add responsive design and mobile-friendly interactions
+    - Create proper loading states and form submission feedback
+    - Write tests for form functionality and design system integration
+    - _Requirements: 1.1, 1.2, 1.3, 1.4, 2.1, 2.2, 4.1, 4.2, 7.1, 8.1_
+
+  - [x] 12.3 Integrate design system for Tasks view/show page
+
+
+
+    - Replace basic HTML layout with modern DetailPage and InfoCard components
+    - Implement proper PageLayout with breadcrumbs and header actions
+    - Update task information display using InfoCard with proper data organization
+    - Add status badges, priority indicators, and visual task information
+    - Implement consistent styling with design tokens and theme system
+    - Add responsive design and mobile-friendly interactions
+    - Create proper loading states and action button feedback
+    - Add edit and delete actions with proper permissions and confirmations
+    - Write tests for page functionality and design system integration
+    - _Requirements: 1.1, 1.2, 1.3, 1.4, 2.1, 2.2, 2.3, 7.1, 8.1_
+
+  - [x] 12.4 Integrate design system for Tasks edit page and fix errors
+
+
+
+    - Fix undefined task object error in form initialization
+    - Replace basic HTML form with modern FormLayout and FormSection components
+    - Implement proper PageLayout with breadcrumbs and header actions
+    - Update form inputs to use BaseInput, BaseSelect, and BaseTextarea components
+    - Add proper form validation display and error handling
+    - Implement consistent styling with design tokens and theme system
+    - Add responsive design and mobile-friendly interactions
+    - Create proper loading states and form submission feedback
+    - Write tests for form functionality and design system integration
+    - _Requirements: 1.1, 1.2, 1.3, 1.4, 2.1, 2.2, 4.1, 4.2, 7.1, 8.1_
+
+  - [x] 12.5 Create real-time clock in/out module for dashboard
+
+
+
+
+
+
+
+
+
+
+    - Enhance existing clock in/out functionality with real-time time display
+    - Create dedicated ClockInOutWidget component with live time updates
+    - Implement WebSocket or polling for real-time attendance status updates
+    - Add visual indicators for current work session duration
+    - Create attendance history display with today's time tracking
+    - Add break time tracking and management functionality
+    - Implement location-based clock in/out with geolocation validation
+    - Create attendance analytics and weekly/monthly summaries
+    - Add notification system for clock in/out reminders
+    - Write tests for real-time functionality and attendance tracking
+    - _Requirements: 1.1, 1.2, 2.1, 2.2, 6.1, 8.1, 8.2_
+
+  - [ ] 12.6 Implement responsive design across all pages
     - Test and refine mobile layouts for all migrated pages
     - Implement touch-friendly interactions with proper sizing
     - Create responsive navigation and form layouts

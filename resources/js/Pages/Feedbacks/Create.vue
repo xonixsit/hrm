@@ -36,15 +36,15 @@
                     :disabled="form.processing"
                   >
                 <template #option="{ option }">
-                  <div class="flex items-center space-x-3">
-                    <div class="flex-shrink-0 w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
-                      <span class="text-sm font-semibold text-primary-700">
+                  <div class="flex items-center gap-3">
+                    <div class="flex-shrink-0 w-6 h-6 bg-primary-100 rounded-full flex items-center justify-center">
+                      <span class="text-xs font-semibold text-primary-700">
                         {{ option.initials }}
                       </span>
                     </div>
-                    <div>
-                      <div class="font-medium text-neutral-900">{{ option.label }}</div>
-                      <div class="text-sm text-neutral-500">{{ option.department }}</div>
+                    <div class="min-w-0 flex-1">
+                      <div class="font-medium text-neutral-900 truncate">{{ option.label }}</div>
+                      <div class="text-xs text-neutral-500 truncate">{{ option.department }}</div>
                     </div>
                   </div>
                 </template>
@@ -252,10 +252,9 @@
             </FormField>
           </div>
         </FormSection>
-            </FormLayout>
-          </ContentCard>
-        </ContentSection>
-      </template>
+          </FormLayout>
+        </ContentCard>
+      </ContentSection>
     </PageLayout>
   </AuthenticatedLayout>
 </template>

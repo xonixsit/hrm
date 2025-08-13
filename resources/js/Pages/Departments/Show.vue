@@ -96,19 +96,6 @@
 
       <!-- Secondary Content (Sidebar) -->
       <template #secondary>
-        <!-- Quick Actions -->
-        <InfoCard
-          title="Quick Actions"
-          :actions="quickActions"
-          class="mb-6"
-        >
-          <div class="space-y-3">
-            <p class="text-sm text-neutral-600">
-              Manage this department's information and employees.
-            </p>
-          </div>
-        </InfoCard>
-
         <!-- Department Statistics -->
         <InfoCard
           title="Department Statistics"

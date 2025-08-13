@@ -12,6 +12,15 @@
     >
       <!-- Primary Content -->
       <template #primary>
+        <!-- Debug Info (only in development) -->
+        <div v-if="process.env.NODE_ENV === 'development'" class="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <h3 class="font-bold text-yellow-800">Debug Info:</h3>
+          <p><strong>Leave Object:</strong> {{ JSON.stringify(leave, null, 2) }}</p>
+          <p><strong>Leave ID:</strong> {{ leave?.id || 'undefined' }}</p>
+          <p><strong>Leave Type:</strong> {{ leave?.leave_type?.name || 'undefined' }}</p>
+          <p><strong>Has Valid Data:</strong> {{ hasValidLeaveData }}</p>
+        </div>
+        
         <div class="space-y-6">
           <!-- Leave Details Card -->
           <InfoCard
@@ -23,11 +32,11 @@
               <div class="space-y-2">
                 <label class="text-sm font-medium text-neutral-600">Leave Type</label>
                 <div class="flex items-center space-x-3">
-                  <div :class="getLeaveTypeIconClasses(leave.leave_type.name)">
-                    <component :is="getLeaveTypeIcon(leave.leave_type.name)" class="w-5 h-5" />
+                  <div :class="getLeaveTypeIconClasses(leave?.leave_type?.name || 'Unknown')">
+                    <component :is="getLeaveTypeIcon(leave?.leave_type?.name || 'Unknown')" class="w-5 h-5" />
                   </div>
                   <span class="text-base font-medium text-neutral-900">
-                    {{ leave.leave_type.name }}
+                    {{ leave?.leave_type?.name || 'Unknown Leave Type' }}
                   </span>
                 </div>
               </div>
@@ -40,26 +49,26 @@
                     {{ calculateDuration() }}
                   </p>
                   <p class="text-sm text-neutral-600">
-                    {{ formatDateRange(leave.from_date, leave.to_date) }}
+                    {{ formatDateRange(leave?.from_date, leave?.to_date) }}
                   </p>
                 </div>
               </div>
 
               <!-- Employee (for approvers) -->
-              <div v-if="isApprover" class="space-y-2">
+              <div v-if="isApprover && leave.employee?.user" class="space-y-2">
                 <label class="text-sm font-medium text-neutral-600">Employee</label>
                 <div class="flex items-center space-x-3">
                   <div class="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
                     <span class="text-xs font-semibold text-primary-700">
-                      {{ getInitials(leave.employee.user.name) }}
+                      {{ getInitials(leave.employee?.user?.name || 'N/A') }}
                     </span>
                   </div>
                   <div>
                     <p class="text-base font-medium text-neutral-900">
-                      {{ leave.employee.user.name }}
+                      {{ leave.employee?.user?.name || 'N/A' }}
                     </p>
                     <p class="text-sm text-neutral-600">
-                      {{ leave.employee.user.email }}
+                      {{ leave.employee?.user?.email || 'N/A' }}
                     </p>
                   </div>
                 </div>
@@ -69,9 +78,9 @@
               <div class="space-y-2">
                 <label class="text-sm font-medium text-neutral-600">Status</label>
                 <div class="flex items-center space-x-2">
-                  <span :class="getStatusClasses(leave.status)">
-                    <component :is="getStatusIcon(leave.status)" class="w-3 h-3 mr-1" />
-                    {{ getStatusLabel(leave.status) }}
+                  <span :class="getStatusClasses(leave?.status || 'pending')">
+                    <component :is="getStatusIcon(leave?.status || 'pending')" class="w-3 h-3 mr-1" />
+                    {{ getStatusLabel(leave?.status || 'pending') }}
                   </span>
                 </div>
               </div>
@@ -81,19 +90,19 @@
             <div class="mt-6 pt-6 border-t border-neutral-200">
               <label class="text-sm font-medium text-neutral-600">Reason for Leave</label>
               <p class="mt-2 text-base text-neutral-900 leading-relaxed">
-                {{ leave.reason }}
+                {{ leave?.reason || 'No reason provided' }}
               </p>
             </div>
 
             <!-- Additional Options -->
-            <div v-if="leave.is_emergency || leave.is_half_day" class="mt-6 pt-6 border-t border-neutral-200">
+            <div v-if="leave?.is_emergency || leave?.is_half_day" class="mt-6 pt-6 border-t border-neutral-200">
               <label class="text-sm font-medium text-neutral-600">Additional Information</label>
               <div class="mt-2 space-y-2">
-                <div v-if="leave.is_emergency" class="flex items-center space-x-2">
+                <div v-if="leave?.is_emergency" class="flex items-center space-x-2">
                   <ExclamationTriangleIcon class="w-4 h-4 text-orange-600" />
                   <span class="text-sm text-orange-700 font-medium">Emergency leave request</span>
                 </div>
-                <div v-if="leave.is_half_day" class="flex items-center space-x-2">
+                <div v-if="leave?.is_half_day" class="flex items-center space-x-2">
                   <ClockIcon class="w-4 h-4 text-blue-600" />
                   <span class="text-sm text-blue-700 font-medium">Half day leave</span>
                 </div>
@@ -102,7 +111,7 @@
           </InfoCard>
 
           <!-- Approval Workflow (for approvers) -->
-          <div v-if="isApprover && leave.status === 'pending'" class="bg-white rounded-lg border border-neutral-200 p-6">
+          <div v-if="isApprover && leave?.status === 'pending'" class="bg-white rounded-lg border border-neutral-200 p-6">
             <div class="flex items-start space-x-4">
               <div class="flex-shrink-0 w-10 h-10 bg-warning-100 rounded-lg flex items-center justify-center">
                 <ClockIcon class="w-6 h-6 text-warning-600" />
@@ -148,20 +157,20 @@
                 <div class="flex-1">
                   <p class="text-sm font-medium text-neutral-900">Request Created</p>
                   <p class="text-xs text-neutral-600">
-                    {{ formatDateTime(leave.created_at) }}
+                    {{ formatDateTime(leave?.created_at) }}
                   </p>
                 </div>
               </div>
 
               <!-- Status Updates -->
-              <div v-if="leave.status !== 'pending'" class="flex items-start space-x-3">
-                <div :class="getTimelineStatusClasses(leave.status)"></div>
+              <div v-if="leave?.status !== 'pending'" class="flex items-start space-x-3">
+                <div :class="getTimelineStatusClasses(leave?.status)"></div>
                 <div class="flex-1">
                   <p class="text-sm font-medium text-neutral-900">
-                    Request {{ getStatusLabel(leave.status) }}
+                    Request {{ getStatusLabel(leave?.status) }}
                   </p>
                   <p class="text-xs text-neutral-600">
-                    {{ formatDateTime(leave.updated_at) }}
+                    {{ formatDateTime(leave?.updated_at) }}
                   </p>
                 </div>
               </div>
@@ -180,7 +189,7 @@
           >
             <div class="space-y-3">
               <Link
-                v-if="canEdit"
+                v-if="canEdit && leave?.id"
                 :href="route('leaves.edit', leave.id)"
                 class="w-full inline-flex items-center justify-center px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors duration-200"
               >
@@ -372,10 +381,41 @@ import {
 } from '@heroicons/vue/24/outline';
 
 const props = defineProps({
-  leave: Object,
+  leave: {
+    type: Object,
+    required: true
+  },
 });
 
 const { hasAnyRole } = useAuth();
+
+// Debug: Log the leave data to see what we're receiving
+if (process.env.NODE_ENV === 'development') {
+  console.log('Leave data received:', props.leave);
+  console.log('Leave keys:', props.leave ? Object.keys(props.leave) : 'No leave data');
+  console.log('Leave ID:', props.leave?.id);
+  console.log('Leave Type (leave_type):', props.leave?.leave_type);
+  console.log('Leave Type (leaveType):', props.leave?.leaveType);
+  console.log('Leave Status:', props.leave?.status);
+  console.log('Leave Dates:', { from: props.leave?.from_date, to: props.leave?.to_date });
+  console.log('Employee data:', props.leave?.employee);
+}
+
+// Check if we have valid leave data
+const hasValidLeaveData = computed(() => {
+  return props.leave && 
+         typeof props.leave === 'object' && 
+         Object.keys(props.leave).length > 0 &&
+         props.leave.id;
+});
+
+// If no valid data, show error message
+if (process.env.NODE_ENV === 'development' && !hasValidLeaveData.value) {
+  console.error('❌ LEAVE DATA ISSUE: No valid leave data received');
+  console.log('Current URL:', window.location.href);
+  console.log('Expected: Leave object with id, leaveType, dates, etc.');
+  console.log('Received:', props.leave);
+}
 
 // Local state
 const loading = ref(false);
@@ -385,34 +425,34 @@ const showDeleteModal = ref(false);
 
 // Computed properties
 const isApprover = computed(() => hasAnyRole(['Admin', 'HR', 'Manager']));
-const canEdit = computed(() => props.leave.status === 'pending' && !isApprover.value);
+const canEdit = computed(() => props.leave?.status === 'pending' && !isApprover.value);
 const canDelete = computed(() => canEdit.value);
 
 const pageTitle = computed(() => {
-  return `Leave Request #${props.leave.id}`;
+  return `Leave Request #${props.leave?.id || 'N/A'}`;
 });
 
 const pageSubtitle = computed(() => {
-  if (isApprover.value) {
+  if (isApprover.value && props.leave?.employee?.user?.name) {
     return `Request by ${props.leave.employee.user.name}`;
   }
-  return `${props.leave.leave_type.name} - ${calculateDuration()}`;
+  return `${props.leave?.leave_type?.name || 'Leave'} - ${calculateDuration()}`;
 });
 
 const leaveStatus = computed(() => ({
-  label: getStatusLabel(props.leave.status),
-  variant: getStatusVariant(props.leave.status)
+  label: getStatusLabel(props.leave?.status),
+  variant: getStatusVariant(props.leave?.status)
 }));
 
 const breadcrumbs = computed(() => [
   { label: 'Leaves', href: route('leaves.index') },
-  { label: `Request #${props.leave.id}`, current: true }
+  { label: `Request #${props.leave?.id || 'N/A'}`, current: true }
 ]);
 
 const pageActions = computed(() => {
   const actions = [];
   
-  if (canEdit.value) {
+  if (canEdit.value && props.leave?.id) {
     actions.push({
       id: 'edit',
       label: 'Edit',
@@ -422,7 +462,7 @@ const pageActions = computed(() => {
     });
   }
   
-  if (canDelete.value) {
+  if (canDelete.value && props.leave?.id) {
     actions.push({
       id: 'delete',
       label: 'Delete',
@@ -437,6 +477,9 @@ const pageActions = computed(() => {
 
 // Helper functions
 const getInitials = (name) => {
+  if (!name || typeof name !== 'string') {
+    return '--';
+  }
   return name
     .split(' ')
     .map(word => word.charAt(0))
@@ -477,6 +520,10 @@ const formatDateTime = (dateString) => {
 };
 
 const calculateDuration = () => {
+  if (!props.leave?.from_date || !props.leave?.to_date) {
+    return 'N/A';
+  }
+  
   const start = new Date(props.leave.from_date);
   const end = new Date(props.leave.to_date);
   const diffTime = Math.abs(end - start);
@@ -564,6 +611,8 @@ const getTimelineStatusClasses = (status) => {
 
 // Actions
 const approve = () => {
+  if (!props.leave?.id) return;
+  
   loading.value = true;
   showApprovalModal.value = false;
   
@@ -575,6 +624,8 @@ const approve = () => {
 };
 
 const reject = () => {
+  if (!props.leave?.id) return;
+  
   loading.value = true;
   showRejectionModal.value = false;
   
@@ -586,6 +637,8 @@ const reject = () => {
 };
 
 const destroy = () => {
+  if (!props.leave?.id) return;
+  
   loading.value = true;
   showDeleteModal.value = false;
   

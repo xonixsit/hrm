@@ -1,81 +1,136 @@
 <template>
   <div class="employee-dashboard">
-    <!-- Welcome Section -->
-    <div class="welcome-section">
-      <div class="welcome-content">
-        <h1 class="welcome-title">
-          Welcome back, {{ userName }}!
-        </h1>
-        <p class="welcome-subtitle">
-          {{ welcomeMessage }}
+    <!-- Motivational Message Block -->
+    <div class="motivation-block">
+      <div class="motivation-content">
+        <p class="motivation-text">
+          <BoltIcon class="w-5 h-5 inline-block mr-2 text-yellow-500" />
+          Ready to tackle today's challenges?
         </p>
       </div>
-      <div class="welcome-actions">
+      <div class="quick-clock-actions">
         <button
-          @click="clockInOut"
-          :disabled="clockingInOut"
+          @click="handleClockInOut"
+          :disabled="loading"
           :class="clockButtonClasses"
         >
-          <component 
-            :is="clockingInOut ? 'LoadingIcon' : 'ClockIcon'" 
-            :class="['w-4 h-4', { 'animate-spin': clockingInOut }]" 
-          />
+          <ClockIcon class="w-4 h-4" />
           {{ clockButtonText }}
+        </button>
+        <button
+          v-if="isCurrentlyClockedIn && !currentAttendance.on_break"
+          @click="handleTakeBreak"
+          :disabled="loading"
+          class="break-button"
+        >
+          <PauseIcon class="w-4 h-4" />
+          Take Break
+        </button>
+        <button
+          v-if="isCurrentlyClockedIn && currentAttendance.on_break"
+          @click="handleEndBreak"
+          :disabled="loading"
+          class="end-break-button"
+        >
+          <PlayIcon class="w-4 h-4" />
+          End Break
         </button>
       </div>
     </div>
 
-    <!-- Personal Stats Overview -->
-    <div class="stats-grid">
-      <StatsCard
-        :value="stats.hoursToday"
-        label="Hours Today"
-        :icon="ClockIcon"
-        icon-color="primary"
-        variant="featured"
-        unit="h"
-        :loading="loading"
-      />
-      
-      <StatsCard
-        :value="stats.tasksCompleted"
-        label="Tasks Completed"
-        :icon="CheckCircleIcon"
-        icon-color="success"
-        :trend="stats.taskTrend"
-        :loading="loading"
-      />
-      
-      <StatsCard
-        :value="stats.leaveBalance"
-        label="Leave Balance"
-        :icon="CalendarDaysIcon"
-        icon-color="info"
-        unit=" days"
-        :loading="loading"
-      />
-      
-      <StatsCard
-        :value="stats.upcomingDeadlines"
-        label="Upcoming Deadlines"
-        :icon="ExclamationTriangleIcon"
-        icon-color="warning"
-        :loading="loading"
-      />
+    <!-- Time Progress Block -->
+    <div class="time-progress-block">
+      <!-- Horizontal Clock Timeline -->
+      <div class="horizontal-clock-container">
+        <!-- Time Markers - Dynamic based on clock-in time -->
+        <div class="time-markers">
+          <div 
+            v-for="(marker, index) in timelineMarkers" 
+            :key="index"
+            class="time-marker"
+            :class="{
+              'start-marker': index === 0,
+              'end-marker': index === timelineMarkers.length - 1,
+              'lunch-marker': marker.isLunch,
+              'regular-marker': !marker.isLunch && index !== 0 && index !== timelineMarkers.length - 1
+            }"
+          >
+            <div class="marker-line"></div>
+            <span class="marker-time">{{ marker.label }}</span>
+          </div>
+        </div>
+        
+        <!-- Progress Bar with Clock Visual -->
+        <div class="time-progress-bar">
+          <!-- Background shimmer for entire bar -->
+          <div class="progress-bar-shimmer"></div>
+          
+          <!-- Pre-work time fill (before clock-in) -->
+          <div 
+            v-if="isCurrentlyClockedIn && preWorkWidth > 0"
+            class="pre-work-fill"
+            :style="{ 
+              left: '0%',
+              width: `${preWorkWidth}%`,
+              transition: 'width 0.5s ease-out'
+            }"
+          ></div>
+          
+          <!-- Break time fills (for each break session) -->
+          <div 
+            v-for="(breakSession, index) in breakTimeFills" 
+            :key="`break-${index}`"
+            v-if="isCurrentlyClockedIn && breakSession.width > 0"
+            class="break-time-fill"
+            :style="{ 
+              left: `${breakSession.left}%`,
+              width: `${breakSession.width}%`,
+              transition: 'width 0.5s ease-out, left 0.5s ease-out'
+            }"
+          ></div>
+
+          <!-- Actual work progress fill (from clock-in to current time) -->
+          <div 
+            v-if="isCurrentlyClockedIn && progressWidth > 0"
+            class="work-progress-fill"
+            :style="{ 
+              left: `${progressStartPosition}%`,
+              width: `${progressWidth}%`,
+              transition: 'width 0.5s ease-out, left 0.5s ease-out'
+            }"
+          >
+            <!-- Active shimmer on filled portion -->
+            <div class="work-shimmer" v-if="workdayStatus === 'during-work' && !currentAttendance.on_break"></div>
+            
+            <!-- Current Time Indicator -->
+            <div class="current-time-indicator" v-if="workdayStatus === 'during-work'">
+              <div class="time-dot"></div>
+              <div class="time-tooltip">{{ currentTimeFormatted }}</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Progress Information -->
+        <div class="time-progress-info">
+          <div class="progress-left">
+            <span class="progress-time">{{ currentTimeFormatted }}</span>
+            <span class="progress-status" :class="getStatusClasses()">{{ workdayStatusText }}</span>
+          </div>
+          <div class="progress-right">
+            <span class="progress-percentage">{{ progressLabel }}</span>
+          </div>
+        </div>
+      </div>
     </div>
+
+
 
     <!-- Main Dashboard Content -->
     <div class="dashboard-content">
       <!-- Left Column -->
       <div class="left-column">
         <!-- Personal Activity Timeline -->
-        <ActivityTimeline
-          :activities="personalActivities"
-          title="Your Recent Activity"
-          :max-items="6"
-          :loading="loading"
-          @action="handleTimelineAction"
-        />
+        
 
         <!-- Today's Schedule -->
         <DashboardWidget
@@ -136,95 +191,6 @@
             </div>
           </div>
         </DashboardWidget>
-      </div>
-
-      <!-- Right Column -->
-      <div class="right-column">
-        <!-- Employee Quick Actions -->
-        <QuickActions
-          :actions="employeeQuickActions"
-          title="Quick Actions"
-          :max-visible="6"
-          @action="handleQuickAction"
-        />
-
-        <!-- My Tasks -->
-        <DashboardWidget
-          title="My Tasks"
-          :loading="loading"
-          class="my-tasks"
-        >
-          <template #actions>
-            <div class="task-filters">
-              <button
-                v-for="filter in taskFilters"
-                :key="filter.key"
-                @click="setTaskFilter(filter.key)"
-                :class="getTaskFilterClasses(filter.key)"
-              >
-                {{ filter.label }}
-              </button>
-            </div>
-          </template>
-
-          <div v-if="filteredTasks.length === 0" class="empty-state">
-            <CheckCircleIcon class="w-12 h-12 text-success-400 mx-auto mb-3" />
-            <p class="text-neutral-500 text-center">
-              {{ activeTaskFilter === 'all' ? 'No tasks assigned' : 'No tasks in this category' }}
-            </p>
-          </div>
-
-          <div v-else class="tasks-list">
-            <div
-              v-for="task in filteredTasks.slice(0, 8)"
-              :key="task.id"
-              class="task-item"
-            >
-              <div class="task-checkbox">
-                <input
-                  type="checkbox"
-                  :checked="task.completed"
-                  @change="toggleTaskCompletion(task)"
-                  class="task-checkbox-input"
-                />
-              </div>
-              <div class="task-content">
-                <h4 :class="['task-title', { 'line-through text-neutral-500': task.completed }]">
-                  {{ task.title }}
-                </h4>
-                <div class="task-meta">
-                  <span v-if="task.project" class="task-project">
-                    {{ task.project.name }}
-                  </span>
-                  <span :class="getPriorityClasses(task.priority)">
-                    {{ task.priority }}
-                  </span>
-                  <span v-if="task.due_date" class="task-due-date">
-                    Due {{ formatRelativeTime(task.due_date) }}
-                  </span>
-                </div>
-              </div>
-              <div class="task-actions">
-                <button
-                  @click="viewTaskDetails(task)"
-                  class="task-action-button"
-                  title="View Details"
-                >
-                  <EyeIcon class="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-
-            <div v-if="filteredTasks.length > 8" class="view-all-tasks">
-              <button
-                @click="viewAllTasks"
-                class="view-all-button"
-              >
-                View {{ filteredTasks.length - 8 }} more tasks
-              </button>
-            </div>
-          </div>
-        </DashboardWidget>
 
         <!-- Recent Feedback -->
         <DashboardWidget
@@ -267,12 +233,28 @@
           </div>
         </DashboardWidget>
       </div>
+
+      <!-- Right Column -->
+      <div class="right-column">
+        <!-- Employee Quick Actions -->
+        <QuickActions
+          :actions="employeeQuickActions"
+          title="Quick Actions"
+          :max-visible="6"
+          @action="handleQuickAction"
+        />
+
+        <!-- My Tasks -->
+        
+
+        
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed, ref, onMounted } from 'vue';
+import { computed, ref, onMounted, onUnmounted } from 'vue';
 import { useAuth } from '@/composables/useAuth.js';
 import DashboardWidget from './DashboardWidget.vue';
 import StatsCard from './StatsCard.vue';
@@ -295,7 +277,10 @@ import {
   DocumentTextIcon,
   UserIcon,
   ChartBarIcon,
-  CogIcon
+  CogIcon,
+  PauseIcon,
+  PlayIcon,
+  BoltIcon
 } from '@heroicons/vue/24/outline';
 
 const props = defineProps({
@@ -332,6 +317,26 @@ const props = defineProps({
   loading: {
     type: Boolean,
     default: false
+  },
+  currentAttendance: {
+    type: Object,
+    default: () => ({
+      clocked_in: false,
+      on_break: false,
+      clock_in_time: null,
+      todays_summary: {
+        total_hours: '0h 0m',
+        break_time: '0h 0m',
+        sessions: 0,
+        clock_ins: 0
+      },
+      recent_activities: [],
+      stats: {
+        weekly_hours: '0h 0m',
+        monthly_hours: '0h 0m',
+        average_daily: '0h 0m'
+      }
+    })
   }
 });
 
@@ -341,36 +346,355 @@ const emit = defineEmits(['clock-in-out', 'toggle-task', 'action', 'view-task'])
 const { user } = useAuth();
 
 // Local state
-const clockingInOut = ref(false);
 const activeTaskFilter = ref('all');
+const clockingInOut = ref(false);
+const currentTime = ref(new Date());
+let timeInterval = null;
 
 // Computed properties
-const userName = computed(() => user.value?.name?.split(' ')[0] || 'Employee');
-
-const welcomeMessage = computed(() => {
-  const hour = new Date().getHours();
-  const messages = {
-    morning: "Ready to tackle today's challenges?",
-    afternoon: "Hope you're having a productive day!",
-    evening: "Wrapping up another great day of work!"
-  };
-  
-  if (hour < 12) return messages.morning;
-  if (hour < 17) return messages.afternoon;
-  return messages.evening;
+const isCurrentlyClockedIn = computed(() => {
+  // Check both clockedIn prop and currentAttendance.clocked_in for consistency
+  return props.clockedIn || props.currentAttendance.clocked_in;
 });
 
 const clockButtonText = computed(() => {
   if (clockingInOut.value) return 'Processing...';
-  return props.clockedIn ? 'Clock Out' : 'Clock In';
+  return isCurrentlyClockedIn.value ? 'Clock Out' : 'Clock In';
 });
 
 const clockButtonClasses = computed(() => [
   'inline-flex items-center space-x-2 px-4 py-2 text-sm font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors',
-  props.clockedIn
-    ? 'text-error-700 bg-error-100 border border-error-300 hover:bg-error-200 focus:ring-error-500'
-    : 'text-success-700 bg-success-100 border border-success-300 hover:bg-success-200 focus:ring-success-500'
+  isCurrentlyClockedIn.value
+    ? 'text-white bg-error-600 border border-error-600 hover:bg-error-700 focus:ring-error-500'
+    : 'text-white bg-success-600 border border-success-600 hover:bg-success-700 focus:ring-success-500'
 ]);
+
+// Real-time progress bar computed properties
+const currentTimeFormatted = computed(() => {
+  return currentTime.value.toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true
+  });
+});
+
+// Workday progress calculation (progress within fixed timeline starting from clock-in time)
+const workdayProgressPercentage = computed(() => {
+  // Only show progress if user is actually clocked in
+  if (!isCurrentlyClockedIn.value) {
+    return 0;
+  }
+  
+  // Get the actual clock-in time from attendance data
+  const clockInTime = props.currentAttendance.clock_in_time;
+  if (!clockInTime) {
+    return 0;
+  }
+  
+  const now = currentTime.value;
+  
+  // Fixed timeline: 8 AM to 5 PM (9 hours total)
+  const timelineStart = new Date(now);
+  timelineStart.setHours(8, 0, 0, 0); // 8:00 AM
+  
+  const timelineEnd = new Date(now);
+  timelineEnd.setHours(17, 0, 0, 0); // 5:00 PM
+  
+  const actualClockIn = new Date(clockInTime);
+  const totalTimelineMs = timelineEnd.getTime() - timelineStart.getTime();
+  
+  // Calculate the clock-in position as a percentage of the timeline
+  const clockInPositionMs = actualClockIn.getTime() - timelineStart.getTime();
+  const clockInPositionPercent = Math.max(0, (clockInPositionMs / totalTimelineMs) * 100);
+  
+  // If current time is before clock-in time, show progress only up to clock-in position
+  if (now < actualClockIn) {
+    return Math.min(100, clockInPositionPercent);
+  }
+  
+  // Calculate current position as percentage of timeline
+  const currentPositionMs = now.getTime() - timelineStart.getTime();
+  const currentPositionPercent = Math.min(100, Math.max(0, (currentPositionMs / totalTimelineMs) * 100));
+  
+  // Return the current position (progress fills from timeline start to current time)
+  // The visual effect will show progress from clock-in position to current position
+  return currentPositionPercent;
+});
+
+const workdayStatus = computed(() => {
+  // If not clocked in, show before-work status
+  if (!isCurrentlyClockedIn.value) {
+    return 'before-work';
+  }
+  
+  const clockInTime = props.currentAttendance.clock_in_time;
+  if (!clockInTime) {
+    return 'before-work';
+  }
+  
+  const now = currentTime.value;
+  const workdayStart = new Date(clockInTime); // Use actual clock-in time
+  const standardWorkHours = 8; // 8-hour workday
+  const workdayEnd = new Date(workdayStart.getTime() + (standardWorkHours * 60 * 60 * 1000)); // 8 hours after clock-in
+  
+  if (now < workdayStart) {
+    return 'before-work';
+  } else if (now > workdayEnd) {
+    return 'after-work';
+  } else {
+    return 'during-work';
+  }
+});
+
+// Actual work progress percentage (based on 8-hour workday)
+const actualWorkProgressPercentage = computed(() => {
+  // Only calculate if user is actually clocked in
+  if (!isCurrentlyClockedIn.value) {
+    return 0;
+  }
+  
+  // Get the actual clock-in time from attendance data
+  const clockInTime = props.currentAttendance.clock_in_time;
+  if (!clockInTime) {
+    return 0;
+  }
+  
+  const now = currentTime.value;
+  const actualClockIn = new Date(clockInTime);
+  
+  // If current time is before clock-in time, show 0%
+  if (now < actualClockIn) {
+    return 0;
+  }
+  
+  // Calculate actual work time elapsed
+  const workTimeElapsedMs = now.getTime() - actualClockIn.getTime();
+  const workTimeElapsedHours = workTimeElapsedMs / (1000 * 60 * 60);
+  
+  // Standard 8-hour workday
+  const standardWorkHours = 8;
+  
+  // Calculate percentage of standard workday completed
+  const percentage = (workTimeElapsedHours / standardWorkHours) * 100;
+  
+  return Math.min(100, Math.max(0, percentage));
+});
+
+const progressLabel = computed(() => {
+  const percentage = Math.round(actualWorkProgressPercentage.value);
+  
+  switch (workdayStatus.value) {
+    case 'before-work':
+      if (!isCurrentlyClockedIn.value) {
+        return 'Ready to clock in';
+      }
+      return 'Work session starting';
+    case 'after-work':
+      return 'Workday complete!';
+    case 'during-work':
+      return `${percentage}% of workday`;
+    default:
+      return `${percentage}% of workday`;
+  }
+});
+
+const workdayStatusText = computed(() => {
+  switch (workdayStatus.value) {
+    case 'before-work':
+      return 'Pre-work';
+    case 'after-work':
+      return 'Complete';
+    case 'during-work':
+      return 'Active';
+    default:
+      return 'Active';
+  }
+});
+
+// Fixed timeline markers (always show 8 AM to 5 PM)
+const timelineMarkers = computed(() => {
+  return [
+    { label: '8 AM', isLunch: false },
+    { label: '9', isLunch: false },
+    { label: '10', isLunch: false },
+    { label: '11', isLunch: false },
+    { label: '12 PM', isLunch: true },
+    { label: '1', isLunch: false },
+    { label: '2', isLunch: false },
+    { label: '3', isLunch: false },
+    { label: '4', isLunch: false },
+    { label: '5 PM', isLunch: false }
+  ];
+});
+
+// Progress bar positioning (start position and width)
+const progressStartPosition = computed(() => {
+  // Only show progress if user is actually clocked in
+  if (!isCurrentlyClockedIn.value) {
+    return 0;
+  }
+  
+  // Get the actual clock-in time from attendance data
+  const clockInTime = props.currentAttendance.clock_in_time;
+  if (!clockInTime) {
+    return 0;
+  }
+  
+  const now = currentTime.value;
+  
+  // Fixed timeline: 8 AM to 5 PM (9 hours total)
+  const timelineStart = new Date(now);
+  timelineStart.setHours(8, 0, 0, 0); // 8:00 AM
+  
+  const timelineEnd = new Date(now);
+  timelineEnd.setHours(17, 0, 0, 0); // 5:00 PM
+  
+  const actualClockIn = new Date(clockInTime);
+  const totalTimelineMs = timelineEnd.getTime() - timelineStart.getTime();
+  
+  // Calculate the clock-in position as a percentage of the timeline
+  const clockInPositionMs = actualClockIn.getTime() - timelineStart.getTime();
+  const clockInPositionPercent = Math.max(0, (clockInPositionMs / totalTimelineMs) * 100);
+  
+  return Math.min(100, clockInPositionPercent);
+});
+
+const progressWidth = computed(() => {
+  // Only show progress if user is actually clocked in
+  if (!isCurrentlyClockedIn.value) {
+    return 0;
+  }
+  
+  // Get the actual clock-in time from attendance data
+  const clockInTime = props.currentAttendance.clock_in_time;
+  if (!clockInTime) {
+    return 0;
+  }
+  
+  const now = currentTime.value;
+  
+  // Fixed timeline: 8 AM to 5 PM (9 hours total)
+  const timelineStart = new Date(now);
+  timelineStart.setHours(8, 0, 0, 0); // 8:00 AM
+  
+  const timelineEnd = new Date(now);
+  timelineEnd.setHours(17, 0, 0, 0); // 5:00 PM
+  
+  const actualClockIn = new Date(clockInTime);
+  const totalTimelineMs = timelineEnd.getTime() - timelineStart.getTime();
+  
+  // If current time is before clock-in time, show no progress width
+  if (now < actualClockIn) {
+    return 0;
+  }
+  
+  // Calculate current position and clock-in position as percentages
+  const currentPositionMs = now.getTime() - timelineStart.getTime();
+  const currentPositionPercent = Math.min(100, Math.max(0, (currentPositionMs / totalTimelineMs) * 100));
+  
+  const clockInPositionMs = actualClockIn.getTime() - timelineStart.getTime();
+  const clockInPositionPercent = Math.max(0, (clockInPositionMs / totalTimelineMs) * 100);
+  
+  // Width is the difference between current position and clock-in position
+  const width = currentPositionPercent - clockInPositionPercent;
+  
+  return Math.max(0, width);
+});
+
+// Pre-work time width (from timeline start to clock-in time)
+const preWorkWidth = computed(() => {
+  // Only show if user is clocked in
+  if (!isCurrentlyClockedIn.value) {
+    return 0;
+  }
+  
+  // Get the actual clock-in time from attendance data
+  const clockInTime = props.currentAttendance.clock_in_time;
+  if (!clockInTime) {
+    return 0;
+  }
+  
+  const now = currentTime.value;
+  
+  // Fixed timeline: 8 AM to 5 PM (9 hours total)
+  const timelineStart = new Date(now);
+  timelineStart.setHours(8, 0, 0, 0); // 8:00 AM
+  
+  const timelineEnd = new Date(now);
+  timelineEnd.setHours(17, 0, 0, 0); // 5:00 PM
+  
+  const actualClockIn = new Date(clockInTime);
+  const totalTimelineMs = timelineEnd.getTime() - timelineStart.getTime();
+  
+  // Calculate the clock-in position as a percentage of the timeline
+  const clockInPositionMs = actualClockIn.getTime() - timelineStart.getTime();
+  const clockInPositionPercent = Math.max(0, (clockInPositionMs / totalTimelineMs) * 100);
+  
+  // Pre-work width is from 0% to clock-in position
+  return Math.min(100, clockInPositionPercent);
+});
+
+// Break time fills (for each break session)
+const breakTimeFills = computed(() => {
+  // Only show if user is clocked in
+  if (!isCurrentlyClockedIn.value) {
+    return [];
+  }
+  
+  // Get break sessions from attendance data
+  const breakSessions = props.currentAttendance.break_sessions || [];
+  if (breakSessions.length === 0) {
+    return [];
+  }
+  
+  const now = currentTime.value;
+  
+  // Fixed timeline: 8 AM to 5 PM (9 hours total)
+  const timelineStart = new Date(now);
+  timelineStart.setHours(8, 0, 0, 0); // 8:00 AM
+  
+  const timelineEnd = new Date(now);
+  timelineEnd.setHours(17, 0, 0, 0); // 5:00 PM
+  
+  const totalTimelineMs = timelineEnd.getTime() - timelineStart.getTime();
+  
+  return breakSessions.map((session, index) => {
+    const breakStart = new Date(session.start);
+    const breakEnd = session.end ? new Date(session.end) : now; // Use current time if break is ongoing
+    
+    // Calculate positions as percentages of the timeline
+    const breakStartMs = breakStart.getTime() - timelineStart.getTime();
+    const breakEndMs = breakEnd.getTime() - timelineStart.getTime();
+    
+    const leftPercent = Math.max(0, (breakStartMs / totalTimelineMs) * 100);
+    const rightPercent = Math.min(100, (breakEndMs / totalTimelineMs) * 100);
+    const widthPercent = Math.max(0, rightPercent - leftPercent);
+    
+    return {
+      left: leftPercent,
+      width: widthPercent,
+      isOngoing: !session.end // Track if this break is currently ongoing
+    };
+  }).filter(session => session.width > 0); // Only return visible sessions
+});
+
+
+
+// Methods for status styling
+const getStatusClasses = () => {
+  const baseClasses = 'text-xs font-medium px-2 py-1 rounded-full';
+  
+  switch (workdayStatus.value) {
+    case 'before-work':
+      return `${baseClasses} bg-neutral-100 text-neutral-600`;
+    case 'after-work':
+      return `${baseClasses} bg-success-100 text-success-700`;
+    case 'during-work':
+      return `${baseClasses} bg-primary-100 text-primary-700`;
+    default:
+      return `${baseClasses} bg-primary-100 text-primary-700`;
+  }
+};
 
 const employeeQuickActions = computed(() => [
   {
@@ -380,22 +704,6 @@ const employeeQuickActions = computed(() => [
     icon: CalendarIcon,
     variant: 'primary',
     route: 'leaves.create'
-  },
-  {
-    id: 'log-timesheet',
-    label: 'Log Time',
-    description: 'Record your working hours',
-    icon: ClockIcon,
-    variant: 'secondary',
-    route: 'timesheets.create'
-  },
-  {
-    id: 'view-payslip',
-    label: 'View Payslip',
-    description: 'Check your latest payslip',
-    icon: DocumentTextIcon,
-    variant: 'info',
-    route: 'payslips.index'
   },
   {
     id: 'update-profile',
@@ -448,14 +756,6 @@ const filteredTasks = computed(() => {
 });
 
 // Methods
-const clockInOut = async () => {
-  clockingInOut.value = true;
-  try {
-    await emit('clock-in-out');
-  } finally {
-    clockingInOut.value = false;
-  }
-};
 
 const handleTimelineAction = (data) => {
   emit('action', { type: 'timeline', data });
@@ -549,8 +849,47 @@ const formatRelativeTime = (date) => {
   return `in ${days}d`;
 };
 
+// Clock In/Out and Break Methods
+const handleClockInOut = async () => {
+  clockingInOut.value = true;
+  try {
+    emit('clock-in-out');
+  } finally {
+    clockingInOut.value = false;
+  }
+};
+
+const handleTakeBreak = async () => {
+  try {
+    emit('action', { type: 'take-break' });
+  } catch (error) {
+    console.error('Take break failed:', error);
+  }
+};
+
+const handleEndBreak = async () => {
+  try {
+    emit('action', { type: 'end-break' });
+  } catch (error) {
+    console.error('End break failed:', error);
+  }
+};
+
+
+
 onMounted(() => {
   // Initialize dashboard data if needed
+  // Start real-time clock update with more frequent updates for smoother progress
+  timeInterval = setInterval(() => {
+    currentTime.value = new Date();
+  }, 500); // Update every 500ms for smoother real-time feel
+});
+
+onUnmounted(() => {
+  // Clean up interval when component is destroyed
+  if (timeInterval) {
+    clearInterval(timeInterval);
+  }
 });
 </script>
 
@@ -559,29 +898,302 @@ onMounted(() => {
   @apply space-y-8;
 }
 
-.welcome-section {
-  @apply flex items-center justify-between mb-8;
+/* Motivational Message Block - HCI Principle: Clear Visual Hierarchy */
+.motivation-block {
+  @apply flex items-center justify-between p-6 bg-gradient-to-r from-primary-50 to-primary-100 rounded-lg border border-primary-200 mb-4;
 }
 
-.welcome-content {
+.motivation-content {
   @apply flex-1;
 }
 
-.welcome-title {
-  @apply text-3xl font-bold text-neutral-900 mb-2;
+.motivation-text {
+  @apply text-lg font-medium text-primary-900;
 }
 
-.welcome-subtitle {
-  @apply text-lg text-neutral-600;
-}
-
-.welcome-actions {
+.quick-clock-actions {
   @apply flex items-center space-x-3;
 }
 
-.stats-grid {
-  @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8;
+/* Time Progress Block - HCI Principle: Focused Information Display */
+.time-progress-block {
+  @apply p-4 bg-white rounded-lg border border-neutral-200 mb-8 shadow-sm;
 }
+
+/* Horizontal Clock Container */
+.horizontal-clock-container {
+  @apply relative;
+}
+
+/* Time Markers - Visual Clock Indicators */
+.time-markers {
+  @apply flex justify-between items-center mb-2 relative;
+}
+
+.time-marker {
+  @apply flex flex-col items-center;
+}
+
+.marker-line {
+  @apply w-px h-4 bg-neutral-300 mb-1;
+}
+
+.start-marker .marker-line {
+  @apply bg-success-400;
+}
+
+.lunch-marker .marker-line {
+  @apply bg-warning-400;
+}
+
+.end-marker .marker-line {
+  @apply bg-error-400;
+}
+
+.regular-marker .marker-line {
+  @apply bg-neutral-300;
+}
+
+.marker-time {
+  @apply text-xs font-medium text-neutral-600;
+}
+
+/* Enhanced Progress Bar - Clean, cohesive design */
+.time-progress-bar {
+  @apply w-full h-5 bg-neutral-100 rounded-lg mb-3 relative;
+  border: 1px solid #e5e7eb;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: hidden; /* Clean edges */
+}
+
+/* Pre-work time fill (before clock-in) - Seamless integration */
+.pre-work-fill {
+  @apply absolute top-0 left-0 h-full;
+  background: linear-gradient(135deg, #fee2e2, #fca5a5, #f87171);
+  position: relative;
+  z-index: 1;
+}
+
+/* Add subtle pattern overlay for pre-work time */
+.pre-work-fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 2px,
+    rgba(255, 255, 255, 0.1) 2px,
+    rgba(255, 255, 255, 0.1) 4px
+  );
+  z-index: 2;
+}
+
+/* Break time fill - Orange/amber color for break periods */
+.break-time-fill {
+  @apply absolute top-0 h-full;
+  background: linear-gradient(135deg, #f59e0b, #f97316, #fb923c) !important;
+  position: absolute !important;
+  z-index: 15 !important;
+  min-width: 3px !important; /* Ensure minimum visibility for short breaks */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Add subtle pattern overlay for break time */
+.break-time-fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 2px,
+    rgba(255, 255, 255, 0.2) 2px,
+    rgba(255, 255, 255, 0.2) 4px
+  );
+  z-index: 16;
+}
+
+/* Work progress fill - Clean, modern design with pattern */
+.work-progress-fill {
+  @apply absolute top-0 h-full;
+  background: linear-gradient(135deg, #059669, #10b981, #34d399) !important;
+  position: absolute !important;
+  z-index: 20 !important;
+  border-radius: 0 6px 6px 0; /* Only round the right side */
+  min-width: 8px !important; /* Ensure minimum visibility */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Add subtle pattern overlay for work progress */
+.work-progress-fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 2px,
+    rgba(255, 255, 255, 0.15) 2px,
+    rgba(255, 255, 255, 0.15) 4px
+  );
+  z-index: 4;
+}
+
+/* Work shimmer - Subtle animation for active work */
+.work-shimmer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(255, 255, 255, 0.3) 50%, 
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: workShimmer 2.5s infinite ease-in-out;
+  z-index: 4;
+}
+
+@keyframes workShimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Current Time Indicator - Moving Dot */
+.current-time-indicator {
+  @apply absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-1/2;
+}
+
+.time-dot {
+  @apply w-3 h-3 bg-white border-2 border-primary-600 rounded-full shadow-lg;
+  animation: pulse 2s infinite;
+}
+
+.time-tooltip {
+  @apply absolute -top-8 left-1/2 transform -translate-x-1/2 bg-neutral-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap opacity-0 transition-opacity duration-200;
+}
+
+.current-time-indicator:hover .time-tooltip {
+  @apply opacity-100;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+/* Background Shimmer - Always visible subtle animation */
+.progress-bar-shimmer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(45deg, 
+    transparent 30%, 
+    rgba(255, 255, 255, 0.3) 50%, 
+    transparent 70%
+  );
+  background-size: 200% 100%;
+  animation: backgroundShimmer 3s infinite linear;
+  z-index: 1;
+}
+
+/* Active Shimmer - Bright sweeping shimmer during work hours */
+.active-shimmer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    transparent 40%, 
+    rgba(255, 255, 255, 0.9) 50%, 
+    transparent 60%, 
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: activeShimmer 2s infinite linear;
+  z-index: 2;
+}
+
+@keyframes backgroundShimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes activeShimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Enhanced Progress Information */
+.time-progress-info {
+  @apply flex items-center justify-between;
+}
+
+.progress-left {
+  @apply flex items-center space-x-3;
+}
+
+.progress-right {
+  @apply flex items-center;
+}
+
+.progress-time {
+  @apply text-sm font-semibold text-neutral-800;
+}
+
+.progress-status {
+  @apply text-xs font-medium;
+}
+
+.progress-percentage {
+  @apply text-sm font-medium text-primary-600;
+}
+
+.break-button {
+  @apply inline-flex items-center space-x-2 px-4 py-2 text-sm font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-white bg-warning-600 border border-warning-600 hover:bg-warning-700 focus:ring-warning-500;
+}
+
+.end-break-button {
+  @apply inline-flex items-center space-x-2 px-4 py-2 text-sm font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-white bg-info-600 border border-info-600 hover:bg-info-700 focus:ring-info-500;
+}
+
+
+
+
 
 .dashboard-content {
   @apply grid grid-cols-1 lg:grid-cols-3 gap-8;
@@ -760,19 +1372,33 @@ onMounted(() => {
     @apply grid-cols-1;
   }
   
-  .stats-grid {
-    @apply grid-cols-1 md:grid-cols-2;
-  }
+
 }
 
 @media (max-width: 640px) {
-  .welcome-section {
-    @apply flex-col items-start space-y-4;
+  /* Motivational Block - Mobile Responsive */
+  .motivation-block {
+    @apply flex-col items-start space-y-4 p-4;
   }
   
-  .stats-grid {
-    @apply grid-cols-1;
+  .quick-clock-actions {
+    @apply w-full justify-center;
   }
+  
+  /* Time Progress Block - Mobile Responsive */
+  .time-progress-block {
+    @apply p-3;
+  }
+  
+  .time-progress-bar {
+    @apply h-2 mb-2;
+  }
+  
+  .time-progress-info {
+    @apply text-xs;
+  }
+  
+
   
   .schedule-item {
     @apply flex-col space-y-3;

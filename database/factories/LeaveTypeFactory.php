@@ -16,9 +16,25 @@ class LeaveTypeFactory extends Factory
      */
     public function definition(): array
     {
-        return [
-            'name' => $this->faker->randomElement(['Annual', 'Sick', 'Maternity', 'Paternity', 'Unpaid']),
-            'quota' => $this->faker->numberBetween(5, 30),
+        static $leaveTypes = [
+            ['name' => 'Annual Leave', 'quota' => 21],
+            ['name' => 'Sick Leave', 'quota' => 10],
+            ['name' => 'Personal Leave', 'quota' => 5],
+            ['name' => 'Maternity Leave', 'quota' => 90],
+            ['name' => 'Paternity Leave', 'quota' => 14],
+            ['name' => 'Study Leave', 'quota' => 10],
+            ['name' => 'Emergency Leave', 'quota' => 3],
         ];
+        
+        static $index = 0;
+        
+        if ($index >= count($leaveTypes)) {
+            $index = 0; // Reset if we've used all types
+        }
+        
+        $leaveType = $leaveTypes[$index];
+        $index++;
+        
+        return $leaveType;
     }
 }

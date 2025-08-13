@@ -11,6 +11,8 @@
         variant="featured"
         :trend="stats.employeeTrend"
         :loading="loading"
+        :clickable="true"
+        route="employees.index"
       />
       
       <StatsCard
@@ -20,6 +22,8 @@
         icon-color="secondary"
         :trend="stats.departmentTrend"
         :loading="loading"
+        :clickable="true"
+        route="departments.index"
       />
       
       <StatsCard
@@ -29,6 +33,8 @@
         icon-color="warning"
         :trend="stats.leaveTrend"
         :loading="loading"
+        :clickable="true"
+        route="leaves.index"
       />
       
       <StatsCard
@@ -38,6 +44,8 @@
         icon-color="success"
         :trend="stats.projectTrend"
         :loading="loading"
+        :clickable="true"
+        route="projects.index"
       />
     </div>
 

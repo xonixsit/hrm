@@ -19,8 +19,12 @@ class DemoDataSeeder extends Seeder
 {
     public function run(): void
     {
-        Department::factory(5)->create();
-        LeaveType::factory(5)->create();
+        // Use dedicated seeder for departments to avoid duplicates
+        $this->call(DepartmentSeeder::class);
+        
+        // Use dedicated seeder for leave types to avoid duplicates
+        $this->call(LeaveTypeSeeder::class);
+        
         Project::factory(5)->create();
         Task::factory(10)->create();
         Employee::factory(20)->create();

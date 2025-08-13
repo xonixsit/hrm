@@ -1,10 +1,11 @@
 <template>
   <DashboardWidget
-    :class="['stats-card', cardClass]"
+    :class="['stats-card', cardClass, { 'cursor-pointer hover:shadow-lg transition-shadow': clickable }]"
     :interactive="interactive"
     :loading="loading"
     padding="md"
     background="white"
+    @click="handleClick"
   >
     <div class="stats-content">
       <!-- Icon -->
@@ -28,12 +29,21 @@
         </div>
 
         <!-- Trend -->
-        <div v-if="trend !== null" class="stats-trend">
-          <div :class="trendClasses">
-            <component :is="trendIcon" class="w-4 h-4" />
-            <span class="text-sm font-medium">{{ Math.abs(trend) }}%</span>
-          </div>
-          <span class="text-sm text-neutral-500">{{ trendLabel }}</span>
+        <div v-if="trend !== null" class="trend-inline">
+          <component 
+            :is="trendIcon" 
+            :class="[
+              'trend-icon',
+              trend >= 0 ? 'text-success-600' : 'text-error-600'
+            ]" 
+          />
+          <span 
+            :class="[
+              'trend-percentage',
+              trend >= 0 ? 'text-success-600' : 'text-error-600'
+            ]"
+          >{{ Math.abs(trend) }}%</span>
+          <span class="trend-label">{{ trendLabel }}</span>
         </div>
       </div>
     </div>
@@ -47,7 +57,9 @@
 
 <script setup>
 import { computed } from 'vue';
+import { router } from '@inertiajs/vue3';
 import DashboardWidget from './DashboardWidget.vue';
+import { ArrowTrendingUpIcon, ArrowTrendingDownIcon } from '@heroicons/vue/24/outline';
 
 const props = defineProps({
   // Stats data
@@ -118,6 +130,17 @@ const props = defineProps({
     type: String,
     default: 'default',
     validator: (value) => ['default', 'compact', 'featured'].includes(value)
+  },
+
+  // Navigation
+  route: {
+    type: String,
+    default: null
+  },
+
+  clickable: {
+    type: Boolean,
+    default: false
   }
 });
 
@@ -192,19 +215,10 @@ const valueClasses = computed(() => {
 // Trend icon based on positive/negative trend
 const trendIcon = computed(() => {
   if (props.trend === null) return null;
-  return props.trend >= 0 ? 'TrendingUpIcon' : 'TrendingDownIcon';
+  return props.trend >= 0 ? ArrowTrendingUpIcon : ArrowTrendingDownIcon;
 });
 
-// Trend classes
-const trendClasses = computed(() => {
-  if (props.trend === null) return '';
-  
-  const isPositive = props.trend >= 0;
-  return [
-    'flex items-center space-x-1',
-    isPositive ? 'text-success-600' : 'text-error-600'
-  ];
-});
+
 
 // Card classes based on variant
 const cardClass = computed(() => {
@@ -215,6 +229,15 @@ const cardClass = computed(() => {
   };
   return variants[props.variant];
 });
+
+// Click handler
+const handleClick = () => {
+  if (!props.clickable || props.loading) return;
+  
+  if (props.route) {
+    router.visit(route(props.route));
+  }
+};
 </script>
 
 <style scoped>
@@ -246,9 +269,23 @@ const cardClass = computed(() => {
   @apply text-sm font-medium text-neutral-600 mb-2;
 }
 
-.stats-trend {
-  @apply flex items-center justify-between;
+.trend-inline {
+  @apply inline-flex items-center;
 }
+
+.trend-icon {
+  @apply w-4 h-4 mr-1;
+}
+
+.trend-percentage {
+  @apply text-sm font-medium mr-1;
+}
+
+.trend-label {
+  @apply text-sm text-neutral-500;
+}
+
+
 
 .stats-extra {
   @apply mt-4 pt-4 border-t border-neutral-200;

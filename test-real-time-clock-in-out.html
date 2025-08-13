@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-time Clock In/Out Module Test</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .clock-in-out-widget {
+            background: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e5e7eb;
+            padding: 1.5rem;
+            max-width: 400px;
+            margin: 2rem auto;
+            position: relative;
+        }
+        
+        .connection-status {
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .connection-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.875rem;
+        }
+        
+        .connection-text {
+            font-weight: 500;
+        }
+        
+        .last-update {
+            font-size: 0.75rem;
+            color: #6b7280;
+        }
+        
+        .clock-display {
+            text-align: center;
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .time-text {
+            font-size: 2.25rem;
+            font-weight: bold;
+            color: #111827;
+            font-family: monospace;
+        }
+        
+        .date-text {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-top: 0.25rem;
+        }
+        
+        .status-section {
+            margin-bottom: 1.5rem;
+        }
+        
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+        
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .status-clocked-in {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+        
+        .status-on-break {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+        
+        .status-clocked-out {
+            background-color: #f3f4f6;
+            color: #4b5563;
+        }
+        
+        .work-duration {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+        
+        .work-progress {
+            margin-top: 1rem;
+            padding: 0.75rem;
+            background-color: #f9fafb;
+            border-radius: 0.5rem;
+        }
+        
+        .progress-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            background-color: #e5e7eb;
+            border-radius: 9999px;
+            height: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .progress-fill {
+            height: 0.5rem;
+            border-radius: 9999px;
+            transition: all 0.3s;
+        }
+        
+        .progress-fill.bg-green { background-color: #10b981; }
+        .progress-fill.bg-blue { background-color: #3b82f6; }
+        .progress-fill.bg-yellow { background-color: #f59e0b; }
+        .progress-fill.bg-gray { background-color: #9ca3af; }
+        
+        .progress-details {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: #6b7280;
+        }
+        
+        .todays-summary {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            padding: 1rem;
+            background: linear-gradient(to right, #f9fafb, #eff6ff);
+            border-radius: 0.5rem;
+            border: 1px solid #e5e7eb;
+            margin-bottom: 1rem;
+        }
+        
+        .summary-item {
+            text-align: center;
+        }
+        
+        .summary-label {
+            display: block;
+            font-size: 0.75rem;
+            color: #6b7280;
+            margin-bottom: 0.25rem;
+        }
+        
+        .summary-value {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #111827;
+        }
+        
+        .productivity-section {
+            margin-top: 1rem;
+            padding: 0.75rem;
+            background: linear-gradient(to right, #eff6ff, #f3e8ff);
+            border-radius: 0.5rem;
+            border: 1px solid #dbeafe;
+        }
+        
+        .productivity-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .productivity-score {
+            font-size: 0.875rem;
+            font-weight: bold;
+            color: #2563eb;
+        }
+        
+        .action-section {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            border-radius: 0.5rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .btn-primary {
+            background-color: #10b981;
+            color: white;
+        }
+        
+        .btn-primary:hover:not(:disabled) {
+            background-color: #059669;
+        }
+        
+        .btn-danger {
+            background-color: #dc2626;
+            color: white;
+        }
+        
+        .btn-danger:hover:not(:disabled) {
+            background-color: #b91c1c;
+        }
+        
+        .btn-secondary {
+            background-color: white;
+            color: #374151;
+            border: 1px solid #d1d5db;
+        }
+        
+        .btn-secondary:hover:not(:disabled) {
+            background-color: #f9fafb;
+        }
+        
+        .quick-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            border-top: 1px solid #e5e7eb;
+            padding-top: 1rem;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 1.125rem;
+            font-weight: bold;
+            color: #111827;
+        }
+        
+        .stat-label {
+            font-size: 0.75rem;
+            color: #6b7280;
+            margin-top: 0.25rem;
+        }
+        
+        .widget-actions {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .widget-action-btn {
+            padding: 0.5rem;
+            color: #6b7280;
+            background: none;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .widget-action-btn:hover {
+            color: #374151;
+            background-color: #f3f4f6;
+        }
+        
+        .settings-panel {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: white;
+            border-radius: 0.75rem;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            padding: 1rem;
+            z-index: 10;
+        }
+        
+        .settings-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .settings-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #111827;
+        }
+        
+        .close-settings {
+            padding: 0.25rem;
+            color: #6b7280;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .setting-item {
+            margin-bottom: 1rem;
+        }
+        
+        .setting-label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+        
+        .setting-input {
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+        }
+        
+        .setting-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            color: #374151;
+            cursor: pointer;
+        }
+        
+        .icon {
+            width: 1rem;
+            height: 1rem;
+        }
+        
+        .icon-lg {
+            width: 1.25rem;
+            height: 1.25rem;
+        }
+        
+        .text-green { color: #10b981; }
+        .text-red { color: #dc2626; }
+        .text-yellow { color: #f59e0b; }
+        
+        .animate-spin {
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .notification {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            padding: 1rem;
+            max-width: 300px;
+            z-index: 50;
+        }
+        
+        .notification.success { border-left: 4px solid #10b981; }
+        .notification.warning { border-left: 4px solid #f59e0b; }
+        .notification.error { border-left: 4px solid #dc2626; }
+        .notification.info { border-left: 4px solid #3b82f6; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen py-8">
+    <div id="app">
+        <div class="container mx-auto px-4">
+            <h1 class="text-3xl font-bold text-center mb-8 text-gray-900">
+                Real-time Clock In/Out Module Test
+            </h1>
+            
+            <clock-in-out-widget
+                :show-analytics="showAnalytics"
+                :show-notifications="showNotifications"
+                :daily-goal="dailyGoal"
+                :break-goal="breakGoal"
+                :location-enabled="locationEnabled"
+                @clock-in-out="handleClockInOut"
+                @take-break="handleTakeBreak"
+                @verify-location="handleVerifyLocation"
+                @settings-change="handleSettingsChange"
+            ></clock-in-out-widget>
+            
+            <div class="max-w-md mx-auto mt-8 p-4 bg-white rounded-lg shadow">
+                <h3 class="text-lg font-semibold mb-4">Test Controls</h3>
+                <div class="space-y-3">
+                    <label class="flex items-center space-x-2">
+                        <input type="checkbox" v-model="showAnalytics" class="rounded">
+                        <span>Show Analytics</span>
+                    </label>
+                    <label class="flex items-center space-x-2">
+                        <input type="checkbox" v-model="showNotifications" class="rounded">
+                        <span>Show Notifications</span>
+                    </label>
+                    <label class="flex items-center space-x-2">
+                        <input type="checkbox" v-model="locationEnabled" class="rounded">
+                        <span>Location Enabled</span>
+                    </label>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Daily Goal (hours)</label>
+                        <input type="number" v-model.number="dailyGoal" min="1" max="24" class="w-full px-3 py-2 border rounded">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Break Goal (hours)</label>
+                        <input type="number" v-model.number="breakGoal" min="0" max="8" step="0.5" class="w-full px-3 py-2 border rounded">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="max-w-md mx-auto mt-4 p-4 bg-white rounded-lg shadow">
+                <h3 class="text-lg font-semibold mb-4">Event Log</h3>
+                <div class="space-y-2 max-h-40 overflow-y-auto">
+                    <div v-for="event in eventLog" :key="event.id" class="text-sm p-2 bg-gray-50 rounded">
+                        <span class="font-medium">{{ event.type }}:</span>
+                        <span class="text-gray-600">{{ event.message }}</span>
+                        <span class="text-xs text-gray-400 block">{{ event.timestamp }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Notifications -->
+        <div v-for="notification in notifications" :key="notification.id" 
+             :class="['notification', notification.type]">
+            <div class="font-semibold">{{ notification.title }}</div>
+            <div class="text-sm text-gray-600 mt-1">{{ notification.message }}</div>
+        </div>
+    </div>
+
+    <script>
+        const { createApp, ref, computed, onMounted, onUnmounted } = Vue;
+
+        // Mock attendance composable
+        function useAttendanceRealTime(userId, options = {}) {
+            const clockedIn = ref(false);
+            const onBreak = ref(false);
+            const clockInTime = ref(null);
+            const loading = ref(false);
+            const error = ref(null);
+            
+            // Real-time state
+            const isConnected = ref(true);
+            const connectionStatus = ref('connected');
+            const lastUpdate = ref(null);
+            const realTimeEnabled = ref(true);
+            const notificationsEnabled = ref(options.notificationsEnabled ?? true);
+            
+            // Analytics
+            const dailyGoal = ref(options.dailyGoal || 8);
+            const breakGoal = ref(options.breakGoal || 1);
+            const productivityScore = ref(85);
+            
+            const workProgress = computed(() => {
+                if (!clockedIn.value || !clockInTime.value) {
+                    return { percentage: 0, hoursWorked: 0, hoursRemaining: dailyGoal.value };
+                }
+                
+                const clockIn = new Date(clockInTime.value);
+                const now = new Date();
+                const hoursWorked = (now - clockIn) / (1000 * 60 * 60);
+                const percentage = Math.min((hoursWorked / dailyGoal.value) * 100, 100);
+                const hoursRemaining = Math.max(dailyGoal.value - hoursWorked, 0);
+                
+                return {
+                    percentage: Math.round(percentage),
+                    hoursWorked: Math.round(hoursWorked * 100) / 100,
+                    hoursRemaining: Math.round(hoursRemaining * 100) / 100
+                };
+            });
+            
+            const breakProgress = ref({ percentage: 30, hoursUsed: 0.3, hoursRemaining: 0.7 });
+            const workEfficiency = ref(92);
+            const estimatedEndTime = ref('5:30 PM');
+            const overtimeStatus = ref({ status: 'normal', message: 'Within normal hours' });
+            
+            // Summary data
+            const todaysSummary = ref({ totalHours: '4h 48m', breakTime: '18m', sessions: 2 });
+            const recentActivities = ref([
+                { id: 1, type: 'clock-in', action: 'Clocked in', time: new Date().toISOString() }
+            ]);
+            const weeklyHours = ref('32h 15m');
+            const monthlyHours = ref('128h 30m');
+            const averageDaily = ref('8h 5m');
+            
+            // Real-time work duration that updates every second
+            const realTimeWorkDuration = ref('0h 0m 0s');
+            let workDurationInterval = null;
+            
+            const updateWorkDuration = () => {
+                if (clockedIn.value && clockInTime.value) {
+                    const clockIn = new Date(clockInTime.value);
+                    const now = new Date();
+                    const diffMs = now - clockIn;
+                    
+                    const hours = Math.floor(diffMs / (1000 * 60 * 60));
+                    const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
+                    
+                    realTimeWorkDuration.value = `${hours}h ${minutes}m ${seconds}s`;
+                } else {
+                    realTimeWorkDuration.value = '0h 0m 0s';
+                }
+            };
+            
+            const workDuration = computed(() => realTimeWorkDuration.value);
+            
+            // Location
+            const locationEnabled = ref(true);
+            const locationVerified = ref(true);
+            const currentLocation = ref(null);
+            
+            // Methods
+            const clockIn = async () => {
+                loading.value = true;
+                try {
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    clockedIn.value = true;
+                    clockInTime.value = new Date().toISOString();
+                    onBreak.value = false;
+                    
+                    recentActivities.value.unshift({
+                        id: Date.now(),
+                        type: 'clock-in',
+                        action: 'Clocked in',
+                        time: new Date().toISOString()
+                    });
+                    
+                    lastUpdate.value = new Date().toISOString();
+                } finally {
+                    loading.value = false;
+                }
+            };
+            
+            const clockOut = async () => {
+                loading.value = true;
+                try {
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    clockedIn.value = false;
+                    clockInTime.value = null;
+                    onBreak.value = false;
+                    
+                    recentActivities.value.unshift({
+                        id: Date.now(),
+                        type: 'clock-out',
+                        action: 'Clocked out',
+                        time: new Date().toISOString()
+                    });
+                    
+                    lastUpdate.value = new Date().toISOString();
+                } finally {
+                    loading.value = false;
+                }
+            };
+            
+            const startBreak = async () => {
+                loading.value = true;
+                try {
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    onBreak.value = true;
+                    
+                    recentActivities.value.unshift({
+                        id: Date.now(),
+                        type: 'break-start',
+                        action: 'Started break',
+                        time: new Date().toISOString()
+                    });
+                    
+                    lastUpdate.value = new Date().toISOString();
+                } finally {
+                    loading.value = false;
+                }
+            };
+            
+            const endBreak = async () => {
+                loading.value = true;
+                try {
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    onBreak.value = false;
+                    
+                    recentActivities.value.unshift({
+                        id: Date.now(),
+                        type: 'break-end',
+                        action: 'Ended break',
+                        time: new Date().toISOString()
+                    });
+                    
+                    lastUpdate.value = new Date().toISOString();
+                } finally {
+                    loading.value = false;
+                }
+            };
+            
+            const getCurrentLocation = async () => {
+                return new Promise((resolve) => {
+                    setTimeout(() => {
+                        resolve({
+                            latitude: 40.7128,
+                            longitude: -74.0060,
+                            accuracy: 10,
+                            timestamp: new Date().toISOString()
+                        });
+                    }, 1000);
+                });
+            };
+            
+            const refreshRealTimeData = () => {
+                lastUpdate.value = new Date().toISOString();
+            };
+            
+            const setDailyGoal = (hours) => {
+                dailyGoal.value = hours;
+            };
+            
+            const setBreakGoal = (hours) => {
+                breakGoal.value = hours;
+            };
+            
+            const toggleRealTime = (enabled) => {
+                realTimeEnabled.value = enabled;
+            };
+            
+            const toggleNotifications = (enabled) => {
+                notificationsEnabled.value = enabled;
+            };
+            
+            const updateAnalytics = () => {
+                // Update analytics
+            };
+            
+            return {
+                // Base attendance state
+                clockedIn,
+                onBreak,
+                clockInTime,
+                loading,
+                error,
+                
+                // Real-time state
+                isConnected,
+                connectionStatus,
+                lastUpdate,
+                realTimeEnabled,
+                notificationsEnabled,
+                
+                // Analytics
+                dailyGoal,
+                breakGoal,
+                productivityScore,
+                workProgress,
+                breakProgress,
+                workEfficiency,
+                estimatedEndTime,
+                overtimeStatus,
+                
+                // Summary data
+                todaysSummary,
+                recentActivities,
+                weeklyHours,
+                monthlyHours,
+                averageDaily,
+                workDuration,
+                
+                // Location
+                locationEnabled,
+                locationVerified,
+                currentLocation,
+                
+                // Methods
+                clockIn,
+                clockOut,
+                startBreak,
+                endBreak,
+                getCurrentLocation,
+                refreshRealTimeData,
+                setDailyGoal,
+                setBreakGoal,
+                toggleRealTime,
+                toggleNotifications,
+                updateAnalytics
+            };
+        }
+
+        // Clock In/Out Widget Component
+        const ClockInOutWidget = {
+            props: {
+                showAnalytics: { type: Boolean, default: true },
+                showNotifications: { type: Boolean, default: true },
+                dailyGoal: { type: Number, default: 8 },
+                breakGoal: { type: Number, default: 1 },
+                locationEnabled: { type: Boolean, default: true }
+            },
+            emits: ['clock-in-out', 'take-break', 'verify-location', 'settings-change'],
+            setup(props, { emit }) {
+                const attendance = useAttendanceRealTime(1, {
+                    dailyGoal: props.dailyGoal,
+                    breakGoal: props.breakGoal,
+                    notificationsEnabled: props.showNotifications
+                });
+                
+                const currentTime = ref('');
+                const currentDate = ref('');
+                const timezone = ref('');
+                const showSettings = ref(false);
+                const unreadNotifications = ref(0);
+                
+                let timeInterval = null;
+                
+                const updateTime = () => {
+                    const now = new Date();
+                    currentTime.value = now.toLocaleTimeString('en-US', {
+                        hour12: false,
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit'
+                    });
+                    currentDate.value = now.toLocaleDateString('en-US', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+                    timezone.value = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                };
+                
+                const statusText = computed(() => {
+                    if (attendance.onBreak.value) return 'On Break';
+                    if (attendance.clockedIn.value) return 'Clocked In';
+                    return 'Clocked Out';
+                });
+                
+                const statusClasses = computed(() => {
+                    if (attendance.clockedIn.value && !attendance.onBreak.value) return 'status-clocked-in';
+                    if (attendance.onBreak.value) return 'status-on-break';
+                    return 'status-clocked-out';
+                });
+                
+                const clockButtonText = computed(() => {
+                    if (attendance.loading.value) return 'Processing...';
+                    return attendance.clockedIn.value ? 'Clock Out' : 'Clock In';
+                });
+                
+                const clockButtonClass = computed(() => {
+                    return attendance.clockedIn.value ? 'btn btn-danger' : 'btn btn-primary';
+                });
+                
+                const connectionStatusClass = computed(() => {
+                    return attendance.isConnected.value ? 'text-green' : 'text-red';
+                });
+                
+                const connectionStatusText = computed(() => {
+                    return attendance.isConnected.value ? 'Connected' : 'Disconnected';
+                });
+                
+                const progressBarClass = computed(() => {
+                    const percentage = attendance.workProgress.value.percentage;
+                    if (percentage >= 100) return 'progress-fill bg-green';
+                    if (percentage >= 75) return 'progress-fill bg-blue';
+                    if (percentage >= 50) return 'progress-fill bg-yellow';
+                    return 'progress-fill bg-gray';
+                });
+                
+                const handleClockInOut = async () => {
+                    try {
+                        if (attendance.clockedIn.value) {
+                            await attendance.clockOut();
+                        } else {
+                            await attendance.clockIn();
+                        }
+                        emit('clock-in-out');
+                    } catch (error) {
+                        console.error('Clock in/out failed:', error);
+                    }
+                };
+                
+                const handleBreak = async () => {
+                    try {
+                        if (attendance.onBreak.value) {
+                            await attendance.endBreak();
+                        } else {
+                            await attendance.startBreak();
+                        }
+                        emit('take-break');
+                    } catch (error) {
+                        console.error('Break action failed:', error);
+                    }
+                };
+                
+                const verifyLocation = async () => {
+                    try {
+                        const location = await attendance.getCurrentLocation();
+                        emit('verify-location', location);
+                    } catch (error) {
+                        console.error('Location verification failed:', error);
+                    }
+                };
+                
+                const formatTime = (timeString) => {
+                    const time = new Date(timeString);
+                    return time.toLocaleTimeString('en-US', {
+                        hour: 'numeric',
+                        minute: '2-digit',
+                        hour12: true
+                    });
+                };
+                
+                const formatRelativeTime = (dateString) => {
+                    const now = new Date();
+                    const date = new Date(dateString);
+                    const diffInMinutes = Math.floor((now - date) / (1000 * 60));
+                    
+                    if (diffInMinutes < 1) return 'just now';
+                    if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+                    
+                    const diffInHours = Math.floor(diffInMinutes / 60);
+                    if (diffInHours < 24) return `${diffInHours}h ago`;
+                    
+                    const diffInDays = Math.floor(diffInHours / 24);
+                    return `${diffInDays}d ago`;
+                };
+                
+                const updateDailyGoal = (value) => {
+                    const hours = parseFloat(value);
+                    if (hours >= 1 && hours <= 24) {
+                        attendance.setDailyGoal(hours);
+                        emit('settings-change', { dailyGoal: hours });
+                    }
+                };
+                
+                const updateBreakGoal = (value) => {
+                    const hours = parseFloat(value);
+                    if (hours >= 0 && hours <= 8) {
+                        attendance.setBreakGoal(hours);
+                        emit('settings-change', { breakGoal: hours });
+                    }
+                };
+                
+                const toggleRealTime = (enabled) => {
+                    attendance.toggleRealTime(enabled);
+                    emit('settings-change', { realTimeEnabled: enabled });
+                };
+                
+                const toggleNotifications = (enabled) => {
+                    attendance.toggleNotifications(enabled);
+                    emit('settings-change', { notificationsEnabled: enabled });
+                };
+                
+                onMounted(() => {
+                    updateTime();
+                    timeInterval = setInterval(updateTime, 1000);
+                    
+                    // Start work duration interval
+                    workDurationInterval = setInterval(updateWorkDuration, 1000);
+                });
+                
+                onUnmounted(() => {
+                    if (timeInterval) clearInterval(timeInterval);
+                    if (workDurationInterval) clearInterval(workDurationInterval);
+                });
+                
+                return {
+                    attendance,
+                    currentTime,
+                    currentDate,
+                    timezone,
+                    showSettings,
+                    unreadNotifications,
+                    statusText,
+                    statusClasses,
+                    clockButtonText,
+                    clockButtonClass,
+                    connectionStatusClass,
+                    connectionStatusText,
+                    progressBarClass,
+                    handleClockInOut,
+                    handleBreak,
+                    verifyLocation,
+                    formatTime,
+                    formatRelativeTime,
+                    updateDailyGoal,
+                    updateBreakGoal,
+                    toggleRealTime,
+                    toggleNotifications
+                };
+            },
+            template: `
+                <div class="clock-in-out-widget">
+                    <!-- Widget Actions -->
+                    <div class="widget-actions">
+                        <button @click="showSettings = !showSettings" class="widget-action-btn" title="Settings">
+                            ⚙️
+                        </button>
+                        <button v-if="showNotifications" class="widget-action-btn" title="Notifications">
+                            🔔
+                            <span v-if="unreadNotifications > 0" class="notification-badge">{{ unreadNotifications }}</span>
+                        </button>
+                    </div>
+
+                    <!-- Real-time Clock Display -->
+                    <div class="clock-display">
+                        <div class="time-text">{{ currentTime }}</div>
+                        <div class="date-text">{{ currentDate }}</div>
+                        <div class="text-xs text-gray-500 mt-1">{{ timezone }}</div>
+                    </div>
+
+                    <!-- Connection Status -->
+                    <div v-if="showAnalytics" class="connection-status">
+                        <div class="connection-indicator">
+                            <div class="flex items-center gap-2">
+                                <span :class="['icon', connectionStatusClass]">📶</span>
+                                <span class="connection-text">{{ connectionStatusText }}</span>
+                            </div>
+                            <div v-if="attendance.lastUpdate.value" class="last-update">
+                                Last update: {{ formatRelativeTime(attendance.lastUpdate.value) }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Status Section -->
+                    <div class="status-section">
+                        <div class="status-indicator">
+                            <div :class="['status-badge', statusClasses]">
+                                <span class="w-2 h-2 rounded-full bg-current"></span>
+                                <span>{{ statusText }}</span>
+                            </div>
+                            <div v-if="attendance.clockedIn.value && attendance.workDuration.value" class="work-duration">
+                                <span class="icon">🕐</span>
+                                <span>{{ attendance.workDuration.value }}</span>
+                            </div>
+                        </div>
+
+                        <!-- Work Progress -->
+                        <div v-if="showAnalytics && attendance.clockedIn.value" class="work-progress">
+                            <div class="progress-header">
+                                <span class="text-sm font-medium text-gray-700">Daily Progress</span>
+                                <span class="text-sm font-bold text-gray-900">{{ attendance.workProgress.value.percentage }}%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div 
+                                    :class="progressBarClass"
+                                    :style="{ width: Math.min(attendance.workProgress.value.percentage, 100) + '%' }"
+                                ></div>
+                            </div>
+                            <div class="progress-details">
+                                <span>{{ attendance.workProgress.value.hoursWorked }}h worked</span>
+                                <span>{{ attendance.workProgress.value.hoursRemaining }}h remaining</span>
+                            </div>
+                        </div>
+
+                        <!-- Today's Summary -->
+                        <div class="todays-summary">
+                            <div class="summary-item">
+                                <span class="summary-label">Total Hours:</span>
+                                <span class="summary-value">{{ attendance.todaysSummary.value?.totalHours || '0h 0m' }}</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="summary-label">Break Time:</span>
+                                <span class="summary-value">{{ attendance.todaysSummary.value?.breakTime || '0h 0m' }}</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="summary-label">Efficiency:</span>
+                                <span class="summary-value">{{ attendance.workEfficiency.value }}%</span>
+                            </div>
+                        </div>
+
+                        <!-- Productivity Score -->
+                        <div v-if="showAnalytics" class="productivity-section">
+                            <div class="productivity-header">
+                                <span class="text-yellow-500">🏆</span>
+                                <span class="text-sm font-medium text-gray-700 flex-1">Productivity Score</span>
+                                <span class="productivity-score">{{ attendance.productivityScore.value }}/100</span>
+                            </div>
+                            <div v-if="attendance.estimatedEndTime.value" class="text-xs text-gray-600 mt-1">
+                                Estimated end time: {{ attendance.estimatedEndTime.value }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="action-section">
+                        <button
+                            @click="handleClockInOut"
+                            :disabled="attendance.loading.value"
+                            :class="clockButtonClass"
+                        >
+                            <span v-if="attendance.loading.value" class="icon animate-spin">⏳</span>
+                            <span v-else-if="attendance.clockedIn.value" class="icon">🕐</span>
+                            <span v-else class="icon">▶️</span>
+                            {{ clockButtonText }}
+                        </button>
+
+                        <button
+                            v-if="attendance.clockedIn.value"
+                            @click="handleBreak"
+                            :disabled="attendance.loading.value"
+                            class="btn btn-secondary"
+                        >
+                            <span class="icon">⏸️</span>
+                            {{ attendance.onBreak.value ? 'End Break' : 'Take Break' }}
+                        </button>
+                    </div>
+
+                    <!-- Quick Stats -->
+                    <div class="quick-stats">
+                        <div class="stat-item">
+                            <div class="stat-value">{{ attendance.weeklyHours.value }}</div>
+                            <div class="stat-label">This Week</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">{{ attendance.monthlyHours.value }}</div>
+                            <div class="stat-label">This Month</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">{{ attendance.averageDaily.value }}</div>
+                            <div class="stat-label">Daily Avg</div>
+                        </div>
+                    </div>
+
+                    <!-- Settings Panel -->
+                    <div v-if="showSettings" class="settings-panel">
+                        <div class="settings-header">
+                            <h4 class="settings-title">Widget Settings</h4>
+                            <button @click="showSettings = false" class="close-settings">✕</button>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <div class="setting-item">
+                                <label class="setting-label">Daily Goal (hours)</label>
+                                <input 
+                                    type="number" 
+                                    :value="attendance.dailyGoal.value" 
+                                    @input="updateDailyGoal($event.target.value)"
+                                    class="setting-input"
+                                    min="1"
+                                    max="24"
+                                />
+                            </div>
+                            
+                            <div class="setting-item">
+                                <label class="setting-label">Break Goal (hours)</label>
+                                <input 
+                                    type="number" 
+                                    :value="attendance.breakGoal.value" 
+                                    @input="updateBreakGoal($event.target.value)"
+                                    class="setting-input"
+                                    min="0"
+                                    max="8"
+                                    step="0.5"
+                                />
+                            </div>
+                            
+                            <div class="setting-item">
+                                <label class="setting-checkbox">
+                                    <input 
+                                        type="checkbox" 
+                                        :checked="attendance.realTimeEnabled.value" 
+                                        @change="toggleRealTime($event.target.checked)"
+                                    />
+                                    <span>Enable Real-time Updates</span>
+                                </label>
+                            </div>
+                            
+                            <div class="setting-item">
+                                <label class="setting-checkbox">
+                                    <input 
+                                        type="checkbox" 
+                                        :checked="attendance.notificationsEnabled.value" 
+                                        @change="toggleNotifications($event.target.checked)"
+                                    />
+                                    <span>Enable Notifications</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `
+        };
+
+        // Main App
+        createApp({
+            components: {
+                ClockInOutWidget
+            },
+            setup() {
+                const showAnalytics = ref(true);
+                const showNotifications = ref(true);
+                const locationEnabled = ref(true);
+                const dailyGoal = ref(8);
+                const breakGoal = ref(1);
+                const eventLog = ref([]);
+                const notifications = ref([]);
+
+                const addEvent = (type, message) => {
+                    eventLog.value.unshift({
+                        id: Date.now(),
+                        type,
+                        message,
+                        timestamp: new Date().toLocaleTimeString()
+                    });
+                    
+                    if (eventLog.value.length > 20) {
+                        eventLog.value = eventLog.value.slice(0, 20);
+                    }
+                };
+
+                const showNotification = (title, message, type = 'info') => {
+                    const notification = {
+                        id: Date.now(),
+                        title,
+                        message,
+                        type
+                    };
+                    
+                    notifications.value.push(notification);
+                    
+                    setTimeout(() => {
+                        const index = notifications.value.findIndex(n => n.id === notification.id);
+                        if (index > -1) {
+                            notifications.value.splice(index, 1);
+                        }
+                    }, 5000);
+                };
+
+                const handleClockInOut = () => {
+                    addEvent('Clock In/Out', 'Clock in/out action triggered');
+                    showNotification('Clock Action', 'Clock in/out completed successfully', 'success');
+                };
+
+                const handleTakeBreak = () => {
+                    addEvent('Break', 'Break action triggered');
+                    showNotification('Break Action', 'Break status updated', 'info');
+                };
+
+                const handleVerifyLocation = (location) => {
+                    addEvent('Location', `Location verified: ${location.latitude}, ${location.longitude}`);
+                    showNotification('Location', 'Location verified successfully', 'success');
+                };
+
+                const handleSettingsChange = (settings) => {
+                    addEvent('Settings', `Settings changed: ${JSON.stringify(settings)}`);
+                    showNotification('Settings', 'Widget settings updated', 'info');
+                };
+
+                return {
+                    showAnalytics,
+                    showNotifications,
+                    locationEnabled,
+                    dailyGoal,
+                    breakGoal,
+                    eventLog,
+                    notifications,
+                    handleClockInOut,
+                    handleTakeBreak,
+                    handleVerifyLocation,
+                    handleSettingsChange
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>

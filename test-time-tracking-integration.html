@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Time Tracking Design System Integration Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Design System Variables */
+        :root {
+            --color-primary-50: #eff6ff;
+            --color-primary-100: #dbeafe;
+            --color-primary-500: #3b82f6;
+            --color-primary-600: #2563eb;
+            --color-primary-700: #1d4ed8;
+            --color-neutral-50: #f9fafb;
+            --color-neutral-100: #f3f4f6;
+            --color-neutral-200: #e5e7eb;
+            --color-neutral-300: #d1d5db;
+            --color-neutral-400: #9ca3af;
+            --color-neutral-500: #6b7280;
+            --color-neutral-600: #4b5563;
+            --color-neutral-700: #374151;
+            --color-neutral-800: #1f2937;
+            --color-neutral-900: #111827;
+            --spacing-2: 0.5rem;
+            --spacing-3: 0.75rem;
+            --spacing-4: 1rem;
+            --spacing-6: 1.5rem;
+            --radius-md: 0.375rem;
+            --radius-lg: 0.5rem;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+        }
+
+        /* Component Styles */
+        .search-bar {
+            position: relative;
+        }
+
+        .filter-panel {
+            background: white;
+            border: 1px solid var(--color-neutral-200);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-6);
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .data-table th {
+            background: var(--color-neutral-100);
+            padding: var(--spacing-4) var(--spacing-6);
+            text-align: left;
+            font-weight: 600;
+            color: var(--color-neutral-700);
+            border-bottom: 1px solid var(--color-neutral-200);
+        }
+
+        .data-table td {
+            padding: var(--spacing-4) var(--spacing-6);
+            border-bottom: 1px solid var(--color-neutral-200);
+        }
+
+        .data-table tr:hover {
+            background: var(--color-neutral-50);
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .status-clocked-in {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-clocked-out {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .status-on-break {
+            background: #fed7aa;
+            color: #c2410c;
+        }
+
+        .employee-avatar {
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            background: var(--color-primary-100);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--color-primary-700);
+        }
+
+        .pagination {
+            display: flex;
+            align-items: center;
+            justify-content: between;
+            padding: var(--spacing-4) var(--spacing-6);
+            background: var(--color-neutral-100);
+            border-top: 1px solid var(--color-neutral-200);
+        }
+
+        .filter-chip {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            background: var(--color-primary-50);
+            color: var(--color-primary-700);
+            border-radius: var(--radius-md);
+            font-size: 0.875rem;
+            margin: 0.25rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius-md);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--color-primary-600);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--color-primary-700);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: var(--color-neutral-700);
+            border: 1px solid var(--color-neutral-300);
+        }
+
+        .btn-secondary:hover {
+            background: var(--color-neutral-50);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .data-table th:nth-child(n+5),
+            .data-table td:nth-child(n+5) {
+                display: none;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .data-table th:nth-child(n+4),
+            .data-table td:nth-child(n+4) {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 p-6">
+    <div class="max-w-7xl mx-auto">
+        <!-- Page Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Time Tracking</h1>
+            <p class="text-gray-600">View and manage attendance records with integrated design system</p>
+        </div>
+
+        <!-- Search and Filter Section -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+            <!-- Search Bar -->
+            <div class="mb-6">
+                <div class="search-bar">
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 flex items-center pl-3">
+                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                        </div>
+                        <input
+                            type="search"
+                            placeholder="Search by employee name, date, or status..."
+                            class="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter Panel -->
+            <div class="filter-panel">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-medium text-gray-900">Filter Time Records</h3>
+                    <button class="text-gray-500 hover:text-gray-700">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Active Filters -->
+                <div class="mb-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-sm font-medium text-gray-700">Active Filters</span>
+                        <button class="text-sm text-blue-600 hover:text-blue-700">Clear All</button>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="filter-chip">
+                            Status: Clocked In
+                            <button class="ml-2 text-blue-600 hover:text-blue-800">×</button>
+                        </span>
+                        <span class="filter-chip">
+                            Date: Last 7 days
+                            <button class="ml-2 text-blue-600 hover:text-blue-800">×</button>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Filter Controls -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Date Range -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Date Range</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <input type="date" class="px-3 py-2 border border-gray-300 rounded-md text-sm">
+                            <input type="date" class="px-3 py-2 border border-gray-300 rounded-md text-sm">
+                        </div>
+                    </div>
+
+                    <!-- Status Filter -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                        <div class="space-y-2">
+                            <label class="flex items-center">
+                                <input type="checkbox" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500" checked>
+                                <span class="ml-2 text-sm text-gray-700">Clocked In (15)</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                <span class="ml-2 text-sm text-gray-700">Clocked Out (45)</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                <span class="ml-2 text-sm text-gray-700">On Break (3)</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Duration Range -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Work Duration (hours)</label>
+                        <input type="range" min="0" max="12" step="0.5" value="8" class="w-full">
+                        <div class="flex justify-between text-xs text-gray-500 mt-1">
+                            <span>0h</span>
+                            <span>8h</span>
+                            <span>12h</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filter Actions -->
+                <div class="flex items-center justify-between pt-4 border-t border-gray-200 mt-6">
+                    <button class="btn btn-secondary">Reset Filters</button>
+                    <div class="flex items-center space-x-3">
+                        <button class="text-sm text-blue-600 hover:text-blue-700">Save Preset</button>
+                        <button class="btn btn-primary">Apply Filters</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Table Section -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            <!-- Table Header -->
+            <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <h3 class="text-lg font-medium text-gray-900">Attendance Records</h3>
+                    <span class="text-sm text-gray-500">127 total records</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button class="btn btn-secondary">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        Bulk Export
+                    </button>
+                    <button class="btn btn-primary">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        Bulk Approve
+                    </button>
+                </div>
+            </div>
+
+            <!-- Data Table -->
+            <div class="overflow-x-auto">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>
+                                <input type="checkbox" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                            </th>
+                            <th>Employee</th>
+                            <th>Date</th>
+                            <th>Clock In</th>
+                            <th>Clock Out</th>
+                            <th>Duration</th>
+                            <th>Status</th>
+                            <th>Break Time</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <input type="checkbox" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                            </td>
+                            <td>
+                                <div class="flex items-center">
+                                    <div class="employee-avatar">JD</div>
+                                    <div class="ml-3">
+                                        <div class="text-sm font-medium text-gray-900">John Doe</div>
+                                        <div class="text-sm text-gray-500">EMP001</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="text-sm text-gray-900">Dec 8, 2025</td>
+                            <td class="text-sm text-gray-900">09:00 AM</td>
+                            <td class="text-sm text-gray-900">—</td>
+                            <td class="text-sm font-medium text-gray-900">3h 15m</td>
+                            <td><span class="status-badge status-clocked-in">Clocked In</span></td>
+                            <td class="text-sm text-gray-900">15m</td>
+                            <td>
+                                <button class="text-blue-600 hover:text-blue-800 text-sm font-medium">View</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <input type="checkbox" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                            </td>
+                            <td>
+                                <div class="flex items-center">
+                                    <div class="employee-avatar">JS</div>
+                                    <div class="ml-3">
+                                        <div class="text-sm font-medium text-gray-900">Jane Smith</div>
+                                        <div class="text-sm text-gray-500">EMP002</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="text-sm text-gray-900">Dec 8, 2025</td>
+                            <td class="text-sm text-gray-900">08:30 AM</td>
+                            <td class="text-sm text-gray-900">05:30 PM</td>
+                            <td class="text-sm font-medium text-gray-900">8h 30m</td>
+                            <td><span class="status-badge status-clocked-out">Clocked Out</span></td>
+                            <td class="text-sm text-gray-900">45m</td>
+                            <td>
+                                <button class="text-blue-600 hover:text-blue-800 text-sm font-medium">View</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <input type="checkbox" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                            </td>
+                            <td>
+                                <div class="flex items-center">
+                                    <div class="employee-avatar">MB</div>
+                                    <div class="ml-3">
+                                        <div class="text-sm font-medium text-gray-900">Mike Brown</div>
+                                        <div class="text-sm text-gray-500">EMP003</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="text-sm text-gray-900">Dec 8, 2025</td>
+                            <td class="text-sm text-gray-900">09:15 AM</td>
+                            <td class="text-sm text-gray-900">—</td>
+                            <td class="text-sm font-medium text-gray-900">2h 45m</td>
+                            <td><span class="status-badge status-on-break">On Break</span></td>
+                            <td class="text-sm text-gray-900">30m</td>
+                            <td>
+                                <button class="text-blue-600 hover:text-blue-800 text-sm font-medium">View</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination">
+                <div class="flex items-center text-sm text-gray-700">
+                    <label class="mr-2">Rows per page:</label>
+                    <select class="border border-gray-300 rounded px-2 py-1">
+                        <option>10</option>
+                        <option selected>15</option>
+                        <option>25</option>
+                        <option>50</option>
+                    </select>
+                </div>
+                
+                <div class="text-sm text-gray-600">
+                    1-15 of 127 results
+                </div>
+                
+                <div class="flex items-center space-x-1">
+                    <button class="p-2 text-gray-400 hover:text-gray-600 disabled:opacity-50" disabled>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                        </svg>
+                    </button>
+                    
+                    <button class="px-3 py-1 text-sm bg-blue-600 text-white rounded">1</button>
+                    <button class="px-3 py-1 text-sm text-gray-700 hover:bg-gray-100 rounded">2</button>
+                    <button class="px-3 py-1 text-sm text-gray-700 hover:bg-gray-100 rounded">3</button>
+                    <span class="px-2 text-gray-400">...</span>
+                    <button class="px-3 py-1 text-sm text-gray-700 hover:bg-gray-100 rounded">9</button>
+                    
+                    <button class="p-2 text-gray-600 hover:text-gray-800">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Integration Summary -->
+        <div class="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
+            <h3 class="text-lg font-semibold text-blue-900 mb-3">Design System Integration Complete</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                <div>
+                    <h4 class="font-medium text-blue-800 mb-2">Search Features</h4>
+                    <ul class="text-blue-700 space-y-1">
+                        <li>• Real-time search with debouncing</li>
+                        <li>• Search suggestions and history</li>
+                        <li>• Keyboard navigation support</li>
+                        <li>• Loading states and error handling</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-medium text-blue-800 mb-2">Filter Features</h4>
+                    <ul class="text-blue-700 space-y-1">
+                        <li>• Multiple filter types (checkbox, range, date)</li>
+                        <li>• Filter presets (save/load/delete)</li>
+                        <li>• Active filter display with chips</li>
+                        <li>• URL synchronization</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-medium text-blue-800 mb-2">Table Features</h4>
+                    <ul class="text-blue-700 space-y-1">
+                        <li>• Server-side pagination</li>
+                        <li>• Column sorting and selection</li>
+                        <li>• Responsive design with priority columns</li>
+                        <li>• Custom cell templates and actions</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Simulate interactive functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // Search functionality
+            const searchInput = document.querySelector('input[type="search"]');
+            searchInput.addEventListener('input', function(e) {
+                console.log('Search query:', e.target.value);
+                // Simulate search suggestions
+            });
+
+            // Filter functionality
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', function(e) {
+                    console.log('Filter changed:', e.target.checked);
+                    // Simulate filter application
+                });
+            });
+
+            // Range slider
+            const rangeInput = document.querySelector('input[type="range"]');
+            rangeInput.addEventListener('input', function(e) {
+                console.log('Duration filter:', e.target.value + 'h');
+                // Update display value
+            });
+
+            // Pagination
+            const pageButtons = document.querySelectorAll('.pagination button');
+            pageButtons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    console.log('Page navigation clicked');
+                    // Simulate page change
+                });
+            });
+
+            // Table interactions
+            const tableRows = document.querySelectorAll('tbody tr');
+            tableRows.forEach(row => {
+                row.addEventListener('click', function(e) {
+                    if (e.target.type !== 'checkbox' && e.target.tagName !== 'BUTTON') {
+                        console.log('Row clicked:', row);
+                        // Simulate row selection or navigation
+                    }
+                });
+            });
+
+            console.log('Time Tracking Design System Integration Test Loaded');
+        });
+    </script>
+</body>
+</html>

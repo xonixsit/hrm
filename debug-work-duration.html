@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Work Duration Real-time</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen py-8">
+    <div id="app" class="container mx-auto px-4">
+        <div class="max-w-lg mx-auto bg-white rounded-lg shadow-lg p-6">
+            <h1 class="text-2xl font-bold text-center mb-6">Debug: Real-time Work Duration</h1>
+            
+            <!-- Current Time -->
+            <div class="text-center mb-6 p-4 bg-gray-50 rounded-lg">
+                <div class="text-2xl font-mono font-bold text-gray-900">{{ currentTime }}</div>
+                <div class="text-sm text-gray-600 mt-1">{{ currentDate }}</div>
+            </div>
+            
+            <!-- Clock Status -->
+            <div class="mb-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div :class="['flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium', statusClasses]">
+                        <div class="w-2 h-2 rounded-full bg-current"></div>
+                        <span>{{ statusText }}</span>
+                    </div>
+                </div>
+                
+                <!-- Real-time Work Duration Display -->
+                <div v-if="clockedIn" class="text-center p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border border-green-200 mb-4">
+                    <div class="text-xs font-medium text-gray-600 mb-1">Current Work Session</div>
+                    <div class="text-4xl font-mono font-bold text-green-700 mb-1">{{ realTimeWorkDuration }}</div>
+                    <div class="text-sm font-medium text-gray-700">{{ onBreak ? 'On Break' : 'Working' }}</div>
+                </div>
+                
+                <!-- Small Work Duration Display -->
+                <div v-if="clockedIn" class="flex items-center justify-center space-x-2 text-lg text-gray-600 mb-4">
+                    <span>🕐</span>
+                    <span class="font-mono font-bold">{{ realTimeWorkDuration }}</span>
+                </div>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="space-y-3 mb-6">
+                <button
+                    @click="toggleClock"
+                    :disabled="loading"
+                    :class="clockButtonClasses"
+                >
+                    <span v-if="loading" class="animate-spin">⏳</span>
+                    <span v-else-if="clockedIn">🕐</span>
+                    <span v-else>▶️</span>
+                    {{ clockButtonText }}
+                </button>
+                
+                <button
+                    v-if="clockedIn"
+                    @click="toggleBreak"
+                    :disabled="loading"
+                    class="w-full flex items-center justify-center space-x-2 px-4 py-2 text-sm font-medium rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                >
+                    <span>⏸️</span>
+                    <span>{{ onBreak ? 'End Break' : 'Take Break' }}</span>
+                </button>
+            </div>
+            
+            <!-- Debug Information -->
+            <div class="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <h3 class="font-semibold text-yellow-800 mb-2">Debug Information:</h3>
+                <div class="text-sm text-yellow-700 space-y-1">
+                    <div><strong>Clocked In:</strong> {{ clockedIn }}</div>
+                    <div><strong>On Break:</strong> {{ onBreak }}</div>
+                    <div><strong>Clock In Time:</strong> {{ clockInTime || 'Not set' }}</div>
+                    <div><strong>Real-time Duration:</strong> {{ realTimeWorkDuration }}</div>
+                    <div><strong>Update Count:</strong> {{ updateCount }}</div>
+                    <div><strong>Last Update:</strong> {{ lastUpdateTime }}</div>
+                </div>
+            </div>
+            
+            <!-- Instructions -->
+            <div class="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <h3 class="font-semibold text-blue-800 mb-2">Test Instructions:</h3>
+                <ol class="text-sm text-blue-700 space-y-1">
+                    <li>1. Click "Clock In" to start the timer</li>
+                    <li>2. Watch the work duration update every second with seconds included</li>
+                    <li>3. The large display should show: "0h 0m 1s", "0h 0m 2s", etc.</li>
+                    <li>4. Try "Take Break" to pause the timer</li>
+                    <li>5. Click "End Break" to resume the timer</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { createApp, ref, computed, onMounted, onUnmounted } = Vue;
+
+        createApp({
+            setup() {
+                // State
+                const clockedIn = ref(false);
+                const onBreak = ref(false);
+                const clockInTime = ref(null);
+                const breakStartTime = ref(null);
+                const totalBreakTime = ref(0);
+                const loading = ref(false);
+                const currentTime = ref('');
+                const currentDate = ref('');
+                const realTimeWorkDuration = ref('0h 0m 0s');
+                const updateCount = ref(0);
+                const lastUpdateTime = ref('');
+                
+                // Intervals
+                let timeInterval = null;
+                let workDurationInterval = null;
+                
+                // Update current time
+                const updateTime = () => {
+                    const now = new Date();
+                    currentTime.value = now.toLocaleTimeString('en-US', {
+                        hour12: false,
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit'
+                    });
+                    currentDate.value = now.toLocaleDateString('en-US', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+                };
+                
+                // Update work duration in real-time (THIS IS THE KEY FUNCTION)
+                const updateWorkDuration = () => {
+                    updateCount.value++;
+                    lastUpdateTime.value = new Date().toLocaleTimeString();
+                    
+                    console.log('updateWorkDuration called', {
+                        clockedIn: clockedIn.value,
+                        clockInTime: clockInTime.value,
+                        onBreak: onBreak.value,
+                        updateCount: updateCount.value
+                    });
+                    
+                    if (clockedIn.value && clockInTime.value) {
+                        const clockIn = new Date(clockInTime.value);
+                        const now = new Date();
+                        let diffMs = now - clockIn;
+                        
+                        // Subtract break time if not currently on break
+                        if (!onBreak.value) {
+                            diffMs -= totalBreakTime.value;
+                        } else {
+                            // If on break, freeze the work duration at the time break started
+                            if (breakStartTime.value) {
+                                const breakStart = new Date(breakStartTime.value);
+                                diffMs = breakStart - clockIn - totalBreakTime.value;
+                            }
+                        }
+                        
+                        // Ensure we don't go negative
+                        diffMs = Math.max(0, diffMs);
+                        
+                        const hours = Math.floor(diffMs / (1000 * 60 * 60));
+                        const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+                        const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
+                        
+                        realTimeWorkDuration.value = `${hours}h ${minutes}m ${seconds}s`;
+                        
+                        console.log('Work duration updated to:', realTimeWorkDuration.value, {
+                            hours,
+                            minutes,
+                            seconds,
+                            diffMs,
+                            totalBreakTime: totalBreakTime.value
+                        });
+                    } else {
+                        realTimeWorkDuration.value = '0h 0m 0s';
+                        console.log('Work duration reset to 0 - not clocked in or no clock in time');
+                    }
+                };
+                
+                // Computed properties
+                const statusText = computed(() => {
+                    if (onBreak.value) return 'On Break';
+                    if (clockedIn.value) return 'Clocked In';
+                    return 'Clocked Out';
+                });
+                
+                const statusClasses = computed(() => {
+                    if (clockedIn.value && !onBreak.value) return 'bg-green-100 text-green-800';
+                    if (onBreak.value) return 'bg-yellow-100 text-yellow-800';
+                    return 'bg-gray-100 text-gray-600';
+                });
+                
+                const clockButtonText = computed(() => {
+                    if (loading.value) return 'Processing...';
+                    return clockedIn.value ? 'Clock Out' : 'Clock In';
+                });
+                
+                const clockButtonClasses = computed(() => {
+                    const baseClasses = 'w-full flex items-center justify-center space-x-2 px-4 py-3 text-sm font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200';
+                    return clockedIn.value
+                        ? `${baseClasses} text-white bg-red-600 hover:bg-red-700`
+                        : `${baseClasses} text-white bg-green-600 hover:bg-green-700`;
+                });
+                
+                // Methods
+                const toggleClock = async () => {
+                    loading.value = true;
+                    
+                    try {
+                        await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
+                        
+                        if (clockedIn.value) {
+                            // Clock out
+                            console.log('Clocking out...');
+                            clockedIn.value = false;
+                            clockInTime.value = null;
+                            onBreak.value = false;
+                            breakStartTime.value = null;
+                            totalBreakTime.value = 0;
+                        } else {
+                            // Clock in
+                            console.log('Clocking in...');
+                            clockedIn.value = true;
+                            clockInTime.value = new Date().toISOString();
+                            onBreak.value = false;
+                            totalBreakTime.value = 0;
+                            
+                            // Immediately update work duration
+                            updateWorkDuration();
+                        }
+                    } finally {
+                        loading.value = false;
+                    }
+                };
+                
+                const toggleBreak = async () => {
+                    loading.value = true;
+                    
+                    try {
+                        await new Promise(resolve => setTimeout(resolve, 500)); // Simulate API call
+                        
+                        if (onBreak.value) {
+                            // End break
+                            console.log('Ending break...');
+                            if (breakStartTime.value) {
+                                const now = new Date();
+                                const breakStart = new Date(breakStartTime.value);
+                                totalBreakTime.value += (now - breakStart);
+                                console.log('Break time added:', (now - breakStart), 'Total break time:', totalBreakTime.value);
+                            }
+                            onBreak.value = false;
+                            breakStartTime.value = null;
+                        } else {
+                            // Start break
+                            console.log('Starting break...');
+                            onBreak.value = true;
+                            breakStartTime.value = new Date().toISOString();
+                        }
+                    } finally {
+                        loading.value = false;
+                    }
+                };
+                
+                // Lifecycle
+                onMounted(() => {
+                    console.log('Component mounted, starting intervals...');
+                    updateTime();
+                    updateWorkDuration();
+                    
+                    timeInterval = setInterval(() => {
+                        updateTime();
+                    }, 1000);
+                    
+                    workDurationInterval = setInterval(() => {
+                        updateWorkDuration();
+                    }, 1000);
+                    
+                    console.log('Intervals started:', { timeInterval, workDurationInterval });
+                });
+                
+                onUnmounted(() => {
+                    console.log('Component unmounting, clearing intervals...');
+                    if (timeInterval) {
+                        clearInterval(timeInterval);
+                        console.log('Time interval cleared');
+                    }
+                    if (workDurationInterval) {
+                        clearInterval(workDurationInterval);
+                        console.log('Work duration interval cleared');
+                    }
+                });
+                
+                return {
+                    // State
+                    clockedIn,
+                    onBreak,
+                    clockInTime,
+                    loading,
+                    currentTime,
+                    currentDate,
+                    realTimeWorkDuration,
+                    updateCount,
+                    lastUpdateTime,
+                    
+                    // Computed
+                    statusText,
+                    statusClasses,
+                    clockButtonText,
+                    clockButtonClasses,
+                    
+                    // Methods
+                    toggleClock,
+                    toggleBreak
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>

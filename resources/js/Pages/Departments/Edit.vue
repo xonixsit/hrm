@@ -103,18 +103,12 @@
             >
               <BaseSelect
                 v-model="form.manager_id"
+                :options="employeeOptions"
+                option-label="label"
+                option-value="value"
                 :error="!!form.errors.manager_id"
                 placeholder="Select manager"
-              >
-                <option value="">Choose a manager</option>
-                <option 
-                  v-for="employee in employees" 
-                  :key="employee.id" 
-                  :value="employee.id"
-                >
-                  {{ employee.user.name }} - {{ employee.job_title || 'No title' }}
-                </option>
-              </BaseSelect>
+              />
             </FormField>
 
             <FormField
@@ -124,18 +118,12 @@
             >
               <BaseSelect
                 v-model="form.parent_id"
+                :options="departmentOptions"
+                option-label="label"
+                option-value="value"
                 :error="!!form.errors.parent_id"
                 placeholder="Select parent department"
-              >
-                <option value="">No parent department</option>
-                <option 
-                  v-for="dept in departments.filter(d => d.id !== department.id)" 
-                  :key="dept.id" 
-                  :value="dept.id"
-                >
-                  {{ dept.name }}
-                </option>
-              </BaseSelect>
+              />
             </FormField>
 
             <FormField
@@ -181,13 +169,12 @@
             >
               <BaseSelect
                 v-model="form.status"
+                :options="statusOptions"
+                option-label="label"
+                option-value="value"
                 :error="!!form.errors.status"
                 placeholder="Select status"
-              >
-                <option value="Active">Active</option>
-                <option value="Inactive">Inactive</option>
-                <option value="Restructuring">Restructuring</option>
-              </BaseSelect>
+              />
             </FormField>
 
             <FormField
@@ -336,6 +323,29 @@ const formActions = computed(() => [
 const isFormValid = computed(() => {
   return form.name && form.name.trim().length > 0
 })
+
+// Transform employees data for BaseSelect
+const employeeOptions = computed(() => {
+  return props.employees.map(employee => ({
+    value: employee.id,
+    label: `${employee.user.name} - ${employee.job_title || 'No title'}`
+  }))
+})
+
+// Transform departments data for BaseSelect
+const departmentOptions = computed(() => {
+  return props.departments.filter(d => d.id !== props.department.id).map(dept => ({
+    value: dept.id,
+    label: dept.name
+  }))
+})
+
+// Status options for BaseSelect
+const statusOptions = [
+  { value: 'Active', label: 'Active' },
+  { value: 'Inactive', label: 'Inactive' },
+  { value: 'Restructuring', label: 'Restructuring' }
+]
 
 // Check if form has changes
 const hasChanges = computed(() => {

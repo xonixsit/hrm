@@ -1,7 +1,7 @@
 <template>
   <AuthenticatedLayout>
     <PageLayout
-    title="Employees"
+    title="Employees test"
     subtitle="Manage your organization's employees and their information"
     :breadcrumbs="breadcrumbs"
     :actions="headerActions"
@@ -160,21 +160,19 @@ const tableActions = [
   }
 ]
 
-// Table columns configuration - Flexible widths that adapt to content and screen size
+// Table columns configuration - Auto-sizing widths like Leave Management
 const columns = [
   {
     key: 'name',
     label: 'Employee',
     sortable: true,
-    flex: '2', // Takes 2 parts of available space
     minWidth: '200px',
-    priority: 'high' // Always visible
+    priority: 'high'
   },
   {
     key: 'email',
     label: 'Email',
     sortable: true,
-    flex: '2.5', // Takes 2.5 parts - more space for longer emails
     minWidth: '220px',
     priority: 'high'
   },
@@ -182,8 +180,7 @@ const columns = [
     key: 'department',
     label: 'Department',
     sortable: true,
-    flex: '1.5', // Takes 1.5 parts
-    minWidth: '120px',
+    minWidth: '140px',
     align: 'left',
     priority: 'high'
   },
@@ -191,7 +188,6 @@ const columns = [
     key: 'job_title',
     label: 'Position',
     sortable: true,
-    flex: '2', // Takes 2 parts
     minWidth: '150px',
     priority: 'high'
   },
@@ -199,8 +195,7 @@ const columns = [
     key: 'contract_type',
     label: 'Employment Type',
     sortable: true,
-    flex: '1.2', // Takes 1.2 parts
-    minWidth: '110px',
+    minWidth: '130px',
     align: 'center',
     priority: 'medium'
   },
@@ -208,8 +203,7 @@ const columns = [
     key: 'join_date',
     label: 'Start Date',
     sortable: true,
-    flex: '1.3', // Takes 1.3 parts
-    minWidth: '110px',
+    minWidth: '120px',
     align: 'left',
     priority: 'medium'
   }

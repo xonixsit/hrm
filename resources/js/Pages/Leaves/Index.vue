@@ -54,7 +54,7 @@
               <option v-for="type in leaveTypes" :key="type.id" :value="type.id">
                 {{ type.name }}
               </option>
-            </select>
+            </select> 
           </div>
         </div>
       </div>
@@ -84,7 +84,7 @@
         >
           <!-- Employee Column -->
           <template #cell-employee="{ row }">
-            <div class="flex items-center space-x-3">
+            <div v-if="row.employee?.user" class="flex items-center space-x-3 min-w-0">
               <div class="flex-shrink-0">
                 <div class="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
                   <span class="text-xs font-semibold text-primary-700">
@@ -98,6 +98,23 @@
                 </p>
                 <p class="text-xs text-neutral-500 truncate">
                   {{ row.employee.user.email }}
+                </p>
+              </div>
+            </div>
+            <div v-else class="flex items-center space-x-3 min-w-0">
+              <div class="flex-shrink-0">
+                <div class="w-8 h-8 bg-neutral-100 rounded-full flex items-center justify-center">
+                  <span class="text-xs font-semibold text-neutral-500">
+                    --
+                  </span>
+                </div>
+              </div>
+              <div class="min-w-0 flex-1">
+                <p class="text-sm font-medium text-neutral-500 truncate">
+                  Employee data unavailable
+                </p>
+                <p class="text-xs text-neutral-400 truncate">
+                  --
                 </p>
               </div>
             </div>
@@ -224,19 +241,24 @@ const tableColumns = computed(() => {
       key: 'dates',
       label: 'Duration',
       sortable: true,
-      minWidth: '180px'
+      minWidth: '180px',
+      priority: 'high'
     },
     {
       key: 'leave_type',
       label: 'Leave Type',
       sortable: true,
-      minWidth: '140px'
+      minWidth: '140px',
+      priority: 'high',
+      align: 'center'
     },
     {
       key: 'status',
       label: 'Status',
       sortable: true,
-      minWidth: '120px'
+      minWidth: '120px',
+      priority: 'high',
+      align: 'center'
     }
   ];
 
@@ -246,7 +268,9 @@ const tableColumns = computed(() => {
       key: 'employee',
       label: 'Employee',
       sortable: true,
-      minWidth: '200px'
+      minWidth: '200px',
+      maxWidth: '300px',
+      priority: 'high'
     });
   }
 

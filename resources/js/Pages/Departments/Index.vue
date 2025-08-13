@@ -7,104 +7,206 @@
       :actions="headerActions"
     >
       <ContentCard>
-        <DataTable
-          :data="departments.data"
-          :columns="columns"
-          :loading="loading"
-          :row-actions="rowActions"
-          :header-actions="tableActions"
-          :search-config="searchConfig"
-          :empty-state="emptyState"
-          :show-footer="true"
-          :server-side-pagination="true"
-          :current-page="departments.current_page"
-          :total-pages="departments.last_page"
-          :total-items="departments.total"
-          :page-size="departments.per_page"
-          :page-size-options="[10, 25, 50, 100]"
-          @row-action="handleRowAction"
-          @header-action="handleTableAction"
-          @search="handleSearch"
-          @page-change="handlePageChange"
-          @page-size-change="handlePageSizeChange"
-          class="w-full"
-        >
-          <!-- Custom cell for department name with icon -->
-          <template #cell-name="{ row }">
-            <div class="flex items-center space-x-3">
-              <div class="flex-shrink-0">
-                <div class="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
-                  <Icon 
-                    :name="getDepartmentIcon(row.name)" 
-                    class="w-5 h-5 text-primary-600"
-                  />
-                </div>
-              </div>
-              <div class="min-w-0 flex-1">
-                <div class="font-semibold text-neutral-900 truncate">{{ row.name }}</div>
-                <div class="text-sm text-neutral-500 truncate">{{ row.code || 'No code' }}</div>
-              </div>
+        <!-- Enhanced Table Implementation with Leave Management Style -->
+        <div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
+          <table class="min-w-full divide-y divide-neutral-300">
+            <thead class="bg-neutral-50">
+              <tr>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wide">
+                  Department
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wide">
+                  Employees
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wide">
+                  Manager
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wide">
+                  Created
+                </th>
+                <th scope="col" class="relative px-6 py-3">
+                  <span class="sr-only">Actions</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-neutral-200">
+              <tr v-for="department in departments.data" :key="department.id" class="hover:bg-neutral-50">
+                <!-- Department Name -->
+                <td class="px-6 py-4">
+                  <div class="flex items-center space-x-3">
+                    <div class="flex-shrink-0">
+                      <div class="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
+                        <Icon 
+                          :name="getDepartmentIcon(department.name)" 
+                          class="w-5 h-5 text-primary-600"
+                        />
+                      </div>
+                    </div>
+                    <div class="min-w-0 flex-1">
+                      <div class="text-sm font-semibold text-neutral-900 truncate">
+                        {{ department.name }}
+                      </div>
+                      <div class="text-xs text-neutral-500 truncate">
+                        {{ department.code || 'No department code' }}
+                      </div>
+                    </div>
+                  </div>
+                </td>
+                
+                <!-- Employee Count -->
+                <td class="px-6 py-4">
+                  <div class="flex items-center space-x-2">
+                    <div class="flex -space-x-1">
+                      <div 
+                        v-for="(employee, index) in department.employees?.slice(0, 3)" 
+                        :key="employee.id"
+                        class="w-6 h-6 bg-neutral-200 rounded-full border-2 border-white flex items-center justify-center text-xs font-medium text-neutral-600"
+                        :style="{ zIndex: 3 - index }"
+                      >
+                        {{ getInitials(employee.user?.name || 'N/A') }}
+                      </div>
+                      <div 
+                        v-if="(department.employees_count || 0) > 3"
+                        class="w-6 h-6 bg-neutral-300 rounded-full border-2 border-white flex items-center justify-center text-xs font-medium text-neutral-600"
+                      >
+                        +{{ (department.employees_count || 0) - 3 }}
+                      </div>
+                    </div>
+                    <div class="text-sm">
+                      <div class="font-medium text-neutral-900">
+                        {{ department.employees_count || 0 }} 
+                        {{ (department.employees_count || 0) === 1 ? 'employee' : 'employees' }}
+                      </div>
+                      <div class="text-xs text-neutral-500">
+                        {{ getEmployeeStatusText(department.employees_count || 0) }}
+                      </div>
+                    </div>
+                  </div>
+                </td>
+                
+                <!-- Manager -->
+                <td class="px-6 py-4">
+                  <div v-if="department.manager" class="flex items-center space-x-2">
+                    <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                      <span class="text-sm font-medium text-green-700">
+                        {{ getInitials(department.manager.user?.name || 'N/A') }}
+                      </span>
+                    </div>
+                    <div class="min-w-0 flex-1">
+                      <div class="text-sm font-medium text-neutral-900 truncate">
+                        {{ department.manager.user?.name || 'Unknown' }}
+                      </div>
+                      <div class="text-xs text-neutral-500 truncate">
+                        {{ department.manager.job_title || 'Manager' }}
+                      </div>
+                    </div>
+                  </div>
+                  <div v-else class="flex items-center space-x-2">
+                    <div class="w-8 h-8 bg-neutral-100 rounded-full flex items-center justify-center">
+                      <span class="text-sm font-medium text-neutral-400">
+                        --
+                      </span>
+                    </div>
+                    <div class="min-w-0 flex-1">
+                      <div class="text-sm text-neutral-400 italic truncate">
+                        No manager assigned
+                      </div>
+                      <div class="text-xs text-neutral-400 truncate">
+                        Requires assignment
+                      </div>
+                    </div>
+                  </div>
+                </td>
+                
+                <!-- Created Date -->
+                <td class="px-6 py-4">
+                  <div class="text-sm">
+                    <div class="flex items-center space-x-1 text-neutral-900">
+                      <CalendarIcon class="w-4 h-4 text-neutral-400" />
+                      <span>{{ formatDate(department.created_at) }}</span>
+                    </div>
+                    <div class="text-xs text-neutral-500 mt-1">
+                      {{ getTimeAgo(department.created_at) }}
+                    </div>
+                  </div>
+                </td>
+                
+                <!-- Actions -->
+                <td class="px-6 py-4 text-right">
+                  <div class="flex items-center justify-end space-x-1">
+                    <Link 
+                      :href="route('departments.show', department.id)"
+                      class="inline-flex items-center p-2 text-neutral-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+                      title="View Department"
+                    >
+                      <EyeIcon class="h-4 w-4" />
+                    </Link>
+                    <Link 
+                      :href="route('departments.edit', department.id)"
+                      class="inline-flex items-center p-2 text-neutral-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
+                      title="Edit Department"
+                    >
+                      <PencilIcon class="h-4 w-4" />
+                    </Link>
+                    <button 
+                      @click="deleteDepartment(department.id)"
+                      class="inline-flex items-center p-2 text-neutral-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:text-neutral-400 disabled:hover:bg-transparent"
+                      title="Delete Department"
+                      :disabled="(department.employees_count || 0) > 0"
+                    >
+                      <TrashIcon class="h-4 w-4" />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          
+          <!-- Empty State -->
+          <div v-if="!departments.data || departments.data.length === 0" class="text-center py-12">
+            <Icon name="building-office" class="mx-auto h-12 w-12 text-gray-400" />
+            <h3 class="mt-2 text-sm font-medium text-gray-900">No departments</h3>
+            <p class="mt-1 text-sm text-gray-500">Get started by creating a new department.</p>
+            <div class="mt-6">
+              <Link 
+                :href="route('departments.create')"
+                class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              >
+                <PlusIcon class="-ml-1 mr-2 h-5 w-5" />
+                New Department
+              </Link>
             </div>
-          </template>
-
-          <!-- Custom cell for employee count -->
-          <template #cell-employees_count="{ row }">
-            <div class="flex items-center space-x-2">
-              <div class="flex -space-x-1">
-                <div 
-                  v-for="(employee, index) in row.recent_employees?.slice(0, 3)" 
-                  :key="employee.id"
-                  class="w-6 h-6 bg-neutral-200 rounded-full border-2 border-white flex items-center justify-center text-xs font-medium text-neutral-600"
-                  :style="{ zIndex: 3 - index }"
-                >
-                  {{ getInitials(employee.user.name) }}
-                </div>
-                <div 
-                  v-if="row.employees_count > 3"
-                  class="w-6 h-6 bg-neutral-300 rounded-full border-2 border-white flex items-center justify-center text-xs font-medium text-neutral-600"
-                >
-                  +{{ row.employees_count - 3 }}
-                </div>
-              </div>
-              <span class="text-sm font-medium text-neutral-700">
-                {{ row.employees_count }} {{ row.employees_count === 1 ? 'employee' : 'employees' }}
+          </div>
+        </div>
+        
+        <!-- Pagination -->
+        <div v-if="departments.data && departments.data.length > 0" class="mt-6">
+          <nav class="flex items-center justify-between border-t border-gray-200 px-4 sm:px-0">
+            <div class="-mt-px flex w-0 flex-1">
+              <Link 
+                v-if="departments.prev_page_url"
+                :href="departments.prev_page_url"
+                class="inline-flex items-center border-t-2 border-transparent pt-4 pr-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700"
+              >
+                Previous
+              </Link>
+            </div>
+            <div class="hidden md:-mt-px md:flex">
+              <span class="inline-flex items-center border-t-2 border-transparent px-4 pt-4 text-sm font-medium text-gray-500">
+                Page {{ departments.current_page }} of {{ departments.last_page }}
               </span>
             </div>
-          </template>
-
-          <!-- Custom cell for manager -->
-          <template #cell-manager="{ row }">
-            <div v-if="row.manager" class="flex items-center space-x-2">
-              <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                <span class="text-sm font-medium text-green-700">
-                  {{ getInitials(row.manager.user.name) }}
-                </span>
-              </div>
-              <div class="min-w-0 flex-1">
-                <div class="font-medium text-neutral-900 truncate">{{ row.manager.user.name }}</div>
-                <div class="text-sm text-neutral-500 truncate">{{ row.manager.job_title || 'Manager' }}</div>
-              </div>
+            <div class="-mt-px flex w-0 flex-1 justify-end">
+              <Link 
+                v-if="departments.next_page_url"
+                :href="departments.next_page_url"
+                class="inline-flex items-center border-t-2 border-transparent pt-4 pl-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700"
+              >
+                Next
+              </Link>
             </div>
-            <div v-else class="text-sm text-neutral-400 italic">
-              No manager assigned
-            </div>
-          </template>
-
-          <!-- Custom cell for status -->
-          <template #cell-status="{ row }">
-            <span :class="getStatusClasses(row.status)">
-              {{ row.status || 'Active' }}
-            </span>
-          </template>
-
-          <!-- Custom cell for created date -->
-          <template #cell-created_at="{ row }">
-            <div class="text-sm">
-              <div class="text-neutral-900">{{ formatDate(row.created_at) }}</div>
-              <div class="text-neutral-500">{{ getTimeAgo(row.created_at) }}</div>
-            </div>
-          </template>
-        </DataTable>
+          </nav>
+        </div>
       </ContentCard>
     </PageLayout>
   </AuthenticatedLayout>
@@ -126,7 +228,8 @@ import {
   TrashIcon,
   DocumentArrowDownIcon,
   FunnelIcon,
-  ChartBarIcon
+  ChartBarIcon,
+  CalendarIcon
 } from '@heroicons/vue/24/outline'
 
 const props = defineProps({
@@ -344,6 +447,20 @@ const getTimeAgo = (dateString) => {
   } else {
     const years = Math.floor(diffDays / 365)
     return `${years} year${years > 1 ? 's' : ''} ago`
+  }
+}
+
+const getEmployeeStatusText = (count) => {
+  if (count === 0) {
+    return 'No staff assigned'
+  } else if (count === 1) {
+    return 'Single member'
+  } else if (count <= 5) {
+    return 'Small team'
+  } else if (count <= 15) {
+    return 'Medium team'
+  } else {
+    return 'Large team'
   }
 }
 

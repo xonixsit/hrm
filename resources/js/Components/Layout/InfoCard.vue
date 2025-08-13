@@ -35,7 +35,7 @@
         <!-- Actions -->
         <div 
           v-if="actions.length"
-          class="flex items-center space-x-2"
+          class="flex flex-col space-y-2 min-w-0"
         >
           <button
             v-for="action in actions"
@@ -380,7 +380,7 @@ const getGridClasses = (columns = 2) => {
 }
 
 const getActionClasses = (action) => {
-  const baseClasses = 'inline-flex items-center px-2 py-1 text-xs font-medium rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2'
+  const baseClasses = 'inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 min-w-0 flex-shrink-0'
   
   const variantClasses = {
     primary: 'text-primary-700 bg-primary-100 hover:bg-primary-200 focus:ring-primary-500',

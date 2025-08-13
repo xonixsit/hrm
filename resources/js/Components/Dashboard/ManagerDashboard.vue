@@ -35,6 +35,8 @@
         variant="featured"
         :trend="stats.teamTrend"
         :loading="loading"
+        :clickable="true"
+        route="employees.index"
       />
       
       <StatsCard
@@ -44,6 +46,8 @@
         icon-color="success"
         :trend="stats.projectTrend"
         :loading="loading"
+        :clickable="true"
+        route="projects.index"
       />
       
       <StatsCard
@@ -53,6 +57,8 @@
         icon-color="warning"
         :trend="stats.taskTrend"
         :loading="loading"
+        :clickable="true"
+        route="tasks.index"
       />
       
       <StatsCard
@@ -63,6 +69,8 @@
         unit="%"
         :trend="stats.attendanceTrend"
         :loading="loading"
+        :clickable="true"
+        route="attendances.index"
       />
     </div>
 

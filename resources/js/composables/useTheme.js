@@ -418,50 +418,54 @@ export function useTheme() {
   // Enhanced theme system initialization with robust error recovery
   const initializeTheme = () => {
     try {
-      // Always start with light theme as safe default
-      const safeDefault = 'light';
+      // FORCE LIGHT THEME ALWAYS - No exceptions
+      currentTheme.value = 'light';
+      systemTheme.value = 'light';
+      isSystemThemePreferred.value = false;
       
-      // Detect system theme with fallback
-      systemTheme.value = detectSystemTheme();
-      
-      // Load saved preference with validation
-      const preference = loadThemePreference();
-      
-      // Validate and sanitize theme preference
-      const validatedTheme = validateTheme(preference.theme) ? preference.theme : safeDefault;
-      const validatedUseSystem = typeof preference.useSystem === 'boolean' ? preference.useSystem : false;
-      
-      // Update state with validated values
-      currentTheme.value = validatedTheme;
-      isSystemThemePreferred.value = validatedUseSystem;
-      
-      // Determine initial theme to apply
-      const initialTheme = validatedUseSystem ? systemTheme.value : validatedTheme;
-      const finalTheme = validateTheme(initialTheme) ? initialTheme : safeDefault;
-      
-      // Apply initial theme with cleanup
-      cleanupAndApplyTheme(finalTheme);
-      
-      // Setup system theme listener with error handling
-      let cleanup = null;
+      // Clear any existing theme preferences to prevent conflicts
       try {
-        cleanup = setupSystemThemeListener();
-      } catch (listenerError) {
-        console.warn('Failed to setup system theme listener:', listenerError);
+        localStorage.removeItem('theme-preference');
+      } catch (storageError) {
+        console.warn('Failed to clear theme preference:', storageError);
       }
       
-      // Return cleanup function (may be null if listener setup failed)
-      return cleanup;
+      // Force light theme application with aggressive cleanup
+      if (typeof document !== 'undefined') {
+        const root = document.documentElement;
+        
+        // Remove ALL possible theme classes
+        root.classList.remove('theme-light', 'theme-dark', 'dark', 'light');
+        
+        // Force light theme class
+        root.classList.add('theme-light');
+        
+        // Force light theme CSS custom properties
+        root.style.setProperty('--color-neutral-50', '#fafafa');
+        root.style.setProperty('--color-neutral-100', '#f5f5f5');
+        root.style.setProperty('--color-neutral-200', '#e5e5e5');
+        root.style.setProperty('--color-neutral-300', '#d4d4d4');
+        root.style.setProperty('--color-neutral-400', '#a3a3a3');
+        root.style.setProperty('--color-neutral-500', '#6b7280');
+        root.style.setProperty('--color-neutral-600', '#525252');
+        root.style.setProperty('--color-neutral-700', '#404040');
+        root.style.setProperty('--color-neutral-800', '#262626');
+        root.style.setProperty('--color-neutral-900', '#111827');
+        root.style.setProperty('--color-neutral-950', '#0a0a0a');
+      }
+      
+      // Don't setup any listeners that could change the theme
+      return null;
       
     } catch (error) {
       console.error('Theme initialization failed:', error);
       
-      // Emergency fallback: force light theme
+      // Emergency fallback: force light theme directly on DOM
       try {
-        currentTheme.value = 'light';
-        systemTheme.value = 'light';
-        isSystemThemePreferred.value = false;
-        cleanupAndApplyTheme('light');
+        if (typeof document !== 'undefined') {
+          document.documentElement.classList.add('theme-light');
+          document.documentElement.classList.remove('theme-dark', 'dark');
+        }
       } catch (fallbackError) {
         console.error('Emergency theme fallback failed:', fallbackError);
       }
