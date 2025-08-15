@@ -34,7 +34,17 @@
         </tbody>
       </table>
     </div>
-    <pagination :links="timesheets.links" />
+    <div v-if="timesheets.last_page > 1">
+      <Pagination 
+        :links="timesheets.links"
+        :current-page="timesheets.current_page"
+        :last-page="timesheets.last_page"
+        :total="timesheets.total"
+        :per-page="timesheets.per_page"
+        :from="timesheets.from"
+        :to="timesheets.to"
+      />
+    </div>
   </div>
 </template>
 

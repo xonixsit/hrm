@@ -102,7 +102,7 @@ export function useAuth() {
         return false
       }
       
-      return roles.value.includes(role)
+      return roles.value.some(r => typeof r === 'string' ? r === role : r.name === role)
     } catch (error) {
       reportError(error, `checking role '${role}'`)
       return false

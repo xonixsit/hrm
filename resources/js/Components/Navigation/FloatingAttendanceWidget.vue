@@ -204,20 +204,27 @@ const todaysHours = computed(() => {
 })
 
 const breakTime = computed(() => {
-  if (!attendance.value.onBreak || !breakStartTime.value) {
-    return '0h 0m'
+  // If currently on break, show current break session duration with seconds
+  if (attendance.value.onBreak && breakStartTime.value) {
+    const breakStart = new Date(breakStartTime.value)
+    if (!isNaN(breakStart.getTime())) {
+      const now = new Date()
+      const diffMs = Math.max(0, now - breakStart) // Ensure positive duration
+      
+      const hours = Math.floor(diffMs / (1000 * 60 * 60))
+      const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60))
+      const seconds = Math.floor((diffMs % (1000 * 60)) / 1000)
+      
+      return `${hours}h ${minutes}m ${seconds}s`
+    } else {
+      // If we can't find a valid break start time but we're on break, 
+      // show at least 1 second to indicate break is active
+      return '0h 0m 1s'
+    }
   }
   
-  const breakStart = new Date(breakStartTime.value)
-  const now = new Date()
-  const breakMs = now - breakStart
-  
-  // Convert to hours and minutes
-  const breakMinutes = Math.floor(breakMs / (1000 * 60))
-  const hours = Math.floor(breakMinutes / 60)
-  const minutes = breakMinutes % 60
-  
-  return `${hours}h ${minutes}m`
+  // Otherwise show 0 when not on break
+  return '0h 0m'
 })
 
 const clockClasses = computed(() => [
@@ -318,17 +325,28 @@ const handleBreak = async () => {
       
       // Save state to localStorage
       saveStateToStorage()
+      
+      // Broadcast update to other components
+      broadcastAttendanceUpdate()
     } else {
-      // Start break
+      // Start break - set break start time immediately for instant feedback
+      breakStartTime.value = new Date().toISOString()
+      attendance.value.onBreak = true
+      
       const response = await window.axios.post('/api/attendance/break-start', {
         timestamp: new Date().toISOString()
       })
       
-      attendance.value.onBreak = true
-      breakStartTime.value = response.data.break_start_time || new Date().toISOString()
+      // Update with server response if available
+      if (response.data.break_start_time) {
+        breakStartTime.value = response.data.break_start_time
+      }
       
       // Save state to localStorage
       saveStateToStorage()
+      
+      // Broadcast update to other components
+      broadcastAttendanceUpdate()
     }
   } catch (error) {
     console.error('Break action failed:', error)
@@ -346,7 +364,33 @@ const fetchCurrentStatus = async () => {
     attendance.value.clockedIn = data.clocked_in || false
     attendance.value.onBreak = data.on_break || false
     attendance.value.clockInTime = data.clock_in_time || null
-    breakStartTime.value = data.break_start_time || null
+    
+    // Use the same logic as main dashboard for break start time
+    if (data.on_break) {
+      // Try multiple sources for break start time (same as main dashboard)
+      if (data.break_start_time) {
+        breakStartTime.value = data.break_start_time
+      } else if (data.current_session?.current_break_start) {
+        breakStartTime.value = data.current_session.current_break_start
+      } else if (data.current_session?.break_sessions && data.current_session.break_sessions.length > 0) {
+        // Get the last break session if it doesn't have an end time (ongoing break)
+        const lastBreak = data.current_session.break_sessions[data.current_session.break_sessions.length - 1]
+        if (lastBreak && !lastBreak.end) {
+          breakStartTime.value = lastBreak.start
+        }
+      } else if (!breakStartTime.value) {
+        // If no break start time found but we're on break, use current time
+        breakStartTime.value = new Date().toISOString()
+      }
+    } else {
+      breakStartTime.value = null
+    }
+    
+    console.log('FloatingWidget: Fetched status:', {
+      clockedIn: attendance.value.clockedIn,
+      onBreak: attendance.value.onBreak,
+      breakStartTime: breakStartTime.value
+    })
   } catch (error) {
     console.error('Failed to fetch attendance status:', error)
   }
@@ -358,6 +402,38 @@ const handleStorageChange = (event) => {
     // Refresh status when other components update attendance
     fetchCurrentStatus()
   }
+}
+
+// Listen for custom attendance state change events
+const handleAttendanceStateChange = (event) => {
+  console.log('FloatingWidget: Received attendance state change:', event.detail)
+  
+  const { clockedIn, onBreak, clockInTime, breakStartTime: eventBreakStartTime } = event.detail
+  
+  // Update local state immediately for responsive UI
+  attendance.value.clockedIn = clockedIn
+  attendance.value.onBreak = onBreak
+  attendance.value.clockInTime = clockInTime
+  
+  // Ensure we use the same break start time as the main dashboard
+  if (onBreak && eventBreakStartTime) {
+    breakStartTime.value = eventBreakStartTime
+  } else if (!onBreak) {
+    breakStartTime.value = null
+  }
+  
+  // Save to localStorage for persistence
+  saveStateToStorage()
+  
+  // Update timer immediately
+  updateTimer()
+  
+  console.log('FloatingWidget: State updated to:', {
+    clockedIn: attendance.value.clockedIn,
+    onBreak: attendance.value.onBreak,
+    breakStartTime: breakStartTime.value,
+    eventBreakStartTime: eventBreakStartTime
+  })
 }
 
 // Broadcast attendance updates to other components
@@ -393,11 +469,19 @@ onMounted(async () => {
   
   // Listen for attendance updates from other components
   window.addEventListener('storage', handleStorageChange)
+  
+  // Listen for custom attendance state change events from dashboard
+  window.addEventListener('attendance-state-changed', handleAttendanceStateChange)
+  
+  console.log('FloatingWidget: Event listeners registered')
 })
 
 onUnmounted(() => {
   if (timerInterval) clearInterval(timerInterval)
   window.removeEventListener('storage', handleStorageChange)
+  window.removeEventListener('attendance-state-changed', handleAttendanceStateChange)
+  
+  console.log('FloatingWidget: Event listeners removed')
 })
 </script>
 

@@ -43,6 +43,7 @@ Route::middleware('auth')->group(function () {
         return Inertia::render('AnimationDemo');
     })->name('animation.demo');
     Route::resource('employees', EmployeeController::class);
+    Route::post('employees/{employee}/reset-password', [EmployeeController::class, 'resetPassword'])->name('employees.reset-password');
     Route::resource('departments', DepartmentController::class);
     Route::resource('projects', ProjectController::class);
     Route::resource('tasks', TaskController::class);

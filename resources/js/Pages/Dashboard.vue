@@ -38,26 +38,21 @@
           @send-message="handleSendMessage"
         />
 
-        <div v-else>
-          <!-- Employee Dashboard Wrapper with Error Boundary -->
-          <div style="border: 2px solid green; padding: 10px; margin: 10px;">
-            <h3>Employee Dashboard Should Render Here</h3>
-            <EmployeeDashboard
-              :stats="employeeStats"
-              :personal-activities="personalActivities"
-              :todays-schedule="todaysSchedule"
-              :my-tasks="myTasks"
-              :recent-feedback="recentFeedback"
-              :clocked-in="clockedIn"
-              :current-attendance="currentAttendance"
-              :loading="loading"
-              @clock-in-out="handleClockInOut"
-              @toggle-task="handleToggleTask"
-              @action="handleAction"
-              @view-task="handleViewTask"
-            />
-          </div>
-        </div>
+        <EmployeeDashboard
+          v-else
+          :stats="employeeStats"
+          :personal-activities="personalActivities"
+          :todays-schedule="todaysSchedule"
+          :my-tasks="myTasks"
+          :recent-feedback="recentFeedback"
+          :clocked-in="clockedIn"
+          :current-attendance="currentAttendance"
+          :loading="loading"
+          @clock-in-out="handleClockInOut"
+          @toggle-task="handleToggleTask"
+          @action="handleAction"
+          @view-task="handleViewTask"
+        />
       </ContentSection>
     </PageLayout>
   </AuthenticatedLayout>
@@ -274,11 +269,17 @@ const handleRejection = async (approval) => {
   }
 };
 
-const handleAction = (actionData) => {
+const handleAction = async (actionData) => {
   console.log('Dashboard action:', actionData);
   
   // Handle different types of actions
   switch (actionData.type) {
+    case 'take-break':
+      await handleTakeBreak();
+      break;
+    case 'end-break':
+      await handleEndBreak();
+      break;
     case 'timeline':
       // Handle timeline actions
       break;
@@ -342,10 +343,22 @@ const handleClockInOut = async () => {
       
       // Broadcast update to floating widget
       try {
-        localStorage.setItem('attendance-update', Date.now().toString())
-        localStorage.removeItem('attendance-update')
+        // Use a more reliable broadcasting method
+        const updateEvent = new CustomEvent('attendance-state-changed', {
+          detail: {
+            clockedIn: !isClockedIn,
+            onBreak: false,
+            clockInTime: isClockedIn ? null : new Date().toISOString(),
+            timestamp: Date.now()
+          }
+        });
+        window.dispatchEvent(updateEvent);
+        
+        // Also update localStorage for persistence
+        localStorage.setItem('attendance-update', Date.now().toString());
+        setTimeout(() => localStorage.removeItem('attendance-update'), 100);
       } catch (error) {
-        console.warn('Failed to broadcast attendance update:', error)
+        console.warn('Failed to broadcast attendance update:', error);
       }
       
       // Reload the dashboard to get updated attendance data
@@ -387,6 +400,127 @@ const handleToggleTask = async (task) => {
 const handleViewTask = (task) => {
   console.log('Viewing task:', task);
   // Navigate to task details page or open modal
+};
+
+// Break functionality
+const handleTakeBreak = async () => {
+  loading.value = true;
+  
+  try {
+    console.log('Starting break...');
+    
+    // Make API call to start break
+    const response = await axios.post('/api/attendance/break-start', {
+      timestamp: new Date().toISOString(),
+    });
+    
+    if (response.data.success) {
+      console.log('Break started successfully:', response.data);
+      
+      // Broadcast update to floating widget
+      try {
+        // Use a more reliable broadcasting method
+        const updateEvent = new CustomEvent('attendance-state-changed', {
+          detail: {
+            clockedIn: true,
+            onBreak: true,
+            clockInTime: props.currentAttendance.clock_in_time,
+            breakStartTime: new Date().toISOString(),
+            timestamp: Date.now()
+          }
+        });
+        window.dispatchEvent(updateEvent);
+        
+        // Also update localStorage for persistence
+        localStorage.setItem('attendance-update', Date.now().toString());
+        setTimeout(() => localStorage.removeItem('attendance-update'), 100);
+      } catch (error) {
+        console.warn('Failed to broadcast attendance update:', error);
+      }
+      
+      // Reload the dashboard to get updated attendance data
+      router.reload({
+        only: ['currentAttendance', 'clockedIn', 'employeeStats'],
+        preserveScroll: true
+      });
+      
+    } else {
+      console.error('Break start failed:', response.data.message);
+    }
+    
+  } catch (error) {
+    console.error('Error starting break:', error);
+    
+    if (error.response?.status === 400) {
+      console.error('Bad request:', error.response.data.message);
+    } else if (error.response?.status === 401) {
+      console.error('Unauthorized - please log in again');
+    } else {
+      console.error('Network or server error');
+    }
+  } finally {
+    loading.value = false;
+  }
+};
+
+const handleEndBreak = async () => {
+  loading.value = true;
+  
+  try {
+    console.log('Ending break...');
+    
+    // Make API call to end break
+    const response = await axios.post('/api/attendance/break-end', {
+      timestamp: new Date().toISOString(),
+    });
+    
+    if (response.data.success) {
+      console.log('Break ended successfully:', response.data);
+      
+      // Broadcast update to floating widget
+      try {
+        // Use a more reliable broadcasting method
+        const updateEvent = new CustomEvent('attendance-state-changed', {
+          detail: {
+            clockedIn: true,
+            onBreak: false,
+            clockInTime: props.currentAttendance.clock_in_time,
+            breakStartTime: null,
+            timestamp: Date.now()
+          }
+        });
+        window.dispatchEvent(updateEvent);
+        
+        // Also update localStorage for persistence
+        localStorage.setItem('attendance-update', Date.now().toString());
+        setTimeout(() => localStorage.removeItem('attendance-update'), 100);
+      } catch (error) {
+        console.warn('Failed to broadcast attendance update:', error);
+      }
+      
+      // Reload the dashboard to get updated attendance data
+      router.reload({
+        only: ['currentAttendance', 'clockedIn', 'employeeStats'],
+        preserveScroll: true
+      });
+      
+    } else {
+      console.error('Break end failed:', response.data.message);
+    }
+    
+  } catch (error) {
+    console.error('Error ending break:', error);
+    
+    if (error.response?.status === 400) {
+      console.error('Bad request:', error.response.data.message);
+    } else if (error.response?.status === 401) {
+      console.error('Unauthorized - please log in again');
+    } else {
+      console.error('Network or server error');
+    }
+  } finally {
+    loading.value = false;
+  }
 };
 </script>
 

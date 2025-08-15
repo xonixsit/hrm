@@ -34,7 +34,11 @@
         :readonly="readonly"
         :required="computedRequired"
         :autocomplete="autocomplete"
-        :aria-describedby="fieldContext?.ariaDescribedBy"
+        :aria-describedby="ariaDescribedBy"
+        :aria-invalid="hasError"
+        :aria-required="computedRequired"
+        :aria-label="ariaLabel"
+        :aria-labelledby="ariaLabelledby"
         :class="inputClasses"
         @input="handleInput"
         @focus="handleFocus"
@@ -72,13 +76,16 @@
     <div v-if="!fieldContext && (computedHelpText || computedErrorMessage)" class="mt-1">
       <p
         v-if="computedErrorMessage"
+        :id="`${inputId}-error`"
         class="text-sm text-error-500"
         role="alert"
+        aria-live="polite"
       >
         {{ computedErrorMessage }}
       </p>
       <p
         v-else-if="computedHelpText"
+        :id="`${inputId}-help`"
         class="text-sm text-neutral-500"
       >
         {{ computedHelpText }}
@@ -182,6 +189,17 @@ const props = defineProps({
   class: {
     type: [String, Array, Object],
     default: ''
+  },
+  
+  // Accessibility props
+  ariaLabel: {
+    type: String,
+    default: null
+  },
+  
+  ariaLabelledby: {
+    type: String,
+    default: null
   }
 });
 
@@ -235,6 +253,29 @@ const computedDisabled = computed(() => {
 
 const computedSize = computed(() => {
   return fieldContext?.size || props.size;
+});
+
+// Accessibility computed properties
+const hasError = computed(() => {
+  return !!computedErrorMessage.value;
+});
+
+const ariaDescribedBy = computed(() => {
+  const ids = [];
+  
+  if (fieldContext?.ariaDescribedBy) {
+    ids.push(fieldContext.ariaDescribedBy);
+  }
+  
+  if (hasError.value) {
+    ids.push(`${inputId.value}-error`);
+  }
+  
+  if (computedHelpText.value) {
+    ids.push(`${inputId.value}-help`);
+  }
+  
+  return ids.length > 0 ? ids.join(' ') : null;
 });
 
 // Wrapper classes

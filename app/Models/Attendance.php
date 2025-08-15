@@ -78,7 +78,7 @@ class Attendance extends Model
             return false; // Not on break
         }
 
-        $breakDuration = now()->diffInMinutes($this->current_break_start);
+        $breakDuration = $this->current_break_start->diffInMinutes(now());
         $breakSessions = $this->break_sessions ?? [];
         
         $breakSessions[] = [
@@ -91,7 +91,7 @@ class Attendance extends Model
             'on_break' => false,
             'current_break_start' => null,
             'break_sessions' => $breakSessions,
-            'total_break_minutes' => $this->total_break_minutes + $breakDuration,
+            'total_break_minutes' => ($this->total_break_minutes ?? 0) + $breakDuration,
             'status' => 'clocked_in'
         ]);
 
@@ -115,7 +115,7 @@ class Attendance extends Model
         
         // Add current break if on break
         if ($this->on_break && $this->current_break_start) {
-            $breakMinutes += now()->diffInMinutes($this->current_break_start);
+            $breakMinutes += $this->current_break_start->diffInMinutes(now());
         }
 
         return max(0, $totalMinutes - $breakMinutes);
@@ -138,11 +138,12 @@ class Attendance extends Model
      */
     public function getBreakDurationAttribute()
     {
-        $minutes = $this->total_break_minutes;
+        // Fix: Ensure total_break_minutes is never null
+        $minutes = $this->total_break_minutes ?? 0;
         
         // Add current break if on break
         if ($this->on_break && $this->current_break_start) {
-            $minutes += now()->diffInMinutes($this->current_break_start);
+            $minutes += $this->current_break_start->diffInMinutes(now());
         }
         
         $hours = intval($minutes / 60);

@@ -313,7 +313,14 @@ const parsedData = computed(() => {
   };
 });
 
-const { currentPage, lastPage, hasPrevious, hasNext, previousUrl, nextUrl, total, from, to } = parsedData.value;
+// Computed properties for template access
+const currentPage = computed(() => parsedData.value.currentPage);
+const lastPage = computed(() => parsedData.value.lastPage);
+const hasPrevious = computed(() => parsedData.value.hasPrevious);
+const hasNext = computed(() => parsedData.value.hasNext);
+const total = computed(() => parsedData.value.total);
+const from = computed(() => parsedData.value.from);
+const to = computed(() => parsedData.value.to);
 
 const visiblePages = computed(() => {
   const pages = [];
@@ -406,22 +413,43 @@ const goToPage = (page) => {
     return;
   }
   
+  console.log('goToPage called with:', page);
+  
+  // Emit the event first
   emit('page-change', page);
   emit('update:currentPage', page);
   
-  // If using Laravel pagination links, navigate using Inertia
+  // Try multiple navigation strategies
+  let navigationSuccess = false;
+  
+  // Strategy 1: Use Laravel pagination links
   if (props.links && props.links.length > 0) {
     const pageLink = props.links.find(link => parseInt(link.label) === page);
+    console.log('Found pageLink:', pageLink);
+    
     if (pageLink?.url) {
+      console.log('Strategy 1: Using Laravel link:', pageLink.url);
       router.get(pageLink.url);
+      navigationSuccess = true;
     }
+  }
+  
+  // Strategy 2: Manual URL construction if Strategy 1 failed
+  if (!navigationSuccess) {
+    console.log('Strategy 2: Manual URL construction');
+    const currentPath = window.location.pathname;
+    const searchParams = new URLSearchParams(window.location.search);
+    searchParams.set('page', page);
+    const newUrl = `${currentPath}?${searchParams.toString()}`;
+    console.log('Navigating to:', newUrl);
+    router.get(newUrl);
   }
 };
 
 const goToPrevious = () => {
   if (parsedData.value.hasPrevious) {
-    if (previousUrl) {
-      router.get(previousUrl);
+    if (parsedData.value.previousUrl) {
+      router.get(parsedData.value.previousUrl);
     } else {
       goToPage(parsedData.value.currentPage - 1);
     }
@@ -430,8 +458,8 @@ const goToPrevious = () => {
 
 const goToNext = () => {
   if (parsedData.value.hasNext) {
-    if (nextUrl) {
-      router.get(nextUrl);
+    if (parsedData.value.nextUrl) {
+      router.get(parsedData.value.nextUrl);
     } else {
       goToPage(parsedData.value.currentPage + 1);
     }

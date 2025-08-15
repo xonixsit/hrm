@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Test Clock In API</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 10px 5px;
+            font-size: 16px;
+        }
+        .button:hover {
+            background: #2563eb;
+        }
+        .button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+        .success {
+            background: #10b981;
+        }
+        .danger {
+            background: #ef4444;
+        }
+        .warning {
+            background: #f59e0b;
+        }
+        .status {
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 6px;
+            font-weight: bold;
+        }
+        .status.success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #10b981;
+        }
+        .status.error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #ef4444;
+        }
+        .status.info {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #3b82f6;
+        }
+        .log {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 15px 0;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .current-status {
+            background: #f0f9ff;
+            border: 1px solid #0ea5e9;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🕐 Clock In/Out API Test</h1>
+        <p>Test the attendance API endpoints to verify clock in functionality is working.</p>
+        
+        <div id="currentStatus" class="current-status">
+            <h3>Current Status</h3>
+            <div id="statusDisplay">Loading...</div>
+        </div>
+        
+        <div class="controls">
+            <button id="getCurrentStatus" class="button">🔄 Get Current Status</button>
+            <button id="clockIn" class="button success">⏰ Clock In</button>
+            <button id="clockOut" class="button danger">⏹️ Clock Out</button>
+            <button id="startBreak" class="button warning">☕ Start Break</button>
+            <button id="endBreak" class="button warning">▶️ End Break</button>
+        </div>
+        
+        <div id="result" class="status" style="display: none;"></div>
+        
+        <div class="log" id="log">
+            <div><strong>API Test Log:</strong></div>
+        </div>
+    </div>
+
+    <script>
+        // Get CSRF token from meta tag or generate one
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || 'test-token';
+        
+        // Set up axios-like functionality
+        const api = {
+            async request(method, url, data = null) {
+                const options = {
+                    method: method.toUpperCase(),
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': csrfToken
+                    }
+                };
+                
+                if (data) {
+                    options.body = JSON.stringify(data);
+                }
+                
+                try {
+                    const response = await fetch(url, options);
+                    const responseData = await response.json();
+                    
+                    return {
+                        status: response.status,
+                        statusText: response.statusText,
+                        data: responseData,
+                        ok: response.ok
+                    };
+                } catch (error) {
+                    throw new Error(`Network error: ${error.message}`);
+                }
+            },
+            
+            get(url) { return this.request('GET', url); },
+            post(url, data) { return this.request('POST', url, data); }
+        };
+        
+        // Logging function
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.style.color = type === 'error' ? '#dc2626' : type === 'success' ? '#059669' : '#374151';
+            logEntry.innerHTML = `[${timestamp}] ${message}`;
+            logDiv.appendChild(logEntry);
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+        
+        // Show result function
+        function showResult(message, type = 'info') {
+            const resultDiv = document.getElementById('result');
+            resultDiv.className = `status ${type}`;
+            resultDiv.textContent = message;
+            resultDiv.style.display = 'block';
+            
+            setTimeout(() => {
+                resultDiv.style.display = 'none';
+            }, 5000);
+        }
+        
+        // Update status display
+        function updateStatusDisplay(data) {
+            const statusDiv = document.getElementById('statusDisplay');
+            
+            if (data.clocked_in) {
+                const status = data.on_break ? 'On Break' : 'Clocked In';
+                const clockInTime = data.clock_in_time ? new Date(data.clock_in_time).toLocaleTimeString() : 'Unknown';
+                
+                statusDiv.innerHTML = `
+                    <div><strong>Status:</strong> ${status}</div>
+                    <div><strong>Clock In Time:</strong> ${clockInTime}</div>
+                    <div><strong>Today's Hours:</strong> ${data.todays_summary?.total_hours || '0h 0m'}</div>
+                    <div><strong>Break Time:</strong> ${data.todays_summary?.break_time || '0h 0m'}</div>
+                `;
+            } else {
+                statusDiv.innerHTML = `
+                    <div><strong>Status:</strong> Clocked Out</div>
+                    <div><strong>Ready to clock in</strong></div>
+                `;
+            }
+        }
+        
+        // API functions
+        async function getCurrentStatus() {
+            try {
+                log('🔄 Getting current attendance status...');
+                const response = await api.get('/api/attendance/current');
+                
+                if (response.ok) {
+                    log('✅ Current status retrieved successfully', 'success');
+                    updateStatusDisplay(response.data);
+                    return response.data;
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${response.data.message || response.statusText}`);
+                }
+            } catch (error) {
+                log(`❌ Error getting status: ${error.message}`, 'error');
+                showResult(`Error: ${error.message}`, 'error');
+                throw error;
+            }
+        }
+        
+        async function clockIn() {
+            try {
+                log('⏰ Attempting to clock in...');
+                const response = await api.post('/api/attendance/clock-in', {
+                    timestamp: new Date().toISOString(),
+                    location: 'Test Location'
+                });
+                
+                if (response.ok) {
+                    log('✅ Clock in successful!', 'success');
+                    showResult('Clock in successful!', 'success');
+                    await getCurrentStatus(); // Refresh status
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${response.data.message || response.statusText}`);
+                }
+            } catch (error) {
+                log(`❌ Clock in failed: ${error.message}`, 'error');
+                showResult(`Clock in failed: ${error.message}`, 'error');
+            }
+        }
+        
+        async function clockOut() {
+            try {
+                log('⏹️ Attempting to clock out...');
+                const response = await api.post('/api/attendance/clock-out', {
+                    timestamp: new Date().toISOString()
+                });
+                
+                if (response.ok) {
+                    log('✅ Clock out successful!', 'success');
+                    showResult('Clock out successful!', 'success');
+                    await getCurrentStatus(); // Refresh status
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${response.data.message || response.statusText}`);
+                }
+            } catch (error) {
+                log(`❌ Clock out failed: ${error.message}`, 'error');
+                showResult(`Clock out failed: ${error.message}`, 'error');
+            }
+        }
+        
+        async function startBreak() {
+            try {
+                log('☕ Attempting to start break...');
+                const response = await api.post('/api/attendance/break-start', {
+                    timestamp: new Date().toISOString()
+                });
+                
+                if (response.ok) {
+                    log('✅ Break started successfully!', 'success');
+                    showResult('Break started successfully!', 'success');
+                    await getCurrentStatus(); // Refresh status
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${response.data.message || response.statusText}`);
+                }
+            } catch (error) {
+                log(`❌ Start break failed: ${error.message}`, 'error');
+                showResult(`Start break failed: ${error.message}`, 'error');
+            }
+        }
+        
+        async function endBreak() {
+            try {
+                log('▶️ Attempting to end break...');
+                const response = await api.post('/api/attendance/break-end', {
+                    timestamp: new Date().toISOString()
+                });
+                
+                if (response.ok) {
+                    log('✅ Break ended successfully!', 'success');
+                    showResult('Break ended successfully!', 'success');
+                    await getCurrentStatus(); // Refresh status
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${response.data.message || response.statusText}`);
+                }
+            } catch (error) {
+                log(`❌ End break failed: ${error.message}`, 'error');
+                showResult(`End break failed: ${error.message}`, 'error');
+            }
+        }
+        
+        // Event listeners
+        document.getElementById('getCurrentStatus').addEventListener('click', getCurrentStatus);
+        document.getElementById('clockIn').addEventListener('click', clockIn);
+        document.getElementById('clockOut').addEventListener('click', clockOut);
+        document.getElementById('startBreak').addEventListener('click', startBreak);
+        document.getElementById('endBreak').addEventListener('click', endBreak);
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            log('🚀 Clock In API Test initialized');
+            getCurrentStatus();
+        });
+    </script>
+</body>
+</html>

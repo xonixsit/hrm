@@ -6,7 +6,17 @@
       <p class="text-sm text-gray-500">{{ notification.created_at }}</p>
       <button v-if="!notification.read_at" @click="markAsRead(notification)" class="text-blue-500">Mark as Read</button>
     </div>
-    <pagination :links="notifications.links" />
+    <div v-if="notifications.last_page > 1">
+      <Pagination 
+        :links="notifications.links"
+        :current-page="notifications.current_page"
+        :last-page="notifications.last_page"
+        :total="notifications.total"
+        :per-page="notifications.per_page"
+        :from="notifications.from"
+        :to="notifications.to"
+      />
+    </div>
   </div>
 </template>
 

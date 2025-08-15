@@ -11,7 +11,6 @@
         </div>
       </slot>
     </div>
-
     <!-- Widget Content -->
     <div class="widget-content">
       <slot />

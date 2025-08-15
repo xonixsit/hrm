@@ -1,196 +1,112 @@
 <?php
-// Simple test script to check the current attendance status API
-// This should be run from the Laravel application root
 
-require_once 'vendor/autoload.php';
+// Test the current status API endpoint directly
+echo "🧪 Testing Attendance API Current Status Endpoint\n";
+echo "================================================\n\n";
 
-use Illuminate\Http\Request;
-use App\Http\Controllers\AttendanceController;
-use Illuminate\Support\Facades\Auth;
+// Test 1: Check if the route exists
+echo "1. Testing route accessibility...\n";
+$url = 'http://localhost/api/attendance/current';
 
-// Create a simple test to check if the API endpoint is working
-echo "Testing Attendance API Endpoints\n";
-echo "================================\n\n";
-
-// Test 1: Check if routes are defined
-echo "1. Checking if routes are defined...\n";
+$context = stream_context_create([
+    'http' => [
+        'method' => 'GET',
+        'header' => [
+            'Accept: application/json',
+            'X-Requested-With: XMLHttpRequest'
+        ]
+    ]
+]);
 
 try {
-    $routes = \Illuminate\Support\Facades\Route::getRoutes();
-    $attendanceRoutes = [];
+    $response = file_get_contents($url, false, $context);
     
-    foreach ($routes as $route) {
-        $uri = $route->uri();
-        if (strpos($uri, 'api/attendance') !== false) {
-            $attendanceRoutes[] = [
-                'method' => implode('|', $route->methods()),
-                'uri' => $uri,
-                'action' => $route->getActionName()
-            ];
-        }
-    }
-    
-    if (empty($attendanceRoutes)) {
-        echo "❌ No attendance API routes found!\n";
+    if ($response === false) {
+        echo "❌ Failed to connect to API endpoint\n";
+        echo "Make sure the Laravel server is running: php artisan serve\n";
     } else {
-        echo "✅ Found " . count($attendanceRoutes) . " attendance API routes:\n";
-        foreach ($attendanceRoutes as $route) {
-            echo "   {$route['method']} /{$route['uri']} -> {$route['action']}\n";
+        echo "✅ API endpoint is accessible\n";
+        echo "Response: " . substr($response, 0, 200) . "...\n\n";
+        
+        // Try to decode JSON
+        $data = json_decode($response, true);
+        if ($data) {
+            echo "✅ Valid JSON response received\n";
+            echo "Response structure:\n";
+            foreach ($data as $key => $value) {
+                echo "  - $key: " . (is_array($value) ? 'array' : gettype($value)) . "\n";
+            }
+        } else {
+            echo "❌ Invalid JSON response\n";
+            echo "Raw response: $response\n";
         }
     }
 } catch (Exception $e) {
-    echo "❌ Error checking routes: " . $e->getMessage() . "\n";
+    echo "❌ Error: " . $e->getMessage() . "\n";
 }
 
-echo "\n";
+echo "\n2. Testing with Laravel artisan command...\n";
 
-// Test 2: Check if AttendanceController methods exist
-echo "2. Checking AttendanceController methods...\n";
+// Test using artisan tinker equivalent
+$testScript = '
+<?php
+require_once "vendor/autoload.php";
 
-$controller = new AttendanceController();
-$methods = ['getCurrentStatus', 'clockIn', 'clockOut', 'startBreak', 'endBreak'];
+$app = require_once "bootstrap/app.php";
+$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
 
-foreach ($methods as $method) {
-    if (method_exists($controller, $method)) {
-        echo "✅ Method {$method} exists\n";
-    } else {
-        echo "❌ Method {$method} missing\n";
-    }
-}
+use App\Models\User;
+use App\Models\Employee;
+use App\Models\Attendance;
 
-echo "\n";
-
-// Test 3: Check database connection and tables
-echo "3. Checking database and tables...\n";
+echo "Testing database connectivity...\n";
 
 try {
-    // Check if attendances table exists
-    $tableExists = \Illuminate\Support\Facades\Schema::hasTable('attendances');
-    if ($tableExists) {
-        echo "✅ Attendances table exists\n";
+    $userCount = User::count();
+    echo "✅ Users in database: $userCount\n";
+    
+    $employeeCount = Employee::count();
+    echo "✅ Employees in database: $employeeCount\n";
+    
+    $attendanceCount = Attendance::count();
+    echo "✅ Attendance records: $attendanceCount\n";
+    
+    // Test getting a user with employee
+    $user = User::with("employee")->find(4); // Employee User
+    if ($user && $user->employee) {
+        echo "✅ Employee User found with employee record\n";
+        echo "   Employee ID: " . $user->employee->id . "\n";
+        echo "   Employee Code: " . $user->employee->employee_code . "\n";
         
-        // Check required columns
-        $requiredColumns = [
-            'employee_id', 'date', 'clock_in', 'clock_out', 
-            'on_break', 'current_break_start', 'break_sessions', 
-            'total_break_minutes', 'status'
-        ];
-        
-        foreach ($requiredColumns as $column) {
-            if (\Illuminate\Support\Facades\Schema::hasColumn('attendances', $column)) {
-                echo "✅ Column '{$column}' exists\n";
-            } else {
-                echo "❌ Column '{$column}' missing\n";
-            }
+        // Test getting current attendance
+        $today = now()->format("Y-m-d");
+        $attendance = Attendance::where("employee_id", $user->employee->id)
+            ->whereDate("date", $today)
+            ->first();
+            
+        if ($attendance) {
+            echo "✅ Found attendance record for today\n";
+            echo "   Status: " . $attendance->status . "\n";
+            echo "   Clocked In: " . ($attendance->isClockedIn() ? "Yes" : "No") . "\n";
+        } else {
+            echo "ℹ️ No attendance record for today (this is normal)\n";
         }
     } else {
-        echo "❌ Attendances table does not exist\n";
+        echo "❌ Employee User not found or missing employee record\n";
     }
+    
 } catch (Exception $e) {
     echo "❌ Database error: " . $e->getMessage() . "\n";
 }
+';
 
-echo "\n";
+file_put_contents('temp_test.php', $testScript);
+$output = shell_exec('php temp_test.php 2>&1');
+echo $output;
+unlink('temp_test.php');
 
-// Test 4: Check if Attendance model methods exist
-echo "4. Checking Attendance model methods...\n";
-
-try {
-    $attendance = new \App\Models\Attendance();
-    $modelMethods = ['startBreak', 'endBreak', 'calculateWorkMinutes', 'isClockedIn'];
-    
-    foreach ($modelMethods as $method) {
-        if (method_exists($attendance, $method)) {
-            echo "✅ Model method {$method} exists\n";
-        } else {
-            echo "❌ Model method {$method} missing\n";
-        }
-    }
-} catch (Exception $e) {
-    echo "❌ Model error: " . $e->getMessage() . "\n";
-}
-
-echo "\n";
-
-// Test 5: Check middleware and authentication
-echo "5. Checking middleware configuration...\n";
-
-try {
-    $middlewareGroups = config('app.middleware_groups', []);
-    if (isset($middlewareGroups['web'])) {
-        echo "✅ Web middleware group configured\n";
-    } else {
-        echo "❌ Web middleware group missing\n";
-    }
-    
-    if (class_exists('\App\Http\Middleware\VerifyCsrfToken')) {
-        echo "✅ CSRF middleware exists\n";
-    } else {
-        echo "❌ CSRF middleware missing\n";
-    }
-} catch (Exception $e) {
-    echo "❌ Middleware check error: " . $e->getMessage() . "\n";
-}
-
-echo "\n";
-
-// Test 6: Sample data check
-echo "6. Checking for sample data...\n";
-
-try {
-    $userCount = \App\Models\User::count();
-    $employeeCount = \App\Models\Employee::count();
-    $attendanceCount = \App\Models\Attendance::count();
-    
-    echo "✅ Users: {$userCount}\n";
-    echo "✅ Employees: {$employeeCount}\n";
-    echo "✅ Attendance records: {$attendanceCount}\n";
-    
-    if ($userCount === 0) {
-        echo "⚠️  No users found - you may need to create test users\n";
-    }
-    
-    if ($employeeCount === 0) {
-        echo "⚠️  No employees found - you may need to create employee records\n";
-    }
-} catch (Exception $e) {
-    echo "❌ Data check error: " . $e->getMessage() . "\n";
-}
-
-echo "\n";
-
-echo "Test Summary:\n";
-echo "=============\n";
-echo "If all tests show ✅, the attendance system should be working.\n";
-echo "If you see ❌ or ⚠️, those issues need to be addressed.\n\n";
-
-echo "To test the API endpoints manually:\n";
-echo "1. Make sure you're logged in to the application\n";
-echo "2. Open the browser developer tools (F12)\n";
-echo "3. Go to the Console tab\n";
-echo "4. Run these commands:\n\n";
-
-echo "// Test current status\n";
-echo "fetch('/api/attendance/current', {\n";
-echo "  method: 'GET',\n";
-echo "  headers: {\n";
-echo "    'Content-Type': 'application/json',\n";
-echo "    'Accept': 'application/json',\n";
-echo "    'X-Requested-With': 'XMLHttpRequest'\n";
-echo "  }\n";
-echo "}).then(r => r.json()).then(console.log)\n\n";
-
-echo "// Test clock in\n";
-echo "fetch('/api/attendance/clock-in', {\n";
-echo "  method: 'POST',\n";
-echo "  headers: {\n";
-echo "    'Content-Type': 'application/json',\n";
-echo "    'Accept': 'application/json',\n";
-echo "    'X-Requested-With': 'XMLHttpRequest',\n";
-echo "    'X-CSRF-TOKEN': document.querySelector('meta[name=\"csrf-token\"]').getAttribute('content')\n";
-echo "  },\n";
-echo "  body: JSON.stringify({})\n";
-echo "}).then(r => r.json()).then(console.log)\n\n";
-
-echo "Run this script with: php test-api-current-status.php\n";
-?>
+echo "\n3. Recommendations:\n";
+echo "- Make sure Laravel server is running: php artisan serve\n";
+echo "- Check if you're logged in to the application\n";
+echo "- Verify the Employee User has an employee record\n";
+echo "- Test the clock in button in the actual dashboard\n";

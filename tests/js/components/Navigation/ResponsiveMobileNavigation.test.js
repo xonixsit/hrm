@@ -141,11 +141,11 @@ describe('Responsive Mobile Navigation', () => {
       configurable: true,
       value: height,
     });
-    
+
     // Update matchMedia mock based on viewport
     window.matchMedia = vi.fn().mockImplementation(query => {
       let matches = false;
-      
+
       if (query.includes('max-width: 320px')) {
         matches = width <= 320;
       } else if (query.includes('max-width: 767px')) {
@@ -157,7 +157,7 @@ describe('Responsive Mobile Navigation', () => {
       } else if (query.includes('orientation: landscape')) {
         matches = width > height;
       }
-      
+
       return {
         matches,
         media: query,
@@ -169,7 +169,7 @@ describe('Responsive Mobile Navigation', () => {
         dispatchEvent: vi.fn(),
       };
     });
-    
+
     // Trigger resize event
     window.dispatchEvent(new Event('resize'));
   };
@@ -181,7 +181,7 @@ describe('Responsive Mobile Navigation', () => {
 
     it('displays mobile navigation components correctly', () => {
       wrapper = createWrapper();
-      
+
       expect(wrapper.find('.mobile-navigation').exists()).toBe(true);
       expect(wrapper.find('.mobile-top-bar').exists()).toBe(true);
       expect(wrapper.find('.mobile-bottom-nav').exists()).toBe(true);
@@ -189,7 +189,7 @@ describe('Responsive Mobile Navigation', () => {
 
     it('hamburger button has proper touch target size', () => {
       wrapper = createWrapper();
-      
+
       const hamburgerButton = wrapper.find('.hamburger-button');
       expect(hamburgerButton.attributes('style')).toContain('min-height: 44px');
       expect(hamburgerButton.attributes('style')).toContain('min-width: 44px');
@@ -197,7 +197,7 @@ describe('Responsive Mobile Navigation', () => {
 
     it('bottom navigation items have proper touch target size', () => {
       wrapper = createWrapper();
-      
+
       const bottomNavItems = wrapper.findAll('.bottom-nav-item');
       bottomNavItems.forEach(item => {
         expect(item.attributes('style')).toContain('min-height: 44px');
@@ -207,10 +207,10 @@ describe('Responsive Mobile Navigation', () => {
 
     it('drawer has appropriate width for mobile', async () => {
       wrapper = createWrapper();
-      
+
       await wrapper.find('.hamburger-button').trigger('click');
       await nextTick();
-      
+
       const drawer = wrapper.find('.mobile-drawer');
       expect(drawer.exists()).toBe(true);
       expect(drawer.classes()).toContain('w-80');
@@ -218,7 +218,7 @@ describe('Responsive Mobile Navigation', () => {
 
     it('applies safe area padding for devices with notches', () => {
       wrapper = createWrapper();
-      
+
       const bottomNav = wrapper.find('.mobile-bottom-nav');
       expect(bottomNav.classes()).toContain('safe-area-pb');
     });
@@ -231,10 +231,10 @@ describe('Responsive Mobile Navigation', () => {
 
     it('adjusts drawer width for very small screens', async () => {
       wrapper = createWrapper();
-      
+
       await wrapper.find('.hamburger-button').trigger('click');
       await nextTick();
-      
+
       const drawer = wrapper.find('.mobile-drawer');
       expect(drawer.exists()).toBe(true);
       // CSS media query should make drawer full width on very small screens
@@ -242,7 +242,7 @@ describe('Responsive Mobile Navigation', () => {
 
     it('maintains minimum touch targets even on small screens', () => {
       wrapper = createWrapper();
-      
+
       const hamburgerButton = wrapper.find('.hamburger-button');
       expect(hamburgerButton.attributes('style')).toContain('min-height: 44px');
       expect(hamburgerButton.attributes('style')).toContain('min-width: 44px');
@@ -250,10 +250,10 @@ describe('Responsive Mobile Navigation', () => {
 
     it('bottom navigation adapts to small screen width', () => {
       wrapper = createWrapper();
-      
+
       const bottomNavItems = wrapper.findAll('.bottom-nav-item');
       expect(bottomNavItems.length).toBeGreaterThan(0);
-      
+
       // Should still maintain minimum touch targets
       bottomNavItems.forEach(item => {
         expect(item.attributes('style')).toContain('min-height: 44px');
@@ -268,17 +268,17 @@ describe('Responsive Mobile Navigation', () => {
 
     it('still shows mobile navigation on tablet portrait', () => {
       wrapper = createWrapper();
-      
+
       expect(wrapper.find('.mobile-navigation').exists()).toBe(true);
       expect(wrapper.find('.lg\\:hidden').exists()).toBe(true);
     });
 
     it('drawer has appropriate width for tablet', async () => {
       wrapper = createWrapper();
-      
+
       await wrapper.find('.hamburger-button').trigger('click');
       await nextTick();
-      
+
       const drawer = wrapper.find('.mobile-drawer');
       expect(drawer.exists()).toBe(true);
       // Should use standard drawer width on tablet
@@ -286,10 +286,10 @@ describe('Responsive Mobile Navigation', () => {
 
     it('bottom navigation spacing is appropriate for tablet', () => {
       wrapper = createWrapper();
-      
+
       const bottomNav = wrapper.find('.mobile-bottom-nav');
       expect(bottomNav.exists()).toBe(true);
-      
+
       const bottomNavItems = wrapper.findAll('.bottom-nav-item');
       expect(bottomNavItems.length).toBeGreaterThan(0);
     });
@@ -302,7 +302,7 @@ describe('Responsive Mobile Navigation', () => {
 
     it('hides bottom navigation in landscape mode', () => {
       wrapper = createWrapper();
-      
+
       const bottomNav = wrapper.find('.mobile-bottom-nav');
       // CSS media query should hide bottom nav in landscape
       expect(bottomNav.exists()).toBe(true);
@@ -310,10 +310,10 @@ describe('Responsive Mobile Navigation', () => {
 
     it('adjusts drawer width for landscape', async () => {
       wrapper = createWrapper();
-      
+
       await wrapper.find('.hamburger-button').trigger('click');
       await nextTick();
-      
+
       const drawer = wrapper.find('.mobile-drawer');
       expect(drawer.exists()).toBe(true);
       // Should use smaller drawer width in landscape
@@ -321,13 +321,13 @@ describe('Responsive Mobile Navigation', () => {
 
     it('maintains hamburger button functionality in landscape', async () => {
       wrapper = createWrapper();
-      
+
       const hamburgerButton = wrapper.find('.hamburger-button');
       expect(hamburgerButton.exists()).toBe(true);
-      
+
       await hamburgerButton.trigger('click');
       await nextTick();
-      
+
       expect(wrapper.find('.mobile-drawer').exists()).toBe(true);
     });
   });
@@ -348,42 +348,42 @@ describe('Responsive Mobile Navigation', () => {
 
         it('hamburger button responds to touch', async () => {
           wrapper = createWrapper();
-          
+
           const hamburgerButton = wrapper.find('.hamburger-button');
           expect(hamburgerButton.classes()).toContain('touch-manipulation');
-          
+
           await hamburgerButton.trigger('click');
           await nextTick();
-          
+
           expect(wrapper.find('.mobile-drawer').exists()).toBe(true);
         });
 
         it('swipe gestures work correctly', async () => {
           wrapper = createWrapper();
-          
+
           // Open menu
           await wrapper.find('.hamburger-button').trigger('click');
           await nextTick();
-          
+
           const drawer = wrapper.find('.mobile-drawer');
           expect(drawer.exists()).toBe(true);
-          
+
           // Simulate swipe gesture
           await drawer.trigger('touchstart', {
             touches: [{ clientX: 200 }]
           });
-          
+
           await drawer.trigger('touchend', {
             changedTouches: [{ clientX: 50 }]
           });
-          
+
           await nextTick();
           expect(wrapper.find('.mobile-drawer').exists()).toBe(false);
         });
 
         it('bottom navigation items are touch-friendly', () => {
           wrapper = createWrapper();
-          
+
           const bottomNavItems = wrapper.findAll('.bottom-nav-item');
           bottomNavItems.forEach(item => {
             expect(item.classes()).toContain('touch-manipulation');
@@ -401,7 +401,7 @@ describe('Responsive Mobile Navigation', () => {
       it(`maintains accessibility at ${width}px width`, () => {
         setViewportSize(width, 667);
         wrapper = createWrapper();
-        
+
         const hamburgerButton = wrapper.find('.hamburger-button');
         expect(hamburgerButton.attributes('aria-label')).toBe('Toggle navigation menu');
         expect(hamburgerButton.attributes('aria-expanded')).toBe('false');
@@ -411,12 +411,12 @@ describe('Responsive Mobile Navigation', () => {
     it('updates ARIA states correctly across screen sizes', async () => {
       setViewportSize(375, 667);
       wrapper = createWrapper();
-      
+
       const hamburgerButton = wrapper.find('.hamburger-button');
-      
+
       await hamburgerButton.trigger('click');
       await nextTick();
-      
+
       expect(hamburgerButton.attributes('aria-expanded')).toBe('true');
     });
   });
@@ -425,32 +425,32 @@ describe('Responsive Mobile Navigation', () => {
     it('renders efficiently on small screens', () => {
       setViewportSize(320, 568);
       wrapper = createWrapper();
-      
+
       expect(wrapper.find('.mobile-navigation').exists()).toBe(true);
       // Component should render without performance issues
     });
 
     it('handles drawer animations smoothly on all screen sizes', async () => {
       const screenSizes = [320, 375, 414, 768];
-      
+
       for (const width of screenSizes) {
         setViewportSize(width, 667);
         wrapper = createWrapper();
-        
+
         const hamburgerButton = wrapper.find('.hamburger-button');
-        
+
         // Open drawer
         await hamburgerButton.trigger('click');
         await nextTick();
-        
+
         expect(wrapper.find('.mobile-drawer').exists()).toBe(true);
-        
+
         // Close drawer
         await hamburgerButton.trigger('click');
         await nextTick();
-        
+
         expect(wrapper.find('.mobile-drawer').exists()).toBe(false);
-        
+
         wrapper.unmount();
       }
     });
@@ -463,42 +463,42 @@ describe('Responsive Mobile Navigation', () => {
         { width: 375, height: 667 },
         { width: 768, height: 1024 }
       ];
-      
+
       screenSizes.forEach(({ width, height }) => {
         setViewportSize(width, height);
         wrapper = createWrapper();
-        
+
         // Bottom navigation should adapt to screen size
         const bottomNavItems = wrapper.findAll('.bottom-nav-item');
         expect(bottomNavItems.length).toBeGreaterThan(0);
-        
+
         // All items should maintain minimum touch targets
         bottomNavItems.forEach(item => {
           expect(item.attributes('style')).toContain('min-height: 44px');
         });
-        
+
         wrapper.unmount();
       });
     });
 
     it('maintains proper spacing in drawer across screen sizes', async () => {
       const screenSizes = [320, 375, 414, 768];
-      
+
       for (const width of screenSizes) {
         setViewportSize(width, 667);
         wrapper = createWrapper();
-        
+
         await wrapper.find('.hamburger-button').trigger('click');
         await nextTick();
-        
+
         const drawer = wrapper.find('.mobile-drawer');
         expect(drawer.exists()).toBe(true);
-        
+
         // Drawer should have proper padding and spacing
         expect(drawer.find('.drawer-header').exists()).toBe(true);
         expect(drawer.find('.drawer-navigation').exists()).toBe(true);
         expect(drawer.find('.drawer-footer').exists()).toBe(true);
-        
+
         wrapper.unmount();
       }
     });
@@ -508,9 +508,9 @@ describe('Responsive Mobile Navigation', () => {
     it('handles very narrow screens gracefully', () => {
       setViewportSize(280, 568); // Extremely narrow
       wrapper = createWrapper();
-      
+
       expect(wrapper.find('.mobile-navigation').exists()).toBe(true);
-      
+
       const hamburgerButton = wrapper.find('.hamburger-button');
       expect(hamburgerButton.attributes('style')).toContain('min-height: 44px');
     });
@@ -518,7 +518,7 @@ describe('Responsive Mobile Navigation', () => {
     it('handles very short screens gracefully', () => {
       setViewportSize(375, 400); // Very short
       wrapper = createWrapper();
-      
+
       expect(wrapper.find('.mobile-navigation').exists()).toBe(true);
       expect(wrapper.find('.mobile-bottom-nav').exists()).toBe(true);
     });
@@ -527,15 +527,15 @@ describe('Responsive Mobile Navigation', () => {
       // Start in portrait
       setViewportSize(375, 667);
       wrapper = createWrapper();
-      
+
       await wrapper.find('.hamburger-button').trigger('click');
       await nextTick();
       expect(wrapper.find('.mobile-drawer').exists()).toBe(true);
-      
+
       // Change to landscape
       setViewportSize(667, 375);
       await nextTick();
-      
+
       // Navigation should still work
       expect(wrapper.find('.mobile-navigation').exists()).toBe(true);
     });

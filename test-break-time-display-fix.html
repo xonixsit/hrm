@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Break Time Display Fix Test</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8fafc;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+        }
+        .widget-demo {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 24px;
+        }
+        .time-display {
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+            font-size: 24px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        .status-dot.working { background: #10b981; }
+        .status-dot.break { background: #f59e0b; animation: pulse 2s infinite; }
+        .status-dot.out { background: #6b7280; }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.1); }
+        }
+        
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-top: 20px;
+        }
+        .metric {
+            text-align: center;
+            padding: 12px;
+            background: #f8fafc;
+            border-radius: 8px;
+        }
+        .metric-value {
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 18px;
+            font-weight: 700;
+            color: #1f2937;
+        }
+        .metric-label {
+            font-size: 11px;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 4px;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+        }
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+        .btn-break {
+            background: #fbbf24;
+            color: #92400e;
+        }
+        .btn-break:hover {
+            background: #f59e0b;
+        }
+        .test-log {
+            background: #1f2937;
+            color: #e5e7eb;
+            padding: 16px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="test-container">
+            <h1 class="text-3xl font-bold text-gray-900 mb-6">Break Time Display Fix Test</h1>
+            
+            <div class="widget-demo">
+                <h2 class="text-xl font-semibold mb-4">Attendance Widget - Break Time Tracking</h2>
+                
+                <!-- Status Display -->
+                <div class="status-indicator">
+                    <div :class="['status-dot', statusClass]"></div>
+                    <span class="font-medium">{{ statusText }}</span>
+                </div>
+                
+                <!-- Time Displays -->
+                <div class="metrics-grid">
+                    <div class="metric">
+                        <div class="metric-value">{{ workTime }}</div>
+                        <div class="metric-label">WORK TIME</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value">{{ breakTime }}</div>
+                        <div class="metric-label">BREAK TIME</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value">{{ efficiency }}%</div>
+                        <div class="metric-label">EFFICIENCY</div>
+                    </div>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="action-buttons">
+                    <button 
+                        @click="toggleClockInOut" 
+                        :class="['btn', clockedIn ? 'btn-secondary' : 'btn-primary']"
+                    >
+                        {{ clockedIn ? 'Clock Out' : 'Clock In' }}
+                    </button>
+                    
+                    <button 
+                        v-if="clockedIn"
+                        @click="toggleBreak" 
+                        :class="['btn', onBreak ? 'btn-secondary' : 'btn-break']"
+                    >
+                        {{ onBreak ? 'End Break' : 'Take Break' }}
+                    </button>
+                </div>
+                
+                <!-- Test Log -->
+                <div class="test-log">
+                    <div v-for="log in logs" :key="log.id" class="mb-1">
+                        <span class="text-blue-400">[{{ log.time }}]</span> {{ log.message }}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="widget-demo">
+                <h2 class="text-xl font-semibold mb-4">Test Scenarios</h2>
+                <div class="space-y-2">
+                    <button @click="runTestScenario1" class="btn btn-primary mr-2">Test: Clock In → Break → End Break</button>
+                    <button @click="runTestScenario2" class="btn btn-primary mr-2">Test: Multiple Break Sessions</button>
+                    <button @click="resetTest" class="btn btn-secondary">Reset Test</button>
+                </div>
+                
+                <div class="mt-4 p-4 bg-blue-50 rounded-lg">
+                    <h3 class="font-semibold text-blue-900 mb-2">Expected Behavior:</h3>
+                    <ul class="text-sm text-blue-800 space-y-1">
+                        <li>• When not on break: Shows accumulated break time from all completed break sessions</li>
+                        <li>• When on break: Shows real-time current break session duration</li>
+                        <li>• Break time should increment in real-time during active breaks</li>
+                        <li>• After ending break: Shows total accumulated break time including the just-ended session</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { createApp, ref, computed, onMounted, onUnmounted } = Vue;
+
+        createApp({
+            setup() {
+                // State
+                const clockedIn = ref(false);
+                const onBreak = ref(false);
+                const clockInTime = ref(null);
+                const breakStartTime = ref(null);
+                const totalBreakMinutes = ref(0); // Accumulated break time from completed sessions
+                const breakSessions = ref([]); // Array of completed break sessions
+                const logs = ref([]);
+                
+                // Timer
+                let timer = null;
+                
+                // Computed properties
+                const statusClass = computed(() => {
+                    if (onBreak.value) return 'break';
+                    if (clockedIn.value) return 'working';
+                    return 'out';
+                });
+                
+                const statusText = computed(() => {
+                    if (onBreak.value) return 'On Break';
+                    if (clockedIn.value) return 'Working';
+                    return 'Clocked Out';
+                });
+                
+                const workTime = computed(() => {
+                    if (!clockedIn.value || !clockInTime.value) return '0h 0m 0s';
+                    
+                    const now = new Date();
+                    const start = new Date(clockInTime.value);
+                    const totalMs = now - start;
+                    
+                    // Subtract all break time
+                    let breakMs = totalBreakMinutes.value * 60 * 1000;
+                    
+                    // Add current break if on break
+                    if (onBreak.value && breakStartTime.value) {
+                        const currentBreakMs = now - new Date(breakStartTime.value);
+                        breakMs += currentBreakMs;
+                    }
+                    
+                    const workMs = Math.max(0, totalMs - breakMs);
+                    return formatDuration(workMs);
+                });
+                
+                const breakTime = computed(() => {
+                    if (!clockedIn.value) return '0h 0m 0s';
+                    
+                    let totalBreakMs = totalBreakMinutes.value * 60 * 1000;
+                    
+                    // If currently on break, add current break duration
+                    if (onBreak.value && breakStartTime.value) {
+                        const now = new Date();
+                        const currentBreakMs = now - new Date(breakStartTime.value);
+                        totalBreakMs += currentBreakMs;
+                    }
+                    
+                    return formatDuration(totalBreakMs);
+                });
+                
+                const efficiency = computed(() => {
+                    if (!clockedIn.value || !clockInTime.value) return 100;
+                    
+                    const now = new Date();
+                    const start = new Date(clockInTime.value);
+                    const totalMs = now - start;
+                    
+                    if (totalMs === 0) return 100;
+                    
+                    let breakMs = totalBreakMinutes.value * 60 * 1000;
+                    if (onBreak.value && breakStartTime.value) {
+                        breakMs += now - new Date(breakStartTime.value);
+                    }
+                    
+                    const workMs = Math.max(0, totalMs - breakMs);
+                    return Math.round((workMs / totalMs) * 100);
+                });
+                
+                // Methods
+                const formatDuration = (ms) => {
+                    const totalSeconds = Math.floor(ms / 1000);
+                    const hours = Math.floor(totalSeconds / 3600);
+                    const minutes = Math.floor((totalSeconds % 3600) / 60);
+                    const seconds = totalSeconds % 60;
+                    return `${hours}h ${minutes}m ${seconds}s`;
+                };
+                
+                const addLog = (message) => {
+                    const now = new Date();
+                    logs.value.unshift({
+                        id: Date.now(),
+                        time: now.toLocaleTimeString(),
+                        message
+                    });
+                    
+                    // Keep only last 20 logs
+                    if (logs.value.length > 20) {
+                        logs.value = logs.value.slice(0, 20);
+                    }
+                };
+                
+                const toggleClockInOut = () => {
+                    if (clockedIn.value) {
+                        // Clock out
+                        if (onBreak.value) {
+                            // End current break first
+                            endBreak();
+                        }
+                        
+                        clockedIn.value = false;
+                        clockInTime.value = null;
+                        addLog('Clocked out');
+                    } else {
+                        // Clock in
+                        clockedIn.value = true;
+                        clockInTime.value = new Date().toISOString();
+                        addLog('Clocked in');
+                    }
+                };
+                
+                const toggleBreak = () => {
+                    if (onBreak.value) {
+                        endBreak();
+                    } else {
+                        startBreak();
+                    }
+                };
+                
+                const startBreak = () => {
+                    if (!clockedIn.value || onBreak.value) return;
+                    
+                    onBreak.value = true;
+                    breakStartTime.value = new Date().toISOString();
+                    addLog('Started break');
+                };
+                
+                const endBreak = () => {
+                    if (!onBreak.value || !breakStartTime.value) return;
+                    
+                    const now = new Date();
+                    const breakStart = new Date(breakStartTime.value);
+                    const breakDurationMs = now - breakStart;
+                    const breakDurationMinutes = Math.floor(breakDurationMs / (1000 * 60));
+                    
+                    // Add to break sessions
+                    breakSessions.value.push({
+                        start: breakStartTime.value,
+                        end: now.toISOString(),
+                        durationMinutes: breakDurationMinutes
+                    });
+                    
+                    // Update total break minutes
+                    totalBreakMinutes.value += breakDurationMinutes;
+                    
+                    // Reset break state
+                    onBreak.value = false;
+                    breakStartTime.value = null;
+                    
+                    addLog(`Ended break (${Math.floor(breakDurationMinutes / 60)}h ${breakDurationMinutes % 60}m)`);
+                };
+                
+                const runTestScenario1 = async () => {
+                    addLog('=== Running Test Scenario 1 ===');
+                    resetTest();
+                    
+                    // Clock in
+                    toggleClockInOut();
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                    
+                    // Start break
+                    startBreak();
+                    addLog('Break started - watch break time increment');
+                    await new Promise(resolve => setTimeout(resolve, 5000));
+                    
+                    // End break
+                    endBreak();
+                    addLog('Break ended - break time should show accumulated total');
+                };
+                
+                const runTestScenario2 = async () => {
+                    addLog('=== Running Test Scenario 2 ===');
+                    resetTest();
+                    
+                    // Clock in
+                    toggleClockInOut();
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    
+                    // First break
+                    startBreak();
+                    addLog('First break started');
+                    await new Promise(resolve => setTimeout(resolve, 3000));
+                    endBreak();
+                    
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                    
+                    // Second break
+                    startBreak();
+                    addLog('Second break started - should add to previous break time');
+                    await new Promise(resolve => setTimeout(resolve, 3000));
+                    endBreak();
+                    
+                    addLog('Multiple breaks completed - check total break time');
+                };
+                
+                const resetTest = () => {
+                    clockedIn.value = false;
+                    onBreak.value = false;
+                    clockInTime.value = null;
+                    breakStartTime.value = null;
+                    totalBreakMinutes.value = 0;
+                    breakSessions.value = [];
+                    logs.value = [];
+                    addLog('Test reset');
+                };
+                
+                // Start timer for real-time updates
+                onMounted(() => {
+                    timer = setInterval(() => {
+                        // Force reactivity update for computed properties
+                    }, 1000);
+                    
+                    addLog('Break time display test initialized');
+                    addLog('This test demonstrates the fix for break time display');
+                });
+                
+                onUnmounted(() => {
+                    if (timer) clearInterval(timer);
+                });
+                
+                return {
+                    clockedIn,
+                    onBreak,
+                    statusClass,
+                    statusText,
+                    workTime,
+                    breakTime,
+                    efficiency,
+                    logs,
+                    toggleClockInOut,
+                    toggleBreak,
+                    runTestScenario1,
+                    runTestScenario2,
+                    resetTest
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>

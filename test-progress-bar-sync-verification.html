@@ -3,271 +3,173 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Progress Bar Clock-In Sync Verification</title>
+    <title>Progress Bar Sync Verification</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f5f5f5;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8fafc;
         }
-        .container {
+        .test-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+        }
+        .widget-demo {
             background: white;
-            padding: 30px;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 24px;
+            border: 1px solid #e5e7eb;
+        }
+        
+        /* Time Display Section styles */
+        .time-display-section {
+            padding: 24px;
+            background: white;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        
+        .time-metrics {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+        }
+        
+        .time-metric {
+            text-align: center;
+        }
+        
+        .time-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #111827;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+            margin-bottom: 4px;
+        }
+        
+        .time-label {
+            font-size: 11px;
+            color: #6b7280;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
             border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-right: 8px;
+            margin-bottom: 8px;
         }
-        .success {
-            background-color: #d4edda;
-            color: #155724;
-            padding: 15px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            border: 1px solid #c3e6cb;
+        .btn-primary { background: #3b82f6; color: white; }
+        .btn-primary:hover { background: #2563eb; }
+        .btn-secondary { background: #f3f4f6; color: #374151; }
+        .btn-secondary:hover { background: #e5e7eb; }
+        .btn-break { background: #fbbf24; color: #92400e; }
+        .btn-break:hover { background: #f59e0b; }
+        
+        .issue-found {
+            background: #fef2f2;
+            border: 1px solid #f87171;
+            color: #991b1b;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 16px;
         }
-        .info {
-            background-color: #d1ecf1;
-            color: #0c5460;
-            padding: 15px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            border: 1px solid #bee5eb;
-        }
-        .timeline-demo {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 5px;
-            margin: 20px 0;
-            border: 1px solid #dee2e6;
-        }
-        .timeline-bar {
-            position: relative;
-            height: 20px;
-            background: #e9ecef;
-            border-radius: 10px;
-            margin: 20px 0;
-            overflow: hidden;
-        }
-        .timeline-progress {
-            position: absolute;
-            height: 100%;
-            background: linear-gradient(90deg, #007bff, #0056b3);
-            border-radius: 10px;
-            transition: all 0.5s ease;
-        }
-        .timeline-markers {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 10px;
-            font-size: 12px;
-            color: #6c757d;
-        }
-        .marker {
-            text-align: center;
-            position: relative;
-        }
-        .marker.clock-in {
-            color: #28a745;
-            font-weight: bold;
-        }
-        .marker.current {
-            color: #007bff;
-            font-weight: bold;
-        }
-        .code-example {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 5px;
-            font-family: 'Courier New', monospace;
-            font-size: 14px;
-            border-left: 4px solid #007bff;
-            margin: 15px 0;
-        }
-        .scenario {
-            background: #fff3cd;
-            padding: 15px;
-            border-radius: 5px;
-            margin: 15px 0;
-            border-left: 4px solid #ffc107;
-        }
-        h1 {
-            color: #333;
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        h2 {
-            color: #495057;
-            border-bottom: 2px solid #dee2e6;
-            padding-bottom: 10px;
-        }
-        .calculation {
-            background: #e7f3ff;
-            padding: 15px;
-            border-radius: 5px;
-            margin: 15px 0;
-            border-left: 4px solid #007bff;
+        
+        .solution {
+            background: #f0fdf4;
+            border: 1px solid #22c55e;
+            color: #166534;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 16px;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>✅ Progress Bar Clock-In Sync Verification</h1>
-        
-        <div class="success">
-            <strong>🎯 Perfect Implementation!</strong> The progress bar is now correctly synchronized with the actual clock-in timestamp within a fixed timeline.
-        </div>
-
-        <h2>🔧 How It Works Now</h2>
-        
-        <div class="info">
-            <strong>Fixed Timeline:</strong> Always shows 8 AM to 5 PM (9 hours)<br>
-            <strong>Progress Start:</strong> Begins from actual clock-in time position<br>
-            <strong>Progress Width:</strong> Shows elapsed time since clock-in<br>
-            <strong>Real-time Updates:</strong> Updates every 500ms for smooth animation
-        </div>
-
-        <h2>📊 Visual Example</h2>
-        
-        <div class="scenario">
-            <strong>Scenario:</strong> User clocks in at 9:00 AM, current time is 11:30 AM
-        </div>
-
-        <div class="timeline-demo">
-            <div class="timeline-markers">
-                <div class="marker">8 AM</div>
-                <div class="marker clock-in">9 AM<br>↑ Clock In</div>
-                <div class="marker">10</div>
-                <div class="marker current">11:30<br>↑ Now</div>
-                <div class="marker">12 PM</div>
-                <div class="marker">1</div>
-                <div class="marker">2</div>
-                <div class="marker">3</div>
-                <div class="marker">4</div>
-                <div class="marker">5 PM</div>
+    <div id="app">
+        <div class="test-container">
+            <h1 class="text-3xl font-bold text-gray-900 mb-6">Progress Bar Sync Verification</h1>
+            
+            <div class="widget-demo">
+                <h2 class="text-xl font-semibold mb-4">Issue Analysis</h2>
+                
+                <div class="issue-found">
+                    <h3 class="font-semibold mb-2">🚨 Problem Identified:</h3>
+                    <p class="mb-2">The main ClockInOutWidget is still using its own local state instead of the shared state from the floating widget.</p>
+                    <ul class="text-sm space-y-1 ml-4">
+                        <li>• Template uses <code>attendanceSync.clockedIn.value</code> but component still has local <code>attendance</code> object</li>
+                        <li>• Action buttons call <code>attendanceSync.clockInOut</code> but component still has <code>handleClockInOut</code></li>
+                        <li>• Time display uses <code>realTimeBreakDuration</code> instead of <code>attendanceSync.breakTime</code></li>
+                        <li>• Two different state management systems are conflicting</li>
+                    </ul>
+                </div>
+                
+                <div class="solution">
+                    <h3 class="font-semibold mb-2">✅ Simple Solution:</h3>
+                    <p class="mb-2">Since the floating widget is working correctly, make the main widget use the same approach:</p>
+                    <ol class="text-sm space-y-1 ml-4">
+                        <li>1. Remove the <code>useAttendanceSync</code> import and usage</li>
+                        <li>2. Keep the existing local state management (it works)</li>
+                        <li>3. Add event listener to sync with floating widget state changes</li>
+                        <li>4. Use the same break time calculation as floating widget</li>
+                    </ol>
+                </div>
             </div>
             
-            <div class="timeline-bar">
-                <div class="timeline-progress" style="left: 11.11%; width: 27.78%;"></div>
+            <div class="widget-demo">
+                <h2 class="text-xl font-semibold mb-4">Recommended Fix</h2>
+                
+                <div class="bg-gray-100 p-4 rounded-lg">
+                    <h3 class="font-semibold mb-2">Template Changes:</h3>
+                    <pre class="text-sm"><code><!-- Change from: -->
+&lt;div v-if="attendanceSync.clockedIn.value" class="time-display-section"&gt;
+
+<!-- To: -->
+&lt;div v-if="attendance.clockedIn.value" class="time-display-section"&gt;
+
+<!-- Change action buttons from: -->
+@click="attendanceSync.clockInOut"
+
+<!-- To: -->
+@click="handleClockInOut"</code></pre>
+                </div>
+                
+                <div class="bg-gray-100 p-4 rounded-lg mt-4">
+                    <h3 class="font-semibold mb-2">Script Changes:</h3>
+                    <pre class="text-sm"><code>// Remove:
+import { useAttendanceSync } from '@/composables/useAttendanceSync.js'
+const attendanceSync = useAttendanceSync()
+
+// Keep existing local state management
+// Add floating widget sync listener (already implemented)</code></pre>
+                </div>
+                
+                <div class="mt-4 p-4 bg-blue-50 rounded-lg">
+                    <h3 class="font-semibold text-blue-900 mb-2">Why This Works:</h3>
+                    <ul class="text-sm text-blue-800 space-y-1">
+                        <li>• Floating widget already has correct break time calculation</li>
+                        <li>• Main widget can listen to floating widget state changes</li>
+                        <li>• Both widgets will show the same data</li>
+                        <li>• No need for complex shared state management</li>
+                        <li>• Simpler and more reliable approach</li>
+                    </ul>
+                </div>
             </div>
-            
-            <div style="text-align: center; margin-top: 10px; font-weight: bold; color: #007bff;">
-                Progress: 2.5 hours worked out of 9-hour timeline (27.78% position)
-            </div>
-        </div>
-
-        <h2>🧮 Calculation Logic</h2>
-        
-        <div class="calculation">
-            <strong>Timeline Setup:</strong><br>
-            • Fixed timeline: 8 AM to 5 PM = 9 hours (32,400,000 ms)<br>
-            • Clock-in time: 9:00 AM<br>
-            • Current time: 11:30 AM<br><br>
-            
-            <strong>Progress Start Position:</strong><br>
-            • Clock-in offset from 8 AM = 1 hour = 3,600,000 ms<br>
-            • Start position = (3,600,000 / 32,400,000) × 100% = 11.11%<br><br>
-            
-            <strong>Progress Width:</strong><br>
-            • Current offset from 8 AM = 3.5 hours = 12,600,000 ms<br>
-            • Current position = (12,600,000 / 32,400,000) × 100% = 38.89%<br>
-            • Progress width = 38.89% - 11.11% = 27.78%<br><br>
-            
-            <strong>Visual Result:</strong><br>
-            • Progress bar starts at 11.11% (9 AM position)<br>
-            • Progress bar width is 27.78% (2.5 hours of work)<br>
-            • Total visual position: 11.11% to 38.89% on timeline
-        </div>
-
-        <h2>💻 Implementation Details</h2>
-
-        <div class="code-example">
-// Progress bar positioning
-const progressStartPosition = computed(() => {
-  const clockInTime = props.currentAttendance.clock_in_time;
-  const timelineStart = new Date(); timelineStart.setHours(8, 0, 0, 0);
-  const timelineEnd = new Date(); timelineEnd.setHours(17, 0, 0, 0);
-  
-  const actualClockIn = new Date(clockInTime);
-  const totalTimelineMs = timelineEnd.getTime() - timelineStart.getTime();
-  const clockInPositionMs = actualClockIn.getTime() - timelineStart.getTime();
-  
-  return Math.max(0, (clockInPositionMs / totalTimelineMs) * 100);
-});
-
-const progressWidth = computed(() => {
-  const now = currentTime.value;
-  const currentPositionMs = now.getTime() - timelineStart.getTime();
-  const currentPositionPercent = (currentPositionMs / totalTimelineMs) * 100;
-  
-  return Math.max(0, currentPositionPercent - clockInPositionPercent);
-});
-        </div>
-
-        <h2>🎨 CSS Implementation</h2>
-
-        <div class="code-example">
-&lt;div 
-  class="time-progress-fill"
-  :style="{ 
-    left: `${progressStartPosition}%`,
-    width: `${progressWidth}%`,
-    transition: 'width 0.5s ease-out, left 0.5s ease-out'
-  }"
-&gt;
-        </div>
-
-        <h2>🧪 Test Scenarios</h2>
-
-        <div class="scenario">
-            <strong>Scenario 1:</strong> Clock in at 8:00 AM (start of timeline)<br>
-            • Start position: 0%<br>
-            • At 11:00 AM: Width = 33.33% (3/9 hours)<br>
-            • Visual: Progress from very beginning
-        </div>
-
-        <div class="scenario">
-            <strong>Scenario 2:</strong> Clock in at 12:00 PM (middle of timeline)<br>
-            • Start position: 44.44% (4/9 hours from 8 AM)<br>
-            • At 2:00 PM: Width = 22.22% (2/9 hours)<br>
-            • Visual: Progress starts from middle, fills rightward
-        </div>
-
-        <div class="scenario">
-            <strong>Scenario 3:</strong> Clock in at 4:00 PM (near end of timeline)<br>
-            • Start position: 88.89% (8/9 hours from 8 AM)<br>
-            • At 5:00 PM: Width = 11.11% (1/9 hours)<br>
-            • Visual: Progress starts near end, small fill
-        </div>
-
-        <h2>⚡ Real-Time Features</h2>
-
-        <div class="info">
-            <ul>
-                <li><strong>Live Updates:</strong> Progress updates every 500ms</li>
-                <li><strong>Smooth Animation:</strong> CSS transitions for width and position changes</li>
-                <li><strong>Current Time Indicator:</strong> Moving dot shows exact current time</li>
-                <li><strong>Status Synchronization:</strong> "Active" status only when actually working</li>
-                <li><strong>Percentage Display:</strong> Shows accurate work progress percentage</li>
-            </ul>
-        </div>
-
-        <h2>🔄 Synchronization Status</h2>
-
-        <div class="success">
-            <strong>✅ Fully Synchronized:</strong>
-            <ul>
-                <li>Progress bar starts from actual clock-in time position</li>
-                <li>Timeline always shows fixed 8 AM - 5 PM schedule</li>
-                <li>Progress width represents actual work time elapsed</li>
-                <li>Real-time updates maintain accuracy</li>
-                <li>Both dashboard and floating widget stay in sync</li>
-            </ul>
-        </div>
-
-        <div class="info">
-            <strong>🎯 Perfect Result:</strong> The progress bar now accurately represents your work session within the fixed timeline. If you clock in at 9 AM, the progress starts from the 9 AM position and grows as time passes, giving you a true visual representation of your workday progress!
         </div>
     </div>
+
+    <script>
+        const { createApp } = Vue;
+        createApp({}).mount('#app');
+    </script>
 </body>
 </html>

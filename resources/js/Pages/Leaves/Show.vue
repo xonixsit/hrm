@@ -12,14 +12,7 @@
     >
       <!-- Primary Content -->
       <template #primary>
-        <!-- Debug Info (only in development) -->
-        <div v-if="process.env.NODE_ENV === 'development'" class="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-          <h3 class="font-bold text-yellow-800">Debug Info:</h3>
-          <p><strong>Leave Object:</strong> {{ JSON.stringify(leave, null, 2) }}</p>
-          <p><strong>Leave ID:</strong> {{ leave?.id || 'undefined' }}</p>
-          <p><strong>Leave Type:</strong> {{ leave?.leave_type?.name || 'undefined' }}</p>
-          <p><strong>Has Valid Data:</strong> {{ hasValidLeaveData }}</p>
-        </div>
+        <!-- Debug Info removed to avoid process.env errors -->
         
         <div class="space-y-6">
           <!-- Leave Details Card -->
@@ -389,17 +382,8 @@ const props = defineProps({
 
 const { hasAnyRole } = useAuth();
 
-// Debug: Log the leave data to see what we're receiving
-if (process.env.NODE_ENV === 'development') {
-  console.log('Leave data received:', props.leave);
-  console.log('Leave keys:', props.leave ? Object.keys(props.leave) : 'No leave data');
-  console.log('Leave ID:', props.leave?.id);
-  console.log('Leave Type (leave_type):', props.leave?.leave_type);
-  console.log('Leave Type (leaveType):', props.leave?.leaveType);
-  console.log('Leave Status:', props.leave?.status);
-  console.log('Leave Dates:', { from: props.leave?.from_date, to: props.leave?.to_date });
-  console.log('Employee data:', props.leave?.employee);
-}
+// Debug mode is disabled
+// No debug logging to avoid process.env errors
 
 // Check if we have valid leave data
 const hasValidLeaveData = computed(() => {
@@ -409,13 +393,7 @@ const hasValidLeaveData = computed(() => {
          props.leave.id;
 });
 
-// If no valid data, show error message
-if (process.env.NODE_ENV === 'development' && !hasValidLeaveData.value) {
-  console.error('❌ LEAVE DATA ISSUE: No valid leave data received');
-  console.log('Current URL:', window.location.href);
-  console.log('Expected: Leave object with id, leaveType, dates, etc.');
-  console.log('Received:', props.leave);
-}
+// Debug validation is disabled to avoid process.env errors
 
 // Local state
 const loading = ref(false);

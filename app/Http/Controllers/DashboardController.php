@@ -341,6 +341,8 @@ class DashboardController extends Controller
             'clocked_in' => $attendance->isClockedIn(),
             'on_break' => $attendance->on_break,
             'clock_in_time' => $attendance->clock_in?->toISOString(),
+            'current_break_start' => $attendance->current_break_start?->toISOString(),
+            'break_sessions' => $attendance->break_sessions ?? [],
             'current_session' => $attendance,
             'todays_summary' => $this->getTodaysSummary($employeeId),
             'recent_activities' => $this->getRecentActivities($employeeId),

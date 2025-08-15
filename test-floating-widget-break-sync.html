@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Break Time Sync Test - Dashboard & Floating Widget</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div id="app">
+        <div class="max-w-6xl mx-auto">
+            <h1 class="text-3xl font-bold text-gray-900 mb-8">Break Time Synchronization Test</h1>
+            
+            <!-- Main Dashboard Simulation -->
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+                <h2 class="text-xl font-semibold mb-4">Main Dashboard</h2>
+                
+                <!-- Time Display (like EmployeeDashboard) -->
+                <div class="grid grid-cols-3 gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
+                    <div class="text-center">
+                        <div class="text-xs text-gray-500 uppercase tracking-wide font-medium mb-1">Work Time</div>
+                        <div class="text-lg font-bold text-gray-900 font-mono">{{ mainDashboard.workDuration }}</div>
+                    </div>
+                    <div class="text-center" v-if="attendance.onBreak">
+                        <div class="text-xs text-gray-500 uppercase tracking-wide font-medium mb-1">Break Time</div>
+                        <div class="text-lg font-bold text-gray-900 font-mono">{{ mainDashboard.breakDuration }}</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-xs text-gray-500 uppercase tracking-wide font-medium mb-1">Status</div>
+                        <div class="text-lg font-bold" :class="statusColor">{{ status }}</div>
+                    </div>
+                </div>
+                
+                <!-- Control Buttons -->
+                <div class="flex space-x-4 mb-4">
+                    <button 
+                        @click="clockIn" 
+                        :disabled="attendance.clockedIn"
+                        class="px-4 py-2 bg-green-600 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-green-700"
+                    >
+                        Clock In
+                    </button>
+                    <button 
+                        @click="takeBreak" 
+                        :disabled="!attendance.clockedIn || attendance.onBreak"
+                        class="px-4 py-2 bg-yellow-600 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-yellow-700"
+                    >
+                        Take Break
+                    </button>
+                    <button 
+                        @click="endBreak" 
+                        :disabled="!attendance.onBreak"
+                        class="px-4 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-700"
+                    >
+                        End Break
+                    </button>
+                    <button 
+                        @click="clockOut" 
+                        :disabled="!attendance.clockedIn"
+                        class="px-4 py-2 bg-red-600 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-red-700"
+                    >
+                        Clock Out
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Floating Widget Simulation -->
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+                <h2 class="text-xl font-semibold mb-4">Floating Widget</h2>
+                
+                <!-- Collapsed State -->
+                <div v-if="!floatingWidget.expanded" class="mb-4">
+                    <div class="inline-flex items-center gap-3 px-4 py-3 bg-white rounded-full shadow-lg border cursor-pointer" @click="floatingWidget.expanded = true">
+                        <div class="w-3 h-3 rounded-full" :class="statusDotClass"></div>
+                        <div>
+                            <div class="text-sm font-mono font-semibold text-gray-700">{{ floatingWidget.currentTimer }}</div>
+                            <div class="text-xs font-medium text-gray-500 uppercase">{{ timerLabel }}</div>
+                        </div>
+                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
+                        </svg>
+                    </div>
+                </div>
+                
+                <!-- Expanded State -->
+                <div v-if="floatingWidget.expanded" class="bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden max-w-sm">
+                    <!-- Header -->
+                    <div class="flex items-center justify-between p-4 border-b border-gray-100">
+                        <div class="flex items-center gap-2">
+                            <div class="w-3 h-3 rounded-full" :class="statusDotClass"></div>
+                            <span class="text-sm font-semibold text-gray-700">{{ status }}</span>
+                        </div>
+                        <button @click="floatingWidget.expanded = false" class="p-1 text-gray-400 hover:text-gray-600 rounded">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    <!-- Timer Display -->
+                    <div class="text-center py-4 px-4">
+                        <div class="text-2xl font-mono font-bold text-gray-800 mb-1">{{ floatingWidget.currentTimer }}</div>
+                        <div class="text-xs font-medium text-gray-500 uppercase tracking-wide">{{ timerLabel }}</div>
+                    </div>
+                    
+                    <!-- Quick Stats -->
+                    <div class="flex border-t border-gray-100">
+                        <div class="flex-1 text-center py-3 px-2">
+                            <span class="block text-sm font-mono font-bold text-gray-800">{{ floatingWidget.todaysHours }}</span>
+                            <span class="block text-xs text-gray-500 mt-1">Today</span>
+                        </div>
+                        <div class="flex-1 text-center py-3 px-2">
+                            <span class="block text-sm font-mono font-bold text-gray-800">{{ floatingWidget.breakTime }}</span>
+                            <span class="block text-xs text-gray-500 mt-1">Break</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Sync Status -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h2 class="text-xl font-semibold mb-4">Synchronization Status</h2>
+                
+                <div class="grid grid-cols-2 gap-6">
+                    <div>
+                        <h3 class="font-medium text-gray-900 mb-2">Main Dashboard Break Time</h3>
+                        <div class="text-2xl font-mono font-bold text-blue-600">{{ mainDashboard.breakDuration }}</div>
+                    </div>
+                    <div>
+                        <h3 class="font-medium text-gray-900 mb-2">Floating Widget Break Time</h3>
+                        <div class="text-2xl font-mono font-bold text-green-600">{{ floatingWidget.breakTime }}</div>
+                    </div>
+                </div>
+                
+                <div class="mt-4 p-4 rounded-lg" :class="syncStatus.bgClass">
+                    <div class="flex items-center">
+                        <div class="w-4 h-4 rounded-full mr-3" :class="syncStatus.dotClass"></div>
+                        <span class="font-medium" :class="syncStatus.textClass">{{ syncStatus.message }}</span>
+                    </div>
+                </div>
+                
+                <!-- Debug Info -->
+                <div class="mt-4 bg-gray-100 p-4 rounded-lg">
+                    <h4 class="font-semibold mb-2">Debug Information:</h4>
+                    <div class="text-sm space-y-1">
+                        <div><strong>Break Start Time:</strong> {{ breakStartTime || 'Not on break' }}</div>
+                        <div><strong>Current Time:</strong> {{ currentTime }}</div>
+                        <div><strong>On Break:</strong> {{ attendance.onBreak }}</div>
+                        <div><strong>Time Difference:</strong> {{ timeDifference }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { createApp, ref, computed, onMounted, onUnmounted } = Vue;
+
+        createApp({
+            setup() {
+                // Shared state
+                const attendance = ref({
+                    clockedIn: false,
+                    onBreak: false,
+                    clockInTime: null
+                });
+                
+                const breakStartTime = ref(null);
+                const currentTime = ref(new Date().toLocaleTimeString());
+                
+                // Main dashboard state
+                const mainDashboard = ref({
+                    workDuration: '0h 0m 0s',
+                    breakDuration: '0h 0m 0s'
+                });
+                
+                // Floating widget state
+                const floatingWidget = ref({
+                    expanded: false,
+                    currentTimer: '0h 0m 0s',
+                    todaysHours: '0h 0m',
+                    breakTime: '0h 0m'
+                });
+                
+                let timeInterval = null;
+                
+                // Computed properties
+                const status = computed(() => {
+                    if (!attendance.value.clockedIn) return 'Not Clocked In';
+                    if (attendance.value.onBreak) return 'On Break';
+                    return 'Working';
+                });
+                
+                const statusColor = computed(() => {
+                    if (!attendance.value.clockedIn) return 'text-gray-600';
+                    if (attendance.value.onBreak) return 'text-yellow-600';
+                    return 'text-green-600';
+                });
+                
+                const statusDotClass = computed(() => {
+                    if (!attendance.value.clockedIn) return 'bg-gray-400';
+                    if (attendance.value.onBreak) return 'bg-yellow-500';
+                    return 'bg-green-500';
+                });
+                
+                const timerLabel = computed(() => {
+                    if (attendance.value.onBreak) return 'BREAK TIME';
+                    if (attendance.value.clockedIn) return 'WORK TIME';
+                    return 'NOT ACTIVE';
+                });
+                
+                const timeDifference = computed(() => {
+                    if (!attendance.value.onBreak || !breakStartTime.value) return 'N/A';
+                    
+                    const breakStart = new Date(breakStartTime.value);
+                    const now = new Date();
+                    const diffMs = now - breakStart;
+                    const diffSeconds = Math.floor(diffMs / 1000);
+                    
+                    return `${diffSeconds} seconds`;
+                });
+                
+                const syncStatus = computed(() => {
+                    if (!attendance.value.onBreak) {
+                        return {
+                            message: 'Not on break - sync not applicable',
+                            bgClass: 'bg-gray-100',
+                            dotClass: 'bg-gray-400',
+                            textClass: 'text-gray-700'
+                        };
+                    }
+                    
+                    const mainBreak = mainDashboard.value.breakDuration;
+                    const floatingBreak = floatingWidget.value.breakTime;
+                    
+                    if (mainBreak === floatingBreak) {
+                        return {
+                            message: '✅ Perfect sync - both showing identical break time',
+                            bgClass: 'bg-green-100',
+                            dotClass: 'bg-green-500',
+                            textClass: 'text-green-700'
+                        };
+                    } else {
+                        return {
+                            message: '⚠️ Out of sync - break times differ',
+                            bgClass: 'bg-red-100',
+                            dotClass: 'bg-red-500',
+                            textClass: 'text-red-700'
+                        };
+                    }
+                });
+                
+                // Methods
+                const updateTime = () => {
+                    const now = new Date();
+                    currentTime.value = now.toLocaleTimeString();
+                    
+                    // Update main dashboard work duration
+                    if (attendance.value.clockedIn && attendance.value.clockInTime) {
+                        const clockIn = new Date(attendance.value.clockInTime);
+                        const diffMs = now - clockIn;
+                        const hours = Math.floor(diffMs / (1000 * 60 * 60));
+                        const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+                        const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
+                        mainDashboard.value.workDuration = `${hours}h ${minutes}m ${seconds}s`;
+                        
+                        // Update floating widget today's hours (without seconds)
+                        floatingWidget.value.todaysHours = `${hours}h ${minutes}m`;
+                    } else {
+                        mainDashboard.value.workDuration = '0h 0m 0s';
+                        floatingWidget.value.todaysHours = '0h 0m';
+                    }
+                    
+                    // Update break duration (MAIN DASHBOARD LOGIC)
+                    if (attendance.value.onBreak && breakStartTime.value) {
+                        const breakStart = new Date(breakStartTime.value);
+                        if (!isNaN(breakStart.getTime())) {
+                            const diffMs = Math.max(0, now - breakStart);
+                            const hours = Math.floor(diffMs / (1000 * 60 * 60));
+                            const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+                            const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
+                            mainDashboard.value.breakDuration = `${hours}h ${minutes}m ${seconds}s`;
+                        } else {
+                            mainDashboard.value.breakDuration = '0h 0m 1s';
+                        }
+                    } else {
+                        mainDashboard.value.breakDuration = '0h 0m 0s';
+                    }
+                    
+                    // Update break duration (FLOATING WIDGET LOGIC)
+                    if (attendance.value.onBreak && breakStartTime.value) {
+                        const breakStart = new Date(breakStartTime.value);
+                        if (!isNaN(breakStart.getTime())) {
+                            const diffMs = Math.max(0, now - breakStart);
+                            const hours = Math.floor(diffMs / (1000 * 60 * 60));
+                            const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+                            const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
+                            floatingWidget.value.breakTime = `${hours}h ${minutes}m ${seconds}s`;
+                        } else {
+                            floatingWidget.value.breakTime = '0h 0m 1s';
+                        }
+                    } else {
+                        floatingWidget.value.breakTime = '0h 0m';
+                    }
+                    
+                    // Update floating widget current timer
+                    if (attendance.value.clockedIn && attendance.value.clockInTime) {
+                        let startTime;
+                        
+                        if (attendance.value.onBreak && breakStartTime.value) {
+                            // Show break duration
+                            startTime = new Date(breakStartTime.value);
+                        } else {
+                            // Show work duration
+                            startTime = new Date(attendance.value.clockInTime);
+                        }
+                        
+                        const diffMs = now - startTime;
+                        const hours = Math.floor(diffMs / (1000 * 60 * 60));
+                        const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+                        const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
+                        
+                        floatingWidget.value.currentTimer = `${hours}h ${minutes}m ${seconds}s`;
+                    } else {
+                        floatingWidget.value.currentTimer = '0h 0m 0s';
+                    }
+                };
+                
+                const clockIn = () => {
+                    attendance.value.clockedIn = true;
+                    attendance.value.clockInTime = new Date().toISOString();
+                };
+                
+                const takeBreak = () => {
+                    if (!attendance.value.clockedIn) return;
+                    
+                    attendance.value.onBreak = true;
+                    breakStartTime.value = new Date().toISOString(); // Immediate feedback
+                };
+                
+                const endBreak = () => {
+                    attendance.value.onBreak = false;
+                    breakStartTime.value = null;
+                };
+                
+                const clockOut = () => {
+                    attendance.value.clockedIn = false;
+                    attendance.value.onBreak = false;
+                    attendance.value.clockInTime = null;
+                    breakStartTime.value = null;
+                };
+                
+                // Lifecycle
+                onMounted(() => {
+                    updateTime();
+                    timeInterval = setInterval(updateTime, 1000);
+                });
+                
+                onUnmounted(() => {
+                    if (timeInterval) {
+                        clearInterval(timeInterval);
+                    }
+                });
+                
+                return {
+                    attendance,
+                    breakStartTime,
+                    currentTime,
+                    mainDashboard,
+                    floatingWidget,
+                    status,
+                    statusColor,
+                    statusDotClass,
+                    timerLabel,
+                    timeDifference,
+                    syncStatus,
+                    clockIn,
+                    takeBreak,
+                    endBreak,
+                    clockOut
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>

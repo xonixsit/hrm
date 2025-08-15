@@ -159,8 +159,16 @@
         </DataTable>
 
         <!-- Pagination -->
-        <div v-if="leaves.links && leaves.links.length > 3" class="mt-6">
-          <Pagination :links="leaves.links" />
+        <div v-if="leaves.last_page > 1" class="mt-6">
+          <Pagination 
+            :links="leaves.links"
+            :current-page="leaves.current_page"
+            :last-page="leaves.last_page"
+            :total="leaves.total"
+            :per-page="leaves.per_page"
+            :from="leaves.from"
+            :to="leaves.to"
+          />
         </div>
     </PageLayout>
   </AuthenticatedLayout>

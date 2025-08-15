@@ -13,9 +13,14 @@ class WorkReport extends Model
         'employee_id',
         'date',
         'calls',
+        'calls_not_received',
+        'disconnected_calls',
+        'follow_up_calls',
+        'successful_calls',
         'emails',
         'whatsapp',
         'sms',
+        'notes',
     ];
 
     public function employee()

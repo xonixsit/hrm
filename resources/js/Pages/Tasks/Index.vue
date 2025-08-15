@@ -1,18 +1,27 @@
 <template>
-  <div class="p-6">
-    <h1 class="text-2xl font-bold mb-4">Tasks</h1>
-    <Link :href="route('tasks.create')" class="bg-blue-500 text-white px-4 py-2 rounded mb-4 inline-block">Add Task</Link>
-    <div class="overflow-x-auto">
-      <table class="min-w-full bg-white">
-        <thead>
-          <tr>
-            <th class="px-4 py-2">Name</th>
-            <th class="px-4 py-2">Project</th>
-            <th class="px-4 py-2">Description</th>
-            <th class="px-4 py-2">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
+  <AuthenticatedLayout>
+    <PageLayout
+      title="Task Management"
+      subtitle="Manage project tasks and assignments"
+      :breadcrumbs="breadcrumbs"
+      :actions="headerActions"
+    >
+      <!-- Filters and Search -->
+      <div class="mb-6 bg-white rounded-lg shadow-sm p-6">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">Task List</h3>
+        
+        <!-- Task Table -->
+        <div class="overflow-x-auto">
+          <table class="min-w-full table-auto border-collapse border border-gray-300">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-4 py-2 border border-gray-300 text-left">Task Name</th>
+                <th class="px-4 py-2 border border-gray-300 text-left">Project</th>
+                <th class="px-4 py-2 border border-gray-300 text-left">Description</th>
+                <th class="px-4 py-2 border border-gray-300 text-left">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
           <tr v-for="task in tasks.data" :key="task.id">
             <td class="border px-4 py-2">{{ task.name }}</td>
             <td class="border px-4 py-2">{{ task.project ? task.project.name : 'N/A' }}</td>
@@ -26,7 +35,17 @@
         </tbody>
       </table>
     </div>
-    <pagination :links="tasks.links" />
+    <div v-if="tasks.last_page > 1">
+      <Pagination 
+        :links="tasks.links"
+        :current-page="tasks.current_page"
+        :last-page="tasks.last_page"
+        :total="tasks.total"
+        :per-page="tasks.per_page"
+        :from="tasks.from"
+        :to="tasks.to"
+      />
+    </div>
   </div>
 </template>
 

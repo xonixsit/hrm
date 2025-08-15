@@ -1,77 +1,122 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Simple API Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 10px 5px;
+            font-size: 16px;
+        }
+        .button:hover {
+            background: #2563eb;
+        }
+        .result {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #10b981;
+        }
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #ef4444;
+        }
+    </style>
 </head>
 <body>
-    <h1>Testing Attendance API</h1>
-    <button onclick="testAPI()">Test Current Status API</button>
-    <button onclick="testClockIn()">Test Clock In API</button>
-    <div id="results"></div>
+    <div class="container">
+        <h1>🧪 Simple API Test</h1>
+        <p>Test basic API connectivity and authentication.</p>
+        
+        <button id="testCurrentStatus" class="button">Test Current Status API</button>
+        <button id="testClockIn" class="button">Test Clock In API</button>
+        
+        <div id="result" class="result" style="display: none;"></div>
+    </div>
 
     <script>
-        function log(message) {
-            document.getElementById('results').innerHTML += '<p>' + message + '</p>';
-            console.log(message);
+        function showResult(message, isError = false) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.className = `result ${isError ? 'error' : 'success'}`;
+            resultDiv.textContent = message;
+            resultDiv.style.display = 'block';
         }
 
-        async function testAPI() {
-            log('🔄 Testing /api/attendance/current...');
-            
+        async function testCurrentStatus() {
             try {
+                showResult('Testing current status API...');
+                
                 const response = await fetch('/api/attendance/current', {
+                    method: 'GET',
                     headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || 'no-token'
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
                     }
                 });
                 
-                log('Response status: ' + response.status);
+                const data = await response.text();
                 
-                if (response.ok) {
-                    const data = await response.json();
-                    log('✅ API Response: ' + JSON.stringify(data, null, 2));
-                    log('Clocked in: ' + data.clocked_in);
-                } else {
-                    const errorText = await response.text();
-                    log('❌ API Error: ' + errorText);
-                }
+                showResult(`Status: ${response.status} ${response.statusText}\n\nResponse:\n${data}`, !response.ok);
+                
             } catch (error) {
-                log('❌ Network Error: ' + error.message);
+                showResult(`Error: ${error.message}`, true);
             }
         }
 
         async function testClockIn() {
-            log('🔄 Testing /api/attendance/clock-in...');
-            
             try {
+                showResult('Testing clock in API...');
+                
                 const response = await fetch('/api/attendance/clock-in', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || 'no-token'
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
                     },
                     body: JSON.stringify({
                         timestamp: new Date().toISOString()
                     })
                 });
                 
-                log('Response status: ' + response.status);
+                const data = await response.text();
                 
-                if (response.ok) {
-                    const data = await response.json();
-                    log('✅ Clock In Response: ' + JSON.stringify(data, null, 2));
-                } else {
-                    const errorText = await response.text();
-                    log('❌ Clock In Error: ' + errorText);
-                }
+                showResult(`Status: ${response.status} ${response.statusText}\n\nResponse:\n${data}`, !response.ok);
+                
             } catch (error) {
-                log('❌ Network Error: ' + error.message);
+                showResult(`Error: ${error.message}`, true);
             }
         }
 
-        // Test CSRF token
-        const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-        log('CSRF Token: ' + (token ? 'Found ✅' : 'Missing ❌'));
+        document.getElementById('testCurrentStatus').addEventListener('click', testCurrentStatus);
+        document.getElementById('testClockIn').addEventListener('click', testClockIn);
     </script>
 </body>
 </html>

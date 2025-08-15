@@ -141,6 +141,68 @@
         </div>
       </FormSection>
 
+      <!-- Password Reset Section (Admin Only) -->
+      <FormSection
+        v-if="canResetPassword"
+        title="Password Management"
+        description="Reset the employee's password (Admin only)"
+      >
+        <div class="bg-warning-50 border border-warning-200 rounded-lg p-4 mb-4">
+          <div class="flex items-start space-x-3">
+            <ExclamationTriangleIcon class="w-5 h-5 text-warning-600 mt-0.5 flex-shrink-0" />
+            <div>
+              <h4 class="text-sm font-medium text-warning-800">Password Reset</h4>
+              <p class="text-sm text-warning-700 mt-1">
+                This will immediately change the employee's password. They will need to use the new password to log in.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <FormField
+            label="New Password"
+            required
+            :error="passwordForm.errors.new_password"
+            help="Password must be at least 8 characters long"
+          >
+            <BaseInput
+              v-model="passwordForm.new_password"
+              type="password"
+              placeholder="Enter new password"
+              :error="!!passwordForm.errors.new_password"
+              required
+            />
+          </FormField>
+
+          <FormField
+            label="Confirm New Password"
+            required
+            :error="passwordForm.errors.new_password_confirmation"
+            help="Re-enter the new password to confirm"
+          >
+            <BaseInput
+              v-model="passwordForm.new_password_confirmation"
+              type="password"
+              placeholder="Confirm new password"
+              :error="!!passwordForm.errors.new_password_confirmation"
+              required
+            />
+          </FormField>
+        </div>
+
+        <div class="flex justify-end mt-4">
+          <button
+            @click="handlePasswordReset"
+            :disabled="!isPasswordFormValid || passwordForm.processing"
+            class="inline-flex items-center px-4 py-2 bg-warning-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-warning-700 focus:bg-warning-700 active:bg-warning-900 focus:outline-none focus:ring-2 focus:ring-warning-500 focus:ring-offset-2 transition ease-in-out duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <KeyIcon class="w-4 h-4 mr-2" />
+            {{ passwordForm.processing ? 'Resetting Password...' : 'Reset Password' }}
+          </button>
+        </div>
+      </FormSection>
+
       <!-- Employment History Section -->
       <FormSection
         title="Employment History"
@@ -171,6 +233,8 @@
 <script setup>
 import { computed } from 'vue'
 import { useForm, router } from '@inertiajs/vue3'
+import { useAuth } from '@/composables/useAuth.js'
+import { useNotifications } from '@/composables/useNotifications.js'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 import PageLayout from '@/Components/Layout/PageLayout.vue'
 import FormLayout from '@/Components/Forms/FormLayout.vue'
@@ -183,7 +247,9 @@ import {
   CheckIcon, 
   EyeIcon, 
   TrashIcon,
-  ClockIcon 
+  ClockIcon,
+  ExclamationTriangleIcon,
+  KeyIcon
 } from '@heroicons/vue/24/outline'
 
 const props = defineProps({
@@ -197,6 +263,9 @@ const props = defineProps({
   }
 })
 
+// Composables
+const { hasRole } = useAuth()
+
 // Form setup
 const form = useForm({
   name: props.employee.user.name,
@@ -205,6 +274,12 @@ const form = useForm({
   employee_code: props.employee.employee_code,
   join_date: props.employee.join_date,
   contract_type: props.employee.contract_type
+})
+
+// Password reset form
+const passwordForm = useForm({
+  new_password: '',
+  new_password_confirmation: ''
 })
 
 // Breadcrumbs configuration
@@ -272,6 +347,17 @@ const hasChanges = computed(() => {
          form.employee_code !== props.employee.employee_code ||
          form.join_date !== props.employee.join_date ||
          form.contract_type !== props.employee.contract_type
+})
+
+// Password reset permissions and validation
+const canResetPassword = computed(() => {
+  return hasRole('Admin')
+})
+
+const isPasswordFormValid = computed(() => {
+  return passwordForm.new_password && 
+         passwordForm.new_password.length >= 8 &&
+         passwordForm.new_password === passwordForm.new_password_confirmation
 })
 
 // Methods
@@ -345,6 +431,34 @@ const handleReset = () => {
   if (confirm('Are you sure you want to reset all changes? This action cannot be undone.')) {
     form.reset()
     form.clearErrors()
+  }
+}
+
+const handlePasswordReset = () => {
+  if (confirm(`Are you sure you want to reset the password for ${props.employee.user.name}? They will need to use the new password to log in.`)) {
+    passwordForm.post(route('employees.reset-password', props.employee.id), {
+      onSuccess: () => {
+        // Clear the password form
+        passwordForm.reset()
+        passwordForm.clearErrors()
+        
+        // Show success message (handled by backend flash message)
+        console.log('Password reset successfully')
+      },
+      onError: (errors) => {
+        console.error('Password reset errors:', errors)
+        
+        // Scroll to first error in password form
+        const firstErrorField = Object.keys(errors)[0]
+        if (firstErrorField) {
+          const element = document.querySelector(`input[name="${firstErrorField}"]`)
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+            element.focus()
+          }
+        }
+      }
+    })
   }
 }
 

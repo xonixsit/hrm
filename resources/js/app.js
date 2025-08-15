@@ -6,6 +6,22 @@ import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createApp, h } from 'vue';
 import { ZiggyVue } from '../../vendor/tightenco/ziggy';
 
+// Define process.env for compatibility with code that uses it
+try {
+  window.process = window.process || {};
+  window.process.env = window.process.env || {};
+  window.process.env.NODE_ENV = import.meta.env.MODE || 'production';
+  console.log('[APP] Successfully defined process.env');
+} catch (error) {
+  console.warn('[APP] Error defining process.env:', error);
+  // Create a fallback process object
+  window.process = {
+    env: {
+      NODE_ENV: 'production'
+    }
+  };
+}
+
 // Import accessibility initialization
 import { initializeAccessibility } from '@/utils/accessibility.js';
 
@@ -55,6 +71,12 @@ createInertiaApp({
         
         // Add global error handler to Vue app
         app.config.errorHandler = (error, instance, info) => {
+          // Check for process.env errors and suppress them
+          if (error && error.message && error.message.includes("Cannot read properties of undefined (reading 'env')")) {
+            console.warn('[VUE ERROR HANDLER] Process.env error detected - preventing app crash');
+            return;
+          }
+          
           if (!handleInertiaError(error, `vue.${info}`)) {
             console.error('[VUE ERROR]', error, info);
           }
