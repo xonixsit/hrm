@@ -77,10 +77,10 @@ describe('useAttendance Real-time Functionality', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
-    
+
     // Reset fetch mock
     fetch.mockClear()
-    
+
     // Import mocked services
     mockWebSocketService = require('@/services/WebSocketService.js').default
     mockNotificationService = require('@/services/NotificationService.js').default
@@ -147,7 +147,7 @@ describe('useAttendance Real-time Functionality', () => {
 
     it('should prevent multiple clock ins', async () => {
       const { clockIn, clockedIn, canClockIn } = useAttendance(1)
-      
+
       // Simulate already clocked in state
       clockedIn.value = true
 
@@ -171,7 +171,7 @@ describe('useAttendance Real-time Functionality', () => {
       })
 
       const { clockOut, clockedIn, clockInTime, onBreak } = useAttendance(1)
-      
+
       // Set initial clocked in state
       clockedIn.value = true
       clockInTime.value = '2025-08-11T09:00:00.000Z'
@@ -189,7 +189,7 @@ describe('useAttendance Real-time Functionality', () => {
 
     it('should prevent clock out when not clocked in', async () => {
       const { clockOut, clockedIn, canClockOut } = useAttendance(1)
-      
+
       expect(clockedIn.value).toBe(false)
       expect(canClockOut.value).toBe(false)
 
@@ -210,7 +210,7 @@ describe('useAttendance Real-time Functionality', () => {
       })
 
       const { startBreak, clockedIn, onBreak, breakStartTime } = useAttendance(1)
-      
+
       // Set initial clocked in state
       clockedIn.value = true
 
@@ -233,7 +233,7 @@ describe('useAttendance Real-time Functionality', () => {
       })
 
       const { endBreak, onBreak, breakStartTime } = useAttendance(1)
-      
+
       // Set initial break state
       onBreak.value = true
       breakStartTime.value = '2025-08-11T10:00:00.000Z'
@@ -248,7 +248,7 @@ describe('useAttendance Real-time Functionality', () => {
 
     it('should prevent break when not clocked in', async () => {
       const { startBreak, clockedIn, canTakeBreak } = useAttendance(1)
-      
+
       expect(clockedIn.value).toBe(false)
       expect(canTakeBreak.value).toBe(false)
 

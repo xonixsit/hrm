@@ -83,18 +83,12 @@
           >
             <BaseSelect
               v-model="form.department_id"
-              :error="!!form.errors.department_id"
+              :options="departments"
+                option-label="name"
+              option-value="id"
               placeholder="Select department"
-            >
-              <option value="">Choose a department</option>
-              <option 
-                v-for="dept in departments" 
-                :key="dept.id" 
-                :value="dept.id"
-              >
-                {{ dept.name }}
-              </option>
-            </BaseSelect>
+              :error-message="form.errors.department_id"
+            />
           </FormField>
 
           <FormField
@@ -115,16 +109,13 @@
             :error="form.errors.contract_type"
             help="Type of employment contract"
           >
+            
             <BaseSelect
               v-model="form.contract_type"
+              :options="contractTypes"
               :error="!!form.errors.contract_type"
               placeholder="Select contract type"
-            >
-              <option value="">Choose contract type</option>
-              <option value="Full-time">Full-time</option>
-              <option value="Part-time">Part-time</option>
-              <option value="Contract">Contract</option>
-            </BaseSelect>
+            />
           </FormField>
 
           <FormField
@@ -231,7 +222,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useForm, router } from '@inertiajs/vue3'
 import { useAuth } from '@/composables/useAuth.js'
 import { useNotifications } from '@/composables/useNotifications.js'
@@ -260,8 +251,16 @@ const props = defineProps({
   departments: {
     type: Array,
     default: () => []
+  },
+  contractTypes: {
+    type: Array,
+    default: () => []
   }
 })
+
+
+
+
 
 // Composables
 const { hasRole } = useAuth()
@@ -275,6 +274,8 @@ const form = useForm({
   join_date: props.employee.join_date,
   contract_type: props.employee.contract_type
 })
+
+
 
 // Password reset form
 const passwordForm = useForm({
@@ -380,7 +381,15 @@ const formatDate = (dateString) => {
     day: 'numeric',
     hour: '2-digit',
     minute: '2-digit'
-  })
+  });
+
+const formattedContractTypes = computed(() => {
+  return props.contractTypes.map(type => ({ label: type, value: type }));
+});
+
+const formattedDepartments = computed(() => {
+  return props.departments.map(dept => ({ label: dept.name, value: dept.id }));
+});
 }
 
 const getTimeWithCompany = (joinDate) => {
@@ -461,6 +470,8 @@ const handlePasswordReset = () => {
     })
   }
 }
+
+
 
 const handleDelete = () => {
   if (confirm(`Are you sure you want to delete ${props.employee.user.name}? This action cannot be undone.`)) {

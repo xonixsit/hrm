@@ -170,7 +170,7 @@ const mobileHeaderClasses = computed(() => ({
 // Main content inner classes
 const mainInnerClasses = computed(() => ({
   'flex-1': true,
-  'overflow-y-auto': true,
+  // 'overflow-y-auto': true,
   'transition-colors': true,
   'duration-200': true,
   

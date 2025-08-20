@@ -7,22 +7,108 @@ use App\Models\Employee;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Log;
 use App\Traits\AuditLogTrait;
 
 class AttendanceController extends Controller
 {
     use AuditLogTrait;
 
-    public function index()
+    public function index(Request $request)
     {
-        $user = Auth::user();
-        if ($user->hasRole('Admin') || $user->hasRole('HR')) {
-            $attendances = Attendance::with('employee.user')->paginate(10);
-        } else {
-            $employee = $user->employee;
-            $attendances = Attendance::where('employee_id', $employee->id)->paginate(10);
+
+
+        // Log the employee_id if it's present in the request
+
+
+        try {
+            $user = Auth::user();
+            $query = Attendance::with('employee.user');
+
+        // Base query based on user role
+        if (!($user->hasRole('Admin') || $user->hasRole('HR'))) {
+            if ($user->employee) {
+                $query->where('employee_id', $user->employee->id);
+            } else {
+                // If a non-Admin/HR user has no employee record, they should see no attendances
+                $query->where('id', null); // Return empty result
+            }
         }
-        return Inertia::render('Attendances/Index', ['attendances' => $attendances]);
+
+        // Employee filter (Admin/HR only)
+        if ($request->filled('employee_id') && $request->employee_id !== '' && ($user->hasRole('Admin') || $user->hasRole('HR'))) {
+
+            $query->where('employee_id', (int) $request->employee_id);
+        }
+
+        // Status filter
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        // Date range filters
+        if ($request->filled('date_from')) {
+            $query->where('date', '>=', \Carbon\Carbon::parse($request->date_from)->startOfDay());
+        }
+        if ($request->filled('date_to')) {
+            // To include the entire day for 'date_to', we compare against the end of the day
+            $query->where('date', '<=', \Carbon\Carbon::parse($request->date_to)->endOfDay());
+        }
+
+        // Search functionality
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('employee.user', function ($userQuery) use ($search) {
+                    $userQuery->where('name', 'like', "%{$search}%");
+                })
+                ->orWhere('notes', 'like', "%{$search}%")
+                ->orWhere('location', 'like', "%{$search}%");
+            });
+        }
+
+        // Sorting
+        $sortBy = $request->get('sort', 'date');
+        $sortDirection = $request->get('direction', 'desc');
+        
+        // Add secondary sorting to ensure consistent ordering
+        if ($sortBy !== 'id') {
+            $query->orderBy($sortBy, $sortDirection)->orderBy('id', 'desc');
+        } else {
+            $query->orderBy($sortBy, $sortDirection);
+        }
+
+        $perPage = $request->get('per_page', 15);
+        $attendances = $query->paginate($perPage)->withQueryString();
+
+        // Get filter options for Admin/HR
+        $filterOptions = [];
+        if ($user->hasRole('Admin') || $user->hasRole('HR')) {
+            $filterOptions['employees'] = Employee::with('user')
+                ->whereHas('user') // Only get employees that have users
+                ->get()
+                ->map(function ($employee) {
+                    return [
+                        'id' => $employee->id,
+                        'name' => $employee->user->name
+                    ];
+                })
+                ->filter(function ($employee) {
+                    return !empty($employee['name']); // Filter out any with empty names
+                })
+                ->values(); // Reset array keys
+        }
+
+        return Inertia::render('Attendances/Index', [
+            'attendances' => $attendances,
+            'filters' => $filterOptions,
+            'queryParams' => $request->query()
+        ]);
+        } catch (\Exception $e) {
+            Log::error('Error in AttendanceController@index: ' . $e->getMessage());
+            Log::error($e->getTraceAsString());
+            return response()->json(['error' => 'Internal Server Error', 'message' => $e->getMessage()], 500);
+        }
     }
 
     public function clockIn(Request $request)

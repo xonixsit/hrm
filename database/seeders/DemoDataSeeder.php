@@ -27,8 +27,10 @@ class DemoDataSeeder extends Seeder
         
         Project::factory(5)->create();
         Task::factory(10)->create();
-        Employee::factory(20)->create();
-        Leave::factory(50)->create();
+        if (Employee::count() < 24) {
+            Employee::factory(24 - Employee::count())->create();
+        }
+        $this->call(SampleLeaveSeeder::class);
         Attendance::factory(100)->create();
         Timesheet::factory(100)->create();
         Feedback::factory(50)->create();

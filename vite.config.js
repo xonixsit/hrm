@@ -28,8 +28,5 @@ export default defineConfig({
             '@': path.resolve(__dirname, 'resources/js'),
         },
     },
-    define: {
-        'process.env': process.env,
-        global: 'globalThis',
-    },
+
 });

@@ -19,7 +19,20 @@ class EmployeeFactory extends Factory
         return [
             'user_id' => \App\Models\User::factory(),
             'department_id' => \App\Models\Department::factory(),
-            'employee_code' => 'EMP' . str_pad($this->faker->unique()->numberBetween(5, 999), 3, '0', STR_PAD_LEFT),
+            'employee_code' => function () {
+                static $nextNumber = null;
+                if ($nextNumber === null) {
+                    $maxNumber = \App\Models\Employee::where('employee_code', 'like', 'EMP%')
+                        ->get()
+                        ->map(function($emp) {
+                            return (int) substr($emp->employee_code, 3);
+                        })->max() ?? 0;
+                    $nextNumber = $maxNumber + 1;
+                }
+                $code = 'EMP' . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
+                $nextNumber++;
+                return $code;
+            },
             'job_title' => $this->faker->jobTitle(),
             'join_date' => $this->faker->dateTimeBetween('-5 years', 'now')->format('Y-m-d'),
             'contract_type' => $this->faker->randomElement(['Full-time', 'Part-time', 'Contract']),

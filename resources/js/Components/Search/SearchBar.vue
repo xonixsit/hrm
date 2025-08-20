@@ -49,7 +49,7 @@
       <div
         v-if="showSuggestions"
         :id="suggestionsId"
-        class="absolute z-dropdown mt-1 w-full bg-white rounded-md shadow-lg border border-neutral-200 max-h-60 overflow-auto"
+        class="absolute z-[9999] mt-1 w-full bg-white rounded-md shadow-lg border border-neutral-200 max-h-60 overflow-auto"
         role="listbox"
       >
         <!-- Loading State -->
@@ -168,7 +168,7 @@ const props = defineProps({
   // Search configuration
   minSearchLength: {
     type: Number,
-    default: 1
+    default: 3
   },
   
   debounceMs: {
@@ -290,8 +290,9 @@ watch(searchQuery, (newValue) => {
     showSuggestions.value = true;
     debouncedSearch(newValue);
   } else {
+    // Only show recent searches if query is empty and feature is enabled
     showSuggestions.value = newValue.length === 0 && props.showRecentSearches && recentSearches.value.length > 0;
-    isLoading.value = false;
+    isLoading.value = false; // Ensure loading is false if criteria not met
   }
   
   // Reset active suggestion when query changes
@@ -308,6 +309,8 @@ const handleFocus = (event) => {
     showSuggestions.value = true;
   } else if (searchQuery.value.length >= props.minSearchLength) {
     showSuggestions.value = true;
+  } else {
+    showSuggestions.value = false; // Hide suggestions if query is too short on focus
   }
   emit('focus', event);
 };
@@ -360,7 +363,7 @@ const handleEscape = () => {
 };
 
 const handleClear = () => {
-  searchQuery.value = '';
+
   showSuggestions.value = false;
   activeSuggestionIndex.value = -1;
   emit('clear');
@@ -386,6 +389,7 @@ const selectSuggestion = (suggestion) => {
   addToRecentSearches(selectedText);
   emit('select', suggestion);
   emit('search', selectedText);
+
 };
 
 // Recent searches management

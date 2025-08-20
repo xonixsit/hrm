@@ -7,65 +7,134 @@
       :actions="headerActions"
     >
       <!-- Filters and Search -->
-      <div class="mb-6 bg-white rounded-lg shadow-sm border border-neutral-200 p-4">
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <!-- Search -->
-          <div class="md:col-span-2">
-            <label for="search" class="sr-only">Search leaves</label>
-            <div class="relative">
-              <MagnifyingGlassIcon class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-neutral-400" />
-              <input
-                id="search"
-                v-model="searchQuery"
-                type="text"
-                placeholder="Search by employee name, leave type..."
-                class="pl-10 pr-4 py-2 w-full border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm"
-                @input="handleSearch"
+      <div class="bg-white rounded-lg shadow-sm">
+        <!-- Table Header with Filters -->
+        <div class="border-b border-gray-200 bg-gray-50 px-6 py-4">
+          <!-- Top Bar with Wide Search -->
+          <div class="flex justify-between items-center mb-4 relative z-[99999]">
+            <h3 class="text-lg font-medium text-gray-900">Leave Requests</h3>
+            <SearchBar
+            
+            v-model="localFilters.search"
+             placeholder="Search employee name, notes..."
+            class="w-full max-w-xl"
+            :suggestions="searchSuggestions"
+            :loading="loading"
+            @input="debounceSearch"
+            @select="handleSearchSelect"
+            @search="applyFilters"
+            @clear="clearSearchFilter"
+          />
+            <button
+              @click="showFilters = !showFilters"
+              class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ml-4"
+            >
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.207A1 1 0 013 6.5V4z"></path>
+              </svg>
+              {{ showFilters ? 'Hide Filters' : 'Show Filters' }}
+            </button>
+          </div>
+          
+          <!-- Filter Controls -->
+          <div v-if="showFilters" class="grid grid-cols-1 md:grid-cols-5 gap-4 items-start relative z-40">
+            <!-- Employee Filter (Admin/HR only) -->
+            <div v-if="isApprover">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Employee</label>
+              <BaseSelect
+                v-model="localFilters.employee_id"
+                :options="employeeOptions"
+                placeholder="All employees"
+                class="w-full"
+                @change="applyFilters"
+              />
+            </div>
+            
+            <!-- Status Filter -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+              <BaseMultiSelect
+                v-model="localFilters.status"
+                :options="statusOptions"
+                placeholder="All statuses"
+                class="w-full"
+              />
+            </div>
+            
+            <!-- Leave Type Filter -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Leave Type</label>
+              <BaseMultiSelect
+                v-model="localFilters.leave_type_id"
+                :options="leaveTypeOptions"
+                placeholder="All types"
+                class="w-full"
+              />
+            </div>
+
+            <!-- Date Range Filter -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Date Range</label>
+              <DateRangePicker
+                v-model="dateRangeFilter"
+                class="w-full"
+                @update:modelValue="applyFilters"
               />
             </div>
           </div>
-
-          <!-- Status Filter -->
-          <div>
-            <label for="status-filter" class="sr-only">Filter by status</label>
-            <select
-              id="status-filter"
-              v-model="statusFilter"
-              class="w-full border border-neutral-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-              @change="handleFilter"
+          
+          <!-- Active Filters Display -->
+          <div v-if="hasActiveFilters" class="mt-4 flex flex-wrap gap-2">
+            <span class="text-sm font-medium text-gray-700">Active filters:</span>
+            <FilterTag
+              v-if="activeEmployeeFilter"
+              :filter="{ label: 'Employee' }"
+              :value="activeEmployeeFilter"
+              @remove="clearEmployeeFilter"
+            />
+            <FilterTag
+              v-if="activeStatusFilter"
+              :filter="{ label: 'Status' }"
+              :value="localFilters.status"
+              @remove="clearStatusFilter"
+            />
+            <FilterTag
+              v-if="activeLeaveTypeFilter"
+              :filter="{ label: 'Leave Type' }"
+              :value="localFilters.leave_type_id"
+              @remove="clearLeaveTypeFilter"
+            />
+            <FilterTag
+              v-if="dateRangeFilter.start || dateRangeFilter.end"
+              :filter="{ label: 'Date Range' }"
+              :value="{ start: dateRangeFilter.start, end: dateRangeFilter.end }"
+              @remove="clearDateRangeFilter"
+            />
+            <FilterTag
+              v-if="localFilters.search"
+              :filter="{ label: 'Search' }"
+              :value="localFilters.search"
+              @remove="clearSearchFilter"
+            />
+            <button
+              @click="clearAllFilters"
+              class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 hover:bg-gray-200"
             >
-              <option value="">All Status</option>
-              <option value="pending">Pending</option>
-              <option value="approved">Approved</option>
-              <option value="rejected">Rejected</option>
-            </select>
-          </div>
-
-          <!-- Leave Type Filter -->
-          <div>
-            <label for="type-filter" class="sr-only">Filter by leave type</label>
-            <select
-              id="type-filter"
-              v-model="typeFilter"
-              class="w-full border border-neutral-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-              @change="handleFilter"
-            >
-              <option value="">All Types</option>
-              <option v-for="type in leaveTypes" :key="type.id" :value="type.id">
-                {{ type.name }}
-              </option>
-            </select> 
+              Clear all
+            </button>
           </div>
         </div>
       </div>
 
       <!-- Data Table -->
-      <DataTable
+      <div class="relative z-10">
+        <DataTable
           :data="leaves.data"
           :columns="tableColumns"
           :loading="loading"
           :actions="tableActions"
           :row-actions="getRowActions"
+          :search-config="{ enabled: false }"
           :empty-state="{
             title: 'No leave requests found',
             description: 'There are no leave requests to display. Create your first leave request to get started.',
@@ -78,6 +147,14 @@
               handler: () => router.visit(route('leaves.create'))
             }] : []
           }"
+          :server-side-pagination="true"
+          :current-page="leaves.current_page"
+          :total-pages="leaves.last_page"
+          :page-size="localPerPage"
+          :total-items="leaves.total"
+          :page-size-options="[10, 15, 25, 50, 100]"
+          @page-change="handlePageChange"
+          @page-size-change="handlePageSizeChange"
           @row-click="handleRowClick"
           @row-action="handleRowAction"
           @header-action="handleHeaderAction"
@@ -159,29 +236,25 @@
         </DataTable>
 
         <!-- Pagination -->
-        <div v-if="leaves.last_page > 1" class="mt-6">
-          <Pagination 
-            :links="leaves.links"
-            :current-page="leaves.current_page"
-            :last-page="leaves.last_page"
-            :total="leaves.total"
-            :per-page="leaves.per_page"
-            :from="leaves.from"
-            :to="leaves.to"
-          />
-        </div>
+      </div>
     </PageLayout>
   </AuthenticatedLayout>
 </template>
 
 <script setup>
-import { Link, router } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { ref, computed, watch } from 'vue';
+import { Head, Link, usePage, router } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import PageLayout from '@/Components/Layout/PageLayout.vue';
 import DataTable from '@/Components/Data/DataTable.vue';
 import Pagination from '@/Components/Pagination.vue';
+import BaseSelect from '@/Components/Base/BaseSelect.vue';
+import BaseMultiSelect from '@/Components/Base/BaseMultiSelect.vue';
+import DateRangePicker from '@/Components/Base/DateRangePicker.vue';
+import SearchBar from '@/Components/Search/SearchBar.vue';
+import FilterTag from '@/Components/Data/FilterTag.vue';
 import { useAuth } from '@/composables/useAuth';
+import { debounce } from 'lodash';
 import {
   CalendarDaysIcon,
   PlusIcon,
@@ -202,23 +275,100 @@ import {
 
 const props = defineProps({
   leaves: Object,
-  leaveTypes: {
-    type: Array,
-    default: () => []
-  }
+  queryParams: Object,
+  canManageLeaves: Boolean,
+  leaveTypes: Array,
+  employees: Array,
 });
 
+const page = usePage();
 const { user, roles, hasRole, hasAnyRole } = useAuth();
 
 // Local state
 const loading = ref(false);
-const searchQuery = ref('');
-const statusFilter = ref('');
-const typeFilter = ref('');
+const showFilters = ref(false);
+
+const localFilters = ref({
+  employee_id: props.queryParams?.employee_id || '',
+  status: props.queryParams?.status ? Array.isArray(props.queryParams.status) ? props.queryParams.status : [props.queryParams.status] : [],
+  leave_type_id: props.queryParams?.leave_type_id ? Array.isArray(props.queryParams.leave_type_id) ? props.queryParams.leave_type_id : [props.queryParams.leave_type_id] : [],
+  search: props.queryParams?.search || '',
+});
+const localPerPage = ref(props.queryParams?.per_page || 10);
+
+const dateRangeFilter = computed({
+  get: () => ({
+    start: props.queryParams?.date_from || '',
+    end: props.queryParams?.date_to || '',
+  }),
+  set: (value) => {
+    localFilters.value.date_from = value.start;
+    localFilters.value.date_to = value.end;
+  },
+});
+const searchSuggestions = computed(() => {
+  const query = localFilters.value.search?.toLowerCase() || '';
+  if (!query) return [];
+  return employeeOptions.value
+    .filter(opt => opt.label.toLowerCase().includes(query))
+    .map(opt => ({
+      id: opt.value,
+      text: opt.label,
+      icon: 'user',
+      category: 'Employee'
+    }));
+});
 
 // Computed properties
 const isApprover = computed(() => hasAnyRole(['Admin', 'HR', 'Manager']));
 const canCreate = computed(() => hasRole('Employee'));
+
+const employeeOptions = computed(() => {
+
+  const options = [{ value: '', label: 'All Employees' }];
+  if (isApprover.value) {
+    options.push({ value: 'my_team', label: 'My Team' });
+  }
+  options.push(...(props.employees || []).map(emp => ({ value: emp.id, label: emp.name })));
+
+  return options;
+});
+
+const statusOptions = computed(() => [
+  { value: '', label: 'All Statuses' },
+  { value: 'pending', label: 'Pending' },
+  { value: 'approved', label: 'Approved' },
+  { value: 'rejected', label: 'Rejected' },
+]);
+
+const leaveTypeOptions = computed(() => [
+  { value: '', label: 'All Types' },
+  ...(props.leaveTypes || []).map(type => ({ value: type.id, label: type.name }))
+]);
+
+const hasActiveFilters = computed(() => {
+  return Object.values(localFilters.value).some(value => value !== '' && value !== null);
+});
+
+const activeEmployeeFilter = computed(() => {
+  if (localFilters.value.employee_id === 'my_team') return 'My Team';
+  const employee = (props.employees || []).find(emp => emp.id == localFilters.value.employee_id);
+  return employee ? employee.name : '';
+});
+
+const activeStatusFilter = computed(() => {
+  return localFilters.value.status
+    .map(s => statusOptions.value.find(opt => opt.value === s)?.label)
+    .filter(Boolean)
+    .join(', ') || '';
+});
+
+const activeLeaveTypeFilter = computed(() => {
+  return localFilters.value.leave_type_id
+    .map(id => (props.leaveTypes || []).find(t => t.id == id)?.name)
+    .filter(Boolean)
+    .join(', ') || '';
+});
 
 // PageLayout configuration
 const breadcrumbs = computed(() => [
@@ -294,6 +444,99 @@ const tableActions = computed(() => [
   }
 ]);
 
+// Filter methods
+const applyFilters = (additionalParams = {}) => {
+
+  const params = { 
+    ...localFilters.value,
+    date_from: dateRangeFilter.value.start,
+    date_to: dateRangeFilter.value.end,
+    per_page: localPerPage.value,
+    ...additionalParams 
+  };
+
+  for (const key in params) {
+    if (params[key] === '' || params[key] === null) {
+      delete params[key];
+    }
+  }
+  
+    router.get(route('leaves.index'), params, {
+    onStart: () => {
+      loading.value = true;
+    },
+    onFinish: () => {
+      loading.value = false;
+    },
+  });
+};
+const handlePageSizeChange = (newSize) => {
+  localPerPage.value = newSize;
+  applyFilters({ page: 1 });
+};
+const handlePageChange = (newPage) => {
+  applyFilters({ page: newPage });
+};
+
+const clearEmployeeFilter = () => {
+  localFilters.value.employee_id = '';
+  applyFilters();
+
+};
+
+const clearStatusFilter = () => {
+  localFilters.value.status = [];
+  applyFilters();
+};
+
+const clearLeaveTypeFilter = () => {
+  localFilters.value.leave_type_id = [];
+  applyFilters();
+};
+
+const clearDateRangeFilter = () => {
+  dateRangeFilter.value = { start: '', end: '' };
+  applyFilters();
+};
+
+const clearSearchFilter = () => {
+  localFilters.value.search = '';
+  applyFilters();
+};
+
+const clearAllFilters = () => {
+  localFilters.value = {
+    employee_id: '',
+    status: [],
+    leave_type_id: [],
+    search: '',
+  };
+  dateRangeFilter.value = { start: '', end: '' };
+  applyFilters();
+};
+
+const debounceSearch = debounce(() => {
+  applyFilters();
+}, 300);
+
+const handleSearchSelect = (suggestion) => {
+  localFilters.value.employee_id = suggestion.id;
+
+  applyFilters();
+};
+
+watch(() => localFilters.value.employee_id, (newValue, oldValue) => {
+  applyFilters();
+});
+
+watch(() => localFilters.value.status, (newValue, oldValue) => {
+  applyFilters();
+});
+
+watch(() => localFilters.value.leave_type_id, (newValue, oldValue) => {
+  applyFilters();
+});
+
 // Helper functions
 const getInitials = (name) => {
   return name
@@ -305,12 +548,10 @@ const getInitials = (name) => {
 };
 
 const formatDate = (dateString) => {
-  const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric'
-  });
+  if (!dateString) return '';
+  const [year, month, day] = dateString.split('-').map(Number);
+  const date = new Date(year, month - 1, day);
+  return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 };
 
 const getDuration = (fromDate, toDate) => {
@@ -359,12 +600,14 @@ const getStatusIcon = (status) => {
 const getStatusLabel = (status) => {
   const labelMap = {
     pending: 'Pending',
-    approved: 'Approved',
+    approved: 'Approved', 
     rejected: 'Rejected'
   };
   
   return labelMap[status] || status;
 };
+
+
 
 const getStatusClasses = (status) => {
   const classMap = {
@@ -386,42 +629,18 @@ const getRowActions = (row) => {
     }
   ];
 
-  // Add edit action for pending leaves (non-approvers only)
-  if (canEdit(row)) {
-    actions.push({
-      id: 'edit',
-      label: 'Edit',
-      icon: 'pencil',
-      handler: () => router.visit(route('leaves.edit', row.id))
-    });
-  }
-
-  // Add delete action for pending leaves (non-approvers only)
-  if (canDelete(row)) {
-    actions.push({
-      id: 'delete',
-      label: 'Delete',
-      icon: 'trash',
-      variant: 'danger',
-      handler: () => destroy(row.id)
-    });
-  }
-
-  // Add approval actions for approvers
-  if (isApprover.value && row.status === 'pending') {
+  if (props.canManageLeaves && row.status === 'pending') {
     actions.push(
       {
         id: 'approve',
         label: 'Approve',
         icon: 'check',
-        variant: 'success',
         handler: () => approve(row.id)
       },
       {
         id: 'reject',
         label: 'Reject',
         icon: 'x-mark',
-        variant: 'danger',
         handler: () => reject(row.id)
       }
     );
@@ -429,6 +648,10 @@ const getRowActions = (row) => {
 
   return actions;
 };
+
+
+
+
 
 // Permission checks
 const canEdit = (leave) => {
@@ -463,7 +686,7 @@ const handleRowAction = ({ action, row }) => {
 const handleHeaderAction = (action) => {
   if (action.id === 'export') {
     // Implement export functionality
-    console.log('Export leaves');
+  
   }
 };
 

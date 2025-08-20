@@ -93,18 +93,12 @@
           >
             <BaseSelect
               v-model="form.department_id"
+              :options="departments"
+              option-label="name"
+              option-value="id"
               :error="!!form.errors.department_id"
               placeholder="Select department"
-            >
-              <option value="">Choose a department</option>
-              <option 
-                v-for="dept in departments" 
-                :key="dept.id" 
-                :value="dept.id"
-              >
-                {{ dept.name }}
-              </option>
-            </BaseSelect>
+            />
           </FormField>
 
           <FormField
@@ -127,14 +121,10 @@
           >
             <BaseSelect
               v-model="form.contract_type"
+              :options="contractTypes"
               :error="!!form.errors.contract_type"
               placeholder="Select contract type"
-            >
-              <option value="">Choose contract type</option>
-              <option value="Full-time">Full-time</option>
-              <option value="Part-time">Part-time</option>
-              <option value="Contract">Contract</option>
-            </BaseSelect>
+            />
           </FormField>
 
           <FormField
@@ -185,6 +175,12 @@ const form = useForm({
   join_date: '',
   contract_type: ''
 })
+
+const contractTypes = [
+  { label: 'Full-time', value: 'Full-time' },
+  { label: 'Part-time', value: 'Part-time' },
+  { label: 'Contract', value: 'Contract' },
+];
 
 // Breadcrumbs configuration
 const breadcrumbs = [

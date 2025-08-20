@@ -23,28 +23,18 @@
     </div>
     
     <!-- Search and Filter Bar -->
-    <div v-if="showSearchAndFilters" class="search-filter-bar">
+    <div v-if="showSearchAndFilters" class="search-filter-bar relative z-[10000] transform translate-z-0">
       <!-- Search Input -->
       <div v-if="searchConfig.enabled" class="search-section">
-        <div class="search-input-wrapper">
-          <Icon name="search" class="search-icon" />
-          <input
-            v-model="searchQuery"
-            type="text"
-            :placeholder="searchConfig.placeholder"
-            class="search-input"
-            @input="handleSearchInput"
-            @keydown.enter="handleSearchSubmit"
-          />
-          <button
-            v-if="searchQuery"
-            @click="clearSearch"
-            class="clear-search"
-            aria-label="Clear search"
-          >
-            <Icon name="x" class="w-4 h-4" />
-          </button>
-        </div>
+        <SearchBar
+          v-model="searchQuery"
+          :placeholder="searchConfig.placeholder"
+          :min-search-length="searchConfig.minSearchLength || 3"
+          :suggestions="searchConfig.suggestions || []"
+          :loading="loading"
+          @search="handleSearchSubmit"
+          @clear="clearSearch"
+        />
       </div>
       
       <!-- Filter Controls -->
@@ -172,7 +162,6 @@
 
 <script setup>
 import { computed, ref, watch } from 'vue';
-import { debounce } from 'lodash-es';
 import BaseButton from '@/Components/Base/BaseButton.vue';
 import BaseInput from '@/Components/Base/BaseInput.vue';
 import BaseSelect from '@/Components/Base/BaseSelect.vue';
@@ -181,6 +170,7 @@ import DateRangePicker from '@/Components/Base/DateRangePicker.vue';
 import Icon from '@/Components/Base/Icon.vue';
 import FilterChip from './FilterChip.vue';
 import FilterTag from './FilterTag.vue';
+import SearchBar from '@/Components/Search/SearchBar.vue';
 
 const props = defineProps({
   title: {
@@ -260,18 +250,13 @@ const hasActiveFilters = computed(() => {
   });
 });
 
-// Debounced search handler
-const debouncedSearch = debounce((query) => {
-  emit('search', query);
-}, props.searchConfig.debounce || 300);
+
 
 // Methods
-const handleSearchInput = () => {
-  debouncedSearch(searchQuery.value);
-};
 
-const handleSearchSubmit = () => {
-  emit('search', searchQuery.value);
+
+const handleSearchSubmit = (query) => {
+  emit('search', query);
 };
 
 const clearSearch = () => {

@@ -6,342 +6,229 @@
       :breadcrumbs="breadcrumbs"
       :actions="headerActions"
     >
-      <!-- Enhanced Filter & Search Section -->
-      <div class="mb-8 space-y-6">
-        <!-- Search Bar - Primary Action -->
-        <div class="bg-white rounded-xl shadow-sm border border-neutral-200 p-6">
-          <div class="flex items-center justify-between mb-4">
-            <div class="flex items-center space-x-3">
-              <div class="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
-                <Icon name="magnifying-glass" class="w-5 h-5 text-primary-600" />
-              </div>
-              <div>
-                <h3 class="text-lg font-semibold text-neutral-900">Find Employees</h3>
-                <p class="text-sm text-neutral-600">Search by name, email, job title, or employee code</p>
-              </div>
+      <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+        <!-- Table Header with Filters -->
+        <div class="border-b border-gray-200 bg-gray-50 px-6 py-4">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-medium text-gray-900">Employee List</h3>
+            <button
+              @click="showFilters = !showFilters"
+              class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            >
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.207A1 1 0 013 6.5V4z"></path>
+              </svg>
+              {{ showFilters ? 'Hide Filters' : 'Show Filters' }}
+            </button>
+          </div>
+          
+          <!-- Filter Controls -->
+          <div v-if="showFilters" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <!-- Department Filter -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Department</label>
+              <BaseSelect
+                v-model="localFilters.department_id"
+                :options="departmentOptions"
+                placeholder="All departments"
+                class="w-full"
+                @change="applyFilters"
+              />
             </div>
-            <div class="flex items-center space-x-2 text-sm text-neutral-500">
-              <span>{{ employees.total }} total employees</span>
-              <span v-if="hasActiveFilters" class="text-primary-600 font-medium">
-                • {{ activeFilterCount }} filters active
-              </span>
+            
+            <!-- Employment Type Filter -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Employment Type</label>
+              <BaseSelect
+                v-model="localFilters.contract_type"
+                :options="contractTypeOptions"
+                placeholder="All types"
+                class="w-full"
+                @change="applyFilters"
+              />
+            </div>
+            
+            <!-- Status Filter -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+              <BaseSelect
+                v-model="localFilters.status"
+                :options="statusOptions"
+                placeholder="All statuses"
+                class="w-full"
+                @change="applyFilters"
+              />
+            </div>
+            
+            <!-- Search Filter -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Search</label>
+              <input
+                v-model="localFilters.search"
+                type="text"
+                placeholder="Name, email, job title..."
+                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                @input="debounceSearch"
+              />
             </div>
           </div>
           
-          <div class="relative">
-            <input
-              type="text"
-              :value="currentSearch"
-              @input="handleSearchInput"
-              placeholder="Search employees by name, email, job title, or employee code..."
-              class="w-full pl-12 pr-4 py-3 border border-neutral-300 rounded-lg text-base placeholder-neutral-500 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
-            />
-            <Icon name="magnifying-glass" class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
-            <button
-              v-if="currentSearch"
-              @click="clearSearch"
-              class="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 text-neutral-400 hover:text-neutral-600 transition-colors"
+          <!-- Active Filters Display -->
+          <div v-if="hasActiveFilters" class="mt-4 flex flex-wrap gap-2">
+            <span class="text-sm font-medium text-gray-700">Active filters:</span>
+            <span
+              v-if="activeDepartmentFilter"
+              class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
             >
-              <Icon name="x-mark" class="w-4 h-4" />
+              Department: {{ activeDepartmentFilter }}
+              <button
+                @click="clearDepartmentFilter"
+                class="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full text-blue-400 hover:bg-blue-200 hover:text-blue-500 focus:outline-none"
+              >
+                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                </svg>
+              </button>
+            </span>
+            <span
+              v-if="activeContractTypeFilter"
+              class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"
+            >
+              Type: {{ activeContractTypeFilter }}
+              <button
+                @click="clearContractTypeFilter"
+                class="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full text-green-400 hover:bg-green-200 hover:text-green-500 focus:outline-none"
+              >
+                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                </svg>
+              </button>
+            </span>
+            <span
+              v-if="activeStatusFilter"
+              class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800"
+            >
+              Status: {{ activeStatusFilter }}
+              <button
+                @click="clearStatusFilter"
+                class="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full text-purple-400 hover:bg-purple-200 hover:text-purple-500 focus:outline-none"
+              >
+                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                </svg>
+              </button>
+            </span>
+            <span
+              v-if="localFilters.search"
+              class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800"
+            >
+              Search: "{{ localFilters.search }}"
+              <button
+                @click="clearSearchFilter"
+                class="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full text-yellow-400 hover:bg-yellow-200 hover:text-yellow-500 focus:outline-none"
+              >
+                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                </svg>
+              </button>
+            </span>
+            <button
+              @click="clearAllFilters"
+              class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 hover:bg-gray-200"
+            >
+              Clear all
             </button>
           </div>
         </div>
 
-        <!-- Filter Section -->
-        <div class="bg-white rounded-xl shadow-sm border border-neutral-200">
-          <!-- Filter Header -->
-          <div class="px-6 py-4 border-b border-neutral-200">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center space-x-3">
-                <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <Icon name="funnel" class="w-5 h-5 text-blue-600" />
-                </div>
-                <div>
-                  <h3 class="text-lg font-semibold text-neutral-900">Filter Options</h3>
-                  <p class="text-sm text-neutral-600">Narrow down your employee search</p>
-                </div>
-              </div>
-              <div class="flex items-center space-x-3">
-                <button
-                  v-if="hasActiveFilters"
-                  @click="handleClearFilters"
-                  class="text-sm text-neutral-600 hover:text-neutral-800 transition-colors"
-                >
-                  Clear all filters
-                </button>
-                <button
-                  @click="toggleFilters"
-                  class="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-neutral-700 bg-neutral-100 rounded-lg hover:bg-neutral-200 transition-colors"
-                >
-                  <span>{{ filtersExpanded ? 'Hide' : 'Show' }} Filters</span>
-                  <Icon 
-                    :name="filtersExpanded ? 'chevron-up' : 'chevron-down'" 
-                    class="w-4 h-4 transition-transform duration-200"
-                  />
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Active Filters Display -->
-          <div v-if="hasActiveFilters" class="px-6 py-4 bg-blue-50 border-b border-neutral-200">
-            <div class="flex items-center justify-between mb-3">
-              <span class="text-sm font-medium text-blue-900">Active Filters</span>
-              <span class="text-xs text-blue-700 bg-blue-200 px-2 py-1 rounded-full">
-                {{ activeFilterCount }} active
-              </span>
-            </div>
-            <div class="flex flex-wrap gap-2">
-              <div
-                v-for="filter in activeFiltersDisplay"
-                :key="filter.key"
-                class="inline-flex items-center space-x-2 px-3 py-1 bg-white border border-blue-200 rounded-full text-sm"
-              >
-                <span class="font-medium text-blue-900">{{ filter.label }}:</span>
-                <span class="text-blue-700">{{ filter.value }}</span>
-                <button
-                  @click="removeFilter(filter)"
-                  class="text-blue-500 hover:text-blue-700 transition-colors"
-                >
-                  <Icon name="x-mark" class="w-3 h-3" />
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Filter Controls -->
-          <Transition
-            enter-active-class="transition ease-out duration-300"
-            enter-from-class="opacity-0 max-h-0"
-            enter-to-class="opacity-100 max-h-screen"
-            leave-active-class="transition ease-in duration-200"
-            leave-from-class="opacity-100 max-h-screen"
-            leave-to-class="opacity-0 max-h-0"
+        <ContentCard class="border-0 shadow-none">
+          <DataTable
+            :data="employees.data"
+            :columns="columns"
+            :loading="loading"
+            :row-actions="rowActions"
+            :search-config="searchConfig"
+            :empty-state="emptyState"
+            :show-footer="true"
+            :server-side-pagination="true"
+            :current-page="employees.current_page"
+            :total-pages="employees.last_page"
+            :total-items="employees.total"
+            :page-size="employees.per_page"
+            :page-size-options="[10, 25, 50, 100]"
+            @row-action="handleRowAction"
+            @search="handleSearch"
+            @page-change="handlePageChange"
+            @page-size-change="handlePageSizeChange"
+            class="w-full"
           >
-            <div v-if="filtersExpanded" class="px-6 py-6 overflow-hidden">
-              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <!-- Department Filter -->
-                <div class="space-y-3">
-                  <label class="block text-sm font-semibold text-neutral-900">
-                    Department
-                    <span v-if="selectedDepartments.length > 0" class="text-primary-600 font-normal">
-                      ({{ selectedDepartments.length }} selected)
+            <!-- Enhanced employee profile card -->
+            <template #cell-name="{ row }">
+              <div class="flex items-center space-x-3">
+                <div class="flex-shrink-0 relative">
+                  <div class="w-10 h-10 bg-gradient-to-br from-primary-100 to-primary-200 rounded-full flex items-center justify-center ring-2 ring-white shadow-sm">
+                    <span class="text-sm font-semibold text-primary-700">
+                      {{ getInitials(row.user.name) }}
                     </span>
-                  </label>
-                  <div class="space-y-2 max-h-40 overflow-y-auto">
-                    <label
-                      v-for="dept in availableDepartments"
-                      :key="dept.id"
-                      class="flex items-center space-x-3 p-2 rounded-lg hover:bg-neutral-50 cursor-pointer transition-colors"
-                    >
-                      <input
-                        type="checkbox"
-                        :value="dept.id.toString()"
-                        :checked="selectedDepartments.includes(dept.id.toString())"
-                        @change="toggleDepartment(dept.id.toString())"
-                        class="w-4 h-4 text-primary-600 border-neutral-300 rounded focus:ring-primary-500"
-                      />
-                      <span class="text-sm text-neutral-700">{{ dept.name }}</span>
-                    </label>
                   </div>
+                  <!-- Online status indicator -->
+                  <div class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-400 border-2 border-white rounded-full"></div>
                 </div>
-
-                <!-- Employment Type Filter -->
-                <div class="space-y-3">
-                  <label class="block text-sm font-semibold text-neutral-900">
-                    Employment Type
-                    <span v-if="selectedContractTypes.length > 0" class="text-primary-600 font-normal">
-                      ({{ selectedContractTypes.length }} selected)
+                <div class="min-w-0 flex-1">
+                  <div class="font-semibold text-neutral-900 truncate">{{ row.user.name }}</div>
+                  <div class="flex items-center space-x-2 text-sm text-neutral-500">
+                    <span class="truncate">{{ row.employee_code || 'No code' }}</span>
+                    <span v-if="row.user.email_verified_at" class="text-green-600" title="Verified">
+                      <Icon name="check-badge" class="w-3 h-3" />
                     </span>
-                  </label>
-                  <div class="space-y-2">
-                    <label
-                      v-for="type in availableContractTypes"
-                      :key="type"
-                      class="flex items-center space-x-3 p-2 rounded-lg hover:bg-neutral-50 cursor-pointer transition-colors"
-                    >
-                      <input
-                        type="checkbox"
-                        :value="type"
-                        :checked="selectedContractTypes.includes(type)"
-                        @change="toggleContractType(type)"
-                        class="w-4 h-4 text-primary-600 border-neutral-300 rounded focus:ring-primary-500"
-                      />
-                      <div class="flex items-center space-x-2">
-                        <div :class="getContractIndicator(type)" class="w-2 h-2 rounded-full"></div>
-                        <span class="text-sm text-neutral-700">{{ type }}</span>
-                      </div>
-                    </label>
-                  </div>
-                </div>
-
-                <!-- Status Filter -->
-                <div class="space-y-3">
-                  <label class="block text-sm font-semibold text-neutral-900">
-                    Status
-                    <span v-if="selectedStatuses.length > 0" class="text-primary-600 font-normal">
-                      ({{ selectedStatuses.length }} selected)
-                    </span>
-                  </label>
-                  <div class="space-y-2">
-                    <label
-                      v-for="status in availableStatuses"
-                      :key="status"
-                      class="flex items-center space-x-3 p-2 rounded-lg hover:bg-neutral-50 cursor-pointer transition-colors"
-                    >
-                      <input
-                        type="checkbox"
-                        :value="status"
-                        :checked="selectedStatuses.includes(status)"
-                        @change="toggleStatus(status)"
-                        class="w-4 h-4 text-primary-600 border-neutral-300 rounded focus:ring-primary-500"
-                      />
-                      <div class="flex items-center space-x-2">
-                        <div :class="status === 'active' ? 'bg-green-500' : 'bg-neutral-400'" class="w-2 h-2 rounded-full"></div>
-                        <span class="text-sm text-neutral-700">{{ status.charAt(0).toUpperCase() + status.slice(1) }}</span>
-                      </div>
-                    </label>
-                  </div>
-                </div>
-
-                <!-- Date Range Filter -->
-                <div class="space-y-3">
-                  <label class="block text-sm font-semibold text-neutral-900">Join Date Range</label>
-                  <div class="space-y-3">
-                    <div>
-                      <label class="block text-xs text-neutral-600 mb-1">From</label>
-                      <input
-                        type="date"
-                        :value="dateFilters.from"
-                        @change="updateDateFilter('from', $event.target.value)"
-                        class="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:ring-primary-500 focus:border-primary-500"
-                      />
-                    </div>
-                    <div>
-                      <label class="block text-xs text-neutral-600 mb-1">To</label>
-                      <input
-                        type="date"
-                        :value="dateFilters.to"
-                        @change="updateDateFilter('to', $event.target.value)"
-                        class="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:ring-primary-500 focus:border-primary-500"
-                      />
-                    </div>
                   </div>
                 </div>
               </div>
+            </template>
 
-              <!-- Filter Actions -->
-              <div class="flex items-center justify-between pt-6 mt-6 border-t border-neutral-200">
-                <button
-                  @click="handleResetFilters"
-                  class="px-4 py-2 text-sm font-medium text-neutral-600 bg-neutral-100 rounded-lg hover:bg-neutral-200 transition-colors"
-                >
-                  Reset All
-                </button>
-                <div class="flex items-center space-x-3">
-                  <span class="text-sm text-neutral-600">
-                    {{ employees.total }} employees found
-                  </span>
-                  <button
-                    @click="applyFilters"
-                    class="px-6 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors"
-                  >
-                    Apply Filters
-                  </button>
+            <!-- Custom cell for email -->
+            <template #cell-email="{ row }">
+              <div class="text-sm">
+                <div v-if="row.user.email" class="text-neutral-900">
+                  {{ row.user.email }}
+                </div>
+                <div v-else class="text-neutral-400 italic">
+                  No email provided
                 </div>
               </div>
-            </div>
-          </Transition>
-        </div>
+            </template>
+
+            <!-- Modern department cell - minimal design -->
+            <template #cell-department="{ row }">
+              <div class="text-sm">
+                <span v-if="row.department" class="text-neutral-900 font-medium">
+                  {{ row.department.name }}
+                </span>
+                <span v-else class="text-neutral-400 italic">
+                  Unassigned
+                </span>
+              </div>
+            </template>
+
+            <!-- Modern contract type cell - subtle indicators -->
+            <template #cell-contract_type="{ row }">
+              <div class="flex items-center space-x-2">
+                <div :class="getContractIndicator(row.contract_type)" class="w-2 h-2 rounded-full flex-shrink-0"></div>
+                <span class="text-sm text-neutral-700 font-medium">{{ row.contract_type }}</span>
+              </div>
+            </template>
+
+            <!-- Custom cell for join date -->
+            <template #cell-join_date="{ row }">
+              <div class="text-sm">
+                <div class="text-neutral-900">{{ formatDate(row.join_date) }}</div>
+                <div class="text-neutral-500">{{ getTimeAgo(row.join_date) }}</div>
+              </div>
+            </template>
+          </DataTable>
+        </ContentCard>
       </div>
-
-      <ContentCard>
-        <DataTable
-          :data="employees.data"
-          :columns="columns"
-          :loading="loading"
-          :row-actions="rowActions"
-          :search-config="searchConfig"
-          :empty-state="emptyState"
-          :show-footer="true"
-          :server-side-pagination="true"
-          :current-page="employees.current_page"
-          :total-pages="employees.last_page"
-          :total-items="employees.total"
-          :page-size="employees.per_page"
-          :page-size-options="[10, 25, 50, 100]"
-          @row-action="handleRowAction"
-          @search="handleSearch"
-          @page-change="handlePageChange"
-          @page-size-change="handlePageSizeChange"
-          class="w-full"
-        >
-      <!-- Enhanced employee profile card -->
-      <template #cell-name="{ row }">
-        <div class="flex items-center space-x-3">
-          <div class="flex-shrink-0 relative">
-            <div class="w-10 h-10 bg-gradient-to-br from-primary-100 to-primary-200 rounded-full flex items-center justify-center ring-2 ring-white shadow-sm">
-              <span class="text-sm font-semibold text-primary-700">
-                {{ getInitials(row.user.name) }}
-              </span>
-            </div>
-            <!-- Online status indicator -->
-            <div class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-400 border-2 border-white rounded-full"></div>
-          </div>
-          <div class="min-w-0 flex-1">
-            <div class="font-semibold text-neutral-900 truncate">{{ row.user.name }}</div>
-            <div class="flex items-center space-x-2 text-sm text-neutral-500">
-              <span class="truncate">{{ row.employee_code || 'No code' }}</span>
-              <span v-if="row.user.email_verified_at" class="text-green-600" title="Verified">
-                <Icon name="check-badge" class="w-3 h-3" />
-              </span>
-            </div>
-          </div>
-        </div>
-      </template>
-
-      <!-- Custom cell for email -->
-      <template #cell-email="{ row }">
-        <div class="text-sm">
-          <div v-if="row.user.email" class="text-neutral-900">
-            {{ row.user.email }}
-          </div>
-          <div v-else class="text-neutral-400 italic">
-            No email provided
-          </div>
-        </div>
-      </template>
-
-      <!-- Modern department cell - minimal design -->
-      <template #cell-department="{ row }">
-        <div class="text-sm">
-          <span v-if="row.department" class="text-neutral-900 font-medium">
-            {{ row.department.name }}
-          </span>
-          <span v-else class="text-neutral-400 italic">
-            Unassigned
-          </span>
-        </div>
-      </template>
-
-      <!-- Modern contract type cell - subtle indicators -->
-      <template #cell-contract_type="{ row }">
-        <div class="flex items-center space-x-2">
-          <div :class="getContractIndicator(row.contract_type)" class="w-2 h-2 rounded-full flex-shrink-0"></div>
-          <span class="text-sm text-neutral-700 font-medium">{{ row.contract_type }}</span>
-        </div>
-      </template>
-
-      <!-- Custom cell for join date -->
-      <template #cell-join_date="{ row }">
-        <div class="text-sm">
-          <div class="text-neutral-900">{{ formatDate(row.join_date) }}</div>
-          <div class="text-neutral-500">{{ getTimeAgo(row.join_date) }}</div>
-        </div>
-      </template>
-      </DataTable>
-    </ContentCard>
-  </PageLayout>
+    </PageLayout>
   </AuthenticatedLayout>
 </template>
 
@@ -352,15 +239,14 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 import PageLayout from '@/Components/Layout/PageLayout.vue'
 import DataTable from '@/Components/Data/DataTable.vue'
 import ContentCard from '@/Components/Layout/ContentCard.vue'
-import FilterPanel from '@/Components/Search/FilterPanel.vue'
+import BaseSelect from '@/Components/Base/BaseSelect.vue'
 import Icon from '@/Components/Base/Icon.vue'
 import { 
   UserPlusIcon, 
   EyeIcon, 
   PencilIcon, 
   TrashIcon,
-  DocumentArrowDownIcon,
-  FunnelIcon
+  DocumentArrowDownIcon
 } from '@heroicons/vue/24/outline'
 
 const props = defineProps({
@@ -380,203 +266,62 @@ const props = defineProps({
 
 // Local state
 const loading = ref(false)
-const filtersExpanded = ref(false)
-const currentSearch = ref(props.queryParams.search || '')
+const showFilters = ref(false)
 
-// Filter state management
-const selectedDepartments = ref([])
-const selectedContractTypes = ref([])
-const selectedStatuses = ref([])
-const dateFilters = ref({
-  from: '',
-  to: ''
+// Filter state - simple like work reports
+const localFilters = ref({
+  department_id: props.queryParams.filter_department || '',
+  contract_type: props.queryParams.filter_contract_type || '',
+  status: props.queryParams.filter_status || '',
+  search: props.queryParams.search || ''
 })
 
-// Initialize filter state from URL parameters
-const initializeFilterState = () => {
-  // Department filters
-  if (props.queryParams.filter_department) {
-    const depts = typeof props.queryParams.filter_department === 'string' 
-      ? props.queryParams.filter_department.split(',') 
-      : props.queryParams.filter_department
-    selectedDepartments.value = Array.isArray(depts) ? depts : [depts]
-  }
-  
-  // Contract type filters
-  if (props.queryParams.filter_contract_type) {
-    const types = typeof props.queryParams.filter_contract_type === 'string' 
-      ? props.queryParams.filter_contract_type.split(',') 
-      : props.queryParams.filter_contract_type
-    selectedContractTypes.value = Array.isArray(types) ? types : [types]
-  }
-  
-  // Status filters
-  if (props.queryParams.filter_status) {
-    const statuses = typeof props.queryParams.filter_status === 'string' 
-      ? props.queryParams.filter_status.split(',') 
-      : props.queryParams.filter_status
-    selectedStatuses.value = Array.isArray(statuses) ? statuses : [statuses]
-  }
-  
-  // Date filters
-  if (props.queryParams.filter_join_date_from) {
-    dateFilters.value.from = props.queryParams.filter_join_date_from
-  }
-  if (props.queryParams.filter_join_date_to) {
-    dateFilters.value.to = props.queryParams.filter_join_date_to
-  }
-}
-
-// Initialize on component mount
-initializeFilterState()
-
-// Computed properties for filter data
-const availableDepartments = computed(() => props.filters.departments || [])
-const availableContractTypes = computed(() => props.filters.contractTypes || [])
-const availableStatuses = computed(() => props.filters.statuses || [])
-
-// Computed properties for filter state
-const hasActiveFilters = computed(() => {
-  return selectedDepartments.value.length > 0 ||
-         selectedContractTypes.value.length > 0 ||
-         selectedStatuses.value.length > 0 ||
-         dateFilters.value.from ||
-         dateFilters.value.to ||
-         currentSearch.value
-})
-
-const activeFilterCount = computed(() => {
-  let count = 0
-  count += selectedDepartments.value.length
-  count += selectedContractTypes.value.length
-  count += selectedStatuses.value.length
-  if (dateFilters.value.from) count++
-  if (dateFilters.value.to) count++
-  return count
-})
-
-const activeFiltersDisplay = computed(() => {
-  const filters = []
-  
-  // Department filters
-  selectedDepartments.value.forEach(deptId => {
-    const dept = availableDepartments.value.find(d => d.id.toString() === deptId)
-    if (dept) {
-      filters.push({
-        key: `department-${deptId}`,
-        label: 'Department',
-        value: dept.name,
-        type: 'department',
-        removeValue: deptId
-      })
-    }
-  })
-  
-  // Contract type filters
-  selectedContractTypes.value.forEach(type => {
-    filters.push({
-      key: `contract-${type}`,
-      label: 'Employment Type',
-      value: type,
-      type: 'contract_type',
-      removeValue: type
-    })
-  })
-  
-  // Status filters
-  selectedStatuses.value.forEach(status => {
-    filters.push({
-      key: `status-${status}`,
-      label: 'Status',
-      value: status.charAt(0).toUpperCase() + status.slice(1),
-      type: 'status',
-      removeValue: status
-    })
-  })
-  
-  // Date filters
-  if (dateFilters.value.from) {
-    filters.push({
-      key: 'date-from',
-      label: 'Join Date From',
-      value: dateFilters.value.from,
-      type: 'date_from',
-      removeValue: 'from'
-    })
-  }
-  
-  if (dateFilters.value.to) {
-    filters.push({
-      key: 'date-to',
-      label: 'Join Date To',
-      value: dateFilters.value.to,
-      type: 'date_to',
-      removeValue: 'to'
-    })
-  }
-  
-  return filters
-})
-
-// Filter configuration
-const filterGroups = computed(() => [
-  {
-    key: 'department',
-    label: 'Department',
-    type: 'checkbox',
-    options: props.filters.departments?.map(dept => ({
-      value: dept.id.toString(),
-      label: dept.name,
-      count: null
-    })) || []
-  },
-  {
-    key: 'contract_type',
-    label: 'Employment Type',
-    type: 'checkbox',
-    options: props.filters.contractTypes?.map(type => ({
-      value: type,
-      label: type,
-      count: null
-    })) || []
-  },
-  {
-    key: 'status',
-    label: 'Status',
-    type: 'checkbox',
-    options: props.filters.statuses?.map(status => ({
-      value: status,
-      label: status.charAt(0).toUpperCase() + status.slice(1),
-      count: null
-    })) || []
-  },
-  {
-    key: 'join_date',
-    label: 'Join Date Range',
-    type: 'daterange'
-  }
+// Filter options
+const departmentOptions = computed(() => [
+  { value: '', label: 'All departments' },
+  ...((props.filters.departments || []).map(dept => ({
+    value: dept.id.toString(),
+    label: dept.name
+  })))
 ])
 
-// Initial filters from URL parameters
-const initialFilters = computed(() => {
-  const filters = {}
-  
-  // Extract filter parameters from query params
-  Object.keys(props.queryParams).forEach(key => {
-    if (key.startsWith('filter_')) {
-      const filterKey = key.replace('filter_', '')
-      let value = props.queryParams[key]
-      
-      // Handle comma-separated values for checkbox filters
-      if (typeof value === 'string' && value.includes(',')) {
-        value = value.split(',')
-      }
-      
-      filters[filterKey] = value
-    }
-  })
-  
-  return filters
+const contractTypeOptions = computed(() => [
+  { value: '', label: 'All types' },
+  ...((props.filters.contractTypes || []).map(type => ({
+    value: type,
+    label: type
+  })))
+])
+
+const statusOptions = computed(() => [
+  { value: '', label: 'All statuses' },
+  ...((props.filters.statuses || []).map(status => ({
+    value: status,
+    label: status.charAt(0).toUpperCase() + status.slice(1)
+  })))
+])
+
+// Active filters computed properties - simple like work reports
+const hasActiveFilters = computed(() => {
+  return localFilters.value.department_id || 
+         localFilters.value.contract_type || 
+         localFilters.value.status ||
+         localFilters.value.search;
+})
+
+const activeDepartmentFilter = computed(() => {
+  if (!localFilters.value.department_id) return null;
+  const dept = props.filters.departments?.find(d => d.id.toString() === localFilters.value.department_id);
+  return dept ? dept.name : null;
+})
+
+const activeContractTypeFilter = computed(() => {
+  return localFilters.value.contract_type || null;
+})
+
+const activeStatusFilter = computed(() => {
+  if (!localFilters.value.status) return null;
+  return localFilters.value.status.charAt(0).toUpperCase() + localFilters.value.status.slice(1);
 })
 
 // Breadcrumbs configuration
@@ -677,12 +422,9 @@ const rowActions = (row) => [
   }
 ]
 
-// Search configuration
+// Search configuration - disabled since we have search in filters
 const searchConfig = {
-  enabled: true,
-  placeholder: 'Search employees by name, email, or job title...',
-  fields: ['user.name', 'user.email', 'job_title', 'employee_code'],
-  initialValue: props.queryParams.search || ''
+  enabled: false
 }
 
 // Empty state configuration
@@ -802,229 +544,147 @@ const handleTableAction = (action) => {
   }
 }
 
-// Filter handlers
-const handleApplyFilters = (filters) => {
-  const params = { ...props.queryParams }
+// Filter methods - simple like work reports
+const applyFilters = () => {
+  loading.value = true;
   
-  // Clear existing filter parameters
-  Object.keys(params).forEach(key => {
-    if (key.startsWith('filter_')) {
-      delete params[key]
-    }
-  })
+  const params = {
+    page: 1, // Reset to first page when filtering
+    per_page: props.employees.per_page || 10
+  };
   
-  // Add new filter parameters
-  Object.entries(filters).forEach(([key, value]) => {
-    if (value && (Array.isArray(value) ? value.length > 0 : value !== '')) {
-      if (Array.isArray(value)) {
-        params[`filter_${key}`] = value.join(',')
-      } else {
-        params[`filter_${key}`] = value
-      }
-    }
-  })
-  
-  // Reset to first page when applying filters
-  params.page = 1
-  
-  router.visit(route('employees.index', params), {
-    preserveState: true,
-    preserveScroll: true
-  })
-}
-
-const handleClearFilters = () => {
-  const params = { ...props.queryParams }
-  
-  // Remove all filter parameters
-  Object.keys(params).forEach(key => {
-    if (key.startsWith('filter_')) {
-      delete params[key]
-    }
-  })
-  
-  // Reset to first page
-  params.page = 1
-  
-  router.visit(route('employees.index', params), {
-    preserveState: true,
-    preserveScroll: true
-  })
-}
-
-const handleResetFilters = () => {
-  handleClearFilters()
-}
-
-const handleSearch = (query) => {
-  const params = { ...props.queryParams }
-  
-  if (query && query.trim()) {
-    params.search = query.trim()
-  } else {
-    delete params.search
+  // Add non-empty filters to params
+  if (localFilters.value.department_id) {
+    params.filter_department = localFilters.value.department_id;
+  }
+  if (localFilters.value.contract_type) {
+    params.filter_contract_type = localFilters.value.contract_type;
+  }
+  if (localFilters.value.status) {
+    params.filter_status = localFilters.value.status;
+  }
+  if (localFilters.value.search) {
+    params.search = localFilters.value.search;
   }
   
-  // Reset to first page when searching
-  params.page = 1
-  
-  router.visit(route('employees.index', params), {
+  router.get(route('employees.index'), params, {
     preserveState: true,
-    preserveScroll: true
-  })
-}
+    preserveScroll: true,
+    onFinish: () => {
+      loading.value = false;
+    }
+  });
+};
+
+const clearDepartmentFilter = () => {
+  localFilters.value.department_id = '';
+  applyFilters();
+};
+
+const clearContractTypeFilter = () => {
+  localFilters.value.contract_type = '';
+  applyFilters();
+};
+
+const clearStatusFilter = () => {
+  localFilters.value.status = '';
+  applyFilters();
+};
+
+const clearSearchFilter = () => {
+  localFilters.value.search = '';
+  applyFilters();
+};
+
+const clearAllFilters = () => {
+  localFilters.value = {
+    department_id: '',
+    contract_type: '',
+    status: '',
+    search: ''
+  };
+  applyFilters();
+};
+
+const debounceSearch = () => {
+  clearTimeout(window.searchTimeout);
+  window.searchTimeout = setTimeout(() => {
+    applyFilters();
+  }, 500);
+};
+
+const handleSearch = (query) => {
+  // This is handled by the DataTable search, but we keep it for compatibility
+  localFilters.value.search = query || '';
+  applyFilters();
+};
 
 const handlePageChange = (page) => {
-  const params = { ...props.queryParams, page }
+  const params = { ...props.queryParams, page };
+  
+  // Ensure current filters are preserved
+  if (localFilters.value.department_id) {
+    params.filter_department = localFilters.value.department_id;
+  }
+  if (localFilters.value.contract_type) {
+    params.filter_contract_type = localFilters.value.contract_type;
+  }
+  if (localFilters.value.status) {
+    params.filter_status = localFilters.value.status;
+  }
+  if (localFilters.value.search) {
+    params.search = localFilters.value.search;
+  }
   
   router.visit(route('employees.index', params), {
     preserveState: true,
     preserveScroll: true
-  })
-}
+  });
+};
 
 const handlePageSizeChange = (size) => {
-  const params = { ...props.queryParams, per_page: size, page: 1 }
+  const params = { ...props.queryParams, per_page: size, page: 1 };
+  
+  // Ensure current filters are preserved
+  if (localFilters.value.department_id) {
+    params.filter_department = localFilters.value.department_id;
+  }
+  if (localFilters.value.contract_type) {
+    params.filter_contract_type = localFilters.value.contract_type;
+  }
+  if (localFilters.value.status) {
+    params.filter_status = localFilters.value.status;
+  }
+  if (localFilters.value.search) {
+    params.search = localFilters.value.search;
+  }
   
   router.visit(route('employees.index', params), {
     preserveState: true,
     preserveScroll: true
-  })
-}
+  });
+};
 
 const handleExport = () => {
   // Build export URL with current filters
-  const params = new URLSearchParams(props.queryParams)
-  params.set('export', 'true')
+  const params = new URLSearchParams();
+  
+  if (localFilters.value.department_id) {
+    params.set('filter_department', localFilters.value.department_id);
+  }
+  if (localFilters.value.contract_type) {
+    params.set('filter_contract_type', localFilters.value.contract_type);
+  }
+  if (localFilters.value.status) {
+    params.set('filter_status', localFilters.value.status);
+  }
+  if (localFilters.value.search) {
+    params.set('search', localFilters.value.search);
+  }
+  
+  params.set('export', 'true');
   
   // You can implement the export endpoint in the backend
-  window.open(`${route('employees.index')}?${params.toString()}`, '_blank')
-}
-
-// New filter interface methods
-const toggleFilters = () => {
-  filtersExpanded.value = !filtersExpanded.value
-}
-
-const handleSearchInput = (event) => {
-  currentSearch.value = event.target.value
-  // Debounce search - apply after user stops typing
-  clearTimeout(window.searchTimeout)
-  window.searchTimeout = setTimeout(() => {
-    handleSearch(currentSearch.value)
-  }, 500)
-}
-
-const clearSearch = () => {
-  currentSearch.value = ''
-  handleSearch('')
-}
-
-const toggleDepartment = (deptId) => {
-  const index = selectedDepartments.value.indexOf(deptId)
-  if (index > -1) {
-    selectedDepartments.value.splice(index, 1)
-  } else {
-    selectedDepartments.value.push(deptId)
-  }
-}
-
-const toggleContractType = (type) => {
-  const index = selectedContractTypes.value.indexOf(type)
-  if (index > -1) {
-    selectedContractTypes.value.splice(index, 1)
-  } else {
-    selectedContractTypes.value.push(type)
-  }
-}
-
-const toggleStatus = (status) => {
-  const index = selectedStatuses.value.indexOf(status)
-  if (index > -1) {
-    selectedStatuses.value.splice(index, 1)
-  } else {
-    selectedStatuses.value.push(status)
-  }
-}
-
-const updateDateFilter = (type, value) => {
-  dateFilters.value[type] = value
-}
-
-const removeFilter = (filter) => {
-  switch (filter.type) {
-    case 'department':
-      toggleDepartment(filter.removeValue)
-      break
-    case 'contract_type':
-      toggleContractType(filter.removeValue)
-      break
-    case 'status':
-      toggleStatus(filter.removeValue)
-      break
-    case 'date_from':
-      dateFilters.value.from = ''
-      break
-    case 'date_to':
-      dateFilters.value.to = ''
-      break
-  }
-  // Auto-apply filters when removing individual filters
-  applyFilters()
-}
-
-const applyFilters = () => {
-  const params = { ...props.queryParams }
-  
-  // Clear existing filter parameters
-  Object.keys(params).forEach(key => {
-    if (key.startsWith('filter_')) {
-      delete params[key]
-    }
-  })
-  
-  // Add new filter parameters
-  if (selectedDepartments.value.length > 0) {
-    params.filter_department = selectedDepartments.value.join(',')
-  }
-  
-  if (selectedContractTypes.value.length > 0) {
-    params.filter_contract_type = selectedContractTypes.value.join(',')
-  }
-  
-  if (selectedStatuses.value.length > 0) {
-    params.filter_status = selectedStatuses.value.join(',')
-  }
-  
-  if (dateFilters.value.from) {
-    params.filter_join_date_from = dateFilters.value.from
-  }
-  
-  if (dateFilters.value.to) {
-    params.filter_join_date_to = dateFilters.value.to
-  }
-  
-  // Reset to first page when applying filters
-  params.page = 1
-  
-  router.visit(route('employees.index', params), {
-    preserveState: true,
-    preserveScroll: true
-  })
-}
-
-const resetAllFilters = () => {
-  selectedDepartments.value = []
-  selectedContractTypes.value = []
-  selectedStatuses.value = []
-  dateFilters.value = { from: '', to: '' }
-  currentSearch.value = ''
-  
-  // Apply the reset
-  const params = { page: 1 }
-  router.visit(route('employees.index', params), {
-    preserveState: true,
-    preserveScroll: true
-  })
-}
+  window.open(`${route('employees.index')}?${params.toString()}`, '_blank');
+};
 </script>

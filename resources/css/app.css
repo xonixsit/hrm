@@ -1,11 +1,202 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import './layout-spacing.css';
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Import layout spacing system */
-@import './layout-spacing.css';
+/* Accessibility Enhancements */
+
+/* High Contrast Mode Support */
+.high-contrast {
+  --color-primary: #000000;
+  --color-secondary: #ffffff;
+  --color-accent: #ffff00;
+  --color-error: #ff0000;
+  --color-success: #00ff00;
+  --color-warning: #ff8800;
+  --color-info: #0088ff;
+  --color-text: #000000;
+  --color-text-inverse: #ffffff;
+  --color-background: #ffffff;
+  --color-background-inverse: #000000;
+  --color-border: #000000;
+  --color-focus: #0000ff;
+}
+
+.high-contrast * {
+  border-color: var(--color-border) !important;
+  outline-color: var(--color-focus) !important;
+}
+
+.high-contrast .bg-white {
+  background-color: var(--color-background) !important;
+  color: var(--color-text) !important;
+}
+
+.high-contrast .bg-primary-50,
+.high-contrast .bg-primary-100,
+.high-contrast .bg-primary-500,
+.high-contrast .bg-primary-600 {
+  background-color: var(--color-primary) !important;
+  color: var(--color-text-inverse) !important;
+}
+
+.high-contrast .text-neutral-900,
+.high-contrast .text-neutral-700,
+.high-contrast .text-neutral-600 {
+  color: var(--color-text) !important;
+}
+
+.high-contrast .text-neutral-500,
+.high-contrast .text-neutral-400 {
+  color: var(--color-text) !important;
+  opacity: 0.8;
+}
+
+.high-contrast .border-neutral-200,
+.high-contrast .border-neutral-300 {
+  border-color: var(--color-border) !important;
+}
+
+.high-contrast .hover\:bg-neutral-50:hover,
+.high-contrast .hover\:bg-neutral-100:hover {
+  background-color: var(--color-accent) !important;
+  color: var(--color-text) !important;
+}
+
+.high-contrast .focus\:ring-primary-500:focus {
+  --tw-ring-color: var(--color-focus) !important;
+  --tw-ring-width: 3px !important;
+}
+
+.high-contrast .text-red-600 {
+  color: var(--color-error) !important;
+}
+
+.high-contrast .text-green-600 {
+  color: var(--color-success) !important;
+}
+
+.high-contrast .text-blue-500,
+.high-contrast .text-blue-600 {
+  color: var(--color-info) !important;
+}
+
+.high-contrast .text-orange-500,
+.high-contrast .text-amber-500 {
+  color: var(--color-warning) !important;
+}
+
+/* Screen Reader Only Content */
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+.sr-only-focusable:focus {
+  position: static !important;
+  width: auto !important;
+  height: auto !important;
+  padding: inherit !important;
+  margin: inherit !important;
+  overflow: visible !important;
+  clip: auto !important;
+  white-space: normal !important;
+}
+
+/* Skip Links */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 6px;
+  background: #000;
+  color: #fff;
+  padding: 8px;
+  text-decoration: none;
+  z-index: 9999;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+.skip-link:focus {
+  top: 6px;
+}
+
+/* Focus Indicators */
+.focus-visible {
+  outline: 2px solid #0066cc;
+  outline-offset: 2px;
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* High Contrast Media Query Support */
+@media (prefers-contrast: high) {
+  :root {
+    --color-primary: #000000;
+    --color-secondary: #ffffff;
+    --color-accent: #ffff00;
+    --color-error: #ff0000;
+    --color-success: #00ff00;
+    --color-warning: #ff8800;
+    --color-info: #0088ff;
+    --color-text: #000000;
+    --color-text-inverse: #ffffff;
+    --color-background: #ffffff;
+    --color-background-inverse: #000000;
+    --color-border: #000000;
+    --color-focus: #0000ff;
+  }
+  
+  * {
+    border-color: var(--color-border) !important;
+  }
+  
+  button:focus,
+  input:focus,
+  select:focus,
+  textarea:focus,
+  a:focus {
+    outline: 3px solid var(--color-focus) !important;
+    outline-offset: 2px !important;
+  }
+}
+
+/* Color Blindness Support */
+@media (prefers-color-scheme: no-preference) {
+  .colorblind-friendly {
+    /* Use patterns and shapes in addition to colors */
+  }
+}
+
+/* Enhanced Focus Styles for Better Accessibility */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+a:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid #0066cc;
+  outline-offset: 2px;
+}
 
 /* Accessibility Enhancements */
 

@@ -281,6 +281,9 @@ const searchRef = ref(null);
 const isOpen = ref(false);
 const searchQuery = ref('');
 const highlightedIndex = ref(-1);
+const dropdownUpwards = ref(false);
+
+
 
 // Generate unique ID for accessibility
 const selectId = computed(() => `select-${Math.random().toString(36).substr(2, 9)}`);
@@ -295,9 +298,13 @@ const selectedOption = computed(() => {
     );
   }
   
-  return props.options.find(option => 
-    getOptionValue(option) === props.modelValue
-  );
+  return props.options.find(option => {
+    const optionVal = getOptionValue(option);
+    const modelVal = typeof props.modelValue === 'object' && props.modelValue !== null
+      ? getOptionValue(props.modelValue)
+      : props.modelValue;
+    return optionVal === modelVal;
+  });
 });
 
 const displayValue = computed(() => {
@@ -360,7 +367,10 @@ const isSelected = (option) => {
     return Array.isArray(props.modelValue) && props.modelValue.includes(optionValue);
   }
   
-  return props.modelValue === optionValue;
+  const modelVal = typeof props.modelValue === 'object' && props.modelValue !== null
+    ? getOptionValue(props.modelValue)
+    : props.modelValue;
+  return modelVal === optionValue;
 };
 
 // Styling
@@ -440,7 +450,8 @@ const iconClasses = computed(() => {
 });
 
 const dropdownClasses = computed(() => [
-  'absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base',
+  'absolute z-50 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base',
+  dropdownUpwards.value ? 'bottom-full mb-1' : 'mt-1',
   'ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm',
   'border border-neutral-200'
 ]);
@@ -460,6 +471,7 @@ const getOptionClasses = (option, index) => [
 
 // Event handlers
 const toggleDropdown = () => {
+
   if (props.disabled) return;
   
   if (isOpen.value) {
@@ -473,17 +485,34 @@ const openDropdown = async () => {
   isOpen.value = true;
   highlightedIndex.value = -1;
   searchQuery.value = '';
-  
+
   emit('open');
-  
+
   await nextTick();
-  
+
+  if (containerRef.value) {
+    const rect = containerRef.value.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const spaceAbove = rect.top;
+
+    // Assuming dropdown height is max-h-60 (240px) + some padding/border
+    // Let's use a conservative estimate, e.g., 250px
+    const dropdownHeightEstimate = 250;
+
+    if (spaceBelow < dropdownHeightEstimate && spaceAbove >= dropdownHeightEstimate) {
+      dropdownUpwards.value = true;
+    } else {
+      dropdownUpwards.value = false;
+    }
+  }
+
   if (props.searchable && searchRef.value) {
     searchRef.value.focus();
   }
 };
 
 const closeDropdown = () => {
+
   isOpen.value = false;
   highlightedIndex.value = -1;
   searchQuery.value = '';
@@ -491,25 +520,26 @@ const closeDropdown = () => {
 };
 
 const selectOption = (option) => {
-  const optionValue = getOptionValue(option);
-  
+  console.log('selectOption called with:', option);
   if (props.multiple) {
     const currentValue = Array.isArray(props.modelValue) ? [...props.modelValue] : [];
+    const optionValue = getOptionValue(option);
     const index = currentValue.indexOf(optionValue);
-    
+
     if (index > -1) {
       currentValue.splice(index, 1);
-    } else {
+    }
+    else {
       currentValue.push(optionValue);
     }
-    
     emit('update:modelValue', currentValue);
-    emit('change', currentValue);
   } else {
-    emit('update:modelValue', optionValue);
-    emit('change', optionValue);
+    const valueToEmit = getOptionValue(option);
+      emit('update:modelValue', valueToEmit);
+    
     closeDropdown();
   }
+  nextTick(() => buttonRef.value?.focus());
 };
 
 const handleKeydown = (event) => {

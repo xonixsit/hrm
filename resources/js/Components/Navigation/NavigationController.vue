@@ -557,22 +557,17 @@ onMounted(() => {
     // Additional development-only conflict checking
     const devConflictCheckInterval = setInterval(detectNavigationConflicts, 5000);
     
-    // Cleanup on unmount
-    onUnmounted(() => {
-      clearInterval(devConflictCheckInterval);
-    });
+
   }
   
   // Cleanup on unmount
   onUnmounted(() => {
+    console.log('Unregistering NavigationController:', { controllerId: controllerId.value, componentId: componentId.value });
     clearInterval(conflictCheckInterval);
-    
-    // Unregister components
+    clearInterval(devConflictCheckInterval); // Moved here for proper cleanup
     conflictDetector.unregisterComponent(controllerId.value);
     conflictDetector.unregisterComponent(componentId.value);
-    
-    // Log component unregistration
-    navigationMonitor.logComponentLifecycle(false, controllerId.value, 'controller');
+    navigationMonitor.logEvent('component_unregistered', { controllerId: controllerId.value, componentId: componentId.value });
   });
   
   // Log initialization

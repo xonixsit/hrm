@@ -32,7 +32,10 @@ const handleInertiaError = (error, context = 'unknown') => {
   console.warn(`[INERTIA ERROR HANDLER] Intercepted error in ${context}:`, error);
   
   // Check for the specific status property error
-  if (error && error.message && error.message.includes("Cannot read properties of undefined (reading 'status')")) {
+  if (error && error.message && (
+    error.message.includes("Cannot read properties of undefined (reading 'status')") ||
+    error.message.includes("Cannot read properties of undefined (reading 'x-inertia')")
+  )) {
     console.warn('[INERTIA ERROR HANDLER] Status property error detected - preventing app crash');
     return true; // Indicate error was handled
   }

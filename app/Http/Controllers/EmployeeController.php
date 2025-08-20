@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Log;
 use App\Traits\AuditLogTrait;
 
 class EmployeeController extends Controller
@@ -92,7 +93,7 @@ class EmployeeController extends Controller
             ->distinct()
             ->whereNotNull('contract_type')
             ->orderBy('contract_type')
-            ->pluck('contract_type');
+            ->pluck('contract_type')->toArray();
         $statuses = Employee::select('status')
             ->distinct()
             ->whereNotNull('status')
@@ -162,7 +163,9 @@ class EmployeeController extends Controller
     {
         $departments = Department::all();
         $employee->load('department', 'user');
-        return Inertia::render('Employees/Edit', ['employee' => $employee, 'departments' => $departments]);
+        $contractTypes = Employee::select('contract_type')->distinct()->pluck('contract_type');
+        
+        return Inertia::render('Employees/Edit', ['employee' => $employee, 'departments' => $departments, 'contractTypes' => $contractTypes]);
     }
 
     public function update(Request $request, Employee $employee)

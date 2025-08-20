@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Leave;
 use App\Models\LeaveType;
+use App\Models\Employee;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -15,16 +16,75 @@ class LeaveController extends Controller
 {
     use AuditLogTrait;
 
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user();
-        if ($user->hasRole('Admin') || $user->hasRole('HR') || $user->hasRole('Manager')) {
-            $leaves = Leave::with(['employee.user', 'leaveType'])->paginate(10);
+        $perPage = $request->get('per_page', 10);
+        $query = Leave::query();
+
+        $isApprover = $user->hasAnyRole(['Admin', 'HR', 'Manager']);
+
+        if ($isApprover) {
+            $query->with(['employee.user', 'leaveType']);
         } else {
-            $employee = $user->employee;
-            $leaves = Leave::where('employee_id', $employee->id)->with('leaveType')->paginate(10);
+            $query->with('leaveType');
+            $query->where('employee_id', $user->employee->id);
         }
-        return Inertia::render('Leaves/Index', ['leaves' => $leaves]);
+
+        // Apply filters
+        if ($request->filled('search')) {
+            $search = $request->get('search');
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('employee.user', function ($uq) use ($search) {
+                    $uq->where('name', 'like', '%' . $search . '%')
+                       ->orWhere('email', 'like', '%' . $search . '%');
+                });
+                $q->orWhere('reason', 'like', '%' . $search . '%');
+            });
+        }
+
+        if ($request->filled('status')) {
+            $status = $request->get('status');
+            $query->whereIn('status', is_array($status) ? $status : [$status]);
+        }
+
+        if ($request->filled('leave_type_id')) {
+            $leaveType = $request->get('leave_type_id');
+            $query->whereIn('leave_type_id', is_array($leaveType) ? $leaveType : [$leaveType]);
+        }
+
+        if ($request->filled('employee_id') && $isApprover) {
+            $employeeId = $request->get('employee_id');
+            if ($employeeId === 'my_team') {
+                // TODO: Implement my_team logic
+                // e.g., $teamIds = $user->employee->managedEmployees()->pluck('id');
+                // $query->whereIn('employee_id', $teamIds);
+            } else {
+        
+                $query->where('employee_id', $employeeId);
+            }
+        }
+
+        if ($request->filled('date_from') && $request->filled('date_to')) {
+            $dateFrom = $request->get('date_from');
+            $dateTo = $request->get('date_to');
+            $query->where('from_date', '>=', $dateFrom)
+                  ->where('to_date', '<=', $dateTo);
+        }
+
+        
+        
+        $leaves = $query->paginate($perPage)->withQueryString();
+
+        return Inertia::render('Leaves/Index', [
+            'leaves' => $leaves,
+            'queryParams' => $request->query(),
+            'canManageLeaves' => $isApprover,
+            'leaveTypes' => LeaveType::all(),
+            'employees' => Employee::with('user')->get()->map(function($emp) {
+                return ['id' => $emp->id, 'name' => $emp->user ? $emp->user->name : 'Unknown'];
+            }),
+        ]);
     }
 
     public function create()

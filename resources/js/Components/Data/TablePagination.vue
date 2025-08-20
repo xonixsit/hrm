@@ -20,14 +20,14 @@
     </div>
     
     <!-- Center: Page Info -->
-    <div class="page-info">
+    <div class="page-info flex-grow min-w-0">
       <span class="info-text">
         {{ startItem }}-{{ endItem }} of {{ totalItems }}
       </span>
     </div>
     
     <!-- Right: Navigation -->
-    <div class="pagination-nav">
+    <div class="pagination-nav flex-shrink-0 flex-grow justify-end">
       <button
         :disabled="currentPage === 1"
         @click="goToPage(currentPage - 1)"
@@ -38,7 +38,7 @@
         <Icon name="chevron-left" class="w-4 h-4" />
       </button>
       
-      <div class="page-numbers">
+      <div class="page-numbers flex items-center">
         <template v-for="page in visiblePages" :key="page">
           <button
             v-if="page !== '...'"
@@ -99,7 +99,7 @@ const props = defineProps({
   
   maxVisiblePages: {
     type: Number,
-    default: 7
+    default: 5 // Reduced from 7 to 5 to prevent overflow on smaller screens
   },
   
   theme: {
@@ -194,20 +194,47 @@ const getPageButtonClasses = (page) => [
 
 <style scoped>
 .table-pagination {
-  @apply flex items-center justify-between bg-white border-t border-neutral-200;
-  @apply gap-4;
-  /* Flexible padding that adapts to container size */
+  @apply flex items-center justify-end bg-white border-t border-neutral-200 w-full;
+  @apply gap-6; /* Increased gap for better spacing */
   padding: clamp(0.75rem, 2vw, 1.5rem) clamp(1rem, 3vw, 2rem);
 }
 
-/* Left: Page Size Section */
 .page-size-section {
   @apply flex items-center text-neutral-700;
-  /* Flexible gap that adapts to screen size */
   gap: clamp(0.5rem, 1.5vw, 1rem);
   font-size: clamp(0.75rem, 2vw, 0.875rem);
 }
 
+.pagination-nav {
+  @apply flex items-center gap-2; /* Slightly increased gap for consistency */
+}
+
+.page-numbers {
+  @apply flex items-center;
+  gap: clamp(0.25rem, 1vw, 0.5rem);
+  margin: 0 clamp(0.5rem, 2vw, 1rem);
+}
+
+.pagination-button {
+  @apply inline-flex items-center justify-center font-medium rounded-md;
+  @apply text-neutral-700 hover:text-neutral-900 hover:bg-neutral-100;
+  @apply focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
+  @apply transition-colors duration-150;
+  min-width: clamp(2rem, 3.5vw, 2.5rem); /* Adjusted min-width for uniformity */
+  height: clamp(2rem, 4vw, 2.5rem);
+  padding: clamp(0.25rem, 1vw, 0.5rem) clamp(0.5rem, 1.5vw, 0.75rem);
+  font-size: clamp(0.75rem, 2vw, 0.875rem);
+}
+
+@media (max-width: 768px) {
+  .table-pagination {
+    @apply flex-wrap justify-center gap-3 px-3 py-4;
+  }
+  
+  .page-size-section, .page-info, .pagination-nav {
+    @apply flex-shrink-0;
+  }
+}
 .page-size-label {
   @apply whitespace-nowrap font-medium text-neutral-600;
 }
