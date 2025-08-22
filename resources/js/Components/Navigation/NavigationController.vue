@@ -93,7 +93,7 @@ import NavigationFallback from './NavigationFallback.vue';
 import Icon from '@/Components/Base/Icon.vue';
 
 // Import conflict prevention services
-import { conflictDetector } from '@/services/NavigationConflictDetector.js';
+// import { conflictDetector } from '@/services/NavigationConflictDetector.js';
 import { navigationMonitor } from '@/services/NavigationMonitor.js';
 import { navigationDebugger } from '@/utils/navigationDebugger.js';
 
@@ -437,7 +437,7 @@ const handleConflictDetected = (conflictEvent) => {
   navigationMonitor.logConflict(conflictEvent.conflicts, false);
   
   // Try to resolve conflicts automatically
-  const resolutions = conflictDetector.resolveConflicts();
+  const resolutions = this.$conflictDetector.resolveConflicts();
   if (resolutions.length > 0) {
     navigationMonitor.logConflict(conflictEvent.conflicts, true);
   }
@@ -517,14 +517,14 @@ const showConflictDetails = () => {
 // Lifecycle
 onMounted(() => {
   // Register controller with conflict detector
-  conflictDetector.registerComponent(controllerId.value, 'controller', {
+  this.$conflictDetector.registerComponent(controllerId.value, 'controller', {
     currentRoute: props.currentRoute,
     deviceType: deviceType.value,
     timestamp: Date.now()
   });
   
   // Register navigation component
-  conflictDetector.registerComponent(componentId.value, deviceType.value, {
+  this.$conflictDetector.registerComponent(componentId.value, deviceType.value, {
     currentRoute: props.currentRoute,
     controllerId: controllerId.value,
     timestamp: Date.now()
@@ -565,8 +565,8 @@ onMounted(() => {
     console.log('Unregistering NavigationController:', { controllerId: controllerId.value, componentId: componentId.value });
     clearInterval(conflictCheckInterval);
     clearInterval(devConflictCheckInterval); // Moved here for proper cleanup
-    conflictDetector.unregisterComponent(controllerId.value);
-    conflictDetector.unregisterComponent(componentId.value);
+    this.$conflictDetector.unregisterComponent(controllerId.value);
+    this.$conflictDetector.unregisterComponent(componentId.value);
     navigationMonitor.logEvent('component_unregistered', { controllerId: controllerId.value, componentId: componentId.value });
   });
   

@@ -20,7 +20,7 @@ class DemoDataSeeder extends Seeder
     public function run(): void
     {
         // Use dedicated seeder for departments to avoid duplicates
-        $this->call(DepartmentSeeder::class);
+
         
         // Use dedicated seeder for leave types to avoid duplicates
         $this->call(LeaveTypeSeeder::class);

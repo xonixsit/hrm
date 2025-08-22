@@ -144,21 +144,42 @@ class LeaveController extends Controller
             'from_date' => 'sometimes|date',
             'to_date' => 'sometimes|date|after_or_equal:from_date',
             'reason' => 'nullable|string',
-            'status' => 'sometimes|in:pending,approved,rejected',
         ]);
 
         $leave->update($validated);
 
-        if (isset($validated['status'])) {
-            if ($validated['status'] === 'approved') {
-                $leave->employee->user->notify(new LeaveApprovedNotification($leave));
-            } elseif ($validated['status'] === 'rejected') {
-                $leave->employee->user->notify(new LeaveRejectedNotification($leave));
-            }
-        }
-
         $this->logAudit('Leave Updated', 'Updated leave ID: ' . $leave->id);
         return redirect()->route('leaves.index')->with('success', 'Leave updated.');
+    }
+
+    public function approve(Leave $leave)
+    {
+        $this->authorize('approve', $leave);
+
+        $leave->update([
+            'status' => 'approved',
+            'approved_by' => Auth::id(),
+        ]);
+
+        $leave->employee->user->notify(new LeaveApprovedNotification($leave));
+
+        $this->logAudit('Leave Approved', 'Approved leave ID: ' . $leave->id);
+        return redirect()->back()->with('success', 'Leave approved successfully.');
+    }
+
+    public function reject(Leave $leave)
+    {
+        $this->authorize('reject', $leave);
+
+        $leave->update([
+            'status' => 'rejected',
+            'approved_by' => Auth::id(),
+        ]);
+
+        $leave->employee->user->notify(new LeaveRejectedNotification($leave));
+
+        $this->logAudit('Leave Rejected', 'Rejected leave ID: ' . $leave->id);
+        return redirect()->back()->with('success', 'Leave rejected successfully.');
     }
 
     public function destroy(Leave $leave)

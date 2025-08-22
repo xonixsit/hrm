@@ -23,50 +23,45 @@
           </div>
           
           <!-- Filter Controls -->
-          <div v-if="showFilters" class="grid grid-cols-1 md:grid-cols-5 gap-4">
+          <div v-if="showFilters" class="grid grid-cols-1 md:grid-cols-4 gap-4">
             <!-- Employee Filter (Admin/HR only) -->
             <div v-if="isAdminOrHR">
               <label class="block text-sm font-medium text-gray-700 mb-1">Employee</label>
-              <BaseSelect
-                v-model="localFilters.employee_id"
-                :options="employeeOptions"
-                placeholder="All employees"
-                class="w-full"
-                @change="applyFilters"
-              />
+               <BaseMultiSelect
+                 v-model="localFilters.employee_id"
+                 :options="employeeOptions"
+                 placeholder="All employees"
+                 class="w-full"
+                 @update:modelValue="debouncedApplyFilters"
+               />
             </div>
             
             <!-- Status Filter -->
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
-              <BaseSelect
+              <BaseMultiSelect
                 v-model="localFilters.status"
                 :options="statusOptions"
                 placeholder="All statuses"
                 class="w-full"
-                @change="applyFilters"
+                @update:modelValue="debouncedApplyFilters"
               />
             </div>
-            
-            <!-- Date From Filter -->
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Date From</label>
-              <input
-                v-model="localFilters.date_from"
-                type="date"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                @change="applyFilters"
-              />
-            </div>
-            
-            <!-- Date To Filter -->
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Date To</label>
-              <input
-                v-model="localFilters.date_to"
-                type="date"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                @change="applyFilters"
+
+            <!-- Date Range Picker -->
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Date Range</label>
+              <DateRangePicker
+                :start-date="localFilters.date_from"
+                :end-date="localFilters.date_to"
+                class="w-full"
+                @update:modelValue="(value) => {
+                  localFilters.date_from = value.start;
+                  localFilters.date_to = value.end;
+                  console.log('DateRangePicker update:', { start: value.start, end: value.end, localFrom: localFilters.date_from, localTo: localFilters.date_to });
+                  // Apply filters immediately when either date changes
+                  debouncedApplyFilters();
+                }"
               />
             </div>
             
@@ -260,7 +255,9 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import PageLayout from '@/Components/Layout/PageLayout.vue';
 import ContentCard from '@/Components/Layout/ContentCard.vue';
 import DataTable from '@/Components/Data/DataTable.vue';
-import BaseSelect from '@/Components/Base/BaseSelect.vue';
+import BaseMultiSelect from '@/Components/Base/BaseMultiSelect.vue';
+import DateRangePicker from '@/Components/Base/DateRangePicker.vue';
+import { debounce } from 'lodash';
 
 const props = defineProps({
   attendances: {
@@ -277,9 +274,10 @@ const props = defineProps({
   }
 });
 
-const { user, hasRole, hasAnyRole } = useAuth();
-const loading = ref(false);
-const showFilters = ref(false);
+ const { user, hasRole, hasAnyRole } = useAuth();
+ const loading = ref(false);
+ const showFilters = ref(false);
+ const perPage = ref(props.queryParams.per_page || 10);
 
 const isAdminOrHR = computed(() => hasAnyRole(['Admin', 'HR']));
 const canClockInOut = computed(() => hasRole('Employee'));
@@ -290,16 +288,20 @@ onMounted(() => {
 
 // Filter state - simple like work reports
 const localFilters = ref({
-  employee_id: props.queryParams.employee_id ? String(props.queryParams.employee_id) : '',
-  status: props.queryParams.status || '',
+  employee_id: props.queryParams.employee_id ? [String(props.queryParams.employee_id)] : [],
+  status: props.queryParams.status ? [props.queryParams.status] : [],
   date_from: props.queryParams.date_from || '',
   date_to: props.queryParams.date_to || '',
   search: props.queryParams.search || ''
 });
 
+const updateFilter = (key, value) => {
+  localFilters.value[key] = value;
+  debouncedApplyFilters();
+};
+
 // Filter options
 const employeeOptions = computed(() => [
-  { value: '', label: 'All employees' },
   ...((props.filters.employees || []).map(emp => ({
     value: emp.id.toString(),
     label: emp.name
@@ -307,37 +309,35 @@ const employeeOptions = computed(() => [
 ]);
 
 const statusOptions = computed(() => [
-  { value: '', label: 'All statuses' },
   { value: 'clocked_in', label: 'Clocked In' },
-  { value: 'clocked_out', label: 'Clocked Out' }
+  { value: 'clocked_out', label: 'Clocked Out' },
+  { value: 'on_break', label: 'On Break' },
+  { value: 'absent', label: 'Absent' }
 ]);
 
 // Active filters computed properties
 const hasActiveFilters = computed(() => {
-  return localFilters.value.employee_id || 
-         localFilters.value.status || 
-         localFilters.value.date_from ||
-         localFilters.value.date_to ||
-         localFilters.value.search;
+  return (localFilters.value.employee_id && localFilters.value.employee_id.length > 0) || 
+         (localFilters.value.status && localFilters.value.status.length > 0) || 
+         !!localFilters.value.date_from ||
+         !!localFilters.value.date_to ||
+         !!localFilters.value.search;
 });
 
 const activeEmployeeFilter = computed(() => {
-  
-
-  
-
-  if (localFilters.value.employee_id && props.filters.employees) {
-    const employee = props.filters.employees.find(emp => emp.id == localFilters.value.employee_id);
-    console.log('Found employee:', employee);
+  if (localFilters.value.employee_id && localFilters.value.employee_id.length > 0 && props.filters.employees) {
+    const employee = props.filters.employees.find(emp => emp.id == localFilters.value.employee_id[0]);
     return employee ? employee.name : '';
   }
   return '';
 });
 
 const activeStatusFilter = computed(() => {
-  if (!localFilters.value.status) return null;
-  const statusOption = statusOptions.value.find(s => s.value === localFilters.value.status);
-  return statusOption ? statusOption.label : null;
+  if (localFilters.value.status && localFilters.value.status.length > 0) {
+    const statusOption = statusOptions.value.find(s => s.value === localFilters.value.status[0]);
+    return statusOption ? statusOption.label : null;
+  }
+  return null;
 });
 
 // Breadcrumbs configuration
@@ -654,13 +654,13 @@ const applyFilters = () => {
   loading.value = true;
   const params = {
     page: 1,
-    per_page: props.attendances.per_page || 10
+    per_page: perPage.value
   };
-
+  
   
   // Add filters to params, setting to null if empty to clear from URL
-  params.employee_id = localFilters.value.employee_id || null;
-  params.status = localFilters.value.status || null;
+  params.employee_id = localFilters.value.employee_id.length > 0 ? localFilters.value.employee_id : null;
+  params.status = localFilters.value.status.length > 0 ? localFilters.value.status : null;
   params.date_from = localFilters.value.date_from || null;
   params.date_to = localFilters.value.date_to || null;
   params.search = localFilters.value.search || null;
@@ -674,12 +674,12 @@ const applyFilters = () => {
 };
 
 const clearEmployeeFilter = () => {
-  localFilters.value.employee_id = '';
+  localFilters.value.employee_id = [];
   applyFilters();
 };
 
 const clearStatusFilter = () => {
-  localFilters.value.status = '';
+  localFilters.value.status = [];
   applyFilters();
 };
 
@@ -700,12 +700,13 @@ const clearSearchFilter = () => {
 
 const clearAllFilters = () => {
   localFilters.value = {
-    employee_id: '',
-    status: '',
+    employee_id: [],
+    status: [],
     date_from: '',
     date_to: '',
     search: ''
-  };  applyFilters();
+  };
+  applyFilters();
 };
 
 const debounceSearch = () => {
@@ -730,7 +731,7 @@ const handlePageChange = (page) => {
 
 const handlePageSizeChange = (size) => {
   perPage.value = size;
-  const params = { ...props.queryParams, per_page: size, page: 1 };
+  const params = { ...props.queryParams, per_page: perPage.value, page: 1 };
   
   // Ensure current filters are preserved, setting to null if empty
   params.employee_id = localFilters.value.employee_id || null;
@@ -747,4 +748,12 @@ const handleRowAction = ({ action, row }) => {
     action.handler();
   }
 };
+
+ const debouncedApplyFilters = debounce(() => {
+   applyFilters();
+ }, 300);
 </script>
+
+
+
+

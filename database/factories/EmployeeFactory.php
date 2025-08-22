@@ -18,20 +18,9 @@ class EmployeeFactory extends Factory
     {
         return [
             'user_id' => \App\Models\User::factory(),
-            'department_id' => \App\Models\Department::factory(),
+            'department_id' => \App\Models\Department::inRandomOrder()->first()->id ?? \App\Models\Department::factory(),
             'employee_code' => function () {
-                static $nextNumber = null;
-                if ($nextNumber === null) {
-                    $maxNumber = \App\Models\Employee::where('employee_code', 'like', 'EMP%')
-                        ->get()
-                        ->map(function($emp) {
-                            return (int) substr($emp->employee_code, 3);
-                        })->max() ?? 0;
-                    $nextNumber = $maxNumber + 1;
-                }
-                $code = 'EMP' . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
-                $nextNumber++;
-                return $code;
+                return 'EMP' . $this->faker->unique()->randomNumber(5, true);
             },
             'job_title' => $this->faker->jobTitle(),
             'join_date' => $this->faker->dateTimeBetween('-5 years', 'now')->format('Y-m-d'),

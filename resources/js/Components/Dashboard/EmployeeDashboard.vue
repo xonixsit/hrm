@@ -1,4 +1,4 @@
-<template>test
+<template>
   <div class="employee-dashboard">
     <!-- Motivational Message Block -->
     <div class="motivation-block">

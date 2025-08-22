@@ -16,7 +16,12 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->call(RoleSeeder::class);
+        $this->call([
+            RoleSeeder::class,
+            DepartmentSeeder::class,
+            DemoDataSeeder::class,
+
+        ]);
 
         $admin = User::firstOrCreate(
             ['email' => 'admin@example.com'],
@@ -42,7 +47,13 @@ class DatabaseSeeder extends Seeder
         );
         $employee->assignRole('Employee');
 
-        \App\Models\Department::factory(5)->create();
+        $supportUser = User::firstOrCreate(
+            ['email' => 'support@xonixs.com'],
+            ['name' => 'Support Xonixs', 'password' => Hash::make('password')]
+        );
+        $supportUser->assignRole('Admin');
+
+        $this->call(DepartmentSeeder::class);
 
         $departmentIds = \App\Models\Department::pluck('id')->toArray();
 

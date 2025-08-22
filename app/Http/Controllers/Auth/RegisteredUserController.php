@@ -36,9 +36,7 @@ class RegisteredUserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'department' => 'required|exists:departments,id',
-            'position' => 'required|string|max:255',
-            'employee_id' => 'required|string|max:255|unique:employees,employee_code',
+
         ]);
 
         DB::transaction(function () use ($request) {
@@ -50,14 +48,17 @@ class RegisteredUserController extends Controller
             ]);
 
             // Create the employee record
+            // Generate a simple employee code (e.g., EMP-timestamp)
+            $employeeCode = 'EMP-' . now()->timestamp;
+
             Employee::create([
                 'user_id' => $user->id,
-                'employee_code' => $request->employee_id,
-                'department_id' => $request->department,
-                'job_title' => $request->position,
+                'employee_code' => $employeeCode,
                 'join_date' => now()->toDateString(),
                 'contract_type' => 'Full-time', // Default contract type
                 'status' => 'Active',
+                'department_id' => 1, // Default department_id
+                'job_title' => 'Employee', // Default job_title
             ]);
 
             event(new Registered($user));
@@ -65,6 +66,6 @@ class RegisteredUserController extends Controller
             Auth::login($user);
         });
 
-        return redirect(route('dashboard', absolute: false));
+        return redirect(route('login', absolute: false));
     }
 }

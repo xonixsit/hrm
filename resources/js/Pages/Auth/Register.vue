@@ -4,7 +4,6 @@ import GuestLayout from '@/Layouts/GuestLayout.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import FormField from '@/Components/Forms/FormField.vue';
 import BaseInput from '@/Components/Base/BaseInput.vue';
-import BaseSelect from '@/Components/Base/BaseSelect.vue';
 import BaseButton from '@/Components/Base/BaseButton.vue';
 
 // Simple form data for intranet application
@@ -13,21 +12,7 @@ const form = useForm({
     email: '',
     password: '',
     password_confirmation: '',
-    department: '',
-    position: '',
-    employee_id: '',
 });
-
-// Department options
-const departmentOptions = [
-    { value: 'engineering', label: 'Engineering' },
-    { value: 'marketing', label: 'Marketing' },
-    { value: 'sales', label: 'Sales' },
-    { value: 'hr', label: 'Human Resources' },
-    { value: 'finance', label: 'Finance' },
-    { value: 'operations', label: 'Operations' },
-    { value: 'support', label: 'Customer Support' }
-];
 
 // Form validation
 const isFormValid = computed(() => {
@@ -35,10 +20,7 @@ const isFormValid = computed(() => {
            form.email.trim() && 
            form.password && 
            form.password_confirmation && 
-           form.password === form.password_confirmation &&
-           form.department &&
-           form.position.trim() &&
-           form.employee_id.trim();
+           form.password === form.password_confirmation;
 });
 
 // Form submission
@@ -62,7 +44,7 @@ const handleSubmit = () => {
                 <p class="registration-subtitle">
                     Join our team and get started
                 </p>
-            </div>
+             </div>
 
             <!-- Simple Registration Form -->
             <form @submit.prevent="handleSubmit" class="registration-form">
@@ -126,49 +108,6 @@ const handleSubmit = () => {
                             type="password"
                             placeholder="Confirm your password"
                             autocomplete="new-password"
-                            required
-                        />
-                    </FormField>
-
-                    <!-- Work Information -->
-                    <FormField
-                        name="department"
-                        label="Department"
-                        required
-                        :error-message="form.errors.department"
-                    >
-                        <BaseSelect
-                            v-model="form.department"
-                            :options="departmentOptions"
-                            placeholder="Select your department"
-                            required
-                        />
-                    </FormField>
-
-                    <FormField
-                        name="position"
-                        label="Position/Job Title"
-                        required
-                        :error-message="form.errors.position"
-                    >
-                        <BaseInput
-                            v-model="form.position"
-                            type="text"
-                            placeholder="Enter your job title"
-                            required
-                        />
-                    </FormField>
-
-                    <FormField
-                        name="employee_id"
-                        label="Employee ID"
-                        required
-                        :error-message="form.errors.employee_id"
-                    >
-                        <BaseInput
-                            v-model="form.employee_id"
-                            type="text"
-                            placeholder="Enter your employee ID"
                             required
                         />
                     </FormField>

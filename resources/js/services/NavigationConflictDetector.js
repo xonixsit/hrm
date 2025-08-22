@@ -1,4 +1,4 @@
-import { ref, computed } from 'vue'
+import { ref } from 'vue';
 
 /**
  * Navigation Conflict Detection and Prevention Service

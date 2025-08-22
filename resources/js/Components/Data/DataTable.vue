@@ -491,6 +491,9 @@ const isPartiallySelected = computed(() => {
 
 // Methods
 const getCellValue = (row, key) => {
+  console.log("Testing");
+  console.log(row, key);
+
   return key.split('.').reduce((obj, k) => obj?.[k], row);
 };
 

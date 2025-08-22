@@ -211,6 +211,7 @@ import { router } from '@inertiajs/vue3';
 import { useAuth } from '@/composables/useAuth.js';
 import { useTheme } from '@/composables/useTheme.js';
 
+
 const props = defineProps({
   currentRoute: {
     type: String,
@@ -364,30 +365,9 @@ onMounted(() => {
   const componentId = Math.random().toString(36).substr(2, 9);
   console.log('[SidebarNavigation] Component mounted, isDesktop:', isDesktop.value, 'ID:', componentId);
   
-  // AGGRESSIVE CONFLICT PREVENTION: Remove ALL existing sidebars first
-  const allSidebars = document.querySelectorAll('[data-debug="sidebar-navigation-component"], .sidebar-navigation, nav[aria-label="Main navigation"]');
-  console.log('[SidebarNavigation] Found total navigation elements:', allSidebars.length);
-  
-  // Remove all existing sidebars except this one (which hasn't been added to DOM yet)
-  allSidebars.forEach((sidebar, index) => {
-    console.log('[SidebarNavigation] Removing existing sidebar:', index);
-    sidebar.remove();
-  });
-  
-  // Wait a moment then check again for any remaining duplicates
-  setTimeout(() => {
-    const remainingSidebars = document.querySelectorAll('[data-debug="sidebar-navigation-component"]');
-    if (remainingSidebars.length > 1) {
-      console.warn('[SidebarNavigation] STILL MULTIPLE SIDEBARS AFTER CLEANUP:', remainingSidebars.length);
-      // Keep only the first one
-      for (let i = 1; i < remainingSidebars.length; i++) {
-        console.log('[SidebarNavigation] Force removing duplicate:', i);
-        remainingSidebars[i].style.display = 'none';
-        remainingSidebars[i].remove();
-      }
-    }
-  }, 100);
-  
+  // Register component with conflict detector
+  this.$conflictDetector.registerComponent('desktop', componentId);
+
   // Add resize listener for desktop detection
   window.addEventListener('resize', checkDesktop);
   
@@ -406,36 +386,15 @@ onUnmounted(() => {
   if (typeof window !== 'undefined') {
     window.removeEventListener('resize', checkDesktop);
   }
+  // Unregister component from conflict detector
+  this.$conflictDetector.unregisterComponent('desktop');
 });
 </script>
 
 <style scoped>
 /* Desktop-only sidebar navigation styles */
 
-/* CONFLICT PREVENTION: Hide duplicate sidebars */
-[data-debug="sidebar-navigation-component"]:not(:first-of-type) {
-  display: none !important;
-}
 
-/* Additional conflict prevention - hide any sidebar after the first one */
-.sidebar-navigation:not(:first-of-type) {
-  display: none !important;
-}
-
-/* Global fix for multiple fixed sidebars */
-nav[role="navigation"][aria-label="Main navigation"]:not(:first-of-type) {
-  display: none !important;
-}
-
-/* AGGRESSIVE FIX: Hide any fixed positioned nav element after the first one */
-nav.fixed:not(:first-of-type) {
-  display: none !important;
-}
-
-/* ULTIMATE FIX: Target any element with sidebar classes after the first */
-.flex.flex-col.h-screen.fixed.left-0.top-0:not(:first-of-type) {
-  display: none !important;
-}
 
 /* Smooth width transitions for collapse/expand */
 .sidebar-navigation {

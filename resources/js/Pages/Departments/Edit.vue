@@ -253,16 +253,19 @@ const props = defineProps({
 })
 
 // Form setup
+
 const form = useForm({
   name: props.department.name,
   code: props.department.code,
   description: props.department.description,
-  manager_id: props.department.manager_id,
   parent_id: props.department.parent_id,
   budget: props.department.budget,
   location: props.department.location,
   status: props.department.status || 'Active',
-  established_date: props.department.established_date
+  established_date: props.department.established_date ? new Date(props.department.established_date).toISOString().split('T')[0] : null,
+  parent_id: props.department.parent_id ? String(props.department.parent_id) : null,
+  manager_id: props.department.manager_id ? String(props.department.manager_id) : null,
+
 })
 
 // Breadcrumbs configuration
@@ -327,10 +330,16 @@ const isFormValid = computed(() => {
 // Transform employees data for BaseSelect
 const employeeOptions = computed(() => {
   return props.employees.map(employee => ({
-    value: employee.id,
+    value: String(employee.id),  // force consistent type
     label: `${employee.user.name} - ${employee.job_title || 'No title'}`
   }))
 })
+
+// const form = useForm({
+//   ...props.department,
+//   manager_id: props.department.manager_id ? String(props.department.manager_id) : null,
+// })
+
 
 // Transform departments data for BaseSelect
 const departmentOptions = computed(() => {
@@ -349,16 +358,20 @@ const statusOptions = [
 
 // Check if form has changes
 const hasChanges = computed(() => {
-  return form.name !== props.department.name ||
-         form.code !== props.department.code ||
-         form.description !== props.department.description ||
-         form.manager_id !== props.department.manager_id ||
-         form.parent_id !== props.department.parent_id ||
+  const normalizeString = (value) => (typeof value === 'string' ? value.trim() : value);
+  const normalizeDate = (value) => (value === '' ? null : value);
+  const normalizeId = (value) => (value === '' ? null : String(value));
+
+  return normalizeString(form.name) !== normalizeString(props.department.name) ||
+         normalizeString(form.code) !== normalizeString(props.department.code) ||
+         normalizeString(form.description) !== normalizeString(props.department.description) ||
+         String(form.manager_id || '') !== String(props.department.manager_id || '') ||
+         normalizeId(form.parent_id) !== normalizeId(props.department.parent_id) ||
          form.budget !== props.department.budget ||
-         form.location !== props.department.location ||
+         normalizeString(form.location) !== normalizeString(props.department.location) ||
          form.status !== (props.department.status || 'Active') ||
-         form.established_date !== props.department.established_date
-})
+         normalizeDate(form.established_date) !== normalizeDate(props.department.established_date)
+});
 
 // Methods
 const getDepartmentIcon = (departmentName) => {
@@ -392,9 +405,56 @@ const formatDate = (dateString) => {
 }
 
 const handleSubmit = () => {
+    const changedData = {};
+
+  for (const key in form.data()) {
+    const originalValue = props.department[key];
+    const currentValue = form[key];
+
+    // Log values for debugging specific fields
+    if (['parent_id', 'manager_id', 'established_date'].includes(key)) {
+      console.log(`Field: ${key}, Original:`, originalValue, `Current:`, currentValue);
+    }
+    // Special handling for fields that might be null or empty string interchangeably
+    const normalizeString = (value) => (typeof value === 'string' ? value.trim() : value);
+
+    if (['established_date', 'code', 'description', 'location'].includes(key)) {
+      const normalizedCurrent = key === 'established_date' ? (currentValue === '' ? null : currentValue) : normalizeString(currentValue);
+      const normalizedOriginal = key === 'established_date' ? (originalValue === '' ? null : originalValue) : key === 'parent_id' ? normalizeId(originalValue) : normalizeString(originalValue);
+      if (normalizedCurrent !== normalizedOriginal) {
+        changedData[key] = normalizedCurrent;
+      }
+    } else if (key === 'name') {
+      const normalizedCurrent = normalizeString(currentValue);
+      const normalizedOriginal = normalizeString(originalValue);
+      if (normalizedCurrent !== normalizedOriginal) {
+        changedData[key] = normalizedCurrent;
+      }
+    } else if (['manager_id', 'parent_id'].includes(key)) {
+      const normalizedCurrent = (currentValue === '' || currentValue === null) ? null : String(currentValue);
+      const normalizedOriginal = (originalValue === '' || originalValue === null) ? null : String(originalValue);
+      if (normalizedCurrent !== normalizedOriginal) {
+        changedData[key] = normalizedCurrent;
+      }
+    } else if (currentValue !== originalValue) {
+      changedData[key] = currentValue;
+    }
+  }
+
+  // If no changes, prevent submission
+  if (Object.keys(changedData).length === 0) {
+    router.visit(route('departments.show', props.department.id));
+    return;
+  }
+
+   
+
   form.put(route('departments.update', props.department.id), {
+    data: changedData,
     onSuccess: () => {
       // Success handled by Inertia redirect
+          console.log(changedData);
+
     },
     onError: (errors) => {
       console.error('Form submission errors:', errors)
@@ -407,9 +467,9 @@ const handleSubmit = () => {
           element.focus()
         }
       }
-    }
-  })
-}
+    },
+  });
+};
 
 const handleReset = () => {
   if (confirm('Are you sure you want to reset all changes? This action cannot be undone.')) {

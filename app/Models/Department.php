@@ -22,7 +22,7 @@ class Department extends Model
     ];
 
     protected $casts = [
-        'established_date' => 'date',
+        'established_date' => 'datetime:Y-m-d',
         'budget' => 'decimal:2'
     ];
 

@@ -37,9 +37,6 @@ const signupForm = useForm({
     email: '',
     password: '',
     password_confirmation: '',
-    department: '',
-    position: '',
-    employee_id: '',
 });
 
 // Department options for signup - use dynamic departments from database
@@ -102,10 +99,7 @@ const isSignupFormValid = computed(() => {
            signupForm.email.trim() && 
            signupForm.password && 
            signupForm.password_confirmation && 
-           signupForm.password === signupForm.password_confirmation &&
-           signupForm.department &&
-           signupForm.position.trim() &&
-           signupForm.employee_id.trim();
+           signupForm.password === signupForm.password_confirmation;
 });
 
 </script>
@@ -333,47 +327,10 @@ const isSignupFormValid = computed(() => {
                     </div>
                     
                     <!-- Department Field -->
-                    <div>
-                        <BaseSelect
-                            id="department"
-                            v-model="signupForm.department"
-                            :options="departmentOptions"
-                            placeholder="Select your department"
-                            :error-message="signupForm.errors.department"
-                            required
-                            size="lg"
-                        />
-                    </div>
                     
                     <!-- Position Field -->
-                    <div>
-                        <BaseInput
-                            id="position"
-                            v-model="signupForm.position"
-                            type="text"
-                            placeholder="Enter your job title"
-                            :error-message="signupForm.errors.position"
-                            :icon-left="'briefcase'"
-                            :floating-label="false"
-                            required
-                            size="lg"
-                        />
-                    </div>
                     
                     <!-- Employee ID Field -->
-                    <div>
-                        <BaseInput
-                            id="employee-id"
-                            v-model="signupForm.employee_id"
-                            type="text"
-                            placeholder="Enter your employee ID"
-                            :error-message="signupForm.errors.employee_id"
-                            :icon-left="'identification'"
-                            :floating-label="false"
-                            required
-                            size="lg"
-                        />
-                    </div>
                     
                     <!-- Submit Button -->
                     <BaseButton
