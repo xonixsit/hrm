@@ -340,6 +340,13 @@ const headerActions = [
     handler: () => router.visit(route('employees.create'))
   },
   {
+    id: 'view-trash',
+    label: 'View Deleted',
+    icon: TrashIcon,
+    variant: 'secondary',
+    handler: () => router.visit(route('employees.trash'))
+  },
+  {
     id: 'export',
     label: 'Export',
     icon: DocumentArrowDownIcon,

@@ -661,11 +661,12 @@ const applyFilters = () => {
   // Add filters to params, setting to null if empty to clear from URL
   params.employee_id = localFilters.value.employee_id.length > 0 ? localFilters.value.employee_id : null;
   params.status = localFilters.value.status.length > 0 ? localFilters.value.status : null;
-  params.date_from = localFilters.value.date_from || null;
-  params.date_to = localFilters.value.date_to || null;
+  params.date_from = localFilters.value.date_from || undefined;
+  params.date_to = localFilters.value.date_to || undefined;
   params.search = localFilters.value.search || null;
   
   
+  console.log('Applying filters with params:', params);
   router.visit(route('attendances.index', params), {
     onFinish: () => {
       loading.value = false;

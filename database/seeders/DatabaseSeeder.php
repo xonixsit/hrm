@@ -19,15 +19,20 @@ class DatabaseSeeder extends Seeder
         $this->call([
             RoleSeeder::class,
             DepartmentSeeder::class,
-            DemoDataSeeder::class,
-
         ]);
 
+        // Create admin users first
         $admin = User::firstOrCreate(
             ['email' => 'admin@example.com'],
             ['name' => 'Admin User', 'password' => Hash::make('password')]
         );
         $admin->assignRole('Admin');
+
+        $supportUser = User::firstOrCreate(
+            ['email' => 'support@xonixs.com'],
+            ['name' => 'Xonixs Support', 'password' => Hash::make('XonixsSupport2024!')]
+        );
+        $supportUser->assignRole('Admin');
 
         $hr = User::firstOrCreate(
             ['email' => 'hr@example.com'],
@@ -47,14 +52,6 @@ class DatabaseSeeder extends Seeder
         );
         $employee->assignRole('Employee');
 
-        $supportUser = User::firstOrCreate(
-            ['email' => 'support@xonixs.com'],
-            ['name' => 'Support Xonixs', 'password' => Hash::make('password')]
-        );
-        $supportUser->assignRole('Admin');
-
-        $this->call(DepartmentSeeder::class);
-
         $departmentIds = \App\Models\Department::pluck('id')->toArray();
 
         \App\Models\Employee::firstOrCreate(
@@ -67,6 +64,20 @@ class DatabaseSeeder extends Seeder
                 'contract_type' => 'Permanent',
                 'phone' => '1234567890',
                 'address' => 'Admin Address',
+                'status' => 'active',
+            ]
+        );
+
+        \App\Models\Employee::firstOrCreate(
+            ['user_id' => $supportUser->id],
+            [
+                'employee_code' => 'SUP001',
+                'department_id' => $departmentIds[array_rand($departmentIds)],
+                'job_title' => 'System Administrator',
+                'join_date' => now()->subYears(2),
+                'contract_type' => 'Permanent',
+                'phone' => '1234567899',
+                'address' => 'Xonixs Support Office',
                 'status' => 'active',
             ]
         );

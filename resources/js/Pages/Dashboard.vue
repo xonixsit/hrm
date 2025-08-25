@@ -252,20 +252,65 @@ const handleRefresh = async () => {
 const handleApproval = async (approval) => {
   try {
     console.log('Approving:', approval);
-    // Handle approval logic - make API call to approve
-    // This would typically be handled by the backend
+    
+    // Handle different approval types
+    if (approval.type === 'timesheet') {
+      const response = await axios.post(`/timesheets/${approval.id}/approve`, {
+        comments: 'Approved from dashboard'
+      });
+      
+      if (response.data.success) {
+        console.log('Timesheet approved successfully');
+        // Refresh dashboard data
+        router.reload({
+          only: ['pendingApprovals', 'adminStats', 'managerStats'],
+          preserveScroll: true
+        });
+      }
+    }
+    // Add other approval types as needed
+    
   } catch (error) {
     console.error('Error approving item:', error);
+    if (error.response?.data?.message) {
+      alert('Error: ' + error.response.data.message);
+    } else {
+      alert('Failed to approve item. Please try again.');
+    }
   }
 };
 
 const handleRejection = async (approval) => {
   try {
     console.log('Rejecting:', approval);
-    // Handle rejection logic - make API call to reject
-    // This would typically be handled by the backend
+    
+    // Handle different approval types
+    if (approval.type === 'timesheet') {
+      const comments = prompt('Please provide a reason for rejection:');
+      if (comments === null) return; // User cancelled
+      
+      const response = await axios.post(`/timesheets/${approval.id}/reject`, {
+        comments: comments || 'Rejected from dashboard'
+      });
+      
+      if (response.data.success) {
+        console.log('Timesheet rejected successfully');
+        // Refresh dashboard data
+        router.reload({
+          only: ['pendingApprovals', 'adminStats', 'managerStats'],
+          preserveScroll: true
+        });
+      }
+    }
+    // Add other approval types as needed
+    
   } catch (error) {
     console.error('Error rejecting item:', error);
+    if (error.response?.data?.message) {
+      alert('Error: ' + error.response.data.message);
+    } else {
+      alert('Failed to reject item. Please try again.');
+    }
   }
 };
 
@@ -300,6 +345,7 @@ const handleAction = async (actionData) => {
       break;
     case 'view-all-approvals':
       // Navigate to approvals page
+      router.visit(route('timesheets.pending-approvals'));
       break;
     default:
       console.log('Unhandled action type:', actionData.type);

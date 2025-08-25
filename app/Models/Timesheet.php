@@ -15,8 +15,17 @@ class Timesheet extends Model
         'task_id',
         'hours',
         'date',
+        'description',
         'status',
         'approved_by',
+        'approved_at',
+        'approval_comments',
+    ];
+
+    protected $casts = [
+        'date' => 'date',
+        'approved_at' => 'datetime',
+        'hours' => 'decimal:2',
     ];
 
     public function employee()

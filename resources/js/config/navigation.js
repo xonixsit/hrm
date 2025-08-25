@@ -65,6 +65,13 @@ export const navigationStructure = {
           icon: 'calendar-x',
           route: 'leaves.index',
           roles: ['Admin', 'Manager', 'Employee']
+        },
+        {
+          id: 'pending-approvals',
+          label: 'Pending Approvals',
+          icon: 'check-circle',
+          route: 'timesheets.pending-approvals',
+          roles: ['Admin', 'Manager']
         }
       ]
     },

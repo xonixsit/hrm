@@ -86,6 +86,7 @@
 
 <script setup>
 import { computed, ref, onMounted, onUnmounted, useSlots } from 'vue';
+import { router } from '@inertiajs/vue3';
 import { useResponsive } from '@/composables/useResponsive';
 import BreadcrumbNavigation from './BreadcrumbNavigation.vue';
 import TabNavigation from './TabNavigation.vue';
@@ -219,6 +220,9 @@ const handleAction = (action) => {
   // Handle built-in action types
   if (action.handler) {
     action.handler();
+  } else if (action.href) {
+    // Handle navigation with Inertia for SPA behavior
+    router.visit(action.href);
   }
 };
 

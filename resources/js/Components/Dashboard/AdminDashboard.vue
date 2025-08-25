@@ -394,7 +394,7 @@ const handleQuickAction = (action) => {
 };
 
 const viewAllApprovals = () => {
-  emit('action', { type: 'view-approvals' });
+  emit('action', { type: 'view-all-approvals' });
 };
 
 const approveItem = async (approval) => {

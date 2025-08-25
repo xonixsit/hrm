@@ -135,7 +135,7 @@ const handleLinkClick = (link) => {
 }
 
 .footer-content {
-  @apply container-responsive;
+  @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
 }
 
 .default-footer {

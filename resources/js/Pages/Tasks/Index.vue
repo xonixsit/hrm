@@ -45,13 +45,17 @@
         :from="tasks.from"
         :to="tasks.to"
       />
-    </div>
-  </div>
+        </div>
+      </div>
+    </PageLayout>
+  </AuthenticatedLayout>
 </template>
 
 <script setup>
 import { Link, router } from '@inertiajs/vue3';
 import { computed } from 'vue';
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import PageLayout from '@/Components/Layout/PageLayout.vue';
 import Pagination from '@/Components/Pagination.vue';
 import { useAuth } from '@/composables/useAuth.js';
 
@@ -63,6 +67,20 @@ const { user, hasRole, hasAnyRole, getUserProperty } = useAuth();
 
 const userId = computed(() => getUserProperty('id'));
 const isManagerOrAdmin = computed(() => hasAnyRole(['Admin', 'Manager']));
+
+const breadcrumbs = computed(() => [
+  { label: 'Dashboard', href: route('dashboard') },
+  { label: 'Tasks', href: route('tasks.index') }
+]);
+
+const headerActions = computed(() => [
+  {
+    label: 'Create Task',
+    href: route('tasks.create'),
+    variant: 'primary',
+    icon: 'plus'
+  }
+]);
 
 const canEdit = (task) => {
   // Managers and Admins can edit all tasks

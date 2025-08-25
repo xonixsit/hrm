@@ -16,7 +16,15 @@ class Leave extends Model
         'to_date',
         'status',
         'approved_by',
+        'approved_at',
+        'approval_comments',
         'reason',
+    ];
+
+    protected $casts = [
+        'from_date' => 'date',
+        'to_date' => 'date',
+        'approved_at' => 'datetime',
     ];
 
     public function employee()

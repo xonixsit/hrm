@@ -210,11 +210,181 @@ class EmployeeController extends Controller
         return back()->with('success', 'Employee password has been reset successfully.');
     }
 
+    public function markAsExit(Request $request, Employee $employee)
+    {
+        // Check if user has admin/HR role
+        if (!auth()->user()->hasAnyRole(['Admin', 'HR'])) {
+            abort(403, 'Only administrators and HR can process employee exits.');
+        }
+
+        $validated = $request->validate([
+            'exit_date' => 'required|date|before_or_equal:today',
+            'exit_reason' => 'required|string|max:255',
+            'exit_notes' => 'nullable|string|max:1000',
+        ]);
+
+        // Update employee with exit information
+        $employee->update([
+            'exit_date' => $validated['exit_date'],
+            'exit_reason' => $validated['exit_reason'],
+            'exit_notes' => $validated['exit_notes'],
+            'exit_processed_at' => now(),
+            'exit_processed_by' => auth()->id(),
+            'status' => 'inactive'
+        ]);
+
+        // Optionally disable the user account
+        $employee->user->update([
+            'email_verified_at' => null, // This effectively disables login
+        ]);
+
+        $this->logAudit('Employee Exit', 'Processed exit for employee: ' . $employee->employee_code . ' - Reason: ' . $validated['exit_reason']);
+        
+        return back()->with('success', 'Employee has been marked as exited successfully.');
+    }
+
+    public function reactivate(Request $request, Employee $employee)
+    {
+        // Check if user has admin role
+        if (!auth()->user()->hasRole('Admin')) {
+            abort(403, 'Only administrators can reactivate employees.');
+        }
+
+        // Clear exit information and reactivate
+        $employee->update([
+            'exit_date' => null,
+            'exit_reason' => null,
+            'exit_notes' => null,
+            'exit_processed_at' => null,
+            'exit_processed_by' => null,
+            'status' => 'active'
+        ]);
+
+        // Re-enable the user account
+        $employee->user->update([
+            'email_verified_at' => now(),
+        ]);
+
+        $this->logAudit('Employee Reactivated', 'Reactivated employee: ' . $employee->employee_code);
+        
+        return back()->with('success', 'Employee has been reactivated successfully.');
+    }
+
     public function destroy(Employee $employee)
     {
-        $employee->user->delete();
+        // Check if user has admin role
+        if (!auth()->user()->hasRole('Admin')) {
+            abort(403, 'Only administrators can delete employees.');
+        }
+
+        // Soft delete the employee (this will hide them from all normal queries)
         $employee->delete();
-        $this->logAudit('Employee Deleted', 'Deleted employee: ' . $employee->employee_code);
-        return redirect()->route('employees.index')->with('success', 'Employee deleted successfully.');
+        
+        // Also soft delete the associated user account
+        $employee->user->delete();
+        
+        $this->logAudit('Employee Soft Deleted', 'Soft deleted employee: ' . $employee->employee_code);
+        return redirect()->route('employees.index')->with('success', 'Employee has been removed from the system successfully.');
+    }
+
+    public function restore($id)
+    {
+        // Check if user has admin role
+        if (!auth()->user()->hasRole('Admin')) {
+            abort(403, 'Only administrators can restore employees.');
+        }
+
+        // Find the soft deleted employee
+        $employee = Employee::withTrashed()->findOrFail($id);
+        
+        // Restore the employee
+        $employee->restore();
+        
+        // Also restore the associated user account
+        $employee->user()->withTrashed()->restore();
+        
+        $this->logAudit('Employee Restored', 'Restored employee: ' . $employee->employee_code);
+        return back()->with('success', 'Employee has been restored successfully.');
+    }
+
+    public function forceDelete($id)
+    {
+        // Check if user has admin role
+        if (!auth()->user()->hasRole('Admin')) {
+            abort(403, 'Only administrators can permanently delete employees.');
+        }
+
+        // Find the soft deleted employee
+        $employee = Employee::withTrashed()->findOrFail($id);
+        
+        // Permanently delete the user first
+        $employee->user()->withTrashed()->forceDelete();
+        
+        // Permanently delete the employee
+        $employee->forceDelete();
+        
+        $this->logAudit('Employee Force Deleted', 'Permanently deleted employee: ' . $employee->employee_code);
+        return redirect()->route('employees.index')->with('success', 'Employee has been permanently deleted.');
+    }
+
+    public function trash(Request $request)
+    {
+        // Check if user has admin role
+        if (!auth()->user()->hasRole('Admin')) {
+            abort(403, 'Only administrators can view deleted employees.');
+        }
+
+        $query = Employee::onlyTrashed()->with('department', 'user');
+
+        // Search functionality for trashed employees
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('user', function ($userQuery) use ($search) {
+                    $userQuery->where('name', 'like', "%{$search}%")
+                             ->orWhere('email', 'like', "%{$search}%");
+                })
+                ->orWhere('job_title', 'like', "%{$search}%")
+                ->orWhere('employee_code', 'like', "%{$search}%");
+            });
+        }
+
+        // Department filter
+        if ($request->filled('filter_department')) {
+            $departments = is_array($request->filter_department) 
+                ? $request->filter_department 
+                : explode(',', $request->filter_department);
+            $query->whereIn('department_id', $departments);
+        }
+
+        // Sorting
+        $sortBy = $request->get('sort', 'deleted_at');
+        $sortDirection = $request->get('direction', 'desc');
+        
+        if ($sortBy === 'name') {
+            $query->join('users', 'employees.user_id', '=', 'users.id')
+                  ->orderBy('users.name', $sortDirection)
+                  ->select('employees.*');
+        } elseif ($sortBy === 'department') {
+            $query->join('departments', 'employees.department_id', '=', 'departments.id')
+                  ->orderBy('departments.name', $sortDirection)
+                  ->select('employees.*');
+        } else {
+            $query->orderBy($sortBy, $sortDirection);
+        }
+
+        $perPage = $request->get('per_page', 10);
+        $employees = $query->paginate($perPage)->withQueryString();
+
+        // Get filter options from all employees (including trashed)
+        $departments = Department::select('id', 'name')->orderBy('name')->get();
+
+        return Inertia::render('Employees/Trash', [
+            'employees' => $employees,
+            'filters' => [
+                'departments' => $departments,
+            ],
+            'queryParams' => $request->query()
+        ]);
     }
 }

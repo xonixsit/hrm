@@ -45,11 +45,21 @@ Route::middleware('auth')->group(function () {
         return Inertia::render('AnimationDemo');
     })->name('animation.demo');
     Route::resource('employees', EmployeeController::class);
+    Route::get('employees-trash', [EmployeeController::class, 'trash'])->name('employees.trash');
     Route::post('employees/{employee}/reset-password', [EmployeeController::class, 'resetPassword'])->name('employees.reset-password');
+    Route::post('employees/{employee}/mark-as-exit', [EmployeeController::class, 'markAsExit'])->name('employees.mark-as-exit');
+    Route::post('employees/{employee}/reactivate', [EmployeeController::class, 'reactivate'])->name('employees.reactivate');
+    Route::post('employees/{id}/restore', [EmployeeController::class, 'restore'])->name('employees.restore');
+    Route::delete('employees/{id}/force-delete', [EmployeeController::class, 'forceDelete'])->name('employees.force-delete');
     Route::resource('departments', DepartmentController::class);
     Route::resource('projects', ProjectController::class);
     Route::resource('tasks', TaskController::class);
     Route::resource('timesheets', TimesheetController::class);
+    Route::post('timesheets/{timesheet}/approve', [TimesheetController::class, 'approve'])->name('timesheets.approve');
+    Route::post('timesheets/{timesheet}/reject', [TimesheetController::class, 'reject'])->name('timesheets.reject');
+    Route::post('timesheets/bulk-approve', [TimesheetController::class, 'bulkApprove'])->name('timesheets.bulk-approve');
+    Route::get('timesheets/pending/approvals', [TimesheetController::class, 'pendingApprovals'])->name('timesheets.pending-approvals');
+    Route::get('api/timesheets/approval-stats', [TimesheetController::class, 'approvalStats'])->name('timesheets.approval-stats');
     Route::resource('work-reports', WorkReportController::class);
     Route::resource('attendances', AttendanceController::class);
     Route::post('attendances/clock-in', [AttendanceController::class, 'clockIn'])->name('attendances.clockIn');
@@ -65,7 +75,27 @@ Route::middleware('auth')->group(function () {
         Route::post('break-end', [AttendanceController::class, 'endBreak']);
         Route::get('current', [AttendanceController::class, 'getCurrentStatus']);
     });
-    Route::resource('leaves', LeaveController::class);
+    Route::resource('leaves', LeaveController::class)->parameters(['leaves' => 'leave']);
+    Route::post('leaves/{leave}/approve', [LeaveController::class, 'approve'])->name('leaves.approve');
+    Route::post('leaves/{leave}/reject', [LeaveController::class, 'reject'])->name('leaves.reject');
+    Route::put('leaves/{leave}/update-and-approve', [LeaveController::class, 'updateAndApprove'])->name('leaves.update-and-approve');
+    
+    // Debug route to test data passing
+    Route::get('debug/leave-data/{leave}', function(App\Models\Leave $leave) {
+        $leave->load(['employee.user', 'leaveType']);
+        
+        return response()->json([
+            'raw_leave' => $leave->toArray(),
+            'inertia_data' => [
+                'leave' => $leave
+            ],
+            'relationships_loaded' => [
+                'employee' => $leave->relationLoaded('employee'),
+                'leaveType' => $leave->relationLoaded('leaveType'),
+                'user' => $leave->employee ? $leave->employee->relationLoaded('user') : false
+            ]
+        ]);
+    })->name('debug.leave.data');
     Route::resource('feedbacks', FeedbackController::class);
 
     Route::get('/reports/attendance/pdf', [ReportController::class, 'attendancePdf'])->name('reports.attendance.pdf');

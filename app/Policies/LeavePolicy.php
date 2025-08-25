@@ -13,7 +13,7 @@ class LeavePolicy
      */
     public function viewAny(User $user): bool
     {
-        return false;
+        return true; // All authenticated users can view leaves
     }
 
     /**
@@ -21,7 +21,13 @@ class LeavePolicy
      */
     public function view(User $user, Leave $leave): bool
     {
-        return false;
+        // Admins and HR can view all leaves
+        if ($user->hasAnyRole(['Admin', 'HR', 'Manager'])) {
+            return true;
+        }
+        
+        // Employees can view their own leaves
+        return $user->employee && $user->employee->id === $leave->employee_id;
     }
 
     /**
@@ -29,7 +35,7 @@ class LeavePolicy
      */
     public function create(User $user): bool
     {
-        return false;
+        return $user->employee !== null; // User must have an employee record
     }
 
     /**
@@ -37,6 +43,16 @@ class LeavePolicy
      */
     public function update(User $user, Leave $leave): bool
     {
+        // Admins and HR can update any leave
+        if ($user->hasAnyRole(['Admin', 'HR'])) {
+            return true;
+        }
+        
+        // Employees can only update their own pending leaves
+        if ($user->employee && $user->employee->id === $leave->employee_id) {
+            return $leave->status === 'pending';
+        }
+        
         return false;
     }
 
@@ -45,7 +61,49 @@ class LeavePolicy
      */
     public function delete(User $user, Leave $leave): bool
     {
+        // Admins can delete any leave
+        if ($user->hasRole('Admin')) {
+            return true;
+        }
+        
+        // Employees can only delete their own pending leaves
+        if ($user->employee && $user->employee->id === $leave->employee_id) {
+            return $leave->status === 'pending';
+        }
+        
         return false;
+    }
+
+    /**
+     * Determine whether the user can approve the model.
+     */
+    public function approve(User $user, Leave $leave): bool
+    {
+        // Only Admins, HR, and Managers can approve leaves
+        if (!$user->hasAnyRole(['Admin', 'HR', 'Manager'])) {
+            return false;
+        }
+        
+        // Can only approve pending leaves
+        if ($leave->status !== 'pending') {
+            return false;
+        }
+        
+        // Users cannot approve their own leaves
+        if ($user->employee && $user->employee->id === $leave->employee_id) {
+            return false;
+        }
+        
+        return true;
+    }
+
+    /**
+     * Determine whether the user can reject the model.
+     */
+    public function reject(User $user, Leave $leave): bool
+    {
+        // Same logic as approve
+        return $this->approve($user, $leave);
     }
 
     /**
@@ -53,7 +111,7 @@ class LeavePolicy
      */
     public function restore(User $user, Leave $leave): bool
     {
-        return false;
+        return $user->hasRole('Admin');
     }
 
     /**
@@ -61,6 +119,6 @@ class LeavePolicy
      */
     public function forceDelete(User $user, Leave $leave): bool
     {
-        return false;
+        return $user->hasRole('Admin');
     }
 }
