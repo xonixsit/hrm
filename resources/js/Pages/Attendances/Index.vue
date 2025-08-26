@@ -6,258 +6,369 @@
       :breadcrumbs="breadcrumbs"
       :actions="headerActions"
     >
-      <div class="bg-white rounded-lg shadow-sm overflow-hidden">
-        <!-- Table Header with Filters -->
-        <div class="border-b border-gray-200 bg-gray-50 px-6 py-4">
-          <div class="flex justify-between items-center mb-4">
-            <h3 class="text-lg font-medium text-gray-900">Attendance Records</h3>
-            <button
-              @click="showFilters = !showFilters"
-              class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-            >
-              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.207A1 1 0 013 6.5V4z"></path>
-              </svg>
-              {{ showFilters ? 'Hide Filters' : 'Show Filters' }}
-            </button>
-          </div>
-          
-          <!-- Filter Controls -->
-          <div v-if="showFilters" class="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <!-- Employee Filter (Admin/HR only) -->
-            <div v-if="isAdminOrHR">
-              <label class="block text-sm font-medium text-gray-700 mb-1">Employee</label>
-               <BaseMultiSelect
-                 v-model="localFilters.employee_id"
-                 :options="employeeOptions"
-                 placeholder="All employees"
-                 class="w-full"
-                 @update:modelValue="debouncedApplyFilters"
-               />
-            </div>
-            
-            <!-- Status Filter -->
+      <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+        <div class="p-6 text-gray-900">
+          <!-- Header Actions -->
+          <div class="flex justify-between items-start mb-6">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
-              <BaseMultiSelect
-                v-model="localFilters.status"
-                :options="statusOptions"
-                placeholder="All statuses"
-                class="w-full"
-                @update:modelValue="debouncedApplyFilters"
-              />
+              <h3 class="text-lg font-medium text-gray-900">Attendance Records</h3>
+              <p class="mt-1 text-sm text-gray-600">
+                View and manage attendance records.
+              </p>
+            </div>
+            <div class="flex items-center space-x-4">
+              <!-- Search Field -->
+              <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+                <input
+                  v-model="localFilters.search"
+                  type="text"
+                  placeholder="Search by employee name or notes..."
+                  class="block w-80 pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  @input="debouncedApplyFilters"
+                />
+              </div>
+              
+              <!-- Show Filters Button -->
+              <button
+                @click="showFilters = !showFilters"
+                class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.707V4z" />
+                </svg>
+                {{ showFilters ? 'Hide Filters' : 'Show Filters' }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Filter Controls -->
+          <div v-if="showFilters" class="mb-6 p-4 bg-gray-50 rounded-lg">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <!-- Employee Filter (Admin/HR only) -->
+              <div v-if="isAdminOrHR">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Employee</label>
+                <select
+                  v-model="localFilters.employee_id"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  @change="applyFilters"
+                >
+                  <option value="">All employees</option>
+                  <option v-for="employee in employees" :key="employee.id" :value="employee.id">
+                    {{ employee.name }}
+                  </option>
+                </select>
+              </div>
+              
+              <!-- Status Filter -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                <select
+                  v-model="localFilters.status"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  @change="applyFilters"
+                >
+                  <option value="">All statuses</option>
+                  <option value="clocked_in">Clocked In</option>
+                  <option value="clocked_out">Clocked Out</option>
+                  <option value="on_break">On Break</option>
+                </select>
+              </div>
+
+              <!-- Date From -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Date From</label>
+                <input
+                  v-model="localFilters.date_from"
+                  type="date"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  @change="applyFilters"
+                />
+              </div>
+
+              <!-- Date To -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Date To</label>
+                <input
+                  v-model="localFilters.date_to"
+                  type="date"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  @change="applyFilters"
+                />
+              </div>
+
+
             </div>
 
-            <!-- Date Range Picker -->
-            <div class="md:col-span-2">
-              <label class="block text-sm font-medium text-gray-700 mb-1">Date Range</label>
-              <DateRangePicker
-                :start-date="localFilters.date_from"
-                :end-date="localFilters.date_to"
-                class="w-full"
-                @update:modelValue="(value) => {
-                  localFilters.date_from = value.start;
-                  localFilters.date_to = value.end;
-                  console.log('DateRangePicker update:', { start: value.start, end: value.end, localFrom: localFilters.date_from, localTo: localFilters.date_to });
-                  // Apply filters immediately when either date changes
-                  debouncedApplyFilters();
-                }"
-              />
-            </div>
-            
-            <!-- Search Filter -->
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Search</label>
-              <input
-                v-model="localFilters.search"
-                type="text"
-                placeholder="Employee name, notes..."
-                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                @input="debounceSearch"
-              />
+            <!-- Active Filters -->
+            <div v-if="hasActiveFilters" class="mt-4 flex flex-wrap gap-2">
+              <span class="text-sm font-medium text-gray-700">Active filters:</span>
+              
+              <span 
+                v-if="localFilters.employee_id"
+                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+              >
+                Employee: {{ getEmployeeName(localFilters.employee_id) }}
+                <button 
+                  @click="clearFilter('employee_id')"
+                  class="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full text-blue-400 hover:bg-blue-200 hover:text-blue-500 focus:outline-none"
+                >
+                  <span class="sr-only">Remove employee filter</span>
+                  <svg class="w-2 h-2" fill="currentColor" viewBox="0 0 8 8">
+                    <path d="M4 3.293l2.146-2.147a.5.5 0 01.708.708L4.707 4l2.147 2.146a.5.5 0 01-.708.708L4 4.707l-2.146 2.147a.5.5 0 01-.708-.708L3.293 4 1.146 1.854a.5.5 0 01.708-.708L4 3.293z" />
+                  </svg>
+                </button>
+              </span>
+
+              <span 
+                v-if="localFilters.status"
+                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"
+              >
+                Status: {{ formatStatus(localFilters.status) }}
+                <button 
+                  @click="clearFilter('status')"
+                  class="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full text-green-400 hover:bg-green-200 hover:text-green-500 focus:outline-none"
+                >
+                  <span class="sr-only">Remove status filter</span>
+                  <svg class="w-2 h-2" fill="currentColor" viewBox="0 0 8 8">
+                    <path d="M4 3.293l2.146-2.147a.5.5 0 01.708.708L4.707 4l2.147 2.146a.5.5 0 01-.708.708L4 4.707l-2.146 2.147a.5.5 0 01-.708-.708L3.293 4 1.146 1.854a.5.5 0 01.708-.708L4 3.293z" />
+                  </svg>
+                </button>
+              </span>
+
+              <span 
+                v-if="localFilters.date_from"
+                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800"
+              >
+                From: {{ formatDate(localFilters.date_from) }}
+                <button 
+                  @click="clearFilter('date_from')"
+                  class="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full text-purple-400 hover:bg-purple-200 hover:text-purple-500 focus:outline-none"
+                >
+                  <span class="sr-only">Remove date from filter</span>
+                  <svg class="w-2 h-2" fill="currentColor" viewBox="0 0 8 8">
+                    <path d="M4 3.293l2.146-2.147a.5.5 0 01.708.708L4.707 4l2.147 2.146a.5.5 0 01-.708.708L4 4.707l-2.146 2.147a.5.5 0 01-.708-.708L3.293 4 1.146 1.854a.5.5 0 01.708-.708L4 3.293z" />
+                  </svg>
+                </button>
+              </span>
+
+              <span 
+                v-if="localFilters.date_to"
+                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800"
+              >
+                To: {{ formatDate(localFilters.date_to) }}
+                <button 
+                  @click="clearFilter('date_to')"
+                  class="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full text-purple-400 hover:bg-purple-200 hover:text-purple-500 focus:outline-none"
+                >
+                  <span class="sr-only">Remove date to filter</span>
+                  <svg class="w-2 h-2" fill="currentColor" viewBox="0 0 8 8">
+                    <path d="M4 3.293l2.146-2.147a.5.5 0 01.708.708L4.707 4l2.147 2.146a.5.5 0 01-.708.708L4 4.707l-2.146 2.147a.5.5 0 01-.708-.708L3.293 4 1.146 1.854a.5.5 0 01.708-.708L4 3.293z" />
+                  </svg>
+                </button>
+              </span>
+
+              <button 
+                @click="resetFilters"
+                class="text-sm text-blue-600 hover:text-blue-800"
+              >
+                Clear all
+              </button>
             </div>
           </div>
-          
-          <!-- Active Filters Display -->
-          <div v-if="hasActiveFilters" class="mt-4 flex flex-wrap gap-2">
-            <span class="text-sm font-medium text-gray-700">Active filters:</span>
-            <span
-              v-if="activeEmployeeFilter"
-              class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
-            >
-              Employee: {{ activeEmployeeFilter }}
-              <button
-                @click="clearEmployeeFilter"
-                class="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full text-blue-400 hover:bg-blue-200 hover:text-blue-500 focus:outline-none"
+
+          <!-- Attendance Table -->
+          <div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
+            <div class="overflow-x-auto">
+              <table class="min-w-full divide-y divide-gray-300">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th v-if="isAdminOrHR" scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Employee
+                  </th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Date
+                  </th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Clock In
+                  </th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Clock Out
+                  </th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Duration
+                  </th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th scope="col" class="relative px-6 py-3">
+                    <span class="sr-only">Actions</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+                <tr v-for="attendance in attendances.data" :key="attendance.id" class="hover:bg-gray-50">
+                  <!-- Employee Column (Admin/HR only) -->
+                  <td v-if="isAdminOrHR" class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center">
+                      <div class="flex-shrink-0 h-8 w-8">
+                        <div class="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
+                          <span class="text-sm font-medium text-blue-700">
+                            {{ getEmployeeInitials(attendance.employee?.user?.name) }}
+                          </span>
+                        </div>
+                      </div>
+                      <div class="ml-4">
+                        <div class="text-sm font-medium text-gray-900">
+                          {{ attendance.employee?.user?.name || 'N/A' }}
+                        </div>
+                        <div class="text-sm text-gray-500">
+                          {{ attendance.employee?.employee_code || '' }}
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+
+                  <!-- Date -->
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {{ formatDate(attendance.date) }}
+                  </td>
+
+                  <!-- Clock In -->
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {{ formatTime(attendance.clock_in) }}
+                  </td>
+
+                  <!-- Clock Out -->
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {{ formatTime(attendance.clock_out) }}
+                  </td>
+
+                  <!-- Duration -->
+                  <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    {{ calculateDuration(attendance) }}
+                  </td>
+
+                  <!-- Status -->
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span :class="getStatusBadgeClasses(attendance.status)" class="inline-flex px-2 py-1 text-xs font-semibold rounded-full">
+                      {{ formatStatus(attendance.status) }}
+                    </span>
+                  </td>
+
+                  <!-- Actions -->
+                  <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <div class="flex items-center justify-end space-x-2">
+                      <Link
+                        :href="route('attendances.show', attendance.id)"
+                        class="text-blue-600 hover:text-blue-900"
+                      >
+                        View
+                      </Link>
+                      <Link
+                        v-if="isAdminOrHR"
+                        :href="route('attendances.edit', attendance.id)"
+                        class="text-indigo-600 hover:text-indigo-900"
+                      >
+                        Edit
+                      </Link>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Pagination -->
+          <div v-if="attendances.data.length > 0" class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+            <div class="flex-1 flex justify-between sm:hidden">
+              <Link 
+                v-if="attendances.prev_page_url"
+                :href="attendances.prev_page_url" 
+                class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
               >
-                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
-                </svg>
-              </button>
-            </span>
-            <span
-              v-if="activeStatusFilter"
-              class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"
-            >
-              Status: {{ activeStatusFilter }}
-              <button
-                @click="clearStatusFilter"
-                class="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full text-green-400 hover:bg-green-200 hover:text-green-500 focus:outline-none"
+                Previous
+              </Link>
+              <Link 
+                v-if="attendances.next_page_url"
+                :href="attendances.next_page_url" 
+                class="relative ml-3 inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
               >
-                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
-                </svg>
-              </button>
-            </span>
-            <span
-              v-if="localFilters.date_from"
-              class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800"
-            >
-              From: {{ formatDate(localFilters.date_from) }}
-              <button
-                @click="clearDateFromFilter"
-                class="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full text-purple-400 hover:bg-purple-200 hover:text-purple-500 focus:outline-none"
-              >
-                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
-                </svg>
-              </button>
-            </span>
-            <span
-              v-if="localFilters.date_to"
-              class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800"
-            >
-              To: {{ formatDate(localFilters.date_to) }}
-              <button
-                @click="clearDateToFilter"
-                class="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full text-purple-400 hover:bg-purple-200 hover:text-purple-500 focus:outline-none"
-              >
-                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
-                </svg>
-              </button>
-            </span>
-            <span
-              v-if="localFilters.search"
-              class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800"
-            >
-              Search: "{{ localFilters.search }}"
-              <button
-                @click="clearSearchFilter"
-                class="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full text-yellow-400 hover:bg-yellow-200 hover:text-yellow-500 focus:outline-none"
-              >
-                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
-                </svg>
-              </button>
-            </span>
-            <button
-              @click="clearAllFilters"
-              class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 hover:bg-gray-200"
-            >
-              Clear all
-            </button>
+                Next
+              </Link>
+            </div>
+            <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+              <div>
+                <p class="text-sm text-gray-700">
+                  Showing
+                  <span class="font-medium">{{ attendances.from }}</span>
+                  to
+                  <span class="font-medium">{{ attendances.to }}</span>
+                  of
+                  <span class="font-medium">{{ attendances.total }}</span>
+                  results
+                </p>
+              </div>
+              <div>
+                <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                  <Link 
+                    v-if="attendances.prev_page_url"
+                    :href="attendances.prev_page_url"
+                    class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                  >
+                    <span class="sr-only">Previous</span>
+                    <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                      <path fill-rule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clip-rule="evenodd" />
+                    </svg>
+                  </Link>
+                  
+                  <template v-for="link in attendances.links" :key="link.label">
+                    <Link 
+                      v-if="link.url && !link.label.includes('Previous') && !link.label.includes('Next')"
+                      :href="link.url"
+                      :class="[
+                        'relative inline-flex items-center px-4 py-2 border text-sm font-medium',
+                        link.active 
+                          ? 'z-10 bg-blue-50 border-blue-500 text-blue-600' 
+                          : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                      ]"
+                    >
+                      {{ link.label }}
+                    </Link>
+                  </template>
+                  
+                  <Link 
+                    v-if="attendances.next_page_url"
+                    :href="attendances.next_page_url"
+                    class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                  >
+                    <span class="sr-only">Next</span>
+                    <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                      <path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd" />
+                    </svg>
+                  </Link>
+                </nav>
+              </div>
+            </div>
           </div>
         </div>
-
-        <ContentCard class="border-0 shadow-none">
-          <DataTable
-            :data="attendances?.data || []"
-            :columns="tableColumns"
-            :loading="loading"
-            :server-side-pagination="true"
-            :current-page="attendances?.current_page || 1"
-            :total-pages="attendances?.last_page || 1"
-            :page-size="perPage"
-            :total-items="attendances?.total || 0"
-            :page-size-options="[10, 15, 25, 50, 100]"
-            :row-actions="getRowActions"
-            :empty-state="emptyState"
-            :search-config="searchConfig"
-            @page-change="handlePageChange"
-            @page-size-change="handlePageSizeChange"
-            @row-action="handleRowAction"
-            class="w-full"
-          >
-            <!-- Custom Employee Cell -->
-            <template #cell-employee="{ row }">
-              <div class="flex items-center space-x-3 min-w-0">
-                <div class="flex-shrink-0 h-8 w-8">
-                  <div class="h-8 w-8 rounded-full bg-primary-100 flex items-center justify-center">
-                    <span class="text-sm font-medium text-primary-700">
-                      {{ getEmployeeInitials(row.employee?.user?.name) }}
-                    </span>
-                  </div>
-                </div>
-                <div class="min-w-0 flex-1">
-                  <div class="text-sm font-medium text-neutral-900 truncate">
-                    {{ row.employee?.user?.name || 'N/A' }}
-                  </div>
-                  <div class="text-sm text-neutral-500 truncate">
-                    {{ row.employee?.employee_code || '' }}
-                  </div>
-                </div>
-              </div>
-            </template>
-
-            <!-- Custom Date Cell -->
-            <template #cell-date="{ value }">
-              <div class="text-sm text-neutral-900">
-                {{ formatDate(value) }}
-              </div>
-            </template>
-
-            <!-- Custom Time Cells -->
-            <template #cell-clock_in="{ value }">
-              <div class="text-sm text-neutral-900">
-                {{ formatTime(value) }}
-              </div>
-            </template>
-
-            <template #cell-clock_out="{ value }">
-              <div class="text-sm text-neutral-900">
-                {{ formatTime(value) }}
-              </div>
-            </template>
-
-            <!-- Custom Duration Cell -->
-            <template #cell-duration="{ row }">
-              <div class="text-sm font-medium text-neutral-900">
-                {{ calculateDuration(row) }}
-              </div>
-            </template>
-
-            <!-- Custom Status Cell -->
-            <template #cell-status="{ value }">
-              <span :class="getStatusBadgeClasses(value)">
-                {{ formatStatus(value) }}
-              </span>
-            </template>
-
-            <!-- Custom Break Time Cell -->
-            <template #cell-break_time="{ value }">
-              <div class="text-sm text-neutral-900">
-                {{ formatBreakTime(value) }}
-              </div>
-            </template>
-          </DataTable>
-        </ContentCard>
       </div>
     </PageLayout>
   </AuthenticatedLayout>
 </template>
 
 <script setup>
+import { ref, computed } from 'vue';
 import { Link, router } from '@inertiajs/vue3';
-import { computed, ref, onMounted } from 'vue';
-import { useAuth } from '@/composables/useAuth';
+import { debounce } from 'lodash';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import PageLayout from '@/Components/Layout/PageLayout.vue';
-import ContentCard from '@/Components/Layout/ContentCard.vue';
-import DataTable from '@/Components/Data/DataTable.vue';
-import BaseMultiSelect from '@/Components/Base/BaseMultiSelect.vue';
-import DateRangePicker from '@/Components/Base/DateRangePicker.vue';
-import { debounce } from 'lodash';
+import { useAuth } from '@/composables/useAuth.js';
 
 const props = defineProps({
   attendances: {
@@ -274,232 +385,45 @@ const props = defineProps({
   }
 });
 
- const { user, hasRole, hasAnyRole } = useAuth();
- const loading = ref(false);
- const showFilters = ref(false);
- const perPage = ref(props.queryParams.per_page || 10);
+const { hasAnyRole } = useAuth();
 
-const isAdminOrHR = computed(() => hasAnyRole(['Admin', 'HR']));
-const canClockInOut = computed(() => hasRole('Employee'));
-
-onMounted(() => {
-  console.log('Index.vue mounted. employeeOptions:', props.filters.employees);
-});
-
-// Filter state - simple like work reports
+// Refs
+const showFilters = ref(true);
+const loading = ref(false);
 const localFilters = ref({
-  employee_id: props.queryParams.employee_id ? [String(props.queryParams.employee_id)] : [],
-  status: props.queryParams.status ? [props.queryParams.status] : [],
+  employee_id: props.queryParams.employee_id || '',
+  status: props.queryParams.status || '',
   date_from: props.queryParams.date_from || '',
   date_to: props.queryParams.date_to || '',
   search: props.queryParams.search || ''
 });
 
-const updateFilter = (key, value) => {
-  localFilters.value[key] = value;
-  debouncedApplyFilters();
-};
+// Computed
+const isAdminOrHR = computed(() => hasAnyRole(['Admin', 'HR']));
 
-// Filter options
-const employeeOptions = computed(() => [
-  ...((props.filters.employees || []).map(emp => ({
-    value: emp.id.toString(),
-    label: emp.name
-  })))
-]);
+const employees = computed(() => props.filters.employees || []);
 
-const statusOptions = computed(() => [
-  { value: 'clocked_in', label: 'Clocked In' },
-  { value: 'clocked_out', label: 'Clocked Out' },
-  { value: 'on_break', label: 'On Break' },
-  { value: 'absent', label: 'Absent' }
-]);
-
-// Active filters computed properties
 const hasActiveFilters = computed(() => {
-  return (localFilters.value.employee_id && localFilters.value.employee_id.length > 0) || 
-         (localFilters.value.status && localFilters.value.status.length > 0) || 
-         !!localFilters.value.date_from ||
-         !!localFilters.value.date_to ||
-         !!localFilters.value.search;
+  return (
+    localFilters.value.employee_id ||
+    localFilters.value.status ||
+    localFilters.value.date_from ||
+    localFilters.value.date_to ||
+    localFilters.value.search
+  );
 });
 
-const activeEmployeeFilter = computed(() => {
-  if (localFilters.value.employee_id && localFilters.value.employee_id.length > 0 && props.filters.employees) {
-    const employee = props.filters.employees.find(emp => emp.id == localFilters.value.employee_id[0]);
-    return employee ? employee.name : '';
-  }
-  return '';
-});
-
-const activeStatusFilter = computed(() => {
-  if (localFilters.value.status && localFilters.value.status.length > 0) {
-    const statusOption = statusOptions.value.find(s => s.value === localFilters.value.status[0]);
-    return statusOption ? statusOption.label : null;
-  }
-  return null;
-});
-
-// Breadcrumbs configuration
 const breadcrumbs = computed(() => [
   { label: 'Dashboard', href: route('dashboard') },
   { label: 'Attendance Management', current: true }
 ]);
 
-// Header actions
-const headerActions = computed(() => {
-  const actions = [];
-  
-  if (canClockInOut.value) {
-    actions.push(
-      {
-        id: 'clock-in',
-        label: 'Clock In',
-        variant: 'success',
-        handler: clockIn
-      },
-      {
-        id: 'clock-out',
-        label: 'Clock Out',
-        variant: 'danger', 
-        handler: clockOut
-      }
-    );
-  }
-  
-  return actions;
-});
+const headerActions = computed(() => []);
 
-// Table columns configuration
-const tableColumns = computed(() => {
-  const baseColumns = [
-    { 
-      key: 'date', 
-      label: 'Date', 
-      sortable: true,
-      minWidth: '120px',
-      priority: 'high'
-    },
-    { 
-      key: 'clock_in', 
-      label: 'Clock In', 
-      sortable: true,
-      minWidth: '100px',
-      priority: 'high',
-      align: 'center'
-    },
-    { 
-      key: 'clock_out', 
-      label: 'Clock Out', 
-      sortable: true,
-      minWidth: '100px',
-      priority: 'high',
-      align: 'center'
-    },
-    { 
-      key: 'duration', 
-      label: 'Duration', 
-      sortable: true,
-      minWidth: '100px',
-      priority: 'medium',
-      align: 'center'
-    },
-    { 
-      key: 'status', 
-      label: 'Status', 
-      sortable: true,
-      minWidth: '120px',
-      priority: 'high',
-      align: 'center'
-    },
-    { 
-      key: 'break_time', 
-      label: 'Break Time', 
-      sortable: false,
-      minWidth: '100px',
-      priority: 'low',
-      align: 'center'
-    }
-  ];
-  
-  // Add employee column for admin/HR at the beginning
-  if (isAdminOrHR.value) {
-    baseColumns.unshift({
-      key: 'employee',
-      label: 'Employee',
-      sortable: true,
-      minWidth: '200px',
-      maxWidth: '300px',
-      priority: 'high'
-    });
-  }
-  
-  return baseColumns;
-});
-
-// Row actions configuration
-const getRowActions = (row) => {
-  const actions = [
-    {
-      id: 'view',
-      label: 'View Details',
-      handler: () => router.visit(route('attendances.show', row.id))
-    }
-  ];
-
-  if (isAdminOrHR.value) {
-    actions.push(
-      {
-        id: 'edit',
-        label: 'Edit',
-        handler: () => router.visit(route('attendances.edit', row.id))
-      },
-      {
-        id: 'delete',
-        label: 'Delete',
-        variant: 'danger',
-        handler: () => deleteRecord(row)
-      }
-    );
-  }
-
-  return actions;
-};
-
-// Search configuration - disabled since we have search in filters
-const searchConfig = {
-  enabled: false
-};
-
-// Empty state configuration
-const emptyState = {
-  title: 'No attendance records found',
-  description: 'No attendance records match your current filters.',
-  icon: 'clock',
-  actions: hasActiveFilters.value ? [
-    {
-      id: 'clear-filters',
-      label: 'Clear Filters',
-      variant: 'secondary',
-      handler: () => clearAllFilters()
-    }
-  ] : []
-};
-
-// Methods
-const getEmployeeInitials = (name) => {
-  if (!name) return 'N/A';
-  return name
-    .split(' ')
-    .map(word => word.charAt(0))
-    .join('')
-    .toUpperCase()
-    .slice(0, 2);
-};
-
+// Helper functions
 const formatDate = (dateString) => {
   if (!dateString) return 'N/A';
-
+  
   try {
     // Parse the date string as YYYY-MM-DD to avoid timezone issues
     const [year, month, day] = dateString.split('-').map(Number);
@@ -522,13 +446,10 @@ const formatTime = (timeString) => {
   if (!timeString || timeString === 'Invalid Date') return '-';
   
   try {
-    // Handle different time formats
     let time;
     if (timeString.includes('T')) {
-      // ISO datetime format
       time = new Date(timeString);
     } else if (timeString.includes(':')) {
-      // Time only format
       time = new Date(`2000-01-01 ${timeString}`);
     } else {
       return '-';
@@ -546,23 +467,22 @@ const formatTime = (timeString) => {
   }
 };
 
-const calculateDuration = (row) => {
-  if (!row.clock_in || !row.clock_out) return '-';
+const calculateDuration = (attendance) => {
+  if (!attendance.clock_in || !attendance.clock_out) return '-';
   
   try {
     let clockIn, clockOut;
     
-    // Handle different datetime formats
-    if (row.clock_in.includes('T')) {
-      clockIn = new Date(row.clock_in);
+    if (attendance.clock_in.includes('T')) {
+      clockIn = new Date(attendance.clock_in);
     } else {
-      clockIn = new Date(`${row.date} ${row.clock_in}`);
+      clockIn = new Date(`${attendance.date} ${attendance.clock_in}`);
     }
     
-    if (row.clock_out.includes('T')) {
-      clockOut = new Date(row.clock_out);
+    if (attendance.clock_out.includes('T')) {
+      clockOut = new Date(attendance.clock_out);
     } else {
-      clockOut = new Date(`${row.date} ${row.clock_out}`);
+      clockOut = new Date(`${attendance.date} ${attendance.clock_out}`);
     }
     
     if (isNaN(clockIn.getTime()) || isNaN(clockOut.getTime())) return '-';
@@ -573,8 +493,6 @@ const calculateDuration = (row) => {
     const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
     const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
     
-    if (isNaN(diffHours) || isNaN(diffMinutes)) return '-';
-    
     return `${diffHours}h ${diffMinutes}m`;
   } catch (error) {
     return '-';
@@ -582,177 +500,76 @@ const calculateDuration = (row) => {
 };
 
 const formatStatus = (status) => {
-  if (!status) return 'Unknown';
-  return status.charAt(0).toUpperCase() + status.slice(1).replace('_', ' ');
+  const statusMap = {
+    'clocked_in': 'Clocked In',
+    'clocked_out': 'Clocked Out',
+    'on_break': 'On Break'
+  };
+  return statusMap[status] || status || 'N/A';
 };
 
 const getStatusBadgeClasses = (status) => {
-  const baseClasses = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium';
-  
-  switch (status) {
-    case 'clocked_in':
-      return `${baseClasses} bg-green-100 text-green-800`;
-    case 'clocked_out':
-      return `${baseClasses} bg-blue-100 text-blue-800`;
-    case 'on_break':
-      return `${baseClasses} bg-yellow-100 text-yellow-800`;
-    case 'absent':
-      return `${baseClasses} bg-red-100 text-red-800`;
-    default:
-      return `${baseClasses} bg-gray-100 text-gray-800`;
-  }
-};
-
-const formatBreakTime = (breakTime) => {
-  if (!breakTime) return '-';
-  const minutes = parseInt(breakTime);
-  if (minutes < 60) {
-    return `${minutes}m`;
-  }
-  const hours = Math.floor(minutes / 60);
-  const remainingMinutes = minutes % 60;
-  return `${hours}h ${remainingMinutes}m`;
-};
-
-// Clock in/out methods
-const clockIn = () => {
-  loading.value = true;
-  router.post(route('attendances.clockIn'), {}, {
-    onFinish: () => {
-      loading.value = false;
-    }
-  });
-};
-
-const clockOut = () => {
-  loading.value = true;
-  router.post(route('attendances.clockOut'), {}, {
-    onFinish: () => {
-      loading.value = false;
-    }
-  });
-};
-
-const deleteRecord = (row) => {
-  if (!confirm('Are you sure you want to delete this attendance record? This action cannot be undone.')) {
-    return;
-  }
-  
-  loading.value = true;
-  router.delete(route('attendances.destroy', row.id), {
-    onFinish: () => {
-      loading.value = false;
-    }
-  });
-};
-
-// Filter methods - simple like work reports
-const applyFilters = () => {
-
-
-
-  loading.value = true;
-  const params = {
-    page: 1,
-    per_page: perPage.value
+  const classes = {
+    'clocked_in': 'bg-green-100 text-green-800',
+    'clocked_out': 'bg-blue-100 text-blue-800',
+    'on_break': 'bg-yellow-100 text-yellow-800'
   };
+  return classes[status] || 'bg-gray-100 text-gray-800';
+};
+
+const getEmployeeInitials = (name) => {
+  if (!name) return '--';
+  return name
+    .split(' ')
+    .map(n => n[0])
+    .join('')
+    .toUpperCase()
+    .substring(0, 2);
+};
+
+const getEmployeeName = (employeeId) => {
+  const employee = employees.value.find(emp => emp.id == employeeId);
+  return employee ? employee.name : 'Unknown';
+};
+
+// Filter methods
+const applyFilters = () => {
+  const params = { ...localFilters.value };
   
+  // Remove empty values
+  Object.keys(params).forEach(key => {
+    if (params[key] === null || params[key] === '') {
+      delete params[key];
+    }
+  });
   
-  // Add filters to params, setting to null if empty to clear from URL
-  params.employee_id = localFilters.value.employee_id.length > 0 ? localFilters.value.employee_id : null;
-  params.status = localFilters.value.status.length > 0 ? localFilters.value.status : null;
-  params.date_from = localFilters.value.date_from || undefined;
-  params.date_to = localFilters.value.date_to || undefined;
-  params.search = localFilters.value.search || null;
-  
-  
-  console.log('Applying filters with params:', params);
-  router.visit(route('attendances.index', params), {
+  loading.value = true;
+  router.get(route('attendances.index'), params, {
+    preserveState: true,
+    preserveScroll: true,
     onFinish: () => {
       loading.value = false;
     }
   });
 };
 
-const clearEmployeeFilter = () => {
-  localFilters.value.employee_id = [];
+const debouncedApplyFilters = debounce(applyFilters, 300);
+
+const clearFilter = (filterKey) => {
+  localFilters.value[filterKey] = '';
   applyFilters();
 };
 
-const clearStatusFilter = () => {
-  localFilters.value.status = [];
-  applyFilters();
-};
-
-const clearDateFromFilter = () => {
-  localFilters.value.date_from = '';
-  applyFilters();
-};
-
-const clearDateToFilter = () => {
-  localFilters.value.date_to = '';
-  applyFilters();
-};
-
-const clearSearchFilter = () => {
-  localFilters.value.search = '';
-  applyFilters();
-};
-
-const clearAllFilters = () => {
+const resetFilters = () => {
   localFilters.value = {
-    employee_id: [],
-    status: [],
+    employee_id: '',
+    status: '',
     date_from: '',
     date_to: '',
     search: ''
   };
   applyFilters();
 };
-
-const debounceSearch = () => {
-  clearTimeout(window.searchTimeout);
-  window.searchTimeout = setTimeout(() => {
-    applyFilters();
-  }, 500);
-};
-
-const handlePageChange = (page) => {
-  const params = { ...props.queryParams, page, per_page: perPage.value };
-  
-  // Ensure current filters are preserved, setting to null if empty
-  params.employee_id = localFilters.value.employee_id || null;
-  params.status = localFilters.value.status || null;
-  params.date_from = localFilters.value.date_from || null;
-  params.date_to = localFilters.value.date_to || null;
-  params.search = localFilters.value.search || null;
-  
-  router.visit(route('attendances.index', params));
-};
-
-const handlePageSizeChange = (size) => {
-  perPage.value = size;
-  const params = { ...props.queryParams, per_page: perPage.value, page: 1 };
-  
-  // Ensure current filters are preserved, setting to null if empty
-  params.employee_id = localFilters.value.employee_id || null;
-  params.status = localFilters.value.status || null;
-  params.date_from = localFilters.value.date_from || null;
-  params.date_to = localFilters.value.date_to || null;
-  params.search = localFilters.value.search || null;
-  
-  router.visit(route('attendances.index', params));
-};
-
-const handleRowAction = ({ action, row }) => {
-  if (action.handler) {
-    action.handler();
-  }
-};
-
- const debouncedApplyFilters = debounce(() => {
-   applyFilters();
- }, 300);
 </script>
 
 

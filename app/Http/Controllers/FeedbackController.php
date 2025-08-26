@@ -13,15 +13,100 @@ class FeedbackController extends Controller
 {
     use AuditLogTrait;
 
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user();
-        if ($user->hasRole('Admin') || $user->hasRole('HR') || $user->hasRole('Manager')) {
-            $feedbacks = Feedback::with(['reviewer', 'reviewee'])->paginate(10);
+        $perPage = $request->get('per_page', 10);
+        $query = Feedback::query();
+
+        $isManager = $user->hasRole('Admin') || $user->hasRole('HR') || $user->hasRole('Manager');
+
+        if ($isManager) {
+            $query->with(['reviewer', 'reviewee']);
         } else {
-            $feedbacks = Feedback::where('reviewee_id', $user->id)->orWhere('reviewer_id', $user->id)->with(['reviewer', 'reviewee'])->paginate(10);
+            $query->where(function($q) use ($user) {
+                $q->where('reviewee_id', $user->id)->orWhere('reviewer_id', $user->id);
+            })->with(['reviewer', 'reviewee']);
         }
-        return Inertia::render('Feedbacks/Index', ['feedbacks' => $feedbacks]);
+
+        // Apply filters
+        if ($request->filled('search')) {
+            $search = $request->get('search');
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('reviewer', function ($uq) use ($search) {
+                    $uq->where('name', 'like', '%' . $search . '%')
+                       ->orWhere('email', 'like', '%' . $search . '%');
+                })
+                ->orWhereHas('reviewee', function ($uq) use ($search) {
+                    $uq->where('name', 'like', '%' . $search . '%')
+                       ->orWhere('email', 'like', '%' . $search . '%');
+                })
+                ->orWhere('period', 'like', '%' . $search . '%')
+                ->orWhere('comments', 'like', '%' . $search . '%');
+            });
+        }
+
+        if ($request->filled('rating')) {
+            $query->where('rating', $request->get('rating'));
+        }
+
+        if ($request->filled('period')) {
+            $query->where('period', $request->get('period'));
+        }
+
+        // Date filtering
+        if ($request->filled('date_from')) {
+            $dateFrom = $request->get('date_from');
+            $query->where('created_at', '>=', $dateFrom);
+        }
+        
+        if ($request->filled('date_to')) {
+            $dateTo = $request->get('date_to');
+            $query->where('created_at', '<=', $dateTo . ' 23:59:59');
+        }
+
+        // Sentiment filtering
+        if ($request->filled('sentiments')) {
+            $sentiments = explode(',', $request->get('sentiments'));
+            $query->where(function($q) use ($sentiments) {
+                foreach ($sentiments as $sentiment) {
+                    if ($sentiment === 'positive') {
+                        $q->orWhere('rating', '>=', 4);
+                    } elseif ($sentiment === 'neutral') {
+                        $q->orWhere('rating', '=', 3);
+                    } elseif ($sentiment === 'negative') {
+                        $q->orWhere('rating', '<=', 2);
+                    }
+                }
+            });
+        }
+
+        $feedbacks = $query->orderBy('created_at', 'desc')->paginate($perPage)->withQueryString();
+
+        // Calculate feedback statistics
+        $statsQuery = Feedback::query();
+        if (!$isManager) {
+            $statsQuery->where(function($q) use ($user) {
+                $q->where('reviewee_id', $user->id)->orWhere('reviewer_id', $user->id);
+            });
+        }
+
+        $feedbackStats = [
+            'total' => $statsQuery->count(),
+            'averageRating' => number_format($statsQuery->avg('rating') ?? 0, 1),
+            'thisMonth' => $statsQuery->whereMonth('created_at', now()->month)
+                                    ->whereYear('created_at', now()->year)
+                                    ->count(),
+            'positiveTrend' => $statsQuery->where('rating', '>=', 4)->count() > 0 
+                ? round(($statsQuery->where('rating', '>=', 4)->count() / $statsQuery->count()) * 100) . '%'
+                : '0%'
+        ];
+
+        return Inertia::render('Feedbacks/Index', [
+            'feedbacks' => $feedbacks,
+            'queryParams' => $request->query(),
+            'feedbackStats' => $feedbackStats
+        ]);
     }
 
     public function create()

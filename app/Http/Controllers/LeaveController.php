@@ -51,12 +51,41 @@ class LeaveController extends Controller
             $query->whereIn('status', is_array($status) ? $status : [$status]);
         }
 
-        if ($request->filled('leave_type_id')) {
-            $leaveType = $request->get('leave_type_id');
+        // Handle both 'type' (from frontend) and 'leave_type_id' (legacy)
+        if ($request->filled('type') || $request->filled('leave_type_id')) {
+            $leaveType = $request->get('type') ?: $request->get('leave_type_id');
             if (is_string($leaveType) && strpos($leaveType, ',') !== false) {
                 $leaveType = explode(',', $leaveType);
             }
-            $query->whereIn('leave_type_id', is_array($leaveType) ? $leaveType : [$leaveType]);
+            
+            // If the type is a string (like 'annual', 'sick'), convert to leave_type_id
+            if (is_array($leaveType)) {
+                $typeIds = [];
+                foreach ($leaveType as $type) {
+                    if (is_numeric($type)) {
+                        $typeIds[] = $type;
+                    } else {
+                        // Convert simplified type name to full name, then to ID
+                        $fullName = $this->getFullLeaveTypeName($type);
+                        $leaveTypeModel = LeaveType::where('name', $fullName)->first();
+                        if ($leaveTypeModel) {
+                            $typeIds[] = $leaveTypeModel->id;
+                        }
+                    }
+                }
+                $query->whereIn('leave_type_id', $typeIds);
+            } else {
+                if (is_numeric($leaveType)) {
+                    $query->where('leave_type_id', $leaveType);
+                } else {
+                    // Convert simplified type name to full name, then to ID
+                    $fullName = $this->getFullLeaveTypeName($leaveType);
+                    $leaveTypeModel = LeaveType::where('name', $fullName)->first();
+                    if ($leaveTypeModel) {
+                        $query->where('leave_type_id', $leaveTypeModel->id);
+                    }
+                }
+            }
         }
 
         if ($request->filled('employee_id') && $isApprover) {
@@ -71,11 +100,15 @@ class LeaveController extends Controller
             }
         }
 
-        if ($request->filled('date_from') && $request->filled('date_to')) {
+        // Date filtering - support both single date_from and date range
+        if ($request->filled('date_from')) {
             $dateFrom = $request->get('date_from');
+            $query->where('from_date', '>=', $dateFrom);
+        }
+        
+        if ($request->filled('date_to')) {
             $dateTo = $request->get('date_to');
-            $query->where('from_date', '>=', $dateFrom)
-                  ->where('to_date', '<=', $dateTo);
+            $query->where('to_date', '<=', $dateTo);
         }
 
         
@@ -86,10 +119,12 @@ class LeaveController extends Controller
             'leaves' => $leaves,
             'queryParams' => $request->query(),
             'canManageLeaves' => $isApprover,
-            'leaveTypes' => LeaveType::all(),
-            'employees' => Employee::with('user')->get()->map(function($emp) {
-                return ['id' => $emp->id, 'name' => $emp->user ? $emp->user->name : 'Unknown'];
-            }),
+            'filters' => [
+                'leaveTypes' => LeaveType::all(),
+                'employees' => $isApprover ? Employee::with('user')->get()->map(function($emp) {
+                    return ['id' => $emp->id, 'name' => $emp->user ? $emp->user->name : 'Unknown'];
+                }) : [],
+            ],
         ]);
     }
 
@@ -270,5 +305,23 @@ class LeaveController extends Controller
 
         $this->logAudit('Leave Deleted', 'Deleted leave ID: ' . $leave->id);
         return redirect()->route('leaves.index')->with('success', 'Leave deleted.');
+    }
+
+    /**
+     * Convert simplified leave type names from frontend to full database names
+     */
+    private function getFullLeaveTypeName($simplifiedName)
+    {
+        $mapping = [
+            'annual' => 'Annual Leave',
+            'sick' => 'Sick Leave', 
+            'personal' => 'Personal Leave',
+            'maternity' => 'Maternity Leave',
+            'paternity' => 'Paternity Leave',
+            'study' => 'Study Leave',
+            'emergency' => 'Emergency Leave',
+        ];
+
+        return $mapping[strtolower($simplifiedName)] ?? $simplifiedName;
     }
 }

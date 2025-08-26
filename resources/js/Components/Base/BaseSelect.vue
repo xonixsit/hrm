@@ -59,18 +59,20 @@
 
       <!-- Dropdown -->
       <Transition
-        enter-active-class="transition ease-out duration-200"
-        enter-from-class="opacity-0 translate-y-1"
-        enter-to-class="opacity-100 translate-y-0"
-        leave-active-class="transition ease-in duration-150"
-        leave-from-class="opacity-100 translate-y-0"
-        leave-to-class="opacity-0 translate-y-1"
-      >
-        <div
-          v-if="isOpen"
-          :class="dropdownClasses"
-          @click.stop
-        >
+  enter-active-class="transition ease-out duration-200"
+  enter-from-class="opacity-0"
+  enter-to-class="opacity-100"
+  leave-active-class="transition ease-in duration-150"
+  leave-from-class="opacity-100"
+  leave-to-class="opacity-0"
+>
+  <div
+    v-if="isOpen"
+    ref="dropdownRef"
+    :class="dropdownClasses"
+    @click.stop
+  >
+
           <!-- Search Input -->
           <div v-if="searchable" class="p-2 border-b border-neutral-200">
             <input
@@ -276,6 +278,7 @@ const emit = defineEmits(['update:modelValue', 'change', 'open', 'close', 'searc
 const containerRef = ref(null);
 const buttonRef = ref(null);
 const searchRef = ref(null);
+const dropdownRef = ref(null);
 
 // State
 const isOpen = ref(false);
@@ -349,7 +352,10 @@ const getOptionLabel = (option) => {
 const getOptionValue = (option) => {
   if (typeof option === 'string' || typeof option === 'number') return option;
   if (typeof option === 'object' && option !== null) {
-    return option[props.optionValue] || option.value || option;
+    // First try the configured optionValue prop, then 'value', then return the option itself
+    const value = option[props.optionValue] !== undefined ? option[props.optionValue] : 
+                  option.value !== undefined ? option.value : option;
+    return value;
   }
   return option;
 };
@@ -450,10 +456,14 @@ const iconClasses = computed(() => {
 });
 
 const dropdownClasses = computed(() => [
-  'absolute z-50 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base',
-  dropdownUpwards.value ? 'bottom-full mb-1' : 'mt-1',
-  'ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm',
-  'border border-neutral-200'
+  'absolute z-[9999] w-full bg-white rounded-md shadow-lg',
+  'ring-1 ring-black ring-opacity-5 focus:outline-none',
+  'transform transition-all duration-200',
+  isOpen.value ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none',
+  props.size === 'sm' ? 'py-0.5 text-xs' : 'py-1 text-sm',
+  props.variant === 'outline' ? 'border border-neutral-300' : 'border-0',
+  props.rounded ? 'rounded-full' : 'rounded-md',
+  dropdownUpwards.value ? 'bottom-full mb-1' : 'mt-1'
 ]);
 
 const getOptionClasses = (option, index) => [
@@ -482,33 +492,101 @@ const toggleDropdown = () => {
 };
 
 const openDropdown = async () => {
+  if (props.disabled) return;
+  isOpen.value = true;
+  highlightedIndex.value = -1;
+  searchQuery.value = '';
+  dropdownUpwards = 1;
+  await nextTick();
+
+  const dropdown = dropdownRef.value;
+  const button = buttonRef.value;
+  const container = containerRef.value;
+  
+  if (!dropdown || !button || !container) return;
+
+  // Get the container's position relative to the viewport
+  const containerRect = container.getBoundingClientRect();
+  
+  // Reset positioning
+  dropdown.style.position = 'absolute';
+  dropdown.style.width = `${containerRect.width}px`;
+  dropdown.style.left = '0';
+  dropdown.style.top = '100%';
+  dropdown.style.marginTop = '4px';
+  
+  // Calculate if we need to show above
+  const dropdownHeight = dropdown.offsetHeight;
+  const spaceBelow = window.innerHeight - (containerRect.top + containerRect.height);
+  const spaceAbove = containerRect.top;
+
+
+  dropdownUpwards.value = spaceBelow < dropdownHeight && containerRect.top > dropdownHeight;
+
+  if (spaceBelow < dropdownHeight && spaceAbove > dropdownHeight) {
+    // Show above
+    dropdown.style.top = 'auto';
+    dropdown.style.bottom = '100%';
+    dropdown.style.marginTop = '0';
+    dropdown.style.marginBottom = '4px';
+  }
+
+  // Focus search input if searchable
+  if (props.searchable && searchRef.value) {
+    searchRef.value.focus();
+  }
+
+  emit('open');
+};
+const openDropdown2 = async () => {
+
+  if (props.disabled) return;
   isOpen.value = true;
   highlightedIndex.value = -1;
   searchQuery.value = '';
 
-  emit('open');
+  // emit('open');
 
   await nextTick();
+  const dropdown = dropdownRef.value;
+  const button = buttonRef.value;
 
-  if (containerRef.value) {
-    const rect = containerRef.value.getBoundingClientRect();
-    const spaceBelow = window.innerHeight - rect.bottom;
-    const spaceAbove = rect.top;
+  if (!dropdownRef.value || !containerRef.value) return;
+  const buttonRect = button.getBoundingClientRect();
 
-    // Assuming dropdown height is max-h-60 (240px) + some padding/border
-    // Let's use a conservative estimate, e.g., 250px
-    const dropdownHeightEstimate = 250;
+  // Reset positioning
+  dropdown.style.removeProperty('top');
+  dropdown.style.removeProperty('bottom');
+  dropdown.style.transformOrigin = 'top center';
 
-    if (spaceBelow < dropdownHeightEstimate && spaceAbove >= dropdownHeightEstimate) {
-      dropdownUpwards.value = true;
-    } else {
-      dropdownUpwards.value = false;
-    }
+  // Show dropdown to measure its height
+  const dropdownHeight = dropdown.offsetHeight;
+  const spaceBelow = window.innerHeight - buttonRect.bottom;
+  const spaceAbove = buttonRect.top;
+  
+  if (spaceBelow < dropdownHeight && spaceAbove > spaceBelow) {
+    // Not enough space below, open above
+    dropdown.style.bottom = '100%';
+    dropdown.style.top = 'auto';
+    dropdown.style.marginBottom = '4px';
+    dropdown.style.marginTop = '0';
+    dropdown.style.transformOrigin = 'bottom center';
+  } else {
+    // Enough space below, open below (default)
+    dropdown.style.top = '100%';
+    dropdown.style.bottom = 'auto';
+    dropdown.style.marginTop = '4px';
+    dropdown.style.marginBottom = '0';
+    dropdown.style.transformOrigin = 'top center';
   }
 
+  // Focus search input if searchable
   if (props.searchable && searchRef.value) {
     searchRef.value.focus();
   }
+
+  emit('open');
+
 };
 
 const closeDropdown = () => {
@@ -520,7 +598,6 @@ const closeDropdown = () => {
 };
 
 const selectOption = (option) => {
-  console.log('selectOption called with:', option);
   if (props.multiple) {
     const currentValue = Array.isArray(props.modelValue) ? [...props.modelValue] : [];
     const optionValue = getOptionValue(option);
@@ -535,8 +612,7 @@ const selectOption = (option) => {
     emit('update:modelValue', currentValue);
   } else {
     const valueToEmit = getOptionValue(option);
-      emit('update:modelValue', valueToEmit);
-    
+    emit('update:modelValue', valueToEmit);
     closeDropdown();
   }
   nextTick(() => buttonRef.value?.focus());
@@ -660,6 +736,25 @@ onUnmounted(() => {
 .base-select-wrapper .max-h-60::-webkit-scrollbar {
   width: 6px;
 }
+.base-select-wrapper {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+}
+
+.base-select-wrapper {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+}
+
+/* Ensure the container has proper positioning */
+.relative {
+  position: relative;
+}
+
+
+
 
 .base-select-wrapper .max-h-60::-webkit-scrollbar-track {
   background: #f1f5f9;

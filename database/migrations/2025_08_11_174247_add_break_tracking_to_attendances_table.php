@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::table('attendances', function (Blueprint $table) {
             // Break tracking fields
-            $table->json('break_sessions')->nullable()->after('location');
+            $table->longText('break_sessions')->nullable()->after('location');
             $table->timestamp('current_break_start')->nullable()->after('break_sessions');
             $table->boolean('on_break')->default(false)->after('current_break_start');
             $table->integer('total_break_minutes')->default(0)->after('on_break');

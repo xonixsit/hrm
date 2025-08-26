@@ -8,31 +8,62 @@
     >
       <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
         <div class="p-6 text-gray-900">
-            <!-- Header Actions -->
-            <div class="flex justify-between items-center mb-6">
-              <div>
-                <h3 class="text-lg font-medium text-gray-900">Leave Requests</h3>
-                <p class="mt-1 text-sm text-gray-600">
-                  View and manage leave requests.
-                </p>
-              </div>
-              <div class="flex space-x-3">
-                <button
-                  @click="showFilters = !showFilters"
-                  class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.707V4z" />
-                  </svg>
-                  {{ showFilters ? 'Hide Filters' : 'Show Filters' }}
-                </button>
-
-              </div>
+          <!-- Header Actions -->
+          <div class="flex justify-between items-start mb-6">
+            <div>
+              <h3 class="text-lg font-medium text-gray-900">Leave Requests</h3>
+              <p class="mt-1 text-sm text-gray-600">
+                View and manage leave requests.
+              </p>
             </div>
+            <div class="flex items-center space-x-4">
+              <!-- Search Field -->
+              <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+                <input
+                  v-model="localFilters.search"
+                  type="text"
+                  placeholder="Search by employee name or reason..."
+                  class="block w-80 pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  @input="debouncedApplyFilters"
+                />
+              </div>
+              
+              <!-- Show Filters Button -->
+              <button
+                @click="showFilters = !showFilters"
+                class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.707V4z" />
+                </svg>
+                {{ showFilters ? 'Hide Filters' : 'Show Filters' }}
+              </button>
+            </div>
+          </div>
 
             <!-- Filter Controls -->
             <div v-if="showFilters" class="mb-6 p-4 bg-gray-50 rounded-lg">
-              <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                <!-- Employee Filter (Admin/HR only) -->
+                <div v-if="canManageLeaves">
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Employee</label>
+                  <select
+                    v-model="localFilters.employee_id"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    @change="applyFilters"
+                  >
+                    <option value="">All employees</option>
+                    <option v-for="employee in employees" :key="employee.id" :value="employee.id">
+                      {{ employee.name }}
+                    </option>
+                  </select>
+                </div>
+                
                 <!-- Status Filter -->
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
@@ -45,7 +76,6 @@
                     <option value="pending">Pending</option>
                     <option value="approved">Approved</option>
                     <option value="rejected">Rejected</option>
-                    <option value="cancelled">Cancelled</option>
                   </select>
                 </div>
 
@@ -53,26 +83,36 @@
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-1">Leave Type</label>
                   <select
-                    v-model="localFilters.leave_type_id"
+                    v-model="localFilters.type"
                     class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                     @change="applyFilters"
                   >
                     <option value="">All types</option>
-                    <option v-for="type in leaveTypes" :key="type.id" :value="type.id">
+                    <option v-for="type in filters.leaveTypes" :key="type.id" :value="type.name.toLowerCase().replace(' leave', '')">
                       {{ type.name }}
                     </option>
                   </select>
                 </div>
 
-                <!-- Search Filter -->
-                <div class="md:col-span-2">
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Search</label>
+                <!-- Date From -->
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Date From</label>
                   <input
-                    v-model="localFilters.search"
-                    type="text"
-                    :placeholder="canManageLeaves ? 'Search by employee name or reason...' : 'Search by reason...'"
+                    v-model="localFilters.date_from"
+                    type="date"
                     class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                    @input="debouncedApplyFilters"
+                    @change="applyFilters"
+                  />
+                </div>
+
+                <!-- Date To -->
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Date To</label>
+                  <input
+                    v-model="localFilters.date_to"
+                    type="date"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    @change="applyFilters"
                   />
                 </div>
               </div>
@@ -82,13 +122,29 @@
                 <span class="text-sm font-medium text-gray-700">Active filters:</span>
                 
                 <span 
-                  v-if="localFilters.status"
+                  v-if="localFilters.employee_id"
                   class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                >
+                  Employee: {{ getEmployeeName(localFilters.employee_id) }}
+                  <button 
+                    @click="clearFilter('employee_id')"
+                    class="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full text-blue-400 hover:bg-blue-200 hover:text-blue-500 focus:outline-none"
+                  >
+                    <span class="sr-only">Remove employee filter</span>
+                    <svg class="w-2 h-2" fill="currentColor" viewBox="0 0 8 8">
+                      <path d="M4 3.293l2.146-2.147a.5.5 0 01.708.708L4.707 4l2.147 2.146a.5.5 0 01-.708.708L4 4.707l-2.146 2.147a.5.5 0 01-.708-.708L3.293 4 1.146 1.854a.5.5 0 01.708-.708L4 3.293z" />
+                    </svg>
+                  </button>
+                </span>
+
+                <span 
+                  v-if="localFilters.status"
+                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"
                 >
                   Status: {{ formatStatus(localFilters.status) }}
                   <button 
                     @click="clearFilter('status')"
-                    class="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full text-blue-400 hover:bg-blue-200 hover:text-blue-500 focus:outline-none"
+                    class="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full text-green-400 hover:bg-green-200 hover:text-green-500 focus:outline-none"
                   >
                     <span class="sr-only">Remove status filter</span>
                     <svg class="w-2 h-2" fill="currentColor" viewBox="0 0 8 8">
@@ -98,15 +154,47 @@
                 </span>
 
                 <span 
-                  v-if="localFilters.leave_type_id"
+                  v-if="localFilters.type"
+                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800"
+                >
+                  Type: {{ getLeaveTypeName(localFilters.type) }}
+                  <button 
+                    @click="clearFilter('type')"
+                    class="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full text-yellow-400 hover:bg-yellow-200 hover:text-yellow-500 focus:outline-none"
+                  >
+                    <span class="sr-only">Remove type filter</span>
+                    <svg class="w-2 h-2" fill="currentColor" viewBox="0 0 8 8">
+                      <path d="M4 3.293l2.146-2.147a.5.5 0 01.708.708L4.707 4l2.147 2.146a.5.5 0 01-.708.708L4 4.707l-2.146 2.147a.5.5 0 01-.708-.708L3.293 4 1.146 1.854a.5.5 0 01.708-.708L4 3.293z" />
+                    </svg>
+                  </button>
+                </span>
+
+                <span 
+                  v-if="localFilters.date_from"
                   class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800"
                 >
-                  Type: {{ getLeaveTypeName(localFilters.leave_type_id) }}
+                  From: {{ formatDate(localFilters.date_from) }}
                   <button 
-                    @click="clearFilter('leave_type_id')"
+                    @click="clearFilter('date_from')"
                     class="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full text-purple-400 hover:bg-purple-200 hover:text-purple-500 focus:outline-none"
                   >
-                    <span class="sr-only">Remove leave type filter</span>
+                    <span class="sr-only">Remove date from filter</span>
+                    <svg class="w-2 h-2" fill="currentColor" viewBox="0 0 8 8">
+                      <path d="M4 3.293l2.146-2.147a.5.5 0 01.708.708L4.707 4l2.147 2.146a.5.5 0 01-.708.708L4 4.707l-2.146 2.147a.5.5 0 01-.708-.708L3.293 4 1.146 1.854a.5.5 0 01.708-.708L4 3.293z" />
+                    </svg>
+                  </button>
+                </span>
+
+                <span 
+                  v-if="localFilters.date_to"
+                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800"
+                >
+                  To: {{ formatDate(localFilters.date_to) }}
+                  <button 
+                    @click="clearFilter('date_to')"
+                    class="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full text-purple-400 hover:bg-purple-200 hover:text-purple-500 focus:outline-none"
+                  >
+                    <span class="sr-only">Remove date to filter</span>
                     <svg class="w-2 h-2" fill="currentColor" viewBox="0 0 8 8">
                       <path d="M4 3.293l2.146-2.147a.5.5 0 01.708.708L4.707 4l2.147 2.146a.5.5 0 01-.708.708L4 4.707l-2.146 2.147a.5.5 0 01-.708-.708L3.293 4 1.146 1.854a.5.5 0 01.708-.708L4 3.293z" />
                     </svg>
@@ -122,9 +210,12 @@
               </div>
             </div>
 
+
+
             <!-- Leaves Table -->
             <div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
-              <table class="min-w-full divide-y divide-gray-300">
+              <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-300">
                 <thead class="bg-gray-50">
                   <tr>
                     <th v-if="canManageLeaves" scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -183,60 +274,64 @@
                       </span>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <div class="flex items-center justify-end space-x-1">
-                        <!-- Primary Action: View (always visible) -->
-                        <Link 
-                          :href="route('leaves.show', leave.id)" 
-                          class="inline-flex items-center p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 group"
-                          :title="`View leave request #${leave.id}`"
-                        >
-                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                          </svg>
-                        </Link>
-
-                        <!-- Quick Actions for Managers/Admins -->
-                        <div v-if="canApprove(leave) || canReject(leave)" class="flex items-center space-x-1">
-                          <button 
-                            v-if="canApprove(leave)"
-                            @click="approve(leave.id)" 
-                            class="inline-flex items-center p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all duration-200 group"
-                            :title="`Approve leave request #${leave.id}`"
-                          >
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                            </svg>
-                          </button>
-                          <button 
-                            v-if="canReject(leave)"
-                            @click="reject(leave.id)" 
-                            class="inline-flex items-center p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 group"
-                            :title="`Reject leave request #${leave.id}`"
-                          >
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                          </button>
-                        </div>
-
-                        <!-- More Actions Dropdown -->
-                        <div v-if="canEdit(leave) || canDelete(leave)" class="relative" :ref="el => setDropdownRef(el, leave.id)">
+                      <div class="flex items-center justify-end">
+                        <!-- Unified Actions Menu -->
+                        <div class="relative" :ref="el => setDropdownRef(el, leave.id)">
                           <button
                             @click="toggleDropdown(leave.id)"
                             class="inline-flex items-center p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-lg transition-all duration-200"
-                            :title="'More actions'"
+                            :title="'Actions'"
                           >
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
                             </svg>
                           </button>
                           
-                          <!-- Dropdown Menu -->
+                          <!-- Unified Dropdown Menu -->
                           <div
                             v-if="activeDropdown === leave.id"
                             class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10"
                           >
+                            <!-- View Action (always available) -->
+                            <Link
+                              :href="route('leaves.show', leave.id)"
+                              class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150"
+                            >
+                              <svg class="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                              </svg>
+                              View Details
+                            </Link>
+
+                            <!-- Divider if there are management actions -->
+                            <div v-if="canApprove(leave) || canReject(leave) || canEdit(leave)" class="border-t border-gray-100 my-1"></div>
+
+                            <!-- Approve Action -->
+                            <button
+                              v-if="canApprove(leave)"
+                              @click="approve(leave.id)"
+                              class="flex items-center w-full px-4 py-2 text-sm text-green-700 hover:bg-green-50 transition-colors duration-150"
+                            >
+                              <svg class="w-4 h-4 mr-3 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                              </svg>
+                              Approve Request
+                            </button>
+
+                            <!-- Reject Action -->
+                            <button
+                              v-if="canReject(leave)"
+                              @click="reject(leave.id)"
+                              class="flex items-center w-full px-4 py-2 text-sm text-red-700 hover:bg-red-50 transition-colors duration-150"
+                            >
+                              <svg class="w-4 h-4 mr-3 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                              Reject Request
+                            </button>
+
+                            <!-- Edit Action -->
                             <Link
                               v-if="canEdit(leave)"
                               :href="route('leaves.edit', leave.id)"
@@ -247,6 +342,8 @@
                               </svg>
                               Edit Request
                             </Link>
+
+                            <!-- Delete Action -->
                             <button
                               v-if="canDelete(leave)"
                               @click="confirmDelete(leave)"
@@ -263,7 +360,8 @@
                     </td>
                   </tr>
                 </tbody>
-              </table>
+                </table>
+              </div>
             </div>
 
             <!-- Empty State -->
@@ -275,15 +373,15 @@
               <p class="mt-1 text-sm text-gray-500">
                 {{ hasActiveFilters ? 'Try adjusting your filters' : 'Get started by creating a new leave request' }}
               </p>
-              <div class="mt-6">
+              <div v-if="hasActiveFilters" class="mt-6">
                 <Link 
                   :href="route('leaves.create')" 
-                  class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
                 >
                   <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                   </svg>
-                  New Request
+                  Create New Request
                 </Link>
               </div>
             </div>
@@ -361,8 +459,7 @@
               </div>
             </div>
           </div>
-        </div>
-
+      </div>
       <!-- Delete Confirmation Modal -->
       <div v-if="showDeleteModal" class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
         <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
@@ -432,13 +529,12 @@ const props = defineProps({
     type: Boolean,
     default: false
   },
-  leaveTypes: {
-    type: Array,
-    default: () => []
-  },
-  employees: {
-    type: Array,
-    default: () => []
+  filters: {
+    type: Object,
+    default: () => ({
+      leaveTypes: [],
+      employees: []
+    })
   }
 });
 
@@ -446,27 +542,33 @@ const { hasRole, hasAnyRole } = useAuth();
 
 // Refs
 const showDeleteModal = ref(false);
-const showFilters = ref(true);
+const showFilters = ref(false);
 const loading = ref(false);
 const leaveToDelete = ref(null);
 const activeDropdown = ref(null);
 const dropdownRefs = ref({});
 const localFilters = ref({
+  employee_id: props.queryParams.employee_id || '',
   status: props.queryParams.status || '',
-  leave_type_id: props.queryParams.leave_type_id || '',
+  type: props.queryParams.type || '',
+  search: props.queryParams.search || '',
   date_from: props.queryParams.date_from || '',
-  date_to: props.queryParams.date_to || '',
-  search: props.queryParams.search || ''
+  date_to: props.queryParams.date_to || ''
 });
 
 // Computed
+const isAdminOrHR = computed(() => hasAnyRole(['Admin', 'HR']));
+
+const employees = computed(() => props.filters.employees || []);
+
 const hasActiveFilters = computed(() => {
   return (
+    localFilters.value.employee_id ||
     localFilters.value.status ||
-    localFilters.value.leave_type_id ||
+    localFilters.value.type ||
+    localFilters.value.search ||
     localFilters.value.date_from ||
-    localFilters.value.date_to ||
-    localFilters.value.search
+    localFilters.value.date_to
   );
 });
 
@@ -541,9 +643,27 @@ const calculateDays = (fromDate, toDate) => {
   return diffDays;
 };
 
-const getLeaveTypeName = (typeId) => {
-  const type = props.leaveTypes.find(t => t.id == typeId);
-  return type ? type.name : 'Unknown';
+const getLeaveTypeName = (simplifiedType) => {
+  if (!simplifiedType) return 'Unknown';
+  
+  // Convert simplified type back to full name for display
+  const typeMapping = {
+    'annual': 'Annual Leave',
+    'sick': 'Sick Leave',
+    'personal': 'Personal Leave',
+    'maternity': 'Maternity Leave',
+    'paternity': 'Paternity Leave',
+    'study': 'Study Leave',
+    'emergency': 'Emergency Leave'
+  };
+  
+  return typeMapping[simplifiedType] || simplifiedType;
+};
+
+const getEmployeeName = (employeeId) => {
+  if (!employeeId) return 'Unknown';
+  const employee = employees.value.find(emp => emp.id == employeeId);
+  return employee ? employee.name : 'Unknown';
 };
 
 // Permission checks
@@ -601,11 +721,12 @@ const clearFilter = (filterKey) => {
 
 const resetFilters = () => {
   localFilters.value = {
+    employee_id: '',
     status: '',
-    leave_type_id: '',
+    type: '',
+    search: '',
     date_from: '',
-    date_to: '',
-    search: ''
+    date_to: ''
   };
   
   // Navigate to the clean URL without any query parameters

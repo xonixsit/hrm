@@ -63,6 +63,11 @@ class EmployeeController extends Controller
         if ($request->filled('filter_join_date_to')) {
             $query->where('join_date', '<=', $request->filter_join_date_to);
         }
+        
+        // Joined after filter (for the new date filter)
+        if ($request->filled('filter_joined_after')) {
+            $query->whereDate('join_date', '>=', $request->filter_joined_after);
+        }
 
         // Sorting
         $sortBy = $request->get('sort', 'created_at');

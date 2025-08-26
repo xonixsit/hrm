@@ -1,5 +1,5 @@
 <template>
-  <div :class="sectionClasses">
+  <div :class="sectionClasses" class="relative z-0">
     <!-- Section Header -->
     <div v-if="hasHeader" class="section-header">
       <slot name="header">
@@ -223,7 +223,7 @@ const getActionClasses = (action) => [
 <style scoped>
 /* Base Section Styles */
 .form-section {
-  @apply relative;
+  @apply relative z-0;
 }
 
 /* Section Variants */
@@ -266,7 +266,7 @@ const getActionClasses = (action) => [
 
 /* Section Header */
 .section-header {
-  @apply mb-4;
+  @apply relative z-0 mb-4;
 }
 
 .form-section--card .section-header,
@@ -337,7 +337,7 @@ const getActionClasses = (action) => [
 
 /* Section Content */
 .section-content {
-  @apply transition-all duration-200;
+  @apply relative z-0 transition-all duration-200;
 }
 
 .section-content--collapsed {

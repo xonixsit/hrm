@@ -11,15 +11,34 @@
         <div class="border-b border-gray-200 bg-gray-50 px-6 py-4">
           <div class="flex justify-between items-center mb-4">
             <h3 class="text-lg font-medium text-gray-900">Employee List</h3>
-            <button
-              @click="showFilters = !showFilters"
-              class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-            >
-              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.207A1 1 0 013 6.5V4z"></path>
-              </svg>
-              {{ showFilters ? 'Hide Filters' : 'Show Filters' }}
-            </button>
+            <div class="flex items-center space-x-4">
+              <!-- Search Field -->
+              <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+                <input
+                  v-model="localFilters.search"
+                  type="text"
+                  placeholder="Name, email, job title..."
+                  class="block w-80 pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  @input="debounceSearch"
+                />
+              </div>
+              
+              <!-- Show Filters Button -->
+              <button
+                @click="showFilters = !showFilters"
+                class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              >
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.207A1 1 0 013 6.5V4z"></path>
+                </svg>
+                {{ showFilters ? 'Hide Filters' : 'Show Filters' }}
+              </button>
+            </div>
           </div>
           
           <!-- Filter Controls -->
@@ -32,8 +51,8 @@
                 :options="departmentOptions"
                 placeholder="All departments"
                 class="w-full"
-                @change="applyFilters"
-              />
+                @update:modelValue="applyFilters"
+                />
             </div>
             
             <!-- Employment Type Filter -->
@@ -44,8 +63,8 @@
                 :options="contractTypeOptions"
                 placeholder="All types"
                 class="w-full"
-                @change="applyFilters"
-              />
+                @update:modelValue="applyFilters"
+                />
             </div>
             
             <!-- Status Filter -->
@@ -56,19 +75,18 @@
                 :options="statusOptions"
                 placeholder="All statuses"
                 class="w-full"
-                @change="applyFilters"
-              />
+                @update:modelValue="applyFilters"
+                />
             </div>
-            
-            <!-- Search Filter -->
+
+            <!-- Date of Joining Filter -->
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Search</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Joined After</label>
               <input
-                v-model="localFilters.search"
-                type="text"
-                placeholder="Name, email, job title..."
+                v-model="localFilters.joined_after"
+                type="date"
                 class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                @input="debounceSearch"
+                @change="applyFilters"
               />
             </div>
           </div>
@@ -119,12 +137,12 @@
               </button>
             </span>
             <span
-              v-if="localFilters.search"
+              v-if="localFilters.joined_after"
               class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800"
             >
-              Search: "{{ localFilters.search }}"
+              Joined After: {{ formatDate(localFilters.joined_after) }}
               <button
-                @click="clearSearchFilter"
+                @click="clearDateFilter"
                 class="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full text-yellow-400 hover:bg-yellow-200 hover:text-yellow-500 focus:outline-none"
               >
                 <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
@@ -273,7 +291,8 @@ const localFilters = ref({
   department_id: props.queryParams.filter_department || '',
   contract_type: props.queryParams.filter_contract_type || '',
   status: props.queryParams.filter_status || '',
-  search: props.queryParams.search || ''
+  search: props.queryParams.search || '',
+  joined_after: props.queryParams.filter_joined_after || ''
 })
 
 // Filter options
@@ -306,22 +325,50 @@ const hasActiveFilters = computed(() => {
   return localFilters.value.department_id || 
          localFilters.value.contract_type || 
          localFilters.value.status ||
-         localFilters.value.search;
+         localFilters.value.search ||
+         localFilters.value.joined_after;
 })
 
 const activeDepartmentFilter = computed(() => {
   if (!localFilters.value.department_id) return null;
-  const dept = props.filters.departments?.find(d => d.id.toString() === localFilters.value.department_id);
-  return dept ? dept.name : null;
+  
+  // Find the option that matches the current filter value
+  const selectedOption = departmentOptions.value.find(option => 
+    option.value === localFilters.value.department_id
+  );
+  
+  // Don't show "All departments" as an active filter (empty value)
+  if (!selectedOption || selectedOption.value === '') return null;
+  
+  return selectedOption.label;
 })
 
 const activeContractTypeFilter = computed(() => {
-  return localFilters.value.contract_type || null;
+  if (!localFilters.value.contract_type) return null;
+  
+  // Find the option that matches the current filter value
+  const selectedOption = contractTypeOptions.value.find(option => 
+    option.value === localFilters.value.contract_type
+  );
+  
+  // Don't show "All types" as an active filter (empty value)
+  if (!selectedOption || selectedOption.value === '') return null;
+  
+  return selectedOption.label;
 })
 
 const activeStatusFilter = computed(() => {
   if (!localFilters.value.status) return null;
-  return localFilters.value.status.charAt(0).toUpperCase() + localFilters.value.status.slice(1);
+  
+  // Find the option that matches the current filter value
+  const selectedOption = statusOptions.value.find(option => 
+    option.value === localFilters.value.status
+  );
+  
+  // Don't show "All statuses" as an active filter (empty value)
+  if (!selectedOption || selectedOption.value === '') return null;
+  
+  return selectedOption.label;
 })
 
 // Breadcrumbs configuration
@@ -498,6 +545,18 @@ const getContractIndicator = (contractType) => {
 const formatDate = (dateString) => {
   if (!dateString) return 'N/A'
   
+  // Handle date string safely without timezone conversion
+  if (dateString.includes('-')) {
+    const [year, month, day] = dateString.split('-')
+    const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day))
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    })
+  }
+  
+  // Fallback for other date formats
   const date = new Date(dateString)
   return date.toLocaleDateString('en-US', {
     year: 'numeric',
@@ -554,7 +613,7 @@ const handleTableAction = (action) => {
 // Filter methods - simple like work reports
 const applyFilters = () => {
   loading.value = true;
-  
+  console.log('apply filters');
   const params = {
     page: 1, // Reset to first page when filtering
     per_page: props.employees.per_page || 10
@@ -572,6 +631,9 @@ const applyFilters = () => {
   }
   if (localFilters.value.search) {
     params.search = localFilters.value.search;
+  }
+  if (localFilters.value.joined_after) {
+    params.filter_joined_after = localFilters.value.joined_after;
   }
   
   router.get(route('employees.index'), params, {
@@ -598,8 +660,8 @@ const clearStatusFilter = () => {
   applyFilters();
 };
 
-const clearSearchFilter = () => {
-  localFilters.value.search = '';
+const clearDateFilter = () => {
+  localFilters.value.joined_after = '';
   applyFilters();
 };
 
@@ -608,7 +670,8 @@ const clearAllFilters = () => {
     department_id: '',
     contract_type: '',
     status: '',
-    search: ''
+    search: '',
+    joined_after: ''
   };
   applyFilters();
 };

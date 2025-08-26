@@ -15,14 +15,28 @@ class DepartmentController extends Controller
 
     public function index()
     {
+        // Get departments with basic relationships
         $departments = Department::withCount('employees')
-            ->with([
-                'employees' => function($query) {
-                    $query->with('user')->limit(3);
-                },
-                'manager.user'
-            ])
+            ->with(['manager.user'])
             ->paginate(10);
+        
+        // Get department IDs from current page
+        $departmentIds = $departments->pluck('id');
+        
+        // Get top 3 employees per department using a subquery approach
+        $employees = \App\Models\Employee::with('user')
+            ->whereIn('department_id', $departmentIds)
+            ->get()
+            ->groupBy('department_id')
+            ->map(function ($departmentEmployees) {
+                return $departmentEmployees->take(3);
+            });
+        
+        // Attach employees to departments
+        $departments->getCollection()->transform(function ($department) use ($employees) {
+            $department->setRelation('employees', $employees->get($department->id, collect()));
+            return $department;
+        });
         
         return Inertia::render('Departments/Index', ['departments' => $departments]);
     }

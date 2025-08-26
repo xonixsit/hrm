@@ -283,8 +283,16 @@ const hasActiveFilters = computed(() => {
 
 const activeEmployeeFilter = computed(() => {
   if (!localFilters.value.user_id) return null;
-  const employee = props.employees.find(emp => emp.value == localFilters.value.user_id);
-  return employee ? employee.label : null;
+  
+  // Find the option that matches the current filter value
+  const selectedOption = employeeOptions.value.find(option => 
+    option.value === localFilters.value.user_id
+  );
+  
+  // Don't show "All employees" as an active filter (empty value)
+  if (!selectedOption || selectedOption.value === '') return null;
+  
+  return selectedOption.label;
 });
 
 // Filter methods

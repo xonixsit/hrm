@@ -36,9 +36,10 @@ class AttendanceController extends Controller
         }
 
         // Employee filter (Admin/HR only)
-        if ($request->filled('employee_id') && $request->employee_id !== '' && ($user->hasRole('Admin') || $user->hasRole('HR'))) {
-
-            $query->where('employee_id', (int) $request->employee_id);
+        if ($request->filled('employee_id') && ($user->hasRole('Admin') || $user->hasRole('HR'))) {
+            // Convert to integer to ensure proper comparison
+            $employeeId = (int) $request->employee_id;
+            $query->where('employee_id', $employeeId);
         }
 
         // Status filter
@@ -86,11 +87,14 @@ class AttendanceController extends Controller
         if ($user->hasRole('Admin') || $user->hasRole('HR')) {
             $filterOptions['employees'] = Employee::with('user')
                 ->whereHas('user') // Only get employees that have users
+                ->where('status', 'active') // Only active employees
+                ->orderBy('id')
                 ->get()
                 ->map(function ($employee) {
                     return [
                         'id' => $employee->id,
-                        'name' => $employee->user->name
+                        'name' => $employee->user->name,
+                        'employee_code' => $employee->employee_code // Add employee code for debugging
                     ];
                 })
                 ->filter(function ($employee) {

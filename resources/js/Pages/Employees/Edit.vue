@@ -77,6 +77,20 @@
       >
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <FormField
+            label="Job Title"
+            :error="form.errors.job_title"
+            help="The employee's position or role in the organization"
+          >
+            <BaseInput
+              v-model="form.job_title"
+              type="text"
+              placeholder="Software Developer"
+              :error="!!form.errors.job_title"
+            />
+          </FormField>
+      
+
+          <FormField
             label="Department"
             :error="form.errors.department_id"
             help="Select the department this employee belongs to"
@@ -90,17 +104,20 @@
               :error-message="form.errors.department_id"
             />
           </FormField>
-
+         
+         
           <FormField
-            label="Job Title"
-            :error="form.errors.job_title"
-            help="The employee's position or role in the organization"
+            label="Join Date"
+            :error="form.errors.join_date"
+            help="The date when the employee started working"
           >
             <BaseInput
-              v-model="form.job_title"
-              type="text"
-              placeholder="Software Developer"
-              :error="!!form.errors.job_title"
+              v-model="form.join_date"
+              type="date"
+              :error="!!form.errors.join_date"
+              :value="form.join_date"
+              @input="form.join_date = $event.target.value"
+
             />
           </FormField>
 
@@ -114,30 +131,12 @@
               v-model="form.contract_type"
               :options="contractTypes"
               :error="!!form.errors.contract_type"
-              placeholder="Select contract type"
+              placeholder="Select contract type" class="asolute"
             />
           </FormField>
 
-          <FormField
-            label="Join Date"
-            :error="form.errors.join_date"
-            help="The date when the employee started working"
-          >
-            <BaseInput
-              v-model="form.join_date"
-              type="date"
-              :error="!!form.errors.join_date"
-            />
-          </FormField>
         </div>
-      </FormSection>
-
-      <!-- Password Reset Section (Admin Only) -->
-      <FormSection
-        v-if="canResetPassword"
-        title="Password Management"
-        description="Reset the employee's password (Admin only)"
-      >
+      
         <div class="bg-warning-50 border border-warning-200 rounded-lg p-4 mb-4">
           <div class="flex items-start space-x-3">
             <ExclamationTriangleIcon class="w-5 h-5 text-warning-600 mt-0.5 flex-shrink-0" />
@@ -267,12 +266,12 @@ const { hasRole } = useAuth()
 
 // Form setup
 const form = useForm({
-  name: props.employee.user.name,
-  department_id: props.employee.department_id,
-  job_title: props.employee.job_title,
-  employee_code: props.employee.employee_code,
-  join_date: props.employee.join_date,
-  contract_type: props.employee.contract_type
+  name: props.employee.user?.name || '',
+  department_id: props.employee.department_id || '',
+  job_title: props.employee.job_title || '',
+  employee_code: props.employee.employee_code || '',
+  join_date: props.employee.join_date ? new Date(props.employee.join_date).toISOString().split('T')[0] : '',
+  contract_type: props.employee.contract_type || '',
 })
 
 

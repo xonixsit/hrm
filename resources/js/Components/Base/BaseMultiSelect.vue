@@ -1,5 +1,5 @@
 <template>
-  <div class="base-multiselect">
+  <div class="base-multiselect" ref="dropdownRef">
     <div class="relative">
       <button
         type="button"
@@ -58,7 +58,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, onMounted, onUnmounted } from 'vue';
 
 const props = defineProps({
   id: {
@@ -117,6 +117,7 @@ const props = defineProps({
 import { ref } from 'vue';
 const emit = defineEmits(['update:modelValue']);
 const showDropdown = ref(false);
+const dropdownRef = ref(null);
 
 // Computed properties
 const selectClasses = computed(() => [
@@ -155,6 +156,21 @@ const toggleSelection = (option) => {
     : [...props.modelValue, value];
   emit('update:modelValue', newValue);
 };
+
+// Click outside handler
+const handleClickOutside = (event) => {
+  if (dropdownRef.value && !dropdownRef.value.contains(event.target)) {
+    showDropdown.value = false;
+  }
+};
+
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside);
+});
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside);
+});
 </script>
 
 <style scoped>
