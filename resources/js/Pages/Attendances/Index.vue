@@ -250,7 +250,7 @@
 
                   <!-- Duration -->
                   <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {{ calculateDuration(attendance) }}
+                    {{ attendance.work_duration_formatted || calculateDuration(attendance) }}
                   </td>
 
                   <!-- Status -->

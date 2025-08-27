@@ -23,7 +23,7 @@
                   <button
                     @click="toggleSentiment('positive')"
                     :class="getSentimentFilterClasses('positive')"
-                    class="inline-flex items-center px-3 py-2 border shadow-sm text-sm leading-4 font-medium rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    class="inline-flex items-center px-3 py-2 border shadow-sm text-sm leading-4 font-medium rounded-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
                     title="Positive (4-5 stars)"
                   >
                     <span class="text-base mr-2">😊</span>
@@ -33,7 +33,7 @@
                   <button
                     @click="toggleSentiment('neutral')"
                     :class="getSentimentFilterClasses('neutral')"
-                    class="inline-flex items-center px-3 py-2 border shadow-sm text-sm leading-4 font-medium rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    class="inline-flex items-center px-3 py-2 border shadow-sm text-sm leading-4 font-medium rounded-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
                     title="Neutral (3 stars)"
                   >
                     <span class="text-base mr-2">😐</span>
@@ -43,7 +43,7 @@
                   <button
                     @click="toggleSentiment('negative')"
                     :class="getSentimentFilterClasses('negative')"
-                    class="inline-flex items-center px-3 py-2 border shadow-sm text-sm leading-4 font-medium rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    class="inline-flex items-center px-3 py-2 border shadow-sm text-sm leading-4 font-medium rounded-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                     title="Negative (1-2 stars)"
                   >
                     <span class="text-base mr-2">😞</span>
@@ -731,18 +731,18 @@ const getSentimentFilterClasses = (sentiment) => {
   
   if (sentiment === 'positive') {
     return isActive 
-      ? 'bg-green-100 border-green-300 text-green-800 hover:bg-green-200'
-      : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-green-300';
+      ? 'bg-green-100 border-green-500 text-green-800 hover:bg-green-200'
+      : 'bg-white border-green-300 text-gray-700 hover:bg-gray-50';
   }
   if (sentiment === 'neutral') {
     return isActive 
-      ? 'bg-yellow-100 border-yellow-300 text-yellow-800 hover:bg-yellow-200'
-      : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-yellow-300';
+      ? 'bg-yellow-100 border-yellow-500 text-yellow-800 hover:bg-yellow-200'
+      : 'bg-white border-yellow-300 text-gray-700 hover:bg-gray-50';
   }
   if (sentiment === 'negative') {
     return isActive 
-      ? 'bg-red-100 border-red-300 text-red-800 hover:bg-red-200'
-      : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-red-300';
+      ? 'bg-red-100 border-red-500 text-red-800 hover:bg-red-200'
+      : 'bg-white border-red-300 text-gray-700 hover:bg-gray-50';
   }
 };
 

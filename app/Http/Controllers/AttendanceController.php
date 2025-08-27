@@ -81,6 +81,20 @@ class AttendanceController extends Controller
 
         $perPage = $request->get('per_page', 15);
         $attendances = $query->paginate($perPage)->withQueryString();
+        
+        // Calculate durations for each attendance record in the list
+        $attendances->getCollection()->transform(function ($attendance) {
+            $workMinutes = $attendance->calculateWorkMinutes();
+            $workDuration = $attendance->work_duration;
+            $breakDuration = $attendance->break_duration;
+            
+            // Add calculated values to the attendance object
+            $attendance->work_minutes_calculated = $workMinutes;
+            $attendance->work_duration_formatted = $workDuration;
+            $attendance->break_duration_formatted = $breakDuration;
+            
+            return $attendance;
+        });
 
         // Get filter options for Admin/HR
         $filterOptions = [];
@@ -453,7 +467,37 @@ class AttendanceController extends Controller
 
     public function edit(Attendance $attendance)
     {
-        return Inertia::render('Attendances/Edit', ['attendance' => $attendance]);
+        // Check authorization
+        $this->authorize('update', $attendance);
+        
+        // Load relationships
+        $attendance->load(['employee.user']);
+        
+        // Calculate durations and add them to the response
+        $workMinutes = $attendance->calculateWorkMinutes();
+        $workDuration = $attendance->work_duration;
+        $breakDuration = $attendance->break_duration;
+        
+        // Debug logging
+        \Log::info('Attendance Edit Data', [
+            'id' => $attendance->id,
+            'clock_in' => $attendance->clock_in,
+            'clock_out' => $attendance->clock_out,
+            'total_break_minutes' => $attendance->total_break_minutes,
+            'work_minutes_calculated' => $workMinutes,
+            'work_duration' => $workDuration,
+            'break_duration' => $breakDuration,
+            'break_sessions' => $attendance->break_sessions
+        ]);
+        
+        return Inertia::render('Attendances/Edit', [
+            'attendance' => array_merge($attendance->toArray(), [
+                'work_minutes_calculated' => $workMinutes,
+                'work_duration_formatted' => $workDuration,
+                'break_duration_formatted' => $breakDuration,
+                'break_sessions_count' => count($attendance->break_sessions ?? [])
+            ])
+        ]);
     }
 
     public function show(Attendance $attendance)

@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Carbon\Carbon;
+use Exception;
 
 class Attendance extends Model
 {
@@ -107,18 +108,25 @@ class Attendance extends Model
             return 0;
         }
 
-        $endTime = $this->clock_out ?? now();
-        $totalMinutes = $this->clock_in->diffInMinutes($endTime);
-        
-        // Subtract break time
-        $breakMinutes = $this->total_break_minutes;
-        
-        // Add current break if on break
-        if ($this->on_break && $this->current_break_start) {
-            $breakMinutes += $this->current_break_start->diffInMinutes(now());
-        }
+        try {
+            $clockIn = \Carbon\Carbon::parse($this->clock_in);
+            $endTime = $this->clock_out ? \Carbon\Carbon::parse($this->clock_out) : now();
+            
+            $totalMinutes = $clockIn->diffInMinutes($endTime);
+            
+            // Subtract break time (ensure it's not null)
+            $breakMinutes = $this->total_break_minutes ?? 0;
+            
+            // Add current break if on break
+            if ($this->on_break && $this->current_break_start) {
+                $breakStart = \Carbon\Carbon::parse($this->current_break_start);
+                $breakMinutes += $breakStart->diffInMinutes(now());
+            }
 
-        return max(0, $totalMinutes - $breakMinutes);
+            return max(0, $totalMinutes - $breakMinutes);
+        } catch (Exception $e) {
+            return 0;
+        }
     }
 
     /**
@@ -126,11 +134,39 @@ class Attendance extends Model
      */
     public function getWorkDurationAttribute()
     {
-        $minutes = $this->calculateWorkMinutes();
-        $hours = intval($minutes / 60);
-        $mins = $minutes % 60;
+        // If no clock_in, return dash
+        if (!$this->clock_in) {
+            return '-';
+        }
         
-        return sprintf('%dh %dm', $hours, $mins);
+        // If no clock_out, return "Working" for active records
+        if (!$this->clock_out) {
+            return 'Working';
+        }
+        
+        try {
+            // Simple calculation using Carbon
+            $clockIn = \Carbon\Carbon::parse($this->clock_in);
+            $clockOut = \Carbon\Carbon::parse($this->clock_out);
+            
+            // Check if clock_out is before clock_in (invalid data)
+            if ($clockOut->lt($clockIn)) {
+                return '-';
+            }
+            
+            $totalMinutes = $clockIn->diffInMinutes($clockOut);
+            
+            // Subtract break time if any
+            $breakMinutes = $this->total_break_minutes ?? 0;
+            $workMinutes = max(0, $totalMinutes - $breakMinutes);
+            
+            $hours = floor($workMinutes / 60);
+            $mins = $workMinutes % 60;
+            
+            return $hours . 'h ' . $mins . 'm';
+        } catch (Exception $e) {
+            return '-';
+        }
     }
 
     /**
@@ -138,18 +174,26 @@ class Attendance extends Model
      */
     public function getBreakDurationAttribute()
     {
-        // Fix: Ensure total_break_minutes is never null
-        $minutes = $this->total_break_minutes ?? 0;
+        $breakMinutes = $this->total_break_minutes ?? 0;
         
         // Add current break if on break
         if ($this->on_break && $this->current_break_start) {
-            $minutes += $this->current_break_start->diffInMinutes(now());
+            try {
+                $breakMinutes += $this->current_break_start->diffInMinutes(now());
+            } catch (Exception $e) {
+                // Handle invalid date format
+            }
         }
         
-        $hours = intval($minutes / 60);
-        $mins = $minutes % 60;
+        // If no breaks, return dash
+        if ($breakMinutes <= 0) {
+            return '-';
+        }
         
-        return sprintf('%dh %dm', $hours, $mins);
+        $hours = floor($breakMinutes / 60);
+        $mins = $breakMinutes % 60;
+        
+        return $hours . 'h ' . $mins . 'm';
     }
 
     /**

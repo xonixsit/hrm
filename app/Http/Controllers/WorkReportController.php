@@ -23,7 +23,7 @@ class WorkReportController extends Controller
         $user = Auth::user();
         $query = WorkReport::with('employee.user');
         
-        // Apply user-based access control
+        // Apply user-based access control FIRST to ensure proper scoping
         if (!($user->hasRole('Admin') || $user->hasRole('Manager') || $user->hasRole('HR'))) {
             $employee = $user->employee;
             if (!$employee) {
@@ -32,17 +32,70 @@ class WorkReportController extends Controller
             $query->where('employee_id', $employee->id);
         }
         
-        // Apply filters
-        if ($request->filled('user_id')) {
-            $query->where('employee_id', $request->user_id);
+        // Apply search filter within the user's scope
+        if ($request->filled('search')) {
+            $searchTerm = trim($request->search);
+            
+            if (!empty($searchTerm)) {
+                $query->where(function ($q) use ($searchTerm) {
+                    // Search in employee name
+                    $q->whereHas('employee.user', function ($userQuery) use ($searchTerm) {
+                        $userQuery->where('name', 'like', "%{$searchTerm}%");
+                    })
+                    // Search in employee code
+                    ->orWhereHas('employee', function ($empQuery) use ($searchTerm) {
+                        $empQuery->where('employee_code', 'like', "%{$searchTerm}%");
+                    })
+                    // Search in notes (if not null)
+                    ->orWhere('notes', 'like', "%{$searchTerm}%")
+                    // Search in formatted date (YYYY-MM-DD format)
+                    ->orWhere('date', 'like', "%{$searchTerm}%")
+                    // Search in numeric fields if the search term is numeric
+                    ->when(is_numeric($searchTerm), function ($numQuery) use ($searchTerm) {
+                        $numQuery->orWhere('calls', $searchTerm)
+                                ->orWhere('successful_calls', $searchTerm)
+                                ->orWhere('calls_not_received', $searchTerm)
+                                ->orWhere('disconnected_calls', $searchTerm)
+                                ->orWhere('follow_up_calls', $searchTerm)
+                                ->orWhere('emails', $searchTerm)
+                                ->orWhere('whatsapp', $searchTerm)
+                                ->orWhere('sms', $searchTerm);
+                    });
+                });
+            }
         }
         
-        if ($request->filled('date_from')) {
-            $query->where('date', '>=', $request->date_from);
+        // Apply employee filter (only for admins/managers/HR)
+        if ($request->filled('user_id') && ($user->hasRole('Admin') || $user->hasRole('Manager') || $user->hasRole('HR'))) {
+            $employeeId = trim($request->user_id);
+            if (is_numeric($employeeId) && $employeeId > 0) {
+                $query->where('employee_id', (int) $employeeId);
+            }
         }
         
-        if ($request->filled('date_to')) {
-            $query->where('date', '<=', $request->date_to);
+        // Date range validation and filtering
+        $dateFrom = $request->filled('date_from') ? trim($request->date_from) : null;
+        $dateTo = $request->filled('date_to') ? trim($request->date_to) : null;
+        
+        // Validate date format and range
+        if ($dateFrom && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateFrom)) {
+            $dateFrom = null;
+        }
+        if ($dateTo && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateTo)) {
+            $dateTo = null;
+        }
+        
+        // Validate date range - swap if from is after to
+        if ($dateFrom && $dateTo && $dateFrom > $dateTo) {
+            [$dateFrom, $dateTo] = [$dateTo, $dateFrom];
+        }
+        
+        if ($dateFrom) {
+            $query->where('date', '>=', $dateFrom);
+        }
+        
+        if ($dateTo) {
+            $query->where('date', '<=', $dateTo);
         }
         
         $workReports = $query->orderBy('date', 'desc')->paginate($perPage);
@@ -55,19 +108,21 @@ class WorkReportController extends Controller
                 ->get()
                 ->map(function ($employee) {
                     return [
-                        'value' => $employee->id,
-                        'label' => $employee->user->name,
+                        'value' => (string) $employee->id,
+                        'label' => $employee->user->name . ' (' . $employee->employee_code . ')',
                         'employee_code' => $employee->employee_code
                     ];
                 })
                 ->sortBy('label')
-                ->values();
+                ->values()
+                ->toArray();
         }
         
         return Inertia::render('WorkReports/Index', [
             'workReports' => $workReports,
             'employees' => $employees,
             'filters' => [
+                'search' => $request->search,
                 'user_id' => $request->user_id,
                 'date_from' => $request->date_from,
                 'date_to' => $request->date_to,

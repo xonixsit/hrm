@@ -226,6 +226,19 @@ class TimesheetController extends Controller
         }
 
         // Apply filters
+        if ($request->filled('search')) {
+            $searchTerm = $request->search;
+            $query->where(function ($q) use ($searchTerm) {
+                $q->whereHas('employee.user', function ($userQuery) use ($searchTerm) {
+                    $userQuery->where('name', 'like', "%{$searchTerm}%");
+                })
+                ->orWhereHas('project', function ($projectQuery) use ($searchTerm) {
+                    $projectQuery->where('name', 'like', "%{$searchTerm}%");
+                })
+                ->orWhere('description', 'like', "%{$searchTerm}%");
+            });
+        }
+
         if ($request->filled('employee')) {
             $query->where('employee_id', $request->employee);
         }
@@ -243,6 +256,18 @@ class TimesheetController extends Controller
         }
 
         $pendingTimesheets = $query->orderBy('created_at', 'desc')->paginate(15);
+
+        // Add work report correlation for each timesheet
+        $pendingTimesheets->getCollection()->transform(function ($timesheet) {
+            $workReport = \App\Models\WorkReport::where('employee_id', $timesheet->employee_id)
+                ->where('date', $timesheet->date)
+                ->first();
+            
+            $timesheet->work_report = $workReport;
+            $timesheet->has_discrepancy = $this->detectTimeDiscrepancy($timesheet, $workReport);
+            
+            return $timesheet;
+        });
 
         // Get available employees and projects for filters
         $availableEmployeesQuery = Employee::with('user');
@@ -272,7 +297,7 @@ class TimesheetController extends Controller
             'timesheets' => $pendingTimesheets,
             'availableEmployees' => $availableEmployees,
             'availableProjects' => $availableProjects,
-            'filters' => $request->only(['employee', 'project', 'date_from', 'date_to'])
+            'filters' => $request->only(['search', 'employee', 'project', 'date_from', 'date_to'])
         ]);
     }
 
@@ -325,5 +350,49 @@ class TimesheetController extends Controller
         }
 
         return round($totalHours / $approvedTimesheets->count(), 1);
+    }
+
+    /**
+     * Detect discrepancies between timesheet and work report
+     */
+    private function detectTimeDiscrepancy($timesheet, $workReport)
+    {
+        if (!$workReport) {
+            return [
+                'type' => 'missing_work_report',
+                'message' => 'No work report found for this date',
+                'severity' => 'warning'
+            ];
+        }
+
+        // Calculate estimated productive hours from work report
+        $productiveActivities = $workReport->successful_calls + $workReport->emails + $workReport->whatsapp;
+        $estimatedHours = min(8, max(1, $productiveActivities * 0.1)); // Rough estimate: 6 minutes per activity
+
+        $hoursDifference = abs($timesheet->hours - $estimatedHours);
+        
+        if ($hoursDifference > 2) {
+            return [
+                'type' => 'hours_mismatch',
+                'message' => "Timesheet hours ({$timesheet->hours}h) significantly differ from estimated productive hours ({$estimatedHours}h)",
+                'severity' => 'high',
+                'timesheet_hours' => $timesheet->hours,
+                'estimated_hours' => $estimatedHours,
+                'difference' => $hoursDifference
+            ];
+        }
+
+        if ($hoursDifference > 1) {
+            return [
+                'type' => 'minor_mismatch',
+                'message' => "Minor difference between timesheet and estimated hours",
+                'severity' => 'low',
+                'timesheet_hours' => $timesheet->hours,
+                'estimated_hours' => $estimatedHours,
+                'difference' => $hoursDifference
+            ];
+        }
+
+        return null; // No discrepancy
     }
 }
