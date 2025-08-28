@@ -40,7 +40,7 @@ class TimesheetApprovedNotification extends Notification implements ShouldQueue
         return (new MailMessage)
             ->subject('Timesheet Approved')
             ->greeting('Hello ' . $notifiable->name . '!')
-            ->line('Your timesheet for ' . $this->timesheet->date->format('F j, Y') . ' has been approved.')
+            ->line('Your timesheet for ' . ($this->timesheet->date ? $this->timesheet->date->format('F j, Y') : 'unknown date') . ' has been approved.')
             ->line('Project: ' . ($this->timesheet->project->name ?? 'N/A'))
             ->line('Hours: ' . $this->timesheet->hours)
             ->when($this->timesheet->approval_comments, function ($mail) {
@@ -60,12 +60,12 @@ class TimesheetApprovedNotification extends Notification implements ShouldQueue
         return [
             'type' => 'timesheet_approved',
             'timesheet_id' => $this->timesheet->id,
-            'date' => $this->timesheet->date->format('Y-m-d'),
+            'date' => $this->timesheet->date ? $this->timesheet->date->format('Y-m-d') : null,
             'hours' => $this->timesheet->hours,
             'project' => $this->timesheet->project->name ?? 'N/A',
             'approved_by' => $this->timesheet->approver->name ?? 'System',
             'approval_comments' => $this->timesheet->approval_comments,
-            'message' => 'Your timesheet for ' . $this->timesheet->date->format('F j, Y') . ' has been approved.'
+            'message' => 'Your timesheet for ' . ($this->timesheet->date ? $this->timesheet->date->format('F j, Y') : 'unknown date') . ' has been approved.'
         ];
     }
 }

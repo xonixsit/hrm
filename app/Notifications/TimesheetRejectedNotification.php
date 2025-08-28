@@ -40,7 +40,7 @@ class TimesheetRejectedNotification extends Notification implements ShouldQueue
         return (new MailMessage)
             ->subject('Timesheet Rejected')
             ->greeting('Hello ' . $notifiable->name . '!')
-            ->line('Your timesheet for ' . $this->timesheet->date->format('F j, Y') . ' has been rejected.')
+            ->line('Your timesheet for ' . ($this->timesheet->date ? $this->timesheet->date->format('F j, Y') : 'unknown date') . ' has been rejected.')
             ->line('Project: ' . ($this->timesheet->project->name ?? 'N/A'))
             ->line('Hours: ' . $this->timesheet->hours)
             ->line('Reason: ' . ($this->timesheet->approval_comments ?? 'No reason provided'))
@@ -59,12 +59,12 @@ class TimesheetRejectedNotification extends Notification implements ShouldQueue
         return [
             'type' => 'timesheet_rejected',
             'timesheet_id' => $this->timesheet->id,
-            'date' => $this->timesheet->date->format('Y-m-d'),
+            'date' => $this->timesheet->date ? $this->timesheet->date->format('Y-m-d') : null,
             'hours' => $this->timesheet->hours,
             'project' => $this->timesheet->project->name ?? 'N/A',
             'rejected_by' => $this->timesheet->approver->name ?? 'System',
             'rejection_reason' => $this->timesheet->approval_comments,
-            'message' => 'Your timesheet for ' . $this->timesheet->date->format('F j, Y') . ' has been rejected.'
+            'message' => 'Your timesheet for ' . ($this->timesheet->date ? $this->timesheet->date->format('F j, Y') : 'unknown date') . ' has been rejected.'
         ];
     }
 }
