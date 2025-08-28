@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Models\Department;
 use App\Models\Project;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class DashboardController extends Controller
@@ -168,25 +169,112 @@ class DashboardController extends Controller
 
     private function getSystemActivities()
     {
-        // Return recent system activities
-        return [
-            [
-                'id' => 1,
-                'type' => 'user_created',
+        $activities = collect();
+
+        // Recent User Registrations
+        $recentUsers = User::with('employee')
+            ->where('created_at', '>=', now()->subDays(7))
+            ->latest()
+            ->take(3)
+            ->get();
+
+        foreach ($recentUsers as $user) {
+            $activities->push([
+                'id' => 'user_' . $user->id,
+                'type' => 'create',
+                'status' => 'success',
                 'title' => 'New user registered',
-                'description' => 'John Doe joined the system',
-                'created_at' => now()->subHours(2),
+                'description' => $user->name . ' joined the system',
+                'timestamp' => $user->created_at->toISOString(),
                 'user' => ['name' => 'System', 'avatar' => null]
-            ],
-            [
-                'id' => 2,
-                'type' => 'leave_approved',
-                'title' => 'Leave request approved',
-                'description' => 'Annual leave approved for Jane Smith',
-                'created_at' => now()->subHours(4),
+            ]);
+        }
+
+        // Recent Leave Approvals/Rejections
+        $recentLeaves = Leave::with('employee.user')
+            ->whereIn('status', ['approved', 'rejected'])
+            ->where('updated_at', '>=', now()->subDays(7))
+            ->latest('updated_at')
+            ->take(5)
+            ->get();
+
+        foreach ($recentLeaves as $leave) {
+            $activities->push([
+                'id' => 'leave_' . $leave->id,
+                'type' => $leave->status === 'approved' ? 'approve' : 'reject',
+                'status' => $leave->status === 'approved' ? 'success' : 'error',
+                'title' => 'Leave request ' . $leave->status,
+                'description' => ucfirst($leave->leave_type) . ' leave ' . $leave->status . ' for ' . $leave->employee->user->name,
+                'timestamp' => $leave->updated_at->toISOString(),
                 'user' => ['name' => 'HR Manager', 'avatar' => null]
-            ]
-        ];
+            ]);
+        }
+
+        // Recent Department Updates
+        $recentDepartments = Department::with('manager.user')
+            ->where('updated_at', '>=', now()->subDays(7))
+            ->where('updated_at', '!=', DB::raw('created_at'))
+            ->latest('updated_at')
+            ->take(3)
+            ->get();
+
+        foreach ($recentDepartments as $department) {
+            $activities->push([
+                'id' => 'dept_' . $department->id,
+                'type' => 'update',
+                'status' => 'info',
+                'title' => 'Department updated',
+                'description' => $department->name . ' department information modified',
+                'timestamp' => $department->updated_at->toISOString(),
+                'user' => ['name' => 'Admin', 'avatar' => null]
+            ]);
+        }
+
+        // Recent Employee Additions
+        $recentEmployees = Employee::with('user', 'department')
+            ->where('created_at', '>=', now()->subDays(7))
+            ->latest()
+            ->take(3)
+            ->get();
+
+        foreach ($recentEmployees as $employee) {
+            $activities->push([
+                'id' => 'emp_' . $employee->id,
+                'type' => 'create',
+                'status' => 'success',
+                'title' => 'New employee added',
+                'description' => $employee->user->name . ' joined ' . ($employee->department->name ?? 'the company'),
+                'timestamp' => $employee->created_at->toISOString(),
+                'user' => ['name' => 'HR', 'avatar' => null]
+            ]);
+        }
+
+        // Recent Timesheet Approvals
+        $recentTimesheets = Timesheet::with('employee.user')
+            ->whereIn('status', ['approved', 'rejected'])
+            ->where('updated_at', '>=', now()->subDays(7))
+            ->latest('updated_at')
+            ->take(3)
+            ->get();
+
+        foreach ($recentTimesheets as $timesheet) {
+            $activities->push([
+                'id' => 'timesheet_' . $timesheet->id,
+                'type' => $timesheet->status === 'approved' ? 'approve' : 'reject',
+                'status' => $timesheet->status === 'approved' ? 'success' : 'error',
+                'title' => 'Timesheet ' . $timesheet->status,
+                'description' => 'Timesheet for ' . $timesheet->employee->user->name . ' (' . $timesheet->start_date->format('M d') . ' - ' . $timesheet->end_date->format('M d') . ')',
+                'timestamp' => $timesheet->updated_at->toISOString(),
+                'user' => ['name' => 'Manager', 'avatar' => null]
+            ]);
+        }
+
+        // Sort all activities by timestamp (most recent first) and take top 10
+        return $activities
+            ->sortByDesc('timestamp')
+            ->take(10)
+            ->values()
+            ->toArray();
     }
 
     private function getPendingApprovals()
