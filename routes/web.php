@@ -106,6 +106,17 @@ Route::middleware('auth')->group(function () {
     Route::get('/reports/timesheets/excel', [ReportController::class, 'timesheetsExcel'])->name('reports.timesheets.excel');
     Route::get('/reports/feedbacks/pdf', [ReportController::class, 'feedbacksPdf'])->name('reports.feedbacks.pdf');
     Route::get('/reports/feedbacks/excel', [ReportController::class, 'feedbacksExcel'])->name('reports.feedbacks.excel');
+    
+    // Reports Dashboard Routes
+    Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+    Route::get('/reports/stats', [ReportController::class, 'stats'])->name('reports.stats');
+    Route::post('/reports/generate', [ReportController::class, 'generate'])->name('reports.generate');
+    Route::post('/reports/schedule', [ReportController::class, 'schedule'])->name('reports.schedule');
+    Route::post('/reports/custom', [ReportController::class, 'custom'])->name('reports.custom');
+    Route::get('/reports/recent', [ReportController::class, 'recent'])->name('reports.recent');
+    Route::get('/reports/{id}/download', [ReportController::class, 'download'])->name('reports.download');
+    Route::delete('/reports/{id}', [ReportController::class, 'destroy'])->name('reports.destroy');
+    
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::post('/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
 

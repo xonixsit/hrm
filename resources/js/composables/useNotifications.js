@@ -10,6 +10,26 @@ export function useNotifications() {
   const notifications = computed(() => notificationQueue.notifications)
   const notificationCount = computed(() => notificationQueue.count())
   
+  // Generic notification method
+  const showNotification = (notification) => {
+    const { type, title, message, ...options } = notification
+    
+    switch (type) {
+      case 'success':
+        return showSuccess(message || title, { title, ...options })
+      case 'error':
+        return showError(message || title, { title, ...options })
+      case 'warning':
+        return showWarning(message || title, { title, ...options })
+      case 'info':
+        return showInfo(message || title, { title, ...options })
+      case 'loading':
+        return showLoading(message || title, { title, ...options })
+      default:
+        return showInfo(message || title, { title, ...options })
+    }
+  }
+
   // Notification methods
   const showSuccess = (message, options = {}) => {
     return notificationQueue.success(message, {
@@ -239,6 +259,9 @@ export function useNotifications() {
     // State
     notifications,
     notificationCount,
+
+    // Generic notification method
+    showNotification,
 
     // Basic notification methods
     showSuccess,

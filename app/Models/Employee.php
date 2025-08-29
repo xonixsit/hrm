@@ -49,6 +49,11 @@ class Employee extends Model
         return $this->belongsTo(User::class, 'exit_processed_by');
     }
 
+    public function managedDepartments()
+    {
+        return $this->hasMany(Department::class, 'manager_id');
+    }
+
     // Helper methods
     public function isActive()
     {

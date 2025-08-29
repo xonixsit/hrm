@@ -40,35 +40,41 @@
           :description="`${department.employees?.length || 0} employees in this department`"
           :icon="UsersIcon"
           display-mode="custom"
+          :actions="employeeActions"
           class="mb-6"
         >
-          <div v-if="department.employees?.length > 0" class="space-y-3">
-            <div 
-              v-for="employee in department.employees" 
-              :key="employee.id"
-              class="flex items-center justify-between p-3 bg-neutral-50 rounded-lg hover:bg-neutral-100 transition-colors"
-            >
-              <div class="flex items-center space-x-3">
-                <div class="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
-                  <span class="text-sm font-medium text-primary-700">
-                    {{ getInitials(employee.user.name) }}
-                  </span>
-                </div>
-                <div>
-                  <div class="font-medium text-neutral-900">{{ employee.user.name }}</div>
-                  <div class="text-sm text-neutral-500">{{ employee.job_title || 'No title' }}</div>
-                </div>
-              </div>
-              <div class="flex items-center space-x-2">
-                <span :class="getContractTypeClasses(employee.contract_type)">
-                  {{ employee.contract_type || 'N/A' }}
-                </span>
-                <button
-                  @click="router.visit(route('employees.show', employee.id))"
-                  class="text-primary-600 hover:text-primary-700 text-sm font-medium"
+          <div v-if="department.employees?.length > 0">
+            <!-- Fixed height scrollable container -->
+            <div class="h-80 overflow-y-auto border border-neutral-200 rounded-lg bg-white">
+              <div class="divide-y divide-neutral-100">
+                <div 
+                  v-for="employee in department.employees" 
+                  :key="employee.id"
+                  class="flex items-center justify-between p-4 hover:bg-neutral-50 transition-colors"
                 >
-                  View
-                </button>
+                  <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
+                      <span class="text-sm font-medium text-primary-700">
+                        {{ getInitials(employee.user.name) }}
+                      </span>
+                    </div>
+                    <div>
+                      <div class="font-medium text-neutral-900">{{ employee.user.name }}</div>
+                      <div class="text-sm text-neutral-500">{{ employee.job_title || 'No title' }}</div>
+                    </div>
+                  </div>
+                  <div class="flex items-center space-x-2">
+                    <span :class="getContractTypeClasses(employee.contract_type)">
+                      {{ employee.contract_type || 'N/A' }}
+                    </span>
+                    <button
+                      @click="router.visit(route('employees.show', employee.id))"
+                      class="text-primary-600 hover:text-primary-700 text-sm font-medium"
+                    >
+                      View
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -77,7 +83,7 @@
             <p class="text-neutral-500">No employees assigned to this department</p>
             <button
               @click="router.visit(route('employees.create', { department_id: department.id }))"
-              class="mt-2 text-primary-600 hover:text-primary-700 text-sm font-medium"
+              class="mt-4 text-primary-600 hover:text-primary-700 text-sm font-medium"
             >
               Add Employee
             </button>
@@ -313,6 +319,17 @@ const systemInfoData = computed(() => ({
   }
 }))
 
+const employeeActions = computed(() => [
+  {
+    id: 'view-all-employees',
+    label: 'View All',
+    icon: UsersIcon,
+    variant: 'secondary',
+    handler: viewAllEmployees,
+    tooltip: `View all employees in ${props.department.name}`
+  }
+])
+
 const quickActions = computed(() => [
   {
     id: 'edit',
@@ -453,5 +470,13 @@ const handleFieldUpdate = (updateData) => {
       loading.value = false
     }
   })
+}
+
+const viewAllEmployees = () => {
+  router.visit(route('employees.index', {
+    filter_department: props.department.id,
+    page: 1,
+    per_page: 10
+  }))
 }
 </script>

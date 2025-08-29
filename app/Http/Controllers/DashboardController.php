@@ -258,12 +258,19 @@ class DashboardController extends Controller
             ->get();
 
         foreach ($recentTimesheets as $timesheet) {
+            $dateRange = '';
+            if ($timesheet->start_date && $timesheet->end_date) {
+                $dateRange = ' (' . $timesheet->start_date->format('M d') . ' - ' . $timesheet->end_date->format('M d') . ')';
+            } elseif ($timesheet->start_date) {
+                $dateRange = ' (' . $timesheet->start_date->format('M d') . ')';
+            }
+
             $activities->push([
                 'id' => 'timesheet_' . $timesheet->id,
                 'type' => $timesheet->status === 'approved' ? 'approve' : 'reject',
                 'status' => $timesheet->status === 'approved' ? 'success' : 'error',
                 'title' => 'Timesheet ' . $timesheet->status,
-                'description' => 'Timesheet for ' . $timesheet->employee->user->name . ' (' . $timesheet->start_date->format('M d') . ' - ' . $timesheet->end_date->format('M d') . ')',
+                'description' => 'Timesheet for ' . $timesheet->employee->user->name . $dateRange,
                 'timestamp' => $timesheet->updated_at->toISOString(),
                 'user' => ['name' => 'Manager', 'avatar' => null]
             ]);

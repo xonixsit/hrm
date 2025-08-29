@@ -86,7 +86,8 @@ const { debugAuthState } = useAuth()
 
 // Error messages for different error types
 const getErrorMessage = (error) => {
-  const message = error.message || error.toString()
+  // Handle both string and Error object inputs
+  const message = typeof error === 'string' ? error : (error?.message || error?.toString() || 'Unknown error')
   
   if (message.includes('auth') || message.includes('Authentication')) {
     return 'Authentication error. Please log in again.'
@@ -105,26 +106,47 @@ const getErrorMessage = (error) => {
 
 // Handle different types of errors
 const handleError = (error, errorInfo = null) => {
-  hasError.value = true
-  errorMessage.value = getErrorMessage(error)
-  
-  // Prepare error details for development
-  if (process.env.NODE_ENV === 'development') {
-    errorDetails.value = JSON.stringify({
-      message: error.message,
-      stack: error.stack,
-      errorInfo,
-      timestamp: new Date().toISOString(),
-      url: window.location.href,
-      userAgent: navigator.userAgent
-    }, null, 2)
+  try {
+    hasError.value = true
     
-    console.group('🚨 Navigation Error Boundary')
-    console.error('Error:', error)
-    console.log('Error Info:', errorInfo)
-    console.log('Current URL:', window.location.href)
-    debugAuthState()
-    console.groupEnd()
+    // Ensure error is an object, not a string
+    const errorObj = typeof error === 'string' ? new Error(error) : error
+    errorMessage.value = getErrorMessage(errorObj)
+    
+    // Prepare error details for development
+    try {
+      if (process.env.NODE_ENV === 'development') {
+        const errorData = {
+          message: errorObj?.message || 'Unknown error',
+          stack: errorObj?.stack || 'No stack trace',
+          errorInfo: errorInfo,
+          timestamp: new Date().toISOString(),
+          url: window.location.href,
+          userAgent: navigator.userAgent
+        }
+        
+        errorDetails.value = JSON.stringify(errorData, null, 2)
+        
+        console.group('🚨 Navigation Error Boundary')
+        console.error('Error:', error)
+        console.log('Error Info:', errorInfo)
+        console.log('Current URL:', window.location.href)
+        debugAuthState()
+        console.groupEnd()
+      }
+    } catch (detailsError) {
+      console.warn('Error preparing error details:', detailsError)
+      errorDetails.value = 'Error details unavailable'
+    }
+  } catch (handlerError) {
+    console.error('Error in error handler:', handlerError)
+    // Fallback error state
+    try {
+      hasError.value = true
+      errorMessage.value = 'An unexpected error occurred'
+    } catch (fallbackError) {
+      console.error('Critical error in error handler fallback:', fallbackError)
+    }
   }
   
   // Track the failed path for retry attempts
@@ -218,19 +240,41 @@ const resetErrorState = () => {
 
 // Vue error capture
 onErrorCaptured((error, instance, errorInfo) => {
-  // Only handle navigation-related errors
-  if (isNavigationError(error)) {
-    handleError(error, errorInfo)
-    return false // Prevent error from propagating
+  try {
+    // Prevent recursive error handling
+    const errorMessage = typeof error === 'string' ? error : (error?.message || '')
+    if (errorMessage.includes('Cannot create property') || errorMessage.includes('mounted hook')) {
+      console.warn('Preventing recursive error handling:', errorMessage)
+      return true // Let Vue handle it
+    }
+    
+    // Prevent handling errors from the error boundary itself
+    if (hasError.value) {
+      console.warn('Error boundary already active, skipping error handling')
+      return true
+    }
+    
+    // Only handle navigation-related errors
+    if (isNavigationError(error)) {
+      handleError(error, errorInfo)
+      return false // Prevent error from propagating
+    }
+    
+    // Let other errors propagate
+    return true
+  } catch (captureError) {
+    console.error('Error in onErrorCaptured:', captureError)
+    return true // Let Vue handle it
   }
-  
-  // Let other errors propagate
-  return true
 })
 
 // Check if error is navigation-related
 const isNavigationError = (error) => {
-  if (!error || !error.message) return false
+  if (!error) return false
+  
+  // Handle both string and Error object inputs
+  const message = typeof error === 'string' ? error : (error?.message || '')
+  if (!message) return false
   
   const navigationKeywords = [
     'navigation', 'route', 'inertia', 'auth', 'permission',
@@ -238,7 +282,7 @@ const isNavigationError = (error) => {
   ]
   
   return navigationKeywords.some(keyword => 
-    error.message.toLowerCase().includes(keyword.toLowerCase())
+    message.toLowerCase().includes(keyword.toLowerCase())
   )
 }
 
@@ -253,7 +297,7 @@ onMounted(() => {
   }
   
   // Handle general JavaScript errors
-  const handleError = (event) => {
+  const handleJSError = (event) => {
     if (isNavigationError(event.error)) {
       handleError(event.error, { type: 'error' })
     }
@@ -268,13 +312,13 @@ onMounted(() => {
   }
   
   window.addEventListener('unhandledrejection', handleUnhandledRejection)
-  window.addEventListener('error', handleError)
+  window.addEventListener('error', handleJSError)
   window.addEventListener('navigation-error', handleNavigationError)
   
   // Store cleanup functions
   window._errorBoundaryCleanup = () => {
     window.removeEventListener('unhandledrejection', handleUnhandledRejection)
-    window.removeEventListener('error', handleError)
+    window.removeEventListener('error', handleJSError)
     window.removeEventListener('navigation-error', handleNavigationError)
   }
 })

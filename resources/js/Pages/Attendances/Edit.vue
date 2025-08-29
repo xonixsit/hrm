@@ -1,36 +1,77 @@
 <template>
   <AuthenticatedLayout>
-    <PageLayout
-      title="Edit Attendance Record"
-      subtitle="Update attendance record details and timing information"
-      :breadcrumbs="breadcrumbs"
-      :actions="headerActions"
-    >
-      <!-- Employee Information -->
-      <div v-if="attendance.employee?.user" class="mb-6 bg-white shadow-sm rounded-lg border border-neutral-200">
-        <div class="p-6">
-          <h3 class="text-lg font-medium text-gray-900 mb-4">Employee Information</h3>
+    <PageLayout>
+      <template #header>
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div class="flex items-center space-x-4">
             <div class="flex-shrink-0">
-              <div class="h-16 w-16 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
-                <span class="text-xl font-bold text-white">
-                  {{ getInitials(attendance.employee.user.name) }}
-                </span>
+              <div class="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-xl">
+                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                </svg>
               </div>
             </div>
-            <div class="flex-1">
-              <h4 class="text-lg font-medium text-gray-900">{{ attendance.employee.user.name }}</h4>
-              <p class="text-sm text-gray-600">{{ attendance.employee.user.email }}</p>
-              <div class="flex items-center mt-2 space-x-4">
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                  Employee ID: {{ attendance.employee.employee_code || 'N/A' }}
-                </span>
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                  Date: {{ formatDate(attendance.date) }}
-                </span>
-                <span :class="getStatusBadgeClasses(attendance.status)">
-                  {{ formatStatus(attendance.status) }}
-                </span>
+            <div>
+              <h1 class="text-3xl font-bold text-gray-900">Edit Attendance Record</h1>
+              <p class="mt-1 text-sm text-gray-600">Update attendance record details and timing information</p>
+            </div>
+          </div>
+          <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 w-full sm:w-auto">
+            <Link 
+              :href="route('attendances.show', attendance.id)" 
+              class="inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-gray-600 to-gray-700 border border-transparent rounded-xl font-semibold text-sm text-white uppercase tracking-wide hover:from-gray-700 hover:to-gray-800 active:from-gray-800 active:to-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:opacity-25 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+            >
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+              </svg>
+              Back to Details
+            </Link>
+          </div>
+        </div>
+      </template>
+      <!-- Employee Information -->
+      <div v-if="attendance.employee?.user" class="mb-8">
+        <div class="bg-white shadow-xl rounded-2xl border border-gray-200 overflow-hidden">
+          <div class="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-gray-200">
+            <h3 class="text-xl font-semibold text-gray-900 flex items-center">
+              <svg class="w-6 h-6 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+              </svg>
+              Employee Information
+            </h3>
+          </div>
+          <div class="p-6">
+            <div class="flex items-center space-x-6">
+              <div class="flex-shrink-0">
+                <div class="h-20 w-20 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg">
+                  <span class="text-2xl font-bold text-white">
+                    {{ getInitials(attendance.employee.user.name) }}
+                  </span>
+                </div>
+              </div>
+              <div class="flex-1">
+                <h4 class="text-2xl font-bold text-gray-900">{{ attendance.employee.user.name }}</h4>
+                <p class="text-lg text-gray-600 mt-1">{{ attendance.employee.user.email }}</p>
+                <div class="flex flex-wrap items-center mt-4 gap-3">
+                  <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold bg-gradient-to-r from-gray-100 to-gray-200 text-gray-800 border border-gray-300">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V4a2 2 0 011-1h2a2 2 0 011 1v2m-4 0a2 2 0 01-2 2h-2a2 2 0 01-2-2m0 0h4v2m-4-2v2m4-2v2"></path>
+                    </svg>
+                    ID: {{ attendance.employee.employee_code || 'N/A' }}
+                  </span>
+                  <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 border border-blue-300">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                    {{ formatDate(attendance.date) }}
+                  </span>
+                  <span :class="getStatusBadgeClasses(attendance.status)">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    {{ formatStatus(attendance.status) }}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
@@ -38,32 +79,62 @@
       </div>
 
       <!-- Current Attendance Summary -->
-      <div class="mb-6 bg-white shadow-sm rounded-lg border border-neutral-200">
-        <div class="p-6">
-          <h3 class="text-lg font-medium text-gray-900 mb-4">Current Record Summary</h3>
-          <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div class="text-center p-4 bg-blue-50 rounded-lg">
-              <div class="text-2xl font-bold text-blue-600">{{ workDuration }}</div>
-              <div class="text-sm text-blue-800">Work Duration</div>
-            </div>
-            <div class="text-center p-4 bg-green-50 rounded-lg">
-              <div class="text-2xl font-bold text-green-600">{{ breakDuration }}</div>
-              <div class="text-sm text-green-800">Break Duration</div>
-            </div>
-            <div class="text-center p-4 bg-purple-50 rounded-lg">
-              <div class="text-2xl font-bold text-purple-600">{{ breakSessionsCount }}</div>
-              <div class="text-sm text-purple-800">Break Sessions</div>
-            </div>
-            <div class="text-center p-4 bg-orange-50 rounded-lg">
-              <div class="text-2xl font-bold text-orange-600">{{ attendance.location ? 'Yes' : 'No' }}</div>
-              <div class="text-sm text-orange-800">Location Tracked</div>
+      <div class="mb-8">
+        <div class="bg-white shadow-xl rounded-2xl border border-gray-200 overflow-hidden">
+          <div class="bg-gradient-to-r from-emerald-50 to-teal-50 px-6 py-4 border-b border-gray-200">
+            <h3 class="text-xl font-semibold text-gray-900 flex items-center">
+              <svg class="w-6 h-6 mr-2 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+              </svg>
+              Current Record Summary
+            </h3>
+          </div>
+          <div class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div class="text-center p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl border border-blue-200 transform hover:scale-105 transition-transform duration-200">
+                <div class="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center mx-auto mb-3">
+                  <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                </div>
+                <div class="text-2xl font-bold text-blue-600">{{ workDuration }}</div>
+                <div class="text-sm font-medium text-blue-800 mt-1">Work Duration</div>
+              </div>
+              <div class="text-center p-6 bg-gradient-to-br from-green-50 to-green-100 rounded-2xl border border-green-200 transform hover:scale-105 transition-transform duration-200">
+                <div class="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center mx-auto mb-3">
+                  <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                </div>
+                <div class="text-2xl font-bold text-green-600">{{ breakDuration }}</div>
+                <div class="text-sm font-medium text-green-800 mt-1">Break Duration</div>
+              </div>
+              <div class="text-center p-6 bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl border border-purple-200 transform hover:scale-105 transition-transform duration-200">
+                <div class="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center mx-auto mb-3">
+                  <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
+                  </svg>
+                </div>
+                <div class="text-2xl font-bold text-purple-600">{{ breakSessionsCount }}</div>
+                <div class="text-sm font-medium text-purple-800 mt-1">Break Sessions</div>
+              </div>
+              <div class="text-center p-6 bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl border border-orange-200 transform hover:scale-105 transition-transform duration-200">
+                <div class="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center mx-auto mb-3">
+                  <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                  </svg>
+                </div>
+                <div class="text-2xl font-bold text-orange-600">{{ attendance.location ? 'Yes' : 'No' }}</div>
+                <div class="text-sm font-medium text-orange-800 mt-1">Location Tracked</div>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
       <!-- Form Container -->
-      <div class="bg-white shadow-sm rounded-lg border border-neutral-200">
+      <div class="bg-white shadow-xl rounded-2xl border border-gray-200 overflow-hidden">
         <FormLayout
           title="Update Attendance Record"
           description="Modify the attendance timing and additional information"
@@ -149,7 +220,7 @@
 
 <script setup>
 import { computed, watch } from 'vue';
-import { useForm, router } from '@inertiajs/vue3';
+import { useForm, router, Link } from '@inertiajs/vue3';
 import { useNotifications } from '@/composables/useNotifications';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import PageLayout from '@/Components/Layout/PageLayout.vue';
@@ -206,13 +277,13 @@ const formatStatus = (status) => {
 };
 
 const getStatusBadgeClasses = (status) => {
-  const baseClasses = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium';
+  const baseClasses = 'inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold border';
   const statusClasses = {
-    'clocked_in': 'bg-green-100 text-green-800',
-    'clocked_out': 'bg-gray-100 text-gray-800',
-    'on_break': 'bg-yellow-100 text-yellow-800'
+    'clocked_in': 'bg-gradient-to-r from-green-100 to-green-200 text-green-800 border-green-300',
+    'clocked_out': 'bg-gradient-to-r from-gray-100 to-gray-200 text-gray-800 border-gray-300',
+    'on_break': 'bg-gradient-to-r from-yellow-100 to-yellow-200 text-yellow-800 border-yellow-300'
   };
-  return `${baseClasses} ${statusClasses[status] || 'bg-gray-100 text-gray-800'}`;
+  return `${baseClasses} ${statusClasses[status] || 'bg-gradient-to-r from-gray-100 to-gray-200 text-gray-800 border-gray-300'}`;
 };
 
 const getInitials = (name) => {

@@ -6,6 +6,202 @@
       :breadcrumbs="breadcrumbs"
       :actions="headerActions"
     >
+      <!-- Search and Filter Section -->
+      <ContentCard class="mb-6">
+        <div class="flex justify-between items-start mb-6">
+          <div>
+            <h3 class="text-lg font-medium text-gray-900">Department List</h3>
+          </div>
+          <div class="flex items-center space-x-3">
+            <!-- Search Field -->
+            <div class="relative flex-1 max-w-md">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              <input
+                v-model="localFilters.search"
+                type="text"
+                placeholder="Name, code, manager..."
+                class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                @input="debouncedApplyFilters"
+              />
+            </div>
+            
+            <!-- Show More Filters Button -->
+            <button
+              @click="showFilters = !showFilters"
+              class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 whitespace-nowrap"
+            >
+              <svg class="w-4 h-4 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.707V4z" />
+              </svg>
+              <span class="hidden sm:inline">{{ showFilters ? 'Hide Filters' : 'Show Filters' }}</span>
+              <span class="sm:hidden">Filters</span>
+              <span v-if="activeFiltersCount > 0" class="ml-2 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-blue-100 bg-blue-600 rounded-full">
+                {{ activeFiltersCount }}
+              </span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Filter Controls -->
+        <div v-if="showFilters" class="mb-6 p-4 bg-gray-50 rounded-lg">
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <!-- Status Filter -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+              <select
+                v-model="localFilters.status"
+                @change="applyFilters"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              >
+                <option value="">All statuses</option>
+                <option v-for="status in filterOptions.statuses" :key="status" :value="status">
+                  {{ status }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Manager Filter -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Manager</label>
+              <select
+                v-model="localFilters.manager"
+                @change="applyFilters"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              >
+                <option value="">All managers</option>
+                <option v-for="manager in filterOptions.managers" :key="manager.id" :value="manager.id">
+                  {{ manager.name }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Parent Department Filter -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Parent Department</label>
+              <select
+                v-model="localFilters.parent"
+                @change="applyFilters"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              >
+                <option value="">All departments</option>
+                <option value="none">Top-level only</option>
+                <option v-for="parent in filterOptions.parents" :key="parent.id" :value="parent.id">
+                  {{ parent.name }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Employee Count Filter -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Team Size</label>
+              <select
+                v-model="localFilters.employee_count"
+                @change="applyFilters"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              >
+                <option value="">All sizes</option>
+                <option value="none">No employees</option>
+                <option value="small">Small (1-5)</option>
+                <option value="medium">Medium (6-15)</option>
+                <option value="large">Large (16+)</option>
+              </select>
+            </div>
+
+            <!-- Date From Filter -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Date From</label>
+              <input
+                v-model="localFilters.date_from"
+                type="date"
+                @change="applyFilters"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              />
+            </div>
+
+            <!-- Date To Filter -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Date To</label>
+              <input
+                v-model="localFilters.date_to"
+                type="date"
+                @change="applyFilters"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              />
+            </div>
+
+            <!-- Sort By -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Sort By</label>
+              <select
+                v-model="localFilters.sort_by"
+                @change="applyFilters"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              >
+                <option value="name">Name</option>
+                <option value="employees_count">Employee Count</option>
+                <option value="manager">Manager</option>
+                <option value="created_at">Created Date</option>
+                <option value="status">Status</option>
+              </select>
+            </div>
+
+            <!-- Sort Order -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Sort Order</label>
+              <select
+                v-model="localFilters.sort_order"
+                @change="applyFilters"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              >
+                <option value="asc">Ascending</option>
+                <option value="desc">Descending</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Active Filters Display -->
+          <div v-if="activeFiltersCount > 0" class="mt-4 flex flex-wrap gap-2">
+            <span class="text-sm font-medium text-gray-700">Active filters:</span>
+            
+            <!-- Search Filter -->
+            <span v-if="localFilters.search" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+              Search: "{{ localFilters.search }}"
+              <button @click="clearFilter('search')" class="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full text-gray-400 hover:bg-gray-200 hover:text-gray-500">
+                <Icon name="x-mark" class="w-2 h-2" />
+              </button>
+            </span>
+
+            <!-- Status Filter -->
+            <span v-if="localFilters.status" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+              Status: {{ localFilters.status }}
+              <button @click="clearFilter('status')" class="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full text-blue-400 hover:bg-blue-200 hover:text-blue-500">
+                <Icon name="x-mark" class="w-2 h-2" />
+              </button>
+            </span>
+
+            <!-- Manager Filter -->
+            <span v-if="localFilters.manager" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+              Manager: {{ getManagerName(localFilters.manager) }}
+              <button @click="clearFilter('manager')" class="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full text-green-400 hover:bg-green-200 hover:text-green-500">
+                <Icon name="x-mark" class="w-2 h-2" />
+              </button>
+            </span>
+
+            <!-- Clear All Button -->
+            <button
+              @click="clearAllFilters"
+              class="text-sm text-primary-600 hover:text-primary-800 font-medium"
+            >
+              Clear all
+            </button>
+          </div>
+        </div>
+      </ContentCard>
+
       <ContentCard>
         <!-- Enhanced Table Implementation with Leave Management Style -->
         <div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
@@ -215,6 +411,7 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { Link, router } from '@inertiajs/vue3'
+import { debounce } from 'lodash'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 import PageLayout from '@/Components/Layout/PageLayout.vue'
 import DataTable from '@/Components/Data/DataTable.vue'
@@ -236,11 +433,33 @@ const props = defineProps({
   departments: {
     type: Object,
     required: true
+  },
+  filterOptions: {
+    type: Object,
+    default: () => ({})
+  },
+  filters: {
+    type: Object,
+    default: () => ({})
   }
 })
 
 // Local state
 const loading = ref(false)
+const showFilters = ref(false)
+
+// Filter state
+const localFilters = ref({
+  search: props.filters.search || '',
+  status: props.filters.status || '',
+  manager: props.filters.manager || '',
+  parent: props.filters.parent || '',
+  employee_count: props.filters.employee_count || '',
+  date_from: props.filters.date_from || '',
+  date_to: props.filters.date_to || '',
+  sort_by: props.filters.sort_by || 'name',
+  sort_order: props.filters.sort_order || 'asc'
+})
 
 // Breadcrumbs configuration
 const breadcrumbs = [
@@ -515,7 +734,59 @@ const handleExport = () => {
   window.location.href = route('departments.export')
 }
 
+// Computed properties for filters
+const activeFiltersCount = computed(() => {
+  let count = 0
+  if (localFilters.value.search) count++
+  if (localFilters.value.status) count++
+  if (localFilters.value.manager) count++
+  if (localFilters.value.parent) count++
+  if (localFilters.value.employee_count) count++
+  if (localFilters.value.date_from) count++
+  if (localFilters.value.date_to) count++
+  return count
+})
+
+// Debounced filter application
+const debouncedApplyFilters = debounce(() => {
+  applyFilters()
+}, 300)
+
+// Filter methods
+const applyFilters = () => {
+  router.get(route('departments.index'), localFilters.value, {
+    preserveState: true,
+    preserveScroll: true,
+    replace: true
+  })
+}
+
+const clearFilter = (filterKey) => {
+  localFilters.value[filterKey] = ''
+  applyFilters()
+}
+
+const clearAllFilters = () => {
+  localFilters.value = {
+    search: '',
+    status: '',
+    manager: '',
+    parent: '',
+    employee_count: '',
+    date_from: '',
+    date_to: '',
+    sort_by: 'name',
+    sort_order: 'asc'
+  }
+  applyFilters()
+}
+
+const getManagerName = (managerId) => {
+  const manager = props.filterOptions.managers?.find(m => m.id.toString() === managerId.toString())
+  return manager ? manager.name : 'Unknown'
+}
+
 const handleFilter = () => {
-  console.log('Opening filters...')
+  showFilters.value = !showFilters.value
 }
 </script>

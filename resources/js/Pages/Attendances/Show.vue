@@ -10,33 +10,51 @@
         <!-- Overview Cards -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
           <StatsCard
-            label="Work Duration"
-            :value="workDuration || '0h 0m'"
+            :label="`Work Duration`"
+            :value="formattedWorkDuration"
+            format="text"
             icon="ClockIcon"
-            color="blue"
+            iconColor="info"
             class="transform hover:scale-105 transition-transform duration-200"
-          />
+          >
+            <div class="text-xs text-gray-500 mt-1">
+              {{ workDurationSubtitle }}
+            </div>
+          </StatsCard>
           <StatsCard
-            label="Break Duration"
-            :value="breakDuration || '-'"
+            :label="`Break Duration`"
+            :value="formattedBreakDuration"
+            format="text"
             icon="PauseIcon"
-            color="orange"
+            iconColor="warning"
             class="transform hover:scale-105 transition-transform duration-200"
-          />
+          >
+            <div class="text-xs text-gray-500 mt-1">
+              {{ breakDurationSubtitle }}
+            </div>
+          </StatsCard>
           <StatsCard
-            label="Break Sessions"
-            :value="breakSessions.length"
+            :label="`Break Sessions`"
+            :value="breakSessions.length.toString()"
             icon="ListBulletIcon"
-            color="green"
+            iconColor="success"
             class="transform hover:scale-105 transition-transform duration-200"
-          />
+          >
+            <div class="text-xs text-gray-500 mt-1">
+              {{ breakSessionsSubtitle }}
+            </div>
+          </StatsCard>
           <StatsCard
-            label="Status"
+            :label="`Status`"
             :value="formatStatus(attendance.status)"
             icon="CheckCircleIcon"
-            :color="getStatusColor(attendance.status)"
+            :iconColor="getStatusColor(attendance.status)"
             class="transform hover:scale-105 transition-transform duration-200"
-          />
+          >
+            <div class="text-xs text-gray-500 mt-1">
+              {{ statusSubtitle }}
+            </div>
+          </StatsCard>
         </div>
 
         <!-- Main Details -->
@@ -105,7 +123,6 @@
                       {{ formatTime(session.start) }} - {{ session.end ? formatTime(session.end) : 'Ongoing' }}
                     </p>
                   </div>
-                </div>
                 </div>
                 <div class="text-right">
                   <p class="text-sm font-medium text-neutral-900">
@@ -273,14 +290,99 @@ const formatDateTime = (dateTimeString) => {
   });
 };
 
+const formatStatus = (status) => {
+  const statusMap = {
+    'clocked_in': 'Clocked In',
+    'clocked_out': 'Clocked Out',
+    'on_break': 'On Break'
+  };
+  return statusMap[status] || status;
+};
+
 const getStatusColor = (status) => {
   const colors = {
-    'clocked_in': 'green',
-    'clocked_out': 'gray',
-    'on_break': 'yellow'
+    'clocked_in': 'success',
+    'clocked_out': 'secondary',
+    'on_break': 'warning'
   };
-  return colors[status] || 'gray';
+  return colors[status] || 'secondary';
 };
+
+// Enhanced computed properties for better stats display
+const formattedWorkDuration = computed(() => {
+  if (!props.workDuration || props.workDuration === '0h 0m') {
+    return '0 hours';
+  }
+  
+  // If it already contains 'h', return as-is (it's already formatted)
+  if (props.workDuration && props.workDuration.includes('h')) {
+    return props.workDuration;
+  }
+  
+  // Convert duration like "10" to "10h 0m" format
+  const hours = parseInt(props.workDuration);
+  return isNaN(hours) ? '0 hours' : `${hours}h 0m`;
+});
+
+const workDurationSubtitle = computed(() => {
+  if (!props.attendance.clock_in) return 'No clock in recorded';
+  
+  const clockIn = formatTime(props.attendance.clock_in);
+  const clockOut = props.attendance.clock_out ? formatTime(props.attendance.clock_out) : 'Still working';
+  
+  return `${clockIn} - ${clockOut}`;
+});
+
+const formattedBreakDuration = computed(() => {
+  if (!props.breakDuration || props.breakDuration === '-' || props.breakDuration === '0h 0m') {
+    return '0 minutes';
+  }
+  
+  // If it already contains time format, return as-is
+  if (props.breakDuration && (props.breakDuration.includes('h') || props.breakDuration.includes('m'))) {
+    return props.breakDuration;
+  }
+  
+  return props.breakDuration;
+});
+
+const breakDurationSubtitle = computed(() => {
+  const sessionCount = props.breakSessions.length;
+  if (sessionCount === 0) return 'No breaks taken';
+  if (sessionCount === 1) return '1 break session';
+  return `${sessionCount} break sessions`;
+});
+
+const breakSessionsSubtitle = computed(() => {
+  const count = props.breakSessions.length;
+  if (count === 0) return 'Continuous work';
+  if (count === 1) return 'Single break taken';
+  return 'Multiple breaks';
+});
+
+const statusSubtitle = computed(() => {
+  const status = props.attendance.status;
+  const now = new Date();
+  
+  switch (status) {
+    case 'clocked_in':
+      if (props.attendance.clock_in) {
+        const clockInTime = formatTime(props.attendance.clock_in);
+        return `Since ${clockInTime}`;
+      }
+      return 'Currently working';
+    case 'clocked_out':
+      if (props.attendance.clock_out) {
+        const clockOutTime = formatTime(props.attendance.clock_out);
+        return `At ${clockOutTime}`;
+      }
+      return 'Work completed';
+    case 'on_break':
+      return 'Currently on break';
+    default:
+      return 'Status unknown';
+  }
+});
 
 const deleteRecord = () => {
   if (!confirm('Are you sure you want to delete this attendance record? This action cannot be undone.')) {

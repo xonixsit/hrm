@@ -13,12 +13,92 @@ class DepartmentController extends Controller
 {
     use AuditLogTrait;
 
-    public function index()
+    public function index(Request $request)
     {
-        // Get departments with basic relationships
-        $departments = Department::withCount('employees')
-            ->with(['manager.user'])
-            ->paginate(10);
+        // Build query with filters
+        $query = Department::withCount('employees')
+            ->with(['manager.user', 'parent']);
+
+        // Apply search filter
+        if ($request->filled('search')) {
+            $search = $request->get('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('code', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%")
+                  ->orWhere('location', 'like', "%{$search}%")
+                  ->orWhereHas('manager.user', function ($q) use ($search) {
+                      $q->where('name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        // Apply status filter
+        if ($request->filled('status')) {
+            $query->where('status', $request->get('status'));
+        }
+
+        // Apply manager filter
+        if ($request->filled('manager')) {
+            $query->where('manager_id', $request->get('manager'));
+        }
+
+        // Apply parent department filter
+        if ($request->filled('parent')) {
+            if ($request->get('parent') === 'none') {
+                $query->whereNull('parent_department_id');
+            } else {
+                $query->where('parent_department_id', $request->get('parent'));
+            }
+        }
+
+        // Apply employee count filter
+        if ($request->filled('employee_count')) {
+            $range = $request->get('employee_count');
+            switch ($range) {
+                case 'none':
+                    $query->having('employees_count', '=', 0);
+                    break;
+                case 'small':
+                    $query->having('employees_count', '>', 0)
+                          ->having('employees_count', '<=', 5);
+                    break;
+                case 'medium':
+                    $query->having('employees_count', '>', 5)
+                          ->having('employees_count', '<=', 15);
+                    break;
+                case 'large':
+                    $query->having('employees_count', '>', 15);
+                    break;
+            }
+        }
+
+        // Apply date range filter
+        if ($request->filled('date_from')) {
+            $query->whereDate('created_at', '>=', $request->get('date_from'));
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('created_at', '<=', $request->get('date_to'));
+        }
+
+        // Apply sorting
+        $sortBy = $request->get('sort_by', 'name');
+        $sortOrder = $request->get('sort_order', 'asc');
+        
+        if ($sortBy === 'employees_count') {
+            $query->orderBy('employees_count', $sortOrder);
+        } elseif ($sortBy === 'manager') {
+            $query->leftJoin('employees', 'departments.manager_id', '=', 'employees.id')
+                  ->leftJoin('users', 'employees.user_id', '=', 'users.id')
+                  ->orderBy('users.name', $sortOrder)
+                  ->select('departments.*');
+        } else {
+            $query->orderBy($sortBy, $sortOrder);
+        }
+
+        // Get paginated results
+        $perPage = $request->get('per_page', 10);
+        $departments = $query->paginate($perPage)->withQueryString();
         
         // Get department IDs from current page
         $departmentIds = $departments->pluck('id');
@@ -37,8 +117,33 @@ class DepartmentController extends Controller
             $department->setRelation('employees', $employees->get($department->id, collect()));
             return $department;
         });
+
+        // Get filter options
+        $filterOptions = [
+            'managers' => \App\Models\Employee::with('user')
+                ->whereHas('managedDepartments')
+                ->get()
+                ->map(function ($employee) {
+                    return [
+                        'id' => $employee->id,
+                        'name' => $employee->user->name ?? 'Unknown'
+                    ];
+                }),
+            'parents' => Department::whereNull('parent_department_id')
+                ->orWhereHas('children')
+                ->select('id', 'name')
+                ->get(),
+            'statuses' => ['Active', 'Inactive', 'Restructuring']
+        ];
         
-        return Inertia::render('Departments/Index', ['departments' => $departments]);
+        return Inertia::render('Departments/Index', [
+            'departments' => $departments,
+            'filterOptions' => $filterOptions,
+            'filters' => $request->only([
+                'search', 'status', 'manager', 'parent', 'employee_count', 
+                'date_from', 'date_to', 'sort_by', 'sort_order', 'per_page'
+            ])
+        ]);
     }
 
     public function create()
@@ -79,17 +184,18 @@ class DepartmentController extends Controller
 
     public function edit(Department $department)
     {
-        // Load department with relationships
-        $department->load(['manager.user', 'parent']);
+        // Load department with relationships, employees, and employees count
+        $department->load(['manager.user', 'parent', 'employees.user']);
+        $department->loadCount('employees');
         
         // Get all employees for manager selection
         $employees = \App\Models\Employee::with('user')->get();
         
         // Get all departments for parent selection (excluding current department)
-$departments = Department::where('id', '!=', $department->id)
-    ->select('id', 'name')   // select only what you need
-    ->distinct()
-    ->get();
+        $departments = Department::where('id', '!=', $department->id)
+            ->select('id', 'name')   // select only what you need
+            ->distinct()
+            ->get();
         
         return Inertia::render('Departments/Edit', [
             'department' => $department,
@@ -135,8 +241,8 @@ $departments = Department::where('id', '!=', $department->id)
             $rules['manager_id'] = 'nullable|exists:employees,id';
         }
 
-        if ($request->has('parent_id')) {
-            $rules['parent_id'] = 'nullable|exists:departments,id';
+        if ($request->has('parent_department_id')) {
+            $rules['parent_department_id'] = 'nullable|exists:departments,id';
         }
 
         $validated = $request->validate($rules);
@@ -147,8 +253,8 @@ $departments = Department::where('id', '!=', $department->id)
             $updateData['manager_id'] = $request->input('manager_id');
         }
 
-        if ($request->has('parent_id')) {
-            $updateData['parent_id'] = $request->input('parent_id');
+        if ($request->has('parent_department_id')) {
+            $updateData['parent_department_id'] = $request->input('parent_department_id');
         }
 
         if ($request->has('established_date')) {

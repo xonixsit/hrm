@@ -257,8 +257,8 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
-import { router } from '@inertiajs/vue3';
+import { computed, onMounted } from 'vue';
+import { router, usePage } from '@inertiajs/vue3';
 import { useAuth } from '@/composables/useAuth.js';
 import { useNotifications } from '@/composables/useNotifications.js';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
@@ -276,6 +276,30 @@ const props = defineProps({
 
 const { user, hasRole, hasAnyRole } = useAuth();
 const { showNotification } = useNotifications();
+
+// Handle flash messages from backend
+
+const page = usePage();
+
+onMounted(() => {
+  // Check for success flash message
+  if (page.props.flash?.success) {
+    showNotification({
+      type: 'success',
+      title: 'Success',
+      message: page.props.flash.success
+    });
+  }
+  
+  // Check for error flash message
+  if (page.props.flash?.error) {
+    showNotification({
+      type: 'error',
+      title: 'Error',
+      message: page.props.flash.error
+    });
+  }
+});
 
 // Computed properties
 const canEdit = computed(() => hasAnyRole(['Admin', 'Manager']));

@@ -14,6 +14,7 @@
         :is-submitting="form.processing"
         variant="card"
         @submit="handleSubmit"
+        @action="handleFormAction"
       >
         <!-- Department Overview -->
         <div class="bg-neutral-50 rounded-lg p-4 mb-6">
@@ -113,15 +114,15 @@
 
             <FormField
               label="Parent Department"
-              :error="form.errors.parent_id"
+              :error="form.errors.parent_department_id"
               help="Select a parent department if this is a sub-department"
             >
               <BaseSelect
-                v-model="form.parent_id"
+                v-model="form.parent_department_id"
                 :options="departmentOptions"
                 option-label="label"
                 option-value="value"
-                :error="!!form.errors.parent_id"
+                :error="!!form.errors.parent_department_id"
                 placeholder="Select parent department"
               />
             </FormField>
@@ -154,13 +155,7 @@
               />
             </FormField>
           </div>
-        </FormSection>
-
-        <!-- Status Section -->
-        <FormSection
-          title="Department Status"
-          description="Set the current status and operational details"
-        >
+        
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <FormField
               label="Status"
@@ -189,15 +184,9 @@
               />
             </FormField>
           </div>
-        </FormSection>
-
-        <!-- Department History Section -->
-        <FormSection
-          title="Department History"
-          description="Track changes and important dates"
-        >
+        
           <div class="bg-neutral-50 rounded-lg p-4">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
               <div>
                 <span class="font-medium text-neutral-700">Created:</span>
                 <p class="text-neutral-600">{{ formatDate(department.created_at) }}</p>
@@ -206,13 +195,11 @@
                 <span class="font-medium text-neutral-700">Last Updated:</span>
                 <p class="text-neutral-600">{{ formatDate(department.updated_at) }}</p>
               </div>
-              <div>
-                <span class="font-medium text-neutral-700">Current Employees:</span>
-                <p class="text-neutral-600">{{ department.employees_count || 0 }} members</p>
-              </div>
             </div>
           </div>
         </FormSection>
+
+
       </FormLayout>
     </PageLayout>
   </AuthenticatedLayout>
@@ -258,14 +245,12 @@ const form = useForm({
   name: props.department.name,
   code: props.department.code,
   description: props.department.description,
-  parent_id: props.department.parent_id,
   budget: props.department.budget,
   location: props.department.location,
   status: props.department.status || 'Active',
   established_date: props.department.established_date ? new Date(props.department.established_date).toISOString().split('T')[0] : null,
-  parent_id: props.department.parent_id ? String(props.department.parent_id) : null,
+  parent_department_id: props.department.parent_department_id ? String(props.department.parent_department_id) : null,
   manager_id: props.department.manager_id ? String(props.department.manager_id) : null,
-
 })
 
 // Breadcrumbs configuration
@@ -301,6 +286,7 @@ const formActions = computed(() => [
   {
     id: 'cancel',
     label: 'Cancel',
+    type: 'button',
     variant: 'secondary',
     handler: () => router.visit(route('departments.show', props.department.id))
   },
@@ -344,7 +330,7 @@ const employeeOptions = computed(() => {
 // Transform departments data for BaseSelect
 const departmentOptions = computed(() => {
   return props.departments.filter(d => d.id !== props.department.id).map(dept => ({
-    value: dept.id,
+    value: String(dept.id),
     label: dept.name
   }))
 })
@@ -366,7 +352,7 @@ const hasChanges = computed(() => {
          normalizeString(form.code) !== normalizeString(props.department.code) ||
          normalizeString(form.description) !== normalizeString(props.department.description) ||
          String(form.manager_id || '') !== String(props.department.manager_id || '') ||
-         normalizeId(form.parent_id) !== normalizeId(props.department.parent_id) ||
+         normalizeId(form.parent_department_id) !== normalizeId(props.department.parent_department_id) ||
          form.budget !== props.department.budget ||
          normalizeString(form.location) !== normalizeString(props.department.location) ||
          form.status !== (props.department.status || 'Active') ||
@@ -412,7 +398,7 @@ const handleSubmit = () => {
     const currentValue = form[key];
 
     // Log values for debugging specific fields
-    if (['parent_id', 'manager_id', 'established_date'].includes(key)) {
+    if (['parent_department_id', 'manager_id', 'established_date'].includes(key)) {
       console.log(`Field: ${key}, Original:`, originalValue, `Current:`, currentValue);
     }
     // Special handling for fields that might be null or empty string interchangeably
@@ -420,7 +406,7 @@ const handleSubmit = () => {
 
     if (['established_date', 'code', 'description', 'location'].includes(key)) {
       const normalizedCurrent = key === 'established_date' ? (currentValue === '' ? null : currentValue) : normalizeString(currentValue);
-      const normalizedOriginal = key === 'established_date' ? (originalValue === '' ? null : originalValue) : key === 'parent_id' ? normalizeId(originalValue) : normalizeString(originalValue);
+      const normalizedOriginal = key === 'established_date' ? (originalValue === '' ? null : originalValue) : normalizeString(originalValue);
       if (normalizedCurrent !== normalizedOriginal) {
         changedData[key] = normalizedCurrent;
       }
@@ -430,7 +416,7 @@ const handleSubmit = () => {
       if (normalizedCurrent !== normalizedOriginal) {
         changedData[key] = normalizedCurrent;
       }
-    } else if (['manager_id', 'parent_id'].includes(key)) {
+    } else if (['manager_id', 'parent_department_id'].includes(key)) {
       const normalizedCurrent = (currentValue === '' || currentValue === null) ? null : String(currentValue);
       const normalizedOriginal = (originalValue === '' || originalValue === null) ? null : String(originalValue);
       if (normalizedCurrent !== normalizedOriginal) {
@@ -493,6 +479,15 @@ const handleDelete = () => {
         alert('Failed to delete department. Please try again.')
       }
     })
+  }
+}
+
+
+
+// Handle form action events from FormLayout
+const handleFormAction = (action) => {
+  if (action.handler && typeof action.handler === 'function') {
+    action.handler()
   }
 }
 </script>

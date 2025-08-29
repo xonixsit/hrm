@@ -226,66 +226,120 @@
             <p class="text-neutral-500 text-center">All approvals handled!</p>
           </div>
 
-          <div v-else class="approvals-list">
-            <div
-              v-for="approval in pendingApprovals.slice(0, 5)"
-              :key="approval.id"
-              class="approval-item"
-            >
+          <div v-else class="approvals-container">
+            <div class="approvals-scroll">
+              <div
+                v-for="approval in pendingApprovals"
+                :key="approval.id"
+                :data-approval-id="approval.id"
+                :class="['approval-item', { 'approval-processing': processingItems.has(approval.id) }]"
+              >
               <div class="approval-content">
                 <div class="approval-header">
                   <h4 class="approval-title">{{ approval.title }}</h4>
-                  <span :class="getApprovalTypeClasses(approval.type)">
-                    {{ approval.type }}
-                  </span>
                 </div>
                 <p class="approval-requester">
                   Requested by {{ approval.requester }}
                 </p>
                 <span class="approval-date">{{ formatRelativeTime(approval.created_at) }}</span>
+                
+                <!-- Timesheet Quick Stats -->
+                <div v-if="approval.type === 'timesheet' && approval.stats" class="approval-stats">
+                  <div class="stats-row">
+                    <div class="stat-item">
+                      <span class="stat-label">Total Hours:</span>
+                      <span class="stat-value">{{ approval.stats.total_hours || '0h 0m' }}</span>
+                    </div>
+                    <div class="stat-item">
+                      <span class="stat-label">Days:</span>
+                      <span class="stat-value">{{ approval.stats.days_count || 0 }}</span>
+                    </div>
+                  </div>
+                  <div v-if="approval.stats.overtime_hours" class="stats-row">
+                    <div class="stat-item overtime">
+                      <span class="stat-label">Overtime:</span>
+                      <span class="stat-value">{{ approval.stats.overtime_hours }}</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Inline Feedback Messages -->
+                <div v-if="approvalFeedback[approval.id]" class="approval-feedback">
+                  <div :class="getApprovalFeedbackClasses(approvalFeedback[approval.id].type)">
+                    <component :is="getFeedbackIcon(approvalFeedback[approval.id].type)" class="w-4 h-4" />
+                    <span>{{ approvalFeedback[approval.id].message }}</span>
+                  </div>
+                </div>
               </div>
               <div class="approval-actions">
                 <button
-                  @click="quickApprove(approval)"
+                  @click="openApprovalModal(approval, 'approve')"
                   class="approve-button"
-                  :disabled="processing"
-                  title="Approve"
+                  :disabled="processing || processingItems.has(approval.id)"
+                  :title="processingItems.has(approval.id) ? 'Processing...' : 'Approve'"
                 >
-                  <CheckIcon class="w-4 h-4" />
+                  <div v-if="processingItems.has(approval.id)" class="w-4 h-4 animate-spin">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  </div>
+                  <CheckIcon v-else class="w-4 h-4" />
                 </button>
                 <button
-                  @click="quickReject(approval)"
+                  @click="openApprovalModal(approval, 'reject')"
                   class="reject-button"
-                  :disabled="processing"
-                  title="Reject"
+                  :disabled="processing || processingItems.has(approval.id)"
+                  :title="processingItems.has(approval.id) ? 'Processing...' : 'Reject'"
                 >
-                  <XMarkIcon class="w-4 h-4" />
+                  <div v-if="processingItems.has(approval.id)" class="w-4 h-4 animate-spin">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  </div>
+                  <XMarkIcon v-else class="w-4 h-4" />
                 </button>
               </div>
             </div>
+            </div>
 
-            <div v-if="pendingApprovals.length > 5" class="view-all">
+            <!-- Enhanced View All Section -->
+            <div v-if="pendingApprovals.length > 3" class="view-all-section">
               <button
                 @click="viewAllApprovals"
-                class="view-all-button"
+                class="view-all-link"
               >
-                View {{ pendingApprovals.length - 5 }} more approvals
+                <span>View All {{ pendingApprovals.length }} Approvals</span>
+                <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
               </button>
             </div>
           </div>
         </DashboardWidget>
       </div>
     </div>
+
+    <!-- Approval Modal -->
+    <ApprovalModal
+      :show="showApprovalModal"
+      :approval="selectedApproval"
+      :action="approvalAction"
+      @close="showApprovalModal = false"
+      @submit="handleApprovalSubmit"
+    />
   </div>
 </template>
 
 <script setup>
-import { computed, ref, onMounted } from 'vue';
+import { computed, ref, onMounted, nextTick } from 'vue';
 import { useAuth } from '@/composables/useAuth.js';
 import DashboardWidget from './DashboardWidget.vue';
 import StatsCard from './StatsCard.vue';
 import ActivityTimeline from './ActivityTimeline.vue';
 import QuickActions from './QuickActions.vue';
+import ApprovalModal from './ApprovalModal.vue';
 
 // Import icons
 import {
@@ -304,7 +358,8 @@ import {
   ChartBarIcon,
   UserPlusIcon,
   CalendarIcon,
-  ClockIcon
+  ClockIcon,
+  ExclamationTriangleIcon
 } from '@heroicons/vue/24/outline';
 
 const props = defineProps({
@@ -355,6 +410,11 @@ const { user } = useAuth();
 // Local state
 const refreshing = ref(false);
 const processing = ref(false);
+const processingItems = ref(new Set());
+const approvalFeedback = ref({});
+const showApprovalModal = ref(false);
+const selectedApproval = ref(null);
+const approvalAction = ref('approve');
 
 // Computed properties
 const userName = computed(() => user.value?.name || 'Manager');
@@ -447,22 +507,74 @@ const sendMessage = (member) => {
   emit('send-message', member);
 };
 
-const quickApprove = async (approval) => {
+const openApprovalModal = (approval, action) => {
+  selectedApproval.value = approval;
+  approvalAction.value = action;
+  showApprovalModal.value = true;
+};
+
+const handleApprovalSubmit = async (data) => {
   processing.value = true;
+  
+  // Clear any existing feedback
+  delete approvalFeedback.value[data.approval.id];
+  
   try {
-    await emit('approve', approval);
+    const approvalData = {
+      ...data.approval,
+      comments: data.comments
+    };
+
+    if (data.action === 'approve') {
+      await emit('approve', approvalData);
+    } else {
+      await emit('reject', approvalData);
+    }
+    
+    // Show success feedback
+    showApprovalFeedback(
+      data.approval.id, 
+      'success', 
+      `${data.action === 'approve' ? 'Approved' : 'Rejected'} successfully`
+    );
+    
+    // Auto-hide feedback after 3 seconds
+    setTimeout(() => {
+      delete approvalFeedback.value[data.approval.id];
+    }, 3000);
+    
+    // Close modal
+    showApprovalModal.value = false;
+    
+  } catch (error) {
+    // Show error feedback
+    showApprovalFeedback(
+      data.approval.id, 
+      'error', 
+      `Failed to ${data.action}. Please try again.`
+    );
+    
+    // Auto-hide error feedback after 5 seconds
+    setTimeout(() => {
+      delete approvalFeedback.value[data.approval.id];
+    }, 5000);
   } finally {
     processing.value = false;
   }
 };
 
-const quickReject = async (approval) => {
-  processing.value = true;
-  try {
-    await emit('reject', approval);
-  } finally {
-    processing.value = false;
-  }
+const scrollToApprovalItem = (approvalId) => {
+  // Use nextTick to ensure DOM is updated
+  nextTick(() => {
+    const element = document.querySelector(`[data-approval-id="${approvalId}"]`);
+    if (element) {
+      element.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+        inline: 'nearest'
+      });
+    }
+  });
 };
 
 const viewAllApprovals = () => {
@@ -522,6 +634,32 @@ const formatRelativeTime = (date) => {
   
   const diffInDays = Math.floor(diffInHours / 24);
   return `${diffInDays}d ago`;
+};
+
+const showApprovalFeedback = (approvalId, type, message) => {
+  approvalFeedback.value[approvalId] = { type, message };
+};
+
+const getApprovalFeedbackClasses = (type) => {
+  const baseClasses = 'flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium';
+  
+  const typeStyles = {
+    success: 'bg-success-50 text-success-700 border border-success-200',
+    error: 'bg-error-50 text-error-700 border border-error-200',
+    warning: 'bg-warning-50 text-warning-700 border border-warning-200'
+  };
+  
+  return `${baseClasses} ${typeStyles[type] || typeStyles.error}`;
+};
+
+const getFeedbackIcon = (type) => {
+  const icons = {
+    success: CheckCircleIcon,
+    error: ExclamationTriangleIcon,
+    warning: ExclamationTriangleIcon
+  };
+  
+  return icons[type] || ExclamationTriangleIcon;
 };
 
 onMounted(() => {
@@ -653,12 +791,34 @@ onMounted(() => {
   @apply py-8 text-center;
 }
 
+.approval-feedback {
+  @apply mt-2;
+}
+
 .approval-count {
   @apply inline-flex items-center justify-center w-6 h-6 text-xs font-medium text-white bg-primary-600 rounded-full;
 }
 
-.approvals-list {
-  @apply space-y-3;
+.approvals-container {
+  @apply space-y-4;
+}
+
+.approvals-scroll {
+  @apply space-y-3 overflow-y-auto pr-2;
+  max-height: 280px; /* Slightly smaller for manager dashboard */
+}
+
+/* Custom scrollbar styling */
+.approvals-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.approvals-scroll::-webkit-scrollbar-track {
+  @apply bg-gray-100 rounded-full;
+}
+
+.approvals-scroll::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 rounded-full hover:bg-gray-400;
 }
 
 .approval-item {
@@ -685,6 +845,30 @@ onMounted(() => {
   @apply text-xs text-neutral-500;
 }
 
+.approval-stats {
+  @apply mt-3 pt-3 border-t border-neutral-200;
+}
+
+.stats-row {
+  @apply flex items-center space-x-4 mb-2 last:mb-0;
+}
+
+.stat-item {
+  @apply flex items-center space-x-1;
+}
+
+.stat-item.overtime {
+  @apply text-warning-600;
+}
+
+.stat-label {
+  @apply text-xs text-neutral-500 font-medium;
+}
+
+.stat-value {
+  @apply text-xs text-neutral-700 font-semibold;
+}
+
 .approval-actions {
   @apply flex items-center space-x-2 ml-3;
 }
@@ -697,12 +881,38 @@ onMounted(() => {
   @apply p-2 text-error-600 hover:bg-error-100 rounded-lg transition-colors;
 }
 
-.view-all {
-  @apply pt-3 border-t border-neutral-200;
+.view-all-section {
+  @apply pt-3 border-t border-gray-200;
 }
 
-.view-all-button {
-  @apply w-full text-sm text-primary-600 hover:text-primary-700 font-medium;
+.view-all-link {
+  @apply w-full flex items-center justify-center px-4 py-3 text-sm font-medium text-primary-600 hover:text-primary-700 hover:bg-primary-50 rounded-lg transition-colors;
+}
+
+.approval-processing {
+  @apply opacity-75 pointer-events-none;
+  position: relative;
+}
+
+.approval-processing::after {
+  content: '';
+  @apply absolute inset-0 bg-white bg-opacity-50 rounded-lg;
+}
+
+.approval-feedback > div {
+  @apply animate-pulse duration-300;
+  animation: slideInFromTop 0.3s ease-out;
+}
+
+@keyframes slideInFromTop {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Responsive adjustments */
