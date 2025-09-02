@@ -4,6 +4,8 @@ namespace App\Providers;
 
 use App\Models\WorkReport;
 use App\Policies\WorkReportPolicy;
+use App\Models\LeaveType;
+use App\Policies\LeaveTypePolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Gate;
 
@@ -16,6 +18,7 @@ class AuthServiceProvider extends ServiceProvider
      */
     protected $policies = [
         WorkReport::class => WorkReportPolicy::class,
+        LeaveType::class => LeaveTypePolicy::class,
     ];
 
     /**

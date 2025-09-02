@@ -231,7 +231,17 @@ class LeaveController extends Controller
 
     public function approve(Request $request, Leave $leave)
     {
-        $this->authorize('approve', $leave);
+        try {
+            $this->authorize('approve', $leave);
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You are not authorized to approve this leave request.'
+                ], 403);
+            }
+            throw $e;
+        }
 
         $leave->update([
             'status' => 'approved',
@@ -243,12 +253,32 @@ class LeaveController extends Controller
         $leave->employee->user->notify(new LeaveApprovedNotification($leave));
 
         $this->logAudit('Leave Approved', 'Approved leave ID: ' . $leave->id);
+        
+        // Handle AJAX requests
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Leave approved successfully.',
+                'leave' => $leave->fresh()
+            ]);
+        }
+        
         return redirect()->back()->with('success', 'Leave approved successfully.');
     }
 
     public function reject(Request $request, Leave $leave)
     {
-        $this->authorize('reject', $leave);
+        try {
+            $this->authorize('reject', $leave);
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You are not authorized to reject this leave request.'
+                ], 403);
+            }
+            throw $e;
+        }
 
         $leave->update([
             'status' => 'rejected',
@@ -260,6 +290,16 @@ class LeaveController extends Controller
         $leave->employee->user->notify(new LeaveRejectedNotification($leave));
 
         $this->logAudit('Leave Rejected', 'Rejected leave ID: ' . $leave->id);
+        
+        // Handle AJAX requests
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Leave rejected successfully.',
+                'leave' => $leave->fresh()
+            ]);
+        }
+        
         return redirect()->back()->with('success', 'Leave rejected successfully.');
     }
 

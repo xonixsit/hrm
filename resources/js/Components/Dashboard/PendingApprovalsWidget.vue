@@ -2,7 +2,8 @@
   <div class="pending-approvals-widget">
     <div class="widget-header">
       <h3 class="widget-title">Pending Approvals</h3>
-      <span class="approval-count">{{ approvals.length }}</span>
+      <span class="approval-count">{{ Math.min(approvals.length, 5) }}</span>
+      <span v-if="approvals.length > 5" class="text-xs text-gray-500 ml-1">of {{ approvals.length }}</span>
     </div>
     
     <div v-if="approvals.length === 0" class="empty-state">

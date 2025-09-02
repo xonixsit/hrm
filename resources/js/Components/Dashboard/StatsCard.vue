@@ -43,9 +43,18 @@
       </div>
     </div>
 
-    <!-- Click Overlay for Navigation -->
-    <div v-if="clickable" class="click-overlay" @click="handleClick">
-      <ArrowTopRightOnSquareIcon class="w-4 h-4" />
+    <!-- Subtle Click Indicators -->
+    <div v-if="clickable" class="click-indicators">
+      <!-- Corner Arrow - appears on hover -->
+      <div class="corner-arrow">
+        <ArrowTopRightOnSquareIcon class="w-4 h-4" />
+      </div>
+      
+      <!-- Subtle Border Glow -->
+      <div class="border-glow"></div>
+      
+      <!-- Click Overlay -->
+      <div class="click-overlay" @click="handleClick"></div>
     </div>
   </div>
 </template>
@@ -150,7 +159,7 @@ const cardClasses = computed(() => {
   let classes = `${baseClasses} ${sizeClasses[props.size]} ${variantClasses[props.variant]}`;
   
   if (props.clickable) {
-    classes += ' cursor-pointer hover:scale-105';
+    classes += ' cursor-pointer hover:scale-[1.02] hover:shadow-lg group';
   }
   
   if (props.urgent) {
@@ -170,7 +179,13 @@ const iconClasses = computed(() => {
     info: 'bg-indigo-100 text-indigo-600'
   };
   
-  return `inline-flex items-center justify-center w-10 h-10 rounded-lg ${variantClasses[props.variant]}`;
+  let classes = `inline-flex items-center justify-center w-10 h-10 rounded-lg transition-all duration-200 ${variantClasses[props.variant]}`;
+  
+  if (props.clickable) {
+    classes += ' group-hover:scale-110 group-hover:shadow-sm';
+  }
+  
+  return classes;
 });
 
 const trendClasses = computed(() => {
@@ -213,7 +228,11 @@ const handleClick = () => {
 }
 
 .value-number {
-  @apply text-2xl font-bold text-gray-900;
+  @apply text-2xl font-bold text-gray-900 transition-colors duration-200;
+}
+
+.group:hover .value-number {
+  @apply text-gray-700;
 }
 
 .value-suffix {
@@ -232,13 +251,34 @@ const handleClick = () => {
   @apply text-red-600;
 }
 
-.click-overlay {
-  @apply absolute top-3 right-3 opacity-0 transition-opacity duration-200;
-  @apply flex items-center justify-center w-6 h-6 bg-white rounded-full shadow-sm;
+/* Click Indicators */
+.click-indicators {
+  @apply absolute inset-0 pointer-events-none;
 }
 
-.stats-card:hover .click-overlay {
+.corner-arrow {
+  @apply absolute top-3 right-3 opacity-0 transition-all duration-300 ease-out;
+  @apply flex items-center justify-center w-6 h-6 bg-white/90 backdrop-blur-sm rounded-full shadow-sm;
+  @apply text-gray-400 group-hover:text-gray-600;
+  transform: translateY(-2px);
+}
+
+.group:hover .corner-arrow {
   @apply opacity-100;
+  transform: translateY(0);
+}
+
+.border-glow {
+  @apply absolute inset-0 rounded-xl opacity-0 transition-opacity duration-300;
+  @apply ring-2 ring-blue-200/50 ring-offset-1;
+}
+
+.group:hover .border-glow {
+  @apply opacity-100;
+}
+
+.click-overlay {
+  @apply absolute inset-0 pointer-events-auto cursor-pointer;
 }
 
 .loading-state {

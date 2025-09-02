@@ -7,6 +7,7 @@ use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\LeaveController;
+use App\Http\Controllers\LeaveTypeController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ReportController;
@@ -79,6 +80,10 @@ Route::middleware('auth')->group(function () {
     Route::post('leaves/{leave}/approve', [LeaveController::class, 'approve'])->name('leaves.approve');
     Route::post('leaves/{leave}/reject', [LeaveController::class, 'reject'])->name('leaves.reject');
     Route::put('leaves/{leave}/update-and-approve', [LeaveController::class, 'updateAndApprove'])->name('leaves.update-and-approve');
+    
+    // Leave Types (Leave Policies) Management
+    Route::resource('leave-types', LeaveTypeController::class)->parameters(['leave-types' => 'leaveType']);
+    Route::post('leave-types/{leaveType}/toggle-status', [LeaveTypeController::class, 'toggleStatus'])->name('leave-types.toggle-status');
     
     // Debug route to test data passing
     Route::get('debug/leave-data/{leave}', function(App\Models\Leave $leave) {

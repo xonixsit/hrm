@@ -286,6 +286,16 @@ const navigationItems = computed(() => {
     route: 'leaves.index',
   });
 
+  // Add Leave Policies for Admin and HR roles
+  if (roles.includes('Admin') || roles.includes('HR')) {
+    items.push({
+      id: 'leave-types',
+      label: 'Leave Policies',
+      icon: 'clipboard-document-list',
+      route: 'leave-types.index',
+    });
+  }
+
   items.push({
     id: 'projects',
     label: 'Project Management',

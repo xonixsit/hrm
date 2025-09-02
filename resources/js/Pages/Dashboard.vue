@@ -40,6 +40,8 @@
               :trend="adminStats.employeeTrend"
               :loading="loading"
               size="large"
+              :clickable="true"
+              route="employees.index"
             />
             <StatsCard
               :value="adminStats.pendingLeaves"
@@ -50,6 +52,8 @@
               :loading="loading"
               size="large"
               :urgent="adminStats.pendingLeaves > 10"
+              :clickable="true"
+              route="leaves.index"
             />
             <StatsCard
               :value="adminStats.activeProjects"
@@ -59,6 +63,8 @@
               :trend="adminStats.projectTrend"
               :loading="loading"
               size="large"
+              :clickable="true"
+              route="projects.index"
             />
             <StatsCard
               :value="adminStats.totalDepartments"
@@ -68,6 +74,8 @@
               :trend="adminStats.departmentTrend"
               :loading="loading"
               size="large"
+              :clickable="true"
+              route="departments.index"
             />
           </div>
         </div>
@@ -141,6 +149,8 @@
               :trend="managerStats.teamTrend"
               :loading="loading"
               size="large"
+              :clickable="true"
+              route="employees.index"
             />
             <StatsCard
               :value="managerStats.pendingLeaves"
@@ -150,6 +160,8 @@
               :loading="loading"
               size="large"
               :urgent="managerStats.pendingLeaves > 5"
+              :clickable="true"
+              route="leaves.index"
             />
             <StatsCard
               :value="managerStats.activeProjects"
@@ -159,6 +171,8 @@
               :trend="managerStats.projectTrend"
               :loading="loading"
               size="large"
+              :clickable="true"
+              route="projects.index"
             />
             <StatsCard
               :value="managerStats.teamPerformance"
@@ -168,6 +182,8 @@
               suffix="%"
               :loading="loading"
               size="large"
+              :clickable="true"
+              route="reports.index"
             />
           </div>
         </div>
@@ -230,6 +246,8 @@
               variant="primary"
               :loading="loading"
               size="medium"
+              :clickable="true"
+              route="attendances.index"
             />
             <StatsCard
               :value="employeeStats.pendingLeaves"
@@ -238,6 +256,8 @@
               variant="warning"
               :loading="loading"
               size="medium"
+              :clickable="true"
+              route="leaves.index"
             />
             <StatsCard
               :value="employeeStats.tasksCompleted"
@@ -247,6 +267,8 @@
               :trend="employeeStats.taskTrend"
               :loading="loading"
               size="medium"
+              :clickable="true"
+              route="tasks.index"
             />
             <StatsCard
               :value="employeeStats.leaveBalance"
@@ -256,6 +278,8 @@
               suffix=" days"
               :loading="loading"
               size="medium"
+              :clickable="true"
+              route="leaves.index"
             />
           </div>
         </div>
@@ -296,6 +320,69 @@
                 :loading="loading"
               />
             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rejection Modal -->
+    <div v-if="showRejectionModal" class="fixed inset-0 z-50 overflow-y-auto">
+      <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" @click="cancelRejection"></div>
+        
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+          <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+            <div class="sm:flex sm:items-start">
+              <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                <ExclamationTriangleIcon class="h-6 w-6 text-red-600" />
+              </div>
+              <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left flex-1">
+                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
+                  Reject {{ rejectionItem?.title || 'Request' }}
+                </h3>
+                <div class="space-y-4">
+                  <div>
+                    <p class="text-sm text-gray-600 mb-2">
+                      <strong>Requester:</strong> {{ rejectionItem?.requester }}
+                    </p>
+                    <p class="text-sm text-gray-600 mb-4">
+                      <strong>Request:</strong> {{ rejectionItem?.description }}
+                    </p>
+                  </div>
+                  <div>
+                    <label for="rejection-reason" class="block text-sm font-medium text-gray-700 mb-2">
+                      Reason for rejection <span class="text-red-500">*</span>
+                    </label>
+                    <textarea
+                      id="rejection-reason"
+                      v-model="rejectionReason"
+                      rows="4"
+                      class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-red-500 focus:border-red-500"
+                      placeholder="Please provide a clear reason for rejecting this request..."
+                      required
+                    ></textarea>
+                    <p class="text-xs text-gray-500 mt-1">
+                      This reason will be sent to the employee and recorded in the system.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+            <button
+              @click="confirmRejection"
+              :disabled="!rejectionReason.trim()"
+              class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Reject Request
+            </button>
+            <button
+              @click="cancelRejection"
+              class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+            >
+              Cancel
+            </button>
           </div>
         </div>
       </div>
@@ -471,6 +558,11 @@ const { hasRole, user } = useAuth();
 // Local state
 const loading = ref(false);
 const notifications = ref([]);
+
+// Rejection modal state
+const showRejectionModal = ref(false);
+const rejectionItem = ref(null);
+const rejectionReason = ref('');
 
 // Role detection computed properties
 const isAdmin = computed(() => hasRole('Admin'));
@@ -652,71 +744,175 @@ const getNotificationClasses = (type) => {
 
 const handleApproval = async (approval) => {
   try {
-    console.log('Approving:', approval);
+    console.log('🎯 Approving approval item:', approval);
+    console.log('📋 Approval type:', approval.type);
+    console.log('🆔 Approval ID:', approval.id);
     
     // Show loading state
     showNotification('Processing approval...', 'info');
     
+    let response;
+    let endpoint;
+    
     // Handle different approval types
-    if (approval.type === 'timesheet') {
-      const response = await axios.post(`/timesheets/${approval.id}/approve`, {
-        comments: 'Approved from dashboard'
-      });
-      
-      if (response.data.success) {
-        console.log('Timesheet approved successfully');
-        showNotification('✅ Timesheet approved successfully!', 'success');
-        
-        // Refresh dashboard data
-        router.reload({
-          only: ['pendingApprovals', 'adminStats', 'managerStats'],
-          preserveScroll: true
-        });
+    const requestConfig = {
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
       }
+    };
+    
+    if (approval.type === 'timesheet') {
+      endpoint = `/timesheets/${approval.id}/approve`;
+      response = await axios.post(endpoint, {
+        comments: 'Approved from dashboard'
+      }, requestConfig);
+    } else if (approval.type === 'leave' || approval.type === 'Leave Request') {
+      endpoint = `/leaves/${approval.id}/approve`;
+      response = await axios.post(endpoint, {
+        comments: 'Approved from dashboard'
+      }, requestConfig);
+    } else {
+      // Generic approval endpoint - adjust as needed
+      endpoint = `/${approval.type}s/${approval.id}/approve`;
+      response = await axios.post(endpoint, {
+        comments: 'Approved from dashboard'
+      }, requestConfig);
     }
-    // Add other approval types as needed
+    
+    console.log('📡 Making request to:', endpoint);
+    console.log('✅ Response received:', response.data);
+    
+    if (response.data.success) {
+      const itemType = approval.type === 'Leave Request' ? 'Leave request' : approval.type;
+      console.log(`${itemType} approved successfully`);
+      showNotification(`✅ ${itemType} approved successfully!`, 'success');
+      
+      // Refresh dashboard data
+      router.reload({
+        only: ['pendingApprovals', 'adminStats', 'managerStats'],
+        preserveScroll: true
+      });
+    } else {
+      console.warn('⚠️ Approval succeeded but response indicates failure:', response.data);
+      showNotification('⚠️ Approval may not have been processed correctly', 'warning');
+    }
     
   } catch (error) {
-    console.error('Error approving item:', error);
-    const errorMessage = error.response?.data?.message || 'Failed to approve item. Please try again.';
+    console.error('❌ Error approving item:', error);
+    console.error('📄 Error response:', error.response?.data);
+    console.error('🔢 Error status:', error.response?.status);
+    
+    let errorMessage = 'Failed to approve item. Please try again.';
+    
+    if (error.response?.status === 403) {
+      errorMessage = 'You are not authorized to approve this request. Please contact your administrator.';
+    } else if (error.response?.data?.message) {
+      errorMessage = error.response.data.message;
+    }
+    
     showNotification('❌ ' + errorMessage, 'error');
   }
 };
 
 const handleRejection = async (approval) => {
+  console.log('🚫 Initiating rejection for:', approval);
+  
+  // Store the approval item and show modal
+  rejectionItem.value = approval;
+  rejectionReason.value = '';
+  showRejectionModal.value = true;
+};
+
+const confirmRejection = async () => {
+  if (!rejectionReason.value.trim()) {
+    showNotification('❌ Please provide a reason for rejection', 'error');
+    return;
+  }
+  
+  const approval = rejectionItem.value;
+  const comments = rejectionReason.value.trim();
+  
   try {
-    console.log('Rejecting:', approval);
+    console.log('🚫 Rejecting approval item:', approval);
+    console.log('📋 Approval type:', approval.type);
+    console.log('🆔 Approval ID:', approval.id);
+    console.log('💬 Rejection reason:', comments);
+    
+    // Close modal and show loading state
+    showRejectionModal.value = false;
+    showNotification('Processing rejection...', 'info');
+    
+    let response;
+    let endpoint;
     
     // Handle different approval types
-    if (approval.type === 'timesheet') {
-      const comments = prompt('Please provide a reason for rejection:');
-      if (comments === null) return; // User cancelled
-      
-      // Show loading state
-      showNotification('Processing rejection...', 'info');
-      
-      const response = await axios.post(`/timesheets/${approval.id}/reject`, {
-        comments: comments || 'Rejected from dashboard'
-      });
-      
-      if (response.data.success) {
-        console.log('Timesheet rejected successfully');
-        showNotification('✅ Timesheet rejected successfully!', 'success');
-        
-        // Refresh dashboard data
-        router.reload({
-          only: ['pendingApprovals', 'adminStats', 'managerStats'],
-          preserveScroll: true
-        });
+    const requestConfig = {
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
       }
+    };
+    
+    if (approval.type === 'timesheet') {
+      endpoint = `/timesheets/${approval.id}/reject`;
+      response = await axios.post(endpoint, {
+        comments: comments
+      }, requestConfig);
+    } else if (approval.type === 'leave' || approval.type === 'Leave Request') {
+      endpoint = `/leaves/${approval.id}/reject`;
+      response = await axios.post(endpoint, {
+        comments: comments
+      }, requestConfig);
+    } else {
+      // Generic rejection endpoint - adjust as needed
+      endpoint = `/${approval.type}s/${approval.id}/reject`;
+      response = await axios.post(endpoint, {
+        comments: comments
+      }, requestConfig);
     }
-    // Add other approval types as needed
+    
+    console.log('📡 Making request to:', endpoint);
+    console.log('✅ Response received:', response.data);
+    
+    if (response.data.success) {
+      const itemType = approval.type === 'Leave Request' ? 'Leave request' : approval.type;
+      console.log(`${itemType} rejected successfully`);
+      showNotification(`✅ ${itemType} rejected successfully!`, 'success');
+      
+      // Refresh dashboard data
+      router.reload({
+        only: ['pendingApprovals', 'adminStats', 'managerStats'],
+        preserveScroll: true
+      });
+    } else {
+      console.warn('⚠️ Rejection succeeded but response indicates failure:', response.data);
+      showNotification('⚠️ Rejection may not have been processed correctly', 'warning');
+    }
     
   } catch (error) {
-    console.error('Error rejecting item:', error);
-    const errorMessage = error.response?.data?.message || 'Failed to reject item. Please try again.';
+    console.error('❌ Error rejecting item:', error);
+    console.error('📄 Error response:', error.response?.data);
+    console.error('🔢 Error status:', error.response?.status);
+    
+    let errorMessage = 'Failed to reject item. Please try again.';
+    
+    if (error.response?.status === 403) {
+      errorMessage = 'You are not authorized to reject this request. Please contact your administrator.';
+    } else if (error.response?.data?.message) {
+      errorMessage = error.response.data.message;
+    }
+    
     showNotification('❌ ' + errorMessage, 'error');
   }
+};
+
+const cancelRejection = () => {
+  showRejectionModal.value = false;
+  rejectionItem.value = null;
+  rejectionReason.value = '';
 };
 
 const handleAction = async (actionData) => {

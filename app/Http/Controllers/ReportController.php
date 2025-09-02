@@ -8,6 +8,7 @@ use App\Models\Timesheet;
 use App\Models\Feedback;
 use App\Models\User;
 use App\Models\Project;
+use App\Models\Employee;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Http\Request;
@@ -24,7 +25,7 @@ class ReportController extends Controller
     public function stats()
     {
         $stats = [
-            'totalUsers' => User::count(),
+            'totalUsers' => Employee::count(), // Changed to match Dashboard (Employee count instead of User count)
             'activeProjects' => Project::where('status', 'active')->count(),
             'completedTasks' => Timesheet::where('status', 'completed')->count(),
             'hoursLogged' => Timesheet::sum('hours') ?? 0
