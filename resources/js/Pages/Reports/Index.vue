@@ -31,9 +31,7 @@
 
     <div class="py-12">
       <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
-        <!-- Quick Insights Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <!-- Total Employees Card -->
+        <!-- <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatsCard
             :value="stats.totalUsers"
             label="Total Employees"
@@ -43,7 +41,7 @@
             route="employees.index"
           />
 
-          <!-- Active Projects Card -->
+          Active Projects Card
           <StatsCard
             :value="stats.activeProjects"
             label="Active Projects"
@@ -53,7 +51,6 @@
             route="projects.index"
           />
 
-          <!-- Completed Tasks Card -->
           <StatsCard
             :value="stats.completedTasks"
             label="Completed Tasks"
@@ -63,7 +60,6 @@
             route="work-reports.index"
           />
 
-          <!-- Hours Logged Card -->
           <StatsCard
             :value="stats.hoursLogged"
             label="Hours Logged"
@@ -72,11 +68,10 @@
             :clickable="true"
             route="attendances.index"
           />
-        </div>
+        </div> -->
 
         <!-- Report Categories -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <!-- Project Reports -->
           <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
             <div class="p-6">
               <h3 class="text-lg font-medium text-gray-900 mb-4">Project Reports</h3>

@@ -296,12 +296,12 @@ const navigationItems = computed(() => {
     });
   }
 
-  items.push({
+  /*items.push({
     id: 'projects',
     label: 'Project Management',
     icon: 'folder',
     route: 'projects.index',
-  });
+  });*/
 
   items.push({
     id: 'feedbacks',
@@ -317,12 +317,12 @@ const navigationItems = computed(() => {
     route: 'work-reports.index',
   });
 
-  items.push({
-    id: 'reports',
-    label: 'Reports & Analytics',
-    icon: 'chart-bar',
-    route: 'reports.index',
-  });
+  // items.push({
+  //   id: 'reports',
+  //   label: 'Reports & Analytics',
+  //   icon: 'chart-bar',
+  //   route: 'reports.index',
+  // });
 
   // Add Pending Approvals for Admin and Manager roles
   if (roles.includes('Admin') || roles.includes('Manager')) {

@@ -55,7 +55,7 @@
               :clickable="true"
               route="leaves.index"
             />
-            <StatsCard
+            <!-- <StatsCard
               :value="adminStats.activeProjects"
               label="Active Projects"
               icon="folder"
@@ -65,7 +65,7 @@
               size="large"
               :clickable="true"
               route="projects.index"
-            />
+            /> -->
             <StatsCard
               :value="adminStats.totalDepartments"
               label="Departments"

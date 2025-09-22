@@ -1,7 +1,6 @@
 <template>
   <div class="date-range-picker">
-    <div class="flex flex-col space-y-2">
-     
+    <div class="flex flex-col space-y-2">     
       <div class="flex items-center space-x-2">
         <input
           :id="`${id}-start`"

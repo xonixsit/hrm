@@ -39,7 +39,7 @@
         route="employees.index"
       />
       
-      <StatsCard
+      <!-- <StatsCard
         :value="stats.activeProjects"
         label="Active Projects"
         :icon="FolderOpenIcon"
@@ -48,7 +48,7 @@
         :loading="loading"
         :clickable="true"
         route="projects.index"
-      />
+      /> -->
       
       <StatsCard
         :value="stats.pendingTasks"
