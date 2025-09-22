@@ -28,9 +28,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
 
-        if (DB::connection() instanceof \Illuminate\Database\SQLiteConnection) {
-            DB::statement(DB::raw('PRAGMA foreign_keys=1'));
-        }
+     
     
         Vite::prefetch(concurrency: 3);
         Schema::defaultStringLength(191);
