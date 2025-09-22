@@ -54,9 +54,9 @@ class LeaveController extends Controller
         // Handle both 'type' (from frontend) and 'leave_type_id' (legacy)
         if ($request->filled('type') || $request->filled('leave_type_id')) {
             $leaveType = $request->get('type') ?: $request->get('leave_type_id');
-            // if (is_string($leaveType) && strpos($leaveType, ',') !== false) {
-            //     $leaveType = explode(',', $leaveType);
-            // }
+            if (is_string($leaveType) && strpos($leaveType, ',') !== false) {
+                $leaveType = explode(',', $leaveType);
+            }
             
             // If the type is a string (like 'annual', 'sick'), convert to leave_type_id
             if (is_array($leaveType)) {
@@ -167,8 +167,7 @@ class LeaveController extends Controller
             $usedLeaves = Leave::where('employee_id', $leave->employee_id)
                 ->where('leave_type_id', $leave->leave_type_id)
                 ->where('status', 'approved')
-                ->whereYear('from_date', date('Y'))
-                ->sum(\DB::raw('DATEDIFF(to_date, from_date) + 1'));
+                ->whereYear('from_date', date('Y'));
             
             $totalQuota = $leave->leaveType->quota ?? 25; // Default 25 days
             $leaveBalance = max(0, $totalQuota - $usedLeaves);
