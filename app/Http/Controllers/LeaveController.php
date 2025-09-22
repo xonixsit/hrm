@@ -11,6 +11,7 @@ use Inertia\Inertia;
 use App\Traits\AuditLogTrait;
 use App\Notifications\LeaveApprovedNotification;
 use App\Notifications\LeaveRejectedNotification;
+use Illuminate\Support\Facades\DB;
 
 class LeaveController extends Controller
 {
@@ -167,7 +168,8 @@ class LeaveController extends Controller
             $usedLeaves = Leave::where('employee_id', $leave->employee_id)
                 ->where('leave_type_id', $leave->leave_type_id)
                 ->where('status', 'approved')
-                ->whereYear('from_date', date('Y'));
+                ->whereYear('from_date', date('Y'))
+                ->sum(DB::raw('DATEDIFF(to_date, from_date) + 1'));
             
             $totalQuota = $leave->leaveType->quota ?? 25; // Default 25 days
             $leaveBalance = max(0, $totalQuota - $usedLeaves);
