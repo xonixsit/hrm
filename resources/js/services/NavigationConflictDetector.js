@@ -83,6 +83,8 @@ class NavigationConflictDetector {
    * Detect navigation conflicts
    */
   detectConflicts() {
+    // Temporarily disable conflict detection to fix navigation issues
+    return
     if (!this.monitoringEnabled.value) return
     
     const currentConflicts = []

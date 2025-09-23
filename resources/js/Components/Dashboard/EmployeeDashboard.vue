@@ -366,7 +366,13 @@ let timeInterval = null;
 
 // Computed properties
 const isCurrentlyClockedIn = computed(() => {
-  return props.clockedIn || props.currentAttendance.clocked_in;
+  const clockedIn = props.clockedIn || props.currentAttendance.clocked_in;
+  console.log('🔍 isCurrentlyClockedIn computed:', {
+    propsClockedIn: props.clockedIn,
+    currentAttendanceClockedIn: props.currentAttendance.clocked_in,
+    result: clockedIn
+  });
+  return clockedIn;
 });
 
 const clockButtonText = computed(() => {
@@ -398,27 +404,20 @@ const workdayStatus = computed(() => {
     return 'before-work';
   }
   
-  const now = currentTime.value;
-  const workdayStart = new Date(clockInTime);
-  const standardWorkHours = 8;
-  const workdayEnd = new Date(workdayStart.getTime() + (standardWorkHours * 60 * 60 * 1000));
-  
-  if (now < workdayStart) {
-    return 'before-work';
-  } else if (now > workdayEnd) {
-    return 'after-work';
-  } else {
-    return 'during-work';
-  }
+  // If clocked in, always show as 'during-work' to display the progress bar
+  // The actual progress calculation will handle the time logic
+  return 'during-work';
 });
 
 const actualWorkProgressPercentage = computed(() => {
   if (!isCurrentlyClockedIn.value) {
+    console.log('🔍 Progress: Not clocked in, returning 0%');
     return 0;
   }
   
   const clockInTime = props.currentAttendance.clock_in_time;
   if (!clockInTime) {
+    console.log('🔍 Progress: No clock in time, returning 0%');
     return 0;
   }
   
@@ -426,6 +425,7 @@ const actualWorkProgressPercentage = computed(() => {
   const actualClockIn = new Date(clockInTime);
   
   if (now < actualClockIn) {
+    console.log('🔍 Progress: Current time before clock in, returning 0%');
     return 0;
   }
   
@@ -434,7 +434,17 @@ const actualWorkProgressPercentage = computed(() => {
   const standardWorkHours = 8;
   const percentage = (workTimeElapsedHours / standardWorkHours) * 100;
   
-  return Math.min(100, Math.max(0, percentage));
+  const finalPercentage = Math.min(100, Math.max(0, percentage));
+  
+  console.log('🔍 Progress calculation:', {
+    clockInTime,
+    now: now.toISOString(),
+    workTimeElapsedHours: workTimeElapsedHours.toFixed(2),
+    percentage: percentage.toFixed(2),
+    finalPercentage: finalPercentage.toFixed(2)
+  });
+  
+  return finalPercentage;
 });
 
 const progressLabel = computed(() => {
@@ -510,11 +520,13 @@ const progressStartPosition = computed(() => {
 
 const progressWidth = computed(() => {
   if (!isCurrentlyClockedIn.value) {
+    console.log('🔍 ProgressWidth: Not clocked in, returning 0');
     return 0;
   }
   
   const clockInTime = props.currentAttendance.clock_in_time;
   if (!clockInTime) {
+    console.log('🔍 ProgressWidth: No clock in time, returning 0');
     return 0;
   }
   
@@ -529,6 +541,7 @@ const progressWidth = computed(() => {
   const totalTimelineMs = timelineEnd.getTime() - timelineStart.getTime();
   
   if (now < actualClockIn) {
+    console.log('🔍 ProgressWidth: Current time before clock in, returning 0');
     return 0;
   }
   
@@ -539,8 +552,19 @@ const progressWidth = computed(() => {
   const clockInPositionPercent = Math.max(0, (clockInPositionMs / totalTimelineMs) * 100);
   
   const width = currentPositionPercent - clockInPositionPercent;
+  const finalWidth = Math.max(0, width);
   
-  return Math.max(0, width);
+  console.log('🔍 ProgressWidth calculation:', {
+    clockInTime,
+    timelineStart: timelineStart.toISOString(),
+    timelineEnd: timelineEnd.toISOString(),
+    currentPositionPercent: currentPositionPercent.toFixed(2),
+    clockInPositionPercent: clockInPositionPercent.toFixed(2),
+    width: width.toFixed(2),
+    finalWidth: finalWidth.toFixed(2)
+  });
+  
+  return finalWidth;
 });
 
 const preWorkWidth = computed(() => {
@@ -768,6 +792,13 @@ const updateWorkDuration = () => {
 
 const handleClockInOut = async () => {
   try {
+    console.log('🔍 EmployeeDashboard: Clock in/out button clicked');
+    console.log('🔍 Current state:', {
+      isCurrentlyClockedIn: isCurrentlyClockedIn.value,
+      clockedIn: props.clockedIn,
+      currentAttendanceClockedIn: props.currentAttendance.clocked_in
+    });
+    
     emit('clock-in-out');
     
     // Also broadcast the state change for immediate floating widget sync

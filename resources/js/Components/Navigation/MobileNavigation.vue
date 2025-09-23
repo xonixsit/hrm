@@ -198,6 +198,7 @@ import Icon from '@/Components/Base/Icon.vue';
 import MobileNavigationSection from './MobileNavigationSection.vue';
 import { useAuth } from '@/composables/useAuth.js';
 import { useTheme } from '@/composables/useTheme.js';
+import { conflictDetector } from '@/services/NavigationConflictDetector.js';
 
 import { useResponsive } from '@/composables/useResponsive.js';
 import { getFilteredNavigation } from '@/config/navigation.js';
@@ -444,18 +445,21 @@ const handleKeydown = (event) => {
   }
 };
 
+// Component ID for conflict detection
+const componentId = ref(`mobile-${Math.random().toString(36).substr(2, 9)}`);
+
 // Lifecycle
 onMounted(() => {
   document.addEventListener('keydown', handleKeydown);
   // Register component with conflict detector
-  this.$conflictDetector.registerComponent('mobile', 'mobile-navigation-component');
+  conflictDetector.registerComponent(componentId.value, 'mobile');
 });
 
 onUnmounted(() => {
   document.removeEventListener('keydown', handleKeydown);
   document.body.style.overflow = '';
   // Unregister component from conflict detector
-  this.$conflictDetector.unregisterComponent('mobile');
+  conflictDetector.unregisterComponent(componentId.value);
 });
 </script>
 

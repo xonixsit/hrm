@@ -33,9 +33,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-
-    
-});
     // Form Layout Demo
     Route::get('/form-layout-demo', function () {
         return Inertia::render('FormLayoutDemo');
@@ -61,6 +58,7 @@ Route::middleware('auth')->group(function () {
     Route::post('timesheets/bulk-approve', [TimesheetController::class, 'bulkApprove'])->name('timesheets.bulk-approve');
     Route::get('timesheets/pending/approvals', [TimesheetController::class, 'pendingApprovals'])->name('timesheets.pending-approvals');
     Route::get('api/timesheets/approval-stats', [TimesheetController::class, 'approvalStats'])->name('timesheets.approval-stats');
+    Route::get('work-reports/leaderboard', [WorkReportController::class, 'leaderboard'])->name('work-reports.leaderboard');
     Route::resource('work-reports', WorkReportController::class);
     Route::resource('attendances', AttendanceController::class);
     Route::post('attendances/clock-in', [AttendanceController::class, 'clockIn'])->name('attendances.clockIn');
@@ -124,5 +122,6 @@ Route::middleware('auth')->group(function () {
     
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::post('/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
+});
 
 require __DIR__.'/auth.php';

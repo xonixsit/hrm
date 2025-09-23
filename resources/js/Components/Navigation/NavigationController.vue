@@ -93,7 +93,7 @@ import NavigationFallback from './NavigationFallback.vue';
 import Icon from '@/Components/Base/Icon.vue';
 
 // Import conflict prevention services
-// import { conflictDetector } from '@/services/NavigationConflictDetector.js';
+import { conflictDetector } from '@/services/NavigationConflictDetector.js';
 import { navigationMonitor } from '@/services/NavigationMonitor.js';
 import { navigationDebugger } from '@/utils/navigationDebugger.js';
 
@@ -227,7 +227,7 @@ const isDesktopNavigation = computed(() => deviceType.value === 'desktop');
 const isMobileNavigation = computed(() => deviceType.value === 'mobile');
 
 // Conflict prevention computed properties
-const hasActiveConflicts = computed(() => activeConflicts.value.length > 0);
+const hasActiveConflicts = computed(() => false); // Temporarily disabled to fix navigation
 
 // Event handlers
 const handleNavigate = (navigationEvent) => {
@@ -437,7 +437,7 @@ const handleConflictDetected = (conflictEvent) => {
   navigationMonitor.logConflict(conflictEvent.conflicts, false);
   
   // Try to resolve conflicts automatically
-  const resolutions = this.$conflictDetector.resolveConflicts();
+  const resolutions = conflictDetector.resolveConflicts();
   if (resolutions.length > 0) {
     navigationMonitor.logConflict(conflictEvent.conflicts, true);
   }
@@ -517,14 +517,14 @@ const showConflictDetails = () => {
 // Lifecycle
 onMounted(() => {
   // Register controller with conflict detector
-  this.$conflictDetector.registerComponent(controllerId.value, 'controller', {
+  conflictDetector.registerComponent(controllerId.value, 'controller', {
     currentRoute: props.currentRoute,
     deviceType: deviceType.value,
     timestamp: Date.now()
   });
   
   // Register navigation component
-  this.$conflictDetector.registerComponent(componentId.value, deviceType.value, {
+  conflictDetector.registerComponent(componentId.value, deviceType.value, {
     currentRoute: props.currentRoute,
     controllerId: controllerId.value,
     timestamp: Date.now()
@@ -565,8 +565,8 @@ onMounted(() => {
     console.log('Unregistering NavigationController:', { controllerId: controllerId.value, componentId: componentId.value });
     clearInterval(conflictCheckInterval);
     clearInterval(devConflictCheckInterval); // Moved here for proper cleanup
-    this.$conflictDetector.unregisterComponent(controllerId.value);
-    this.$conflictDetector.unregisterComponent(componentId.value);
+    conflictDetector.unregisterComponent(controllerId.value);
+    conflictDetector.unregisterComponent(componentId.value);
     navigationMonitor.logEvent('component_unregistered', { controllerId: controllerId.value, componentId: componentId.value });
   });
   

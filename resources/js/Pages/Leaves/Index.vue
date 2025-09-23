@@ -20,9 +20,7 @@
               <!-- Search Field -->
               <div class="relative">
                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
+                  <MagnifyingGlassIcon class="h-5 w-5 text-gray-400" />
                 </div>
                 <input
                   v-model="localFilters.search"
@@ -38,9 +36,7 @@
                 @click="showFilters = !showFilters"
                 class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               >
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.707V4z" />
-                </svg>
+                <FunnelIcon class="w-4 h-4 mr-2" />
                 {{ showFilters ? 'Hide Filters' : 'Show Filters' }}
               </button>
             </div>
@@ -504,6 +500,15 @@
           </div>
         </div>
       </div>
+
+      <!-- Approval Modal -->
+      <ApprovalModal
+        :show="showApprovalModal"
+        :approval="currentLeave"
+        :action="approvalAction"
+        @close="closeApprovalModal"
+        @submit="handleApprovalSubmit"
+      />
     </PageLayout>
   </AuthenticatedLayout>
 </template>
@@ -514,7 +519,12 @@ import { Link, router } from '@inertiajs/vue3';
 import { debounce } from 'lodash';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import PageLayout from '@/Components/Layout/PageLayout.vue';
+import ApprovalModal from '@/Components/Dashboard/ApprovalModal.vue';
 import { useAuth } from '@/composables/useAuth.js';
+import { 
+  FunnelIcon,
+  MagnifyingGlassIcon 
+} from '@heroicons/vue/24/outline';
 
 const props = defineProps({
   leaves: {
@@ -547,6 +557,11 @@ const loading = ref(false);
 const leaveToDelete = ref(null);
 const activeDropdown = ref(null);
 const dropdownRefs = ref({});
+
+// Approval modal refs
+const showApprovalModal = ref(false);
+const currentLeave = ref(null);
+const approvalAction = ref('approve');
 const localFilters = ref({
   employee_id: props.queryParams.employee_id || '',
   status: props.queryParams.status || '',
@@ -758,15 +773,45 @@ const deleteLeave = () => {
 };
 
 const approve = (leaveId) => {
-  if (confirm('Are you sure you want to approve this leave request?')) {
-    router.post(route('leaves.approve', leaveId));
+  const leave = props.leaves.data.find(l => l.id === leaveId);
+  if (leave) {
+    currentLeave.value = leave;
+    approvalAction.value = 'approve';
+    showApprovalModal.value = true;
+    activeDropdown.value = null; // Close dropdown
   }
 };
 
 const reject = (leaveId) => {
-  if (confirm('Are you sure you want to reject this leave request?')) {
-    router.post(route('leaves.reject', leaveId));
+  const leave = props.leaves.data.find(l => l.id === leaveId);
+  if (leave) {
+    currentLeave.value = leave;
+    approvalAction.value = 'reject';
+    showApprovalModal.value = true;
+    activeDropdown.value = null; // Close dropdown
   }
+};
+
+// Handle approval modal submission
+const handleApprovalSubmit = (data) => {
+  const { approval, action, comments } = data;
+  
+  router.post(route(`leaves.${action}`, approval.id), {
+    comments: comments
+  }, {
+    onSuccess: () => {
+      showApprovalModal.value = false;
+      currentLeave.value = null;
+    },
+    onError: (errors) => {
+      console.error('Approval error:', errors);
+    }
+  });
+};
+
+const closeApprovalModal = () => {
+  showApprovalModal.value = false;
+  currentLeave.value = null;
 };
 
 // Dropdown functionality

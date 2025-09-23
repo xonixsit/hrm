@@ -122,6 +122,11 @@
               <svg v-else-if="item.icon === 'document-text'" class="w-5 h-5 max-w-5 max-h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 20px; height: 20px;">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
               </svg>
+              
+              <!-- Trophy Icon for Leaderboard -->
+              <svg v-else-if="item.icon === 'trophy'" class="w-5 h-5 max-w-5 max-h-5" fill="currentColor" viewBox="0 0 24 24" style="width: 20px; height: 20px;">
+                <path d="M5.166 2.621v.858c-1.035.148-2.059.33-3.071.543a.75.75 0 0 0-.584.859 6.753 6.753 0 0 0 6.138 5.6 6.73 6.73 0 0 0 2.743 1.346A6.707 6.707 0 0 1 9.279 15H8.54c-1.036 0-1.875.84-1.875 1.875V19.5h-.75a2.25 2.25 0 0 0-2.25 2.25c0 .414.336.75.75.75h9.284a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-2.25-2.25h-.75v-2.625c0-1.036-.84-1.875-1.875-1.875h-.739a6.706 6.706 0 0 1-1.112-3.173 6.73 6.73 0 0 0 2.743-1.347 6.753 6.753 0 0 0 6.139-5.6.75.75 0 0 0-.585-.858 47.077 47.077 0 0 0-3.07-.543V2.62a.75.75 0 0 0-.658-.744 49.22 49.22 0 0 0-6.093-.377c-2.063 0-4.096.128-6.093.377a.75.75 0 0 0-.657.744Z" />
+              </svg>
               <!-- Check Circle Icon for Pending Approvals -->
               <svg v-else-if="item.icon === 'check-circle'" class="w-5 h-5 max-w-5 max-h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 20px; height: 20px;">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -214,6 +219,7 @@ import { computed, ref, onMounted, onUnmounted } from 'vue';
 import { router } from '@inertiajs/vue3';
 import { useAuth } from '@/composables/useAuth.js';
 import { useTheme } from '@/composables/useTheme.js';
+import { conflictDetector } from '@/services/NavigationConflictDetector.js';
 
 
 const props = defineProps({
@@ -317,6 +323,13 @@ const navigationItems = computed(() => {
     route: 'work-reports.index',
   });
 
+  items.push({
+    id: 'leaderboard',
+    label: 'Performance Leaderboard',
+    icon: 'trophy',
+    route: 'work-reports.leaderboard',
+  });
+
   // items.push({
   //   id: 'reports',
   //   label: 'Reports & Analytics',
@@ -359,14 +372,18 @@ const toggleCollapse = () => {
 };
 
 const handleNavigate = (item) => {
+  console.log('Navigation clicked:', item);
   emit('navigate', { route: item.route, item });
   
   if (item.route) {
     try {
+      console.log('Attempting navigation to:', item.route);
       if (typeof window !== 'undefined' && window.route) {
         router.visit(window.route(item.route));
       } else {
-        router.visit(`/${item.route.replace('.', '/')}`);
+        const url = `/${item.route.replace('.', '/')}`;
+        console.log('Navigating to URL:', url);
+        router.visit(url);
       }
     } catch (error) {
       console.warn(`Navigation failed for route: ${item.route}`, error);
@@ -387,17 +404,19 @@ const handleLogout = () => {
   }
 };
 
+// Component ID for conflict detection
+const componentId = ref(`sidebar-${Math.random().toString(36).substr(2, 9)}`);
+
 // Initialize desktop-only sidebar
 onMounted(() => {
   // Initial desktop check
   checkDesktop();
   
   // DEBUG: Log component mounting with unique ID
-  const componentId = Math.random().toString(36).substr(2, 9);
-  console.log('[SidebarNavigation] Component mounted, isDesktop:', isDesktop.value, 'ID:', componentId);
+  console.log('[SidebarNavigation] Component mounted, isDesktop:', isDesktop.value, 'ID:', componentId.value);
   
   // Register component with conflict detector
-  this.$conflictDetector.registerComponent('desktop', componentId);
+  conflictDetector.registerComponent(componentId.value, 'desktop');
 
   // Add resize listener for desktop detection
   window.addEventListener('resize', checkDesktop);
@@ -418,7 +437,7 @@ onUnmounted(() => {
     window.removeEventListener('resize', checkDesktop);
   }
   // Unregister component from conflict detector
-  this.$conflictDetector.unregisterComponent('desktop');
+  conflictDetector.unregisterComponent(componentId.value);
 });
 </script>
 

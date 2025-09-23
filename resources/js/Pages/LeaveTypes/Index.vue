@@ -1,30 +1,11 @@
 <template>
   <AuthenticatedLayout>
-    <template #header>
-      <div class="flex justify-between items-center">
-        <div>
-          <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            Leave Policies
-          </h2>
-          <p class="text-sm text-gray-600 mt-1">
-            Manage leave types, quotas, and approval policies
-          </p>
-        </div>
-        <div class="flex space-x-3">
-          <button
-            v-if="canCreate"
-            @click="$inertia.visit(route('leave-types.create'))"
-            class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"
-          >
-            <PlusIcon class="w-4 h-4 mr-2" />
-            Add Leave Type
-          </button>
-        </div>
-      </div>
-    </template>
-
-    <div class="py-12">
-      <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+    <PageLayout
+      title="Leave Policies"
+      subtitle="Manage leave types, quotas, and approval policies"
+      :breadcrumbs="breadcrumbs"
+      :actions="headerActions"
+    >
         <!-- Stats Cards -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
@@ -188,8 +169,7 @@
             </div>
           </div>
         </div>
-      </div>
-    </div>
+    </PageLayout>
   </AuthenticatedLayout>
 </template>
 
@@ -198,6 +178,7 @@ import { computed } from 'vue'
 import { router } from '@inertiajs/vue3'
 import axios from 'axios'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
+import PageLayout from '@/Components/Layout/PageLayout.vue'
 import {
   PlusIcon,
   ClipboardDocumentListIcon,
@@ -221,6 +202,29 @@ const totalQuota = computed(() => {
 
 const totalLeaves = computed(() => {
   return props.leaveTypes.reduce((sum, type) => sum + type.leaves_count, 0)
+})
+
+// Breadcrumbs for consistent navigation
+const breadcrumbs = computed(() => [
+  { label: 'Dashboard', href: route('dashboard') },
+  { label: 'Leave Policies', current: true }
+])
+
+// Header actions for consistent layout
+const headerActions = computed(() => {
+  const actions = []
+  
+  if (props.canCreate) {
+    actions.push({
+      id: 'add-leave-type',
+      label: 'Add Leave Type',
+      icon: 'plus',
+      variant: 'primary',
+      handler: () => router.visit(route('leave-types.create'))
+    })
+  }
+  
+  return actions
 })
 
 const toggleStatus = async (leaveType) => {

@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Performance Dashboard Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold text-gray-900 mb-8">Work Reports Performance Dashboard</h1>
+        
+        <!-- Filter Controls -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                <!-- Primary Filters -->
+                <div class="flex flex-col sm:flex-row gap-4 flex-1">
+                    <!-- Date Range Selector -->
+                    <div class="flex items-center gap-3">
+                        <label class="text-sm font-medium text-gray-700 whitespace-nowrap">Date Range:</label>
+                        <div class="flex items-center gap-2">
+                            <input
+                                type="date"
+                                value="2024-01-01"
+                                class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            />
+                            <span class="text-gray-400">to</span>
+                            <input
+                                type="date"
+                                value="2024-01-31"
+                                class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            />
+                        </div>
+                    </div>
+
+                    <!-- Employee Selector -->
+                    <div class="flex items-center gap-3">
+                        <label class="text-sm font-medium text-gray-700 whitespace-nowrap">Employee:</label>
+                        <select class="min-w-48 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option>All employees</option>
+                            <option>John Doe (EMP001)</option>
+                            <option>Jane Smith (EMP002)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Quick Date Presets -->
+                <div class="flex items-center gap-2">
+                    <span class="text-sm text-gray-500">Quick:</span>
+                    <button class="px-3 py-1.5 text-xs font-medium rounded-md border border-gray-300 hover:bg-gray-50 text-gray-700">Today</button>
+                    <button class="px-3 py-1.5 text-xs font-medium rounded-md border border-blue-300 bg-blue-50 text-blue-700">This Week</button>
+                    <button class="px-3 py-1.5 text-xs font-medium rounded-md border border-gray-300 hover:bg-gray-50 text-gray-700">This Month</button>
+                    <button class="px-3 py-1.5 text-xs font-medium rounded-md border border-gray-300 hover:bg-gray-50 text-gray-700">3 Months</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Performance Overview Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+            <!-- Total Calls Card -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Total Calls</p>
+                        <p class="text-3xl font-bold text-gray-900">1,247</p>
+                        <p class="text-sm text-gray-500 mt-1">
+                            <span class="text-green-600">+12.5%</span>
+                            vs previous period
+                        </p>
+                    </div>
+                    <div class="p-3 bg-blue-50 rounded-lg">
+                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Success Rate Card -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Success Rate</p>
+                        <p class="text-3xl font-bold text-gray-900">78.3%</p>
+                        <p class="text-sm text-gray-500 mt-1">976 successful calls</p>
+                    </div>
+                    <div class="p-3 bg-green-50 rounded-lg">
+                        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Communication Channels Card -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Total Communications</p>
+                        <p class="text-3xl font-bold text-gray-900">2,156</p>
+                        <p class="text-sm text-gray-500 mt-1">Calls, emails, messages</p>
+                    </div>
+                    <div class="p-3 bg-purple-50 rounded-lg">
+                        <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Average Daily Performance Card -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Daily Average</p>
+                        <p class="text-3xl font-bold text-gray-900">40.2</p>
+                        <p class="text-sm text-gray-500 mt-1">Calls per day</p>
+                    </div>
+                    <div class="p-3 bg-orange-50 rounded-lg">
+                        <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Performance Charts -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <!-- Call Performance Chart -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900">Call Performance Breakdown</h3>
+                    <div class="text-sm text-gray-500">Jan 1 - Jan 31, 2024</div>
+                </div>
+                
+                <div class="space-y-4">
+                    <!-- Successful Calls -->
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <div class="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
+                            <span class="text-sm font-medium text-gray-700">Successful</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="text-sm font-semibold text-gray-900 mr-2">976</span>
+                            <div class="w-24 bg-gray-200 rounded-full h-2">
+                                <div class="bg-green-500 h-2 rounded-full" style="width: 78%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Not Received -->
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <div class="w-3 h-3 bg-yellow-500 rounded-full mr-3"></div>
+                            <span class="text-sm font-medium text-gray-700">Not Received</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="text-sm font-semibold text-gray-900 mr-2">156</span>
+                            <div class="w-24 bg-gray-200 rounded-full h-2">
+                                <div class="bg-yellow-500 h-2 rounded-full" style="width: 12%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Disconnected -->
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <div class="w-3 h-3 bg-red-500 rounded-full mr-3"></div>
+                            <span class="text-sm font-medium text-gray-700">Disconnected</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="text-sm font-semibold text-gray-900 mr-2">89</span>
+                            <div class="w-24 bg-gray-200 rounded-full h-2">
+                                <div class="bg-red-500 h-2 rounded-full" style="width: 7%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Follow-up -->
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <div class="w-3 h-3 bg-blue-500 rounded-full mr-3"></div>
+                            <span class="text-sm font-medium text-gray-700">Follow-up</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="text-sm font-semibold text-gray-900 mr-2">26</span>
+                            <div class="w-24 bg-gray-200 rounded-full h-2">
+                                <div class="bg-blue-500 h-2 rounded-full" style="width: 3%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Communication Channels Chart -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900">Communication Channels</h3>
+                    <div class="text-sm text-gray-500">Jan 1 - Jan 31, 2024</div>
+                </div>
+                
+                <div class="space-y-4">
+                    <!-- Calls -->
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <div class="w-3 h-3 bg-blue-500 rounded-full mr-3"></div>
+                            <span class="text-sm font-medium text-gray-700">Phone Calls</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="text-sm font-semibold text-gray-900 mr-2">1,247</span>
+                            <div class="w-24 bg-gray-200 rounded-full h-2">
+                                <div class="bg-blue-500 h-2 rounded-full" style="width: 58%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Emails -->
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <div class="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
+                            <span class="text-sm font-medium text-gray-700">Emails</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="text-sm font-semibold text-gray-900 mr-2">542</span>
+                            <div class="w-24 bg-gray-200 rounded-full h-2">
+                                <div class="bg-green-500 h-2 rounded-full" style="width: 25%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- WhatsApp -->
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <div class="w-3 h-3 bg-green-600 rounded-full mr-3"></div>
+                            <span class="text-sm font-medium text-gray-700">WhatsApp</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="text-sm font-semibold text-gray-900 mr-2">289</span>
+                            <div class="w-24 bg-gray-200 rounded-full h-2">
+                                <div class="bg-green-600 h-2 rounded-full" style="width: 13%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SMS -->
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <div class="w-3 h-3 bg-purple-500 rounded-full mr-3"></div>
+                            <span class="text-sm font-medium text-gray-700">SMS</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="text-sm font-semibold text-gray-900 mr-2">78</span>
+                            <div class="w-24 bg-gray-200 rounded-full h-2">
+                                <div class="bg-purple-500 h-2 rounded-full" style="width: 4%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Reports Table -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-semibold text-gray-900">Recent Reports</h3>
+                    <button class="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                        Show Details
+                    </button>
+                </div>
+            </div>
+
+            <div class="divide-y divide-gray-200">
+                <!-- Sample Report 1 -->
+                <div class="p-6 hover:bg-gray-50 transition-colors">
+                    <div class="flex items-center justify-between">
+                        <div class="flex-1">
+                            <div class="flex items-center justify-between mb-2">
+                                <h4 class="text-sm font-medium text-gray-900">
+                                    January 31, 2024
+                                    <span class="text-gray-500">- John Doe</span>
+                                </h4>
+                                <div class="flex items-center space-x-4 text-sm text-gray-500">
+                                    <span>45 calls</span>
+                                    <span>82% success</span>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center space-x-6 text-sm text-gray-600">
+                                <span class="flex items-center">
+                                    <svg class="w-4 h-4 mr-1 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                                    </svg>
+                                    37 successful
+                                </span>
+                                <span class="flex items-center">
+                                    <svg class="w-4 h-4 mr-1 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                                        <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+                                    </svg>
+                                    23 emails
+                                </span>
+                                <span class="flex items-center">
+                                    <svg class="w-4 h-4 mr-1 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd" />
+                                    </svg>
+                                    15 messages
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="ml-4 flex items-center space-x-2">
+                            <button class="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50">
+                                View
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sample Report 2 -->
+                <div class="p-6 hover:bg-gray-50 transition-colors">
+                    <div class="flex items-center justify-between">
+                        <div class="flex-1">
+                            <div class="flex items-center justify-between mb-2">
+                                <h4 class="text-sm font-medium text-gray-900">
+                                    January 30, 2024
+                                    <span class="text-gray-500">- Jane Smith</span>
+                                </h4>
+                                <div class="flex items-center space-x-4 text-sm text-gray-500">
+                                    <span>38 calls</span>
+                                    <span>76% success</span>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center space-x-6 text-sm text-gray-600">
+                                <span class="flex items-center">
+                                    <svg class="w-4 h-4 mr-1 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                                    </svg>
+                                    29 successful
+                                </span>
+                                <span class="flex items-center">
+                                    <svg class="w-4 h-4 mr-1 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                                        <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+                                    </svg>
+                                    18 emails
+                                </span>
+                                <span class="flex items-center">
+                                    <svg class="w-4 h-4 mr-1 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd" />
+                                    </svg>
+                                    12 messages
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="ml-4 flex items-center space-x-2">
+                            <button class="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50">
+                                View
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

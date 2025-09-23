@@ -4,25 +4,31 @@
     <div class="flex items-center justify-center min-h-screen px-4 py-6">
       <div class="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-xl" @click.stop>
         <h3 class="text-lg font-medium text-gray-900 mb-4">
-          {{ action === 'approve' ? 'Approve' : 'Reject' }} Timesheet
+          {{ action === 'approve' ? 'Approve' : 'Reject' }} {{ approval?.leave_type ? 'Leave Request' : 'Timesheet' }}
         </h3>
         
         <div class="space-y-4">
-          <!-- Debug info - remove after testing -->
-          <div v-if="approval" class="bg-red-50 p-2 rounded text-xs">
-            <strong>DEBUG:</strong> {{ JSON.stringify(approval, null, 2) }}
-          </div>
-          
           <div class="bg-gray-50 p-4 rounded-lg">
             <div class="text-sm">
               <div class="font-medium text-gray-900">{{ approval?.employee?.user?.name || approval?.requester || 'Unknown User' }}</div>
-              <div class="text-gray-600">{{ formatDate(approval?.date || approval?.created_at) }}{{ approval?.hours ? ` - ${approval.hours}h` : (approval?.stats?.total_hours ? ` - ${approval.stats.total_hours}` : '') }}</div>
-              <div class="text-gray-600">{{ approval?.project?.name || approval?.title || 'No project' }}</div>
+              
+              <!-- For Leave Requests -->
+              <div v-if="approval?.leave_type" class="text-gray-600">
+                <div>{{ approval.leave_type.name }}</div>
+                <div>{{ formatDate(approval.from_date) }} - {{ formatDate(approval.to_date) }}</div>
+                <div v-if="approval.reason">{{ approval.reason }}</div>
+              </div>
+              
+              <!-- For Timesheets -->
+              <div v-else class="text-gray-600">
+                <div>{{ formatDate(approval?.date || approval?.created_at) }}{{ approval?.hours ? ` - ${approval.hours}h` : (approval?.stats?.total_hours ? ` - ${approval.stats.total_hours}` : '') }}</div>
+                <div>{{ approval?.project?.name || approval?.title || 'No project' }}</div>
+              </div>
             </div>
           </div>
 
-          <!-- Work Report Context -->
-          <div v-if="approval?.work_report" class="bg-blue-50 p-4 rounded-lg">
+          <!-- Work Report Context (only for timesheets) -->
+          <div v-if="approval?.work_report && !approval?.leave_type" class="bg-blue-50 p-4 rounded-lg">
             <h4 class="text-sm font-medium text-blue-900 mb-2">Work Report Context</h4>
             <div class="grid grid-cols-3 gap-4 text-xs">
               <div>
@@ -37,8 +43,8 @@
             </div>
           </div>
 
-          <!-- Discrepancy Warning -->
-          <div v-if="approval?.has_discrepancy" class="bg-yellow-50 border border-yellow-200 p-4 rounded-lg">
+          <!-- Discrepancy Warning (only for timesheets) -->
+          <div v-if="approval?.has_discrepancy && !approval?.leave_type" class="bg-yellow-50 border border-yellow-200 p-4 rounded-lg">
             <div class="flex items-start">
               <svg class="w-5 h-5 text-yellow-400 mt-0.5 mr-2" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />

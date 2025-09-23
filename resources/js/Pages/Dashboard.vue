@@ -222,106 +222,20 @@
 
       <!-- Employee Dashboard Layout -->
       <div v-else class="employee-layout">
-        <!-- Personal Productivity Focus -->
-        <div class="productivity-section">
-          <!-- Time Tracking - Most Important for Employees -->
-          <div class="time-tracking-hero">
-            <TimeTrackingWidget
-              :current-attendance="currentAttendance"
-              :clocked-in="clockedIn"
-              :loading="loading"
-              @clock-in-out="handleClockInOut"
-              @take-break="() => handleAction({ type: 'take-break' })"
-              @end-break="() => handleAction({ type: 'end-break' })"
-              variant="hero"
-            />
-          </div>
-
-          <!-- Personal Stats -->
-          <div class="personal-stats-grid">
-            <StatsCard
-              :value="employeeStats.hoursToday"
-              label="Hours Today"
-              icon="clock"
-              variant="primary"
-              :loading="loading"
-              size="medium"
-              :clickable="true"
-              route="attendances.index"
-            />
-            <StatsCard
-              :value="employeeStats.pendingLeaves"
-              label="Pending Leaves"
-              icon="calendar"
-              variant="warning"
-              :loading="loading"
-              size="medium"
-              :clickable="true"
-              route="leaves.index"
-            />
-            <StatsCard
-              :value="employeeStats.tasksCompleted"
-              label="Tasks Completed"
-              icon="check-circle"
-              variant="success"
-              :trend="employeeStats.taskTrend"
-              :loading="loading"
-              size="medium"
-              :clickable="true"
-              route="tasks.index"
-            />
-            <StatsCard
-              :value="employeeStats.leaveBalance"
-              label="Leave Balance"
-              icon="calendar-days"
-              variant="info"
-              suffix=" days"
-              :loading="loading"
-              size="medium"
-              :clickable="true"
-              route="leaves.index"
-            />
-          </div>
-        </div>
-
-        <!-- Personal Workspace -->
-        <div class="workspace-section">
-          <div class="content-grid-employee">
-            <!-- Today's Schedule - Immediate Actions -->
-            <div class="schedule-card priority-high">
-              <TodaysScheduleWidget
-                :schedule="todaysSchedule"
-                :loading="loading"
-              />
-            </div>
-
-            <!-- My Tasks - Action Items -->
-            <div class="tasks-card priority-high">
-              <MyTasksWidget
-                :tasks="myTasks"
-                :loading="loading"
-                @toggle-task="handleToggleTask"
-                @view-task="handleViewTask"
-              />
-            </div>
-
-            <!-- Recent Feedback - Growth -->
-            <div class="feedback-card priority-medium">
-              <RecentFeedbackWidget
-                :feedback="recentFeedback"
-                :loading="loading"
-              />
-            </div>
-
-            <!-- Personal Activities -->
-            <div class="activities-card priority-low">
-              <PersonalActivitiesWidget
-                :activities="personalActivities"
-                :loading="loading"
-              />
-            </div>
-          </div>
-        </div>
+        <EmployeeDashboard
+          :stats="employeeStats"
+          :personal-activities="personalActivities"
+          :todays-schedule="todaysSchedule"
+          :my-tasks="myTasks"
+          :recent-feedback="recentFeedback"
+          :clocked-in="clockedIn"
+          :current-attendance="currentAttendance"
+          :loading="loading"
+          @clock-in-out="handleClockInOut"
+          @action="handleAction"
+          @toggle-task="handleToggleTask"
+          @view-task="handleViewTask"
+        />
       </div>
     </div>
 
@@ -388,6 +302,15 @@
       </div>
     </div>
 
+    <!-- Approval Modal -->
+    <ApprovalModal
+      :show="showApprovalModal"
+      :approval="selectedApproval"
+      :action="approvalAction"
+      @close="closeApprovalModal"
+      @submit="handleApprovalSubmit"
+    />
+
     <!-- Floating Notifications -->
     <div v-if="notifications.length > 0" class="notification-overlay">
       <div class="notification-center">
@@ -427,6 +350,7 @@ import ContentSection from '@/Components/Layout/ContentSection.vue';
 import AdminDashboard from '@/Components/Dashboard/AdminDashboard.vue';
 import ManagerDashboard from '@/Components/Dashboard/ManagerDashboard.vue';
 import EmployeeDashboard from '@/Components/Dashboard/EmployeeDashboard.vue';
+import ApprovalModal from '@/Components/Dashboard/ApprovalModal.vue';
 
 // Widget Components (these would need to be created)
 import StatsCard from '@/Components/Dashboard/StatsCard.vue';
@@ -563,6 +487,11 @@ const notifications = ref([]);
 const showRejectionModal = ref(false);
 const rejectionItem = ref(null);
 const rejectionReason = ref('');
+
+// Approval modal state
+const showApprovalModal = ref(false);
+const selectedApproval = ref(null);
+const approvalAction = ref('approve');
 
 // Role detection computed properties
 const isAdmin = computed(() => hasRole('Admin'));
@@ -742,87 +671,24 @@ const getNotificationClasses = (type) => {
   return `${baseClasses} ${typeClasses[type] || typeClasses.info}`;
 };
 
-const handleApproval = async (approval) => {
-  try {
-    console.log('🎯 Approving approval item:', approval);
-    console.log('📋 Approval type:', approval.type);
-    console.log('🆔 Approval ID:', approval.id);
-    
-    // Show loading state
-    showNotification('Processing approval...', 'info');
-    
-    let response;
-    let endpoint;
-    
-    // Handle different approval types
-    const requestConfig = {
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-        'X-Requested-With': 'XMLHttpRequest'
-      }
-    };
-    
-    if (approval.type === 'timesheet') {
-      endpoint = `/timesheets/${approval.id}/approve`;
-      response = await axios.post(endpoint, {
-        comments: 'Approved from dashboard'
-      }, requestConfig);
-    } else if (approval.type === 'leave' || approval.type === 'Leave Request') {
-      endpoint = `/leaves/${approval.id}/approve`;
-      response = await axios.post(endpoint, {
-        comments: 'Approved from dashboard'
-      }, requestConfig);
-    } else {
-      // Generic approval endpoint - adjust as needed
-      endpoint = `/${approval.type}s/${approval.id}/approve`;
-      response = await axios.post(endpoint, {
-        comments: 'Approved from dashboard'
-      }, requestConfig);
-    }
-    
-    console.log('📡 Making request to:', endpoint);
-    console.log('✅ Response received:', response.data);
-    
-    if (response.data.success) {
-      const itemType = approval.type === 'Leave Request' ? 'Leave request' : approval.type;
-      console.log(`${itemType} approved successfully`);
-      showNotification(`✅ ${itemType} approved successfully!`, 'success');
-      
-      // Refresh dashboard data
-      router.reload({
-        only: ['pendingApprovals', 'adminStats', 'managerStats'],
-        preserveScroll: true
-      });
-    } else {
-      console.warn('⚠️ Approval succeeded but response indicates failure:', response.data);
-      showNotification('⚠️ Approval may not have been processed correctly', 'warning');
-    }
-    
-  } catch (error) {
-    console.error('❌ Error approving item:', error);
-    console.error('📄 Error response:', error.response?.data);
-    console.error('🔢 Error status:', error.response?.status);
-    
-    let errorMessage = 'Failed to approve item. Please try again.';
-    
-    if (error.response?.status === 403) {
-      errorMessage = 'You are not authorized to approve this request. Please contact your administrator.';
-    } else if (error.response?.data?.message) {
-      errorMessage = error.response.data.message;
-    }
-    
-    showNotification('❌ ' + errorMessage, 'error');
-  }
+const handleApproval = (approval) => {
+  console.log('🎯 Opening approval modal for:', approval);
+  console.log('🎯 Modal state before:', showApprovalModal.value);
+  selectedApproval.value = approval;
+  approvalAction.value = 'approve';
+  showApprovalModal.value = true;
+  console.log('🎯 Modal state after:', showApprovalModal.value);
+  console.log('🎯 Selected approval:', selectedApproval.value);
 };
 
-const handleRejection = async (approval) => {
-  console.log('🚫 Initiating rejection for:', approval);
-  
-  // Store the approval item and show modal
-  rejectionItem.value = approval;
-  rejectionReason.value = '';
-  showRejectionModal.value = true;
+const handleRejection = (approval) => {
+  console.log('🚫 Opening rejection modal for:', approval);
+  console.log('🚫 Modal state before:', showApprovalModal.value);
+  selectedApproval.value = approval;
+  approvalAction.value = 'reject';
+  showApprovalModal.value = true;
+  console.log('🚫 Modal state after:', showApprovalModal.value);
+  console.log('🚫 Selected approval:', selectedApproval.value);
 };
 
 const confirmRejection = async () => {
@@ -882,11 +748,13 @@ const confirmRejection = async () => {
       console.log(`${itemType} rejected successfully`);
       showNotification(`✅ ${itemType} rejected successfully!`, 'success');
       
-      // Refresh dashboard data
-      router.reload({
-        only: ['pendingApprovals', 'adminStats', 'managerStats'],
-        preserveScroll: true
-      });
+      // Refresh dashboard data with a small delay to avoid Inertia conflicts
+      setTimeout(() => {
+        router.reload({
+          only: ['pendingApprovals', 'adminStats', 'managerStats'],
+          preserveScroll: true
+        });
+      }, 100);
     } else {
       console.warn('⚠️ Rejection succeeded but response indicates failure:', response.data);
       showNotification('⚠️ Rejection may not have been processed correctly', 'warning');
@@ -915,41 +783,157 @@ const cancelRejection = () => {
   rejectionReason.value = '';
 };
 
+// Approval modal handlers
+const closeApprovalModal = () => {
+  showApprovalModal.value = false;
+  selectedApproval.value = null;
+  approvalAction.value = 'approve';
+};
+
+const handleApprovalSubmit = async (data) => {
+  const { approval, action, comments } = data;
+  
+  try {
+    console.log(`🎯 ${action === 'approve' ? 'Approving' : 'Rejecting'} approval item:`, approval);
+    console.log('📋 Approval type:', approval.type);
+    console.log('🆔 Approval ID:', approval.id);
+    console.log('💬 Comments:', comments);
+    
+    // Close modal first
+    closeApprovalModal();
+    
+    // Show loading state
+    showNotification(`Processing ${action}...`, 'info');
+    
+    let response;
+    let endpoint;
+    
+    // Handle different approval types
+    const requestConfig = {
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    };
+    
+    if (approval.type === 'timesheet') {
+      endpoint = `/timesheets/${approval.id}/${action}`;
+      response = await axios.post(endpoint, {
+        comments: comments || `${action === 'approve' ? 'Approved' : 'Rejected'} from dashboard`
+      }, requestConfig);
+    } else if (approval.type === 'leave' || approval.type === 'Leave Request') {
+      endpoint = `/leaves/${approval.id}/${action}`;
+      response = await axios.post(endpoint, {
+        comments: comments || `${action === 'approve' ? 'Approved' : 'Rejected'} from dashboard`
+      }, requestConfig);
+    } else {
+      // Generic approval endpoint - adjust as needed
+      endpoint = `/${approval.type}s/${approval.id}/${action}`;
+      response = await axios.post(endpoint, {
+        comments: comments || `${action === 'approve' ? 'Approved' : 'Rejected'} from dashboard`
+      }, requestConfig);
+    }
+    
+    console.log('📡 Making request to:', endpoint);
+    console.log('✅ Response received:', response.data);
+    
+    if (response.data.success) {
+      const itemType = approval.type === 'Leave Request' ? 'Leave request' : approval.type;
+      const actionText = action === 'approve' ? 'approved' : 'rejected';
+      console.log(`${itemType} ${actionText} successfully`);
+      showNotification(`✅ ${itemType} ${actionText} successfully!`, 'success');
+      
+      // Refresh dashboard data with a small delay to avoid Inertia conflicts
+      setTimeout(() => {
+        router.reload({
+          only: ['pendingApprovals', 'adminStats', 'managerStats'],
+          preserveScroll: true
+        });
+      }, 100);
+    } else {
+      console.warn(`⚠️ ${action} succeeded but response indicates failure:`, response.data);
+      showNotification(`⚠️ ${action} may not have been processed correctly`, 'warning');
+    }
+    
+  } catch (error) {
+    console.error(`❌ Error ${action}ing item:`, error);
+    console.error('📄 Error response:', error.response?.data);
+    console.error('🔢 Error status:', error.response?.status);
+    
+    let errorMessage = `Failed to ${action} item. Please try again.`;
+    
+    if (error.response?.status === 403) {
+      errorMessage = `You are not authorized to ${action} this request. Please contact your administrator.`;
+    } else if (error.response?.data?.message) {
+      errorMessage = error.response.data.message;
+    }
+    
+    showNotification('❌ ' + errorMessage, 'error');
+  }
+};
+
 const handleAction = async (actionData) => {
   console.log('Dashboard action:', actionData);
+  loading.value = true;
   
-  // Handle different types of actions
-  switch (actionData.type) {
-    case 'take-break':
-      await handleTakeBreak();
-      break;
-    case 'end-break':
-      await handleEndBreak();
-      break;
-    case 'timeline':
-      // Handle timeline actions
-      break;
-    case 'quick-action':
-      // Handle quick actions - navigation is handled by the component
-      break;
-    case 'view-approvals':
-      // Navigate to approvals page
-      break;
-    case 'view-reports':
-      // Navigate to reports page
-      break;
-    case 'view-calendar':
-      // Navigate to calendar page
-      break;
-    case 'view-all-tasks':
-      // Navigate to tasks page
-      break;
-    case 'view-all-approvals':
-      // Navigate to approvals page
-      router.visit(route('timesheets.pending-approvals'));
-      break;
-    default:
-      console.log('Unhandled action type:', actionData.type);
+  try {
+    // Handle different types of actions
+    switch (actionData.type) {
+      case 'take-break':
+        console.log('Taking break...');
+        const breakResponse = await axios.post('/api/attendance/break-start');
+        if (breakResponse.data.success) {
+          console.log('Break started successfully');
+          showNotification('Break started successfully!', 'success');
+          
+          // Reload dashboard data
+          router.reload({
+            only: ['currentAttendance', 'clockedIn', 'employeeStats'],
+            preserveScroll: true
+          });
+        }
+        break;
+        
+      case 'end-break':
+        console.log('Ending break...');
+        const endBreakResponse = await axios.post('/api/attendance/break-end');
+        if (endBreakResponse.data.success) {
+          console.log('Break ended successfully');
+          showNotification('Break ended successfully!', 'success');
+          
+          // Reload dashboard data
+          router.reload({
+            only: ['currentAttendance', 'clockedIn', 'employeeStats'],
+            preserveScroll: true
+          });
+        }
+        break;
+        
+      case 'quick-action':
+        if (actionData.data?.route) {
+          router.visit(route(actionData.data.route));
+        }
+        break;
+        
+      case 'view-calendar':
+        // Navigate to calendar view
+        console.log('Navigate to calendar');
+        break;
+        
+      case 'view-all-approvals':
+        // Navigate to approvals page
+        router.visit(route('timesheets.pending-approvals'));
+        break;
+        
+      default:
+        console.log('Unhandled action type:', actionData.type);
+    }
+  } catch (error) {
+    console.error('Error handling action:', error);
+    showNotification('Action failed. Please try again.', 'error');
+  } finally {
+    loading.value = false;
   }
 };
 
