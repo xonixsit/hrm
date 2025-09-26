@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Log;
 use App\Traits\AuditLogTrait;
+use App\Notifications\WelcomeEmployeeNotification;
 
 class EmployeeController extends Controller
 {
@@ -153,6 +154,9 @@ class EmployeeController extends Controller
             'contract_type' => $validated['contract_type'],
             // Add other fields
         ]);
+
+        // Send welcome email to the employee
+        $user->notify(new WelcomeEmployeeNotification($employee));
 
         $this->logAudit('Employee Created', 'Created employee: ' . $employee->employee_code);
         return redirect()->route('employees.index')->with('success', 'Employee created successfully.');
