@@ -48,6 +48,7 @@ class WelcomeEmployeeNotification extends Notification implements ShouldQueue
             ->line('Join Date: ' . $this->employee->join_date->format('F j, Y'))
             ->action('Login to Your Account', route('login'))
             ->line('If you have any questions, please contact your manager or the HR department.')
-            ->line('We look forward to working with you!');
+            ->line('We look forward to working with you!')
+            ->salutation('Regards,\nE-Tax Planner');
     }
 }

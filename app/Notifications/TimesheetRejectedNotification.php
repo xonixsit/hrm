@@ -46,7 +46,8 @@ class TimesheetRejectedNotification extends Notification implements ShouldQueue
             ->line('Reason: ' . ($this->timesheet->approval_comments ?? 'No reason provided'))
             ->line('Please review the feedback and resubmit your timesheet if necessary.')
             ->action('View Timesheet', route('timesheets.show', $this->timesheet->id))
-            ->line('If you have any questions, please contact your manager.');
+            ->line('If you have any questions, please contact your manager.')
+            ->salutation('Regards,\nE-Tax Planner');
     }
 
     /**

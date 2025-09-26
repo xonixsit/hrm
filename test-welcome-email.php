@@ -22,10 +22,11 @@ try {
         exit(1);
     }
     
-    // Create a test user
+    // Create a test user with a unique email
+    $uniqueEmail = 'test_' . time() . '@example.com';
     $user = User::create([
         'name' => 'Test User',
-        'email' => 'test.welcome@example.com',
+        'email' => $uniqueEmail,
         'password' => Hash::make('password123'),
     ]);
     

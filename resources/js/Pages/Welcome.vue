@@ -18,6 +18,8 @@ defineProps({
     },
 });
 
+const appName = 'E-Tax Planner';
+
 function handleImageError() {
     document.getElementById('screenshot-container')?.classList.add('!hidden');
     document.getElementById('docs-card')?.classList.add('!row-span-1');
@@ -144,11 +146,11 @@ function handleImageError() {
                                         </h2>
 
                                         <p class="mt-4 text-sm/relaxed">
-                                            Laravel has wonderful documentation
+                                            {{ appName }} has wonderful documentation
                                             covering every aspect of the
-                                            framework. Whether you are a
+                                            system. Whether you are a
                                             newcomer or have prior experience
-                                            with Laravel, we recommend reading
+                                            with {{ appName }}, we recommend reading
                                             our documentation from beginning to
                                             end.
                                         </p>
@@ -378,7 +380,7 @@ function handleImageError() {
                 <footer
                     class="py-16 text-center text-sm text-black dark:text-white/70"
                 >
-                    Laravel v{{ laravelVersion }} (PHP v{{ phpVersion }})
+                    {{ appName }} v{{ laravelVersion }} (PHP v{{ phpVersion }})
                 </footer>
             </div>
         </div>

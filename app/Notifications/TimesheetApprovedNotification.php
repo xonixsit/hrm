@@ -47,7 +47,8 @@ class TimesheetApprovedNotification extends Notification implements ShouldQueue
                 return $mail->line('Comments: ' . $this->timesheet->approval_comments);
             })
             ->action('View Timesheet', route('timesheets.show', $this->timesheet->id))
-            ->line('Thank you for your hard work!');
+            ->line('Thank you for your hard work!')
+            ->salutation('Regards,\nE-Tax Planner');
     }
 
     /**
