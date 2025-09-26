@@ -106,7 +106,7 @@ const isSignupFormValid = computed(() => {
 
 <template>
     <div class="min-h-screen flex">
-        <Head title="Sign In" />
+        <Head title="HR Management - Sign In" />
         
         <!-- Left Side - Branding/Hero Section -->
         <div class="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary-600 via-primary-700 to-secondary-600 relative overflow-hidden">
@@ -122,16 +122,16 @@ const isSignupFormValid = computed(() => {
             <!-- Content -->
             <div class="relative z-10 flex flex-col justify-center items-start px-16 py-12 text-white">
                 <div class="mb-8">
-                    <ApplicationLogo class="h-16 w-16 text-white fill-current" />
+                    <ApplicationLogo class="h-auto w-64 text-white" />
                 </div>
                 
                 <h1 class="text-5xl font-bold mb-6 leading-tight">
-                    Welcome back to your
-                    <span class="text-accent-300">workspace</span>
+                    Welcome to
+                    <span class="text-accent-300">HR Management</span>
                 </h1>
                 
                 <p class="text-xl text-white/80 mb-8 leading-relaxed max-w-md">
-                    Sign in to access your dashboard, manage projects, and collaborate with your team.
+                    Sign in to access your HR dashboard, manage employee records, and streamline internal workflows.
                 </p>
                 
                 <!-- Feature highlights -->
@@ -140,19 +140,19 @@ const isSignupFormValid = computed(() => {
                         <div class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
                             <Icon name="check" class="w-4 h-4" />
                         </div>
-                        <span class="text-white/90">Secure authentication</span>
+                        <span class="text-white/90">Employee attendance tracking</span>
                     </div>
                     <div class="flex items-center space-x-3">
                         <div class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
                             <Icon name="shield-check" class="w-4 h-4" />
                         </div>
-                        <span class="text-white/90">Role-based access control</span>
+                        <span class="text-white/90">Leave management system</span>
                     </div>
                     <div class="flex items-center space-x-3">
                         <div class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
                             <Icon name="users" class="w-4 h-4" />
                         </div>
-                        <span class="text-white/90">Team collaboration tools</span>
+                        <span class="text-white/90">Department collaboration tools</span>
                     </div>
                 </div>
             </div>
@@ -163,13 +163,13 @@ const isSignupFormValid = computed(() => {
             <div class="mx-auto w-full max-w-md">
                 <!-- Mobile Logo -->
                 <div class="lg:hidden flex justify-center mb-8">
-                    <ApplicationLogo class="h-12 w-12 text-primary-600 fill-current" />
+                    <ApplicationLogo class="h-auto w-48 text-primary-600" />
                 </div>
                 
                 <!-- Header -->
                 <div class="text-center mb-8">
                     <h2 class="text-3xl font-bold text-neutral-900 mb-2">
-                        {{ isSignup ? 'Create your account' : 'Sign in to your account' }}
+                        {{ isSignup ? 'Create your HR Management account' : 'Sign in to HR Management' }}
                     </h2>
                     <p class="text-neutral-600">
                         {{ isSignup ? 'Already have an account?' : "Don't have an account?" }}
