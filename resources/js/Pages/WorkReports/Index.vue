@@ -732,6 +732,12 @@ const props = defineProps({
   }
 });
 
+// Define breadcrumbs for the page
+const breadcrumbs = computed(() => [
+  { label: 'Dashboard', href: route('dashboard') },
+  { label: 'Work Reports', href: route('work-reports.index'), current: true }
+]);
+
 const { hasAnyRole, hasRole, roles, user, isAuthenticated } = useAuth();
 const loading = ref(false);
 const showFilters = ref(false);
@@ -1223,10 +1229,7 @@ onMounted(() => {
   }
 });
 
-const breadcrumbs = computed(() => [
-  { label: 'Dashboard', href: '/dashboard' },
-  { label: 'Performance Analytics', current: true }
-]);
+// Breadcrumbs are already defined above
 
 const headerActions = computed(() => {
   if (!canCreate.value) return [];

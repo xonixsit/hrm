@@ -32,7 +32,7 @@ class WelcomeEmailTest extends TestCase
             'join_date' => now()->format('Y-m-d'),
             'contract_type' => 'Full-time',
         ]);
-        
+
         // Assert
         $user = User::where('email', 'test.employee@example.com')->first();
         $this->assertNotNull($user);

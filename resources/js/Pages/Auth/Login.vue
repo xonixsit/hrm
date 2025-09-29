@@ -122,13 +122,14 @@ const isSignupFormValid = computed(() => {
             <!-- Content -->
             <div class="relative z-10 flex flex-col justify-center items-start px-16 py-12 text-white">
                 <div class="mb-8">
-                    <ApplicationLogo class="h-auto w-64 text-white" />
+                    <ApplicationLogo class="h-auto w-72 text-white filter drop-shadow(0 0 8px rgba(255, 255, 255, 0.5))" />
                 </div>
                 
                 <h1 class="text-5xl font-bold mb-6 leading-tight">
                     Welcome to
                     <span class="text-accent-300">HR Management</span>
                 </h1>
+                
                 
                 <p class="text-xl text-white/80 mb-8 leading-relaxed max-w-md">
                     Sign in to access your HR dashboard, manage employee records, and streamline internal workflows.
@@ -162,14 +163,14 @@ const isSignupFormValid = computed(() => {
         <div class="flex-1 flex flex-col justify-center px-6 py-12 lg:px-16 bg-neutral-50">
             <div class="mx-auto w-full max-w-md">
                 <!-- Mobile Logo -->
-                <div class="lg:hidden flex justify-center mb-8">
-                    <ApplicationLogo class="h-auto w-48 text-primary-600" />
+                <div class="flex justify-center mb-8">
+                    <ApplicationLogo class="h-auto w-56 text-primary-600 filter drop-shadow(0 0 2px rgba(0, 0, 0, 0.05))" />
                 </div>
                 
                 <!-- Header -->
                 <div class="text-center mb-8">
                     <h2 class="text-3xl font-bold text-neutral-900 mb-2">
-                        {{ isSignup ? 'Create your HR Management account' : 'Sign in to HR Management' }}
+                        {{ isSignup ? 'Create your HR Management account' : 'Sign in to HRM' }}
                     </h2>
                     <p class="text-neutral-600">
                         {{ isSignup ? 'Already have an account?' : "Don't have an account?" }}

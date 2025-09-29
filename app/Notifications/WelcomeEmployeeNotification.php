@@ -38,7 +38,7 @@ class WelcomeEmployeeNotification extends Notification implements ShouldQueue
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('Welcome to ' . config('app.name', 'XonixSHR'))
+            ->subject('Welcome to ' . config('app.name', 'E-Tax Planner'))
             ->greeting('Hello ' . $notifiable->name . '!')
             ->line('Welcome to our team! We are excited to have you join us.')
             ->line('Your employee account has been created with the following details:')

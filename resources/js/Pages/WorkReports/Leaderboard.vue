@@ -277,11 +277,11 @@ const leaderboardType = ref('score') // 'calls', 'success', 'score'
 const activePeriod = ref(null)
 
 // Breadcrumbs
-const breadcrumbs = [
-  { name: 'Dashboard', href: '/dashboard' },
-  { name: 'Reports', href: '/work-reports' },
-  { name: 'Leaderboard', href: '/work-reports/leaderboard' }
-]
+const breadcrumbs = computed(() => [
+  { label: 'Dashboard', href: route('dashboard') },
+  { label: 'Work Reports', href: route('work-reports.index') },
+  { label: 'Leaderboard', href: route('work-reports.leaderboard'), current: true }
+])
 
 // Header actions
 const headerActions = [
