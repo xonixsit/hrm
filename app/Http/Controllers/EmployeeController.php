@@ -156,7 +156,18 @@ class EmployeeController extends Controller
         ]);
 
         // Send welcome email to the employee
-        $user->notify(new WelcomeEmployeeNotification($employee));
+        try {
+            Log::info('Attempting to send WelcomeEmployeeNotification', ['user_id' => $user->id, 'email' => $user->email]);
+            $user->notify(new WelcomeEmployeeNotification($employee));
+            Log::info('WelcomeEmployeeNotification sent successfully', ['user_id' => $user->id, 'email' => $user->email]);
+        } catch (\Throwable $e) {
+            Log::error('Failed to send WelcomeEmployeeNotification', [
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+        }
 
         $this->logAudit('Employee Created', 'Created employee: ' . $employee->employee_code);
         return redirect()->route('employees.index')->with('success', 'Employee created successfully.');

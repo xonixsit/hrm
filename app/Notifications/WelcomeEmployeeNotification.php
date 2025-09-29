@@ -43,9 +43,10 @@ class WelcomeEmployeeNotification extends Notification implements ShouldQueue
             ->line('Welcome to our team! We are excited to have you join us.')
             ->line('Your employee account has been created with the following details:')
             ->line('Job Title: ' . $this->employee->job_title)
-            ->line('Department: ' . ($this->employee->department->name ?? 'Not assigned'))
-            ->line('Employee Code: ' . $this->employee->employee_code)
-            ->line('Join Date: ' . $this->employee->join_date->format('F j, Y'))
+            // Safely access department name if relationship is not loaded
+            ->line('Department: ' . ($this->employee->department?->name ?? 'Not assigned'))
+            // Guard join_date formatting
+            ->line('Join Date: ' . ($this->employee->join_date ? $this->employee->join_date->format('F j, Y') : 'N/A'))
             ->action('Login to Your Account', route('login'))
             ->line('If you have any questions, please contact your manager or the HR department.')
             ->line('We look forward to working with you!')

@@ -12,7 +12,7 @@ echo "Sending test email...\n";
 
 try {
     Mail::raw('Test email from HR Management System', function($message) {
-        $message->to('test@example.com')
+        $message->to('xonixsit@outlook.com')
                ->subject('Test Email');
     });
     echo "Email sent successfully!\n";
