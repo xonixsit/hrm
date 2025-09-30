@@ -65,7 +65,7 @@
                   </label>
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div 
-                      v-for="type in leaveTypes" 
+                      v-for="type in displayedLeaveTypes" 
                       :key="type.id"
                       @click="selectLeaveType(type)"
                       :class="[
@@ -318,9 +318,9 @@
           <ContentCard>
             <h3 class="text-lg font-medium text-gray-900 mb-4">Leave Balance</h3>
             <div class="space-y-3">
-              <div v-for="type in leaveTypes" :key="type.id" class="flex justify-between items-center">
+              <div v-for="type in displayedLeaveTypes" :key="type.id" class="flex justify-between items-center">
                 <span class="text-sm text-gray-600">{{ type.name }}</span>
-                <span class="text-sm font-medium text-gray-900">{{ type.balance || 'N/A' }} days</span>
+                <span class="text-sm font-medium text-gray-900">{{ type.balance === null || type.balance === undefined ? 'N/A' : type.balance }} days</span>
               </div>
             </div>
           </ContentCard>
@@ -385,7 +385,7 @@ const form = useForm({
 
 // UI state
 const currentStep = ref(1);
-const confirmationChecked = ref(false);
+const displayedLeaveTypes = computed(() => props.leaveTypes);
 
 // Computed properties
 const minDate = computed(() => {
