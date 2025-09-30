@@ -5,10 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\Leave;
 use App\Models\LeaveType;
 use App\Models\Employee;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use App\Traits\AuditLogTrait;
+use App\Notifications\LeaveAppliedNotification;
 use App\Notifications\LeaveApprovedNotification;
 use App\Notifications\LeaveRejectedNotification;
 use Illuminate\Support\Facades\DB;
@@ -147,7 +149,16 @@ class LeaveController extends Controller
         $validated['employee_id'] = Auth::user()->employee->id;
         $validated['status'] = 'pending';
 
-        Leave::create($validated);
+        $leave = Leave::create($validated);
+
+        // Notify admins and HR
+        $admins = User::whereHas('roles', function ($query) {
+            $query->whereIn('name', ['Admin', 'HR']);
+        })->get();
+
+        foreach ($admins as $admin) {
+            $admin->notify(new LeaveAppliedNotification($leave));
+        }
 
         $this->logAudit('Leave Created', 'Created leave request for dates: ' . $validated['from_date'] . ' to ' . $validated['to_date']);
         return redirect()->route('leaves.index')->with('success', 'Leave request submitted.');

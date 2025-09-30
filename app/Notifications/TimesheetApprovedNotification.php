@@ -7,6 +7,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use Illuminate\Support\HtmlString;
 
 class TimesheetApprovedNotification extends Notification implements ShouldQueue
 {
@@ -48,7 +49,7 @@ class TimesheetApprovedNotification extends Notification implements ShouldQueue
             })
             ->action('View Timesheet', route('timesheets.show', $this->timesheet->id))
             ->line('Thank you for your hard work!')
-            ->salutation('Regards,\nE-Tax Planner');
+            ->salutation(new HtmlString('Regards,<br>E-Tax Planner'));
     }
 
     /**

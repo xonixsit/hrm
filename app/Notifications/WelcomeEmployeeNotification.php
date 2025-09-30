@@ -6,6 +6,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use App\Models\Employee;
+use Illuminate\Support\HtmlString;
 
 class WelcomeEmployeeNotification extends Notification
 {
@@ -53,6 +54,6 @@ class WelcomeEmployeeNotification extends Notification
             ->action('Login to Your Account', route('login'))
             ->line('If you have any questions, please contact your manager or the HR department.')
             ->line('We look forward to working with you!')
-            ->salutation('Regards,\nE-Tax Planner');
+            ->salutation(new HtmlString('Regards,<br>E-Tax Planner'));
     }
 }
