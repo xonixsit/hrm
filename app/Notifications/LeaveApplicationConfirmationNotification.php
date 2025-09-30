@@ -9,7 +9,7 @@ use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\HtmlString;
 
-class LeaveAppliedNotification extends Notification implements ShouldQueue
+class LeaveApplicationConfirmationNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
@@ -45,17 +45,16 @@ class LeaveAppliedNotification extends Notification implements ShouldQueue
      */
     public function toMail($notifiable)
     {
-        // Get employee name from the user relationship
-        $employeeName = $this->leave->employee->user->name ?? 'Unknown Employee';
         $leaveUrl = url('/leaves/' . $this->leave->id);
 
         return (new MailMessage)
-            ->subject('New Leave Application')
-            ->greeting('Hello!')
-            ->line($employeeName . ' has applied for a new leave.')
+            ->subject('Leave Application Submitted Successfully')
+            ->greeting('Hello ' . $notifiable->name . '!')
+            ->line('Your leave application has been submitted successfully and is pending approval.')
             ->line('Leave Type: ' . ($this->leave->leaveType->name ?? 'N/A'))
             ->line('Dates: ' . $this->leave->from_date->format('M d, Y') . ' to ' . $this->leave->to_date->format('M d, Y'))
             ->line('Reason: ' . ($this->leave->reason ?? 'No reason provided'))
+            ->line('You will be notified once your leave request is reviewed.')
             ->action('View Leave Request', $leaveUrl)
             ->salutation(new HtmlString('Regards,<br>E-Tax Planner'));
     }

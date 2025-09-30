@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use App\Traits\AuditLogTrait;
 use App\Notifications\LeaveAppliedNotification;
+use App\Notifications\LeaveApplicationConfirmationNotification;
 use App\Notifications\LeaveApprovedNotification;
 use App\Notifications\LeaveRejectedNotification;
 use Illuminate\Support\Facades\DB;
@@ -151,6 +152,12 @@ class LeaveController extends Controller
 
         $leave = Leave::create($validated);
 
+        // Load relationships for notifications
+        $leave->load(['employee.user', 'leaveType']);
+
+        // Notify the employee who applied
+        Auth::user()->notify(new LeaveApplicationConfirmationNotification($leave));
+
         // Notify admins and HR
         $admins = User::whereHas('roles', function ($query) {
             $query->whereIn('name', ['Admin', 'HR']);
@@ -262,6 +269,9 @@ class LeaveController extends Controller
             'approval_comments' => $request->input('comments'),
         ]);
 
+        // Reload the leave with relationships for notification
+        $leave->load(['employee.user', 'leaveType', 'approver']);
+        
         $leave->employee->user->notify(new LeaveApprovedNotification($leave));
 
         $this->logAudit('Leave Approved', 'Approved leave ID: ' . $leave->id);
@@ -299,6 +309,9 @@ class LeaveController extends Controller
             'approval_comments' => $request->input('comments', 'Request rejected'),
         ]);
 
+        // Reload the leave with relationships for notification
+        $leave->load(['employee.user', 'leaveType', 'approver']);
+        
         $leave->employee->user->notify(new LeaveRejectedNotification($leave));
 
         $this->logAudit('Leave Rejected', 'Rejected leave ID: ' . $leave->id);
@@ -343,6 +356,9 @@ class LeaveController extends Controller
             'approval_comments' => $approvalComments,
         ]);
 
+        // Reload the leave with relationships for notification
+        $leave->load(['employee.user', 'leaveType', 'approver']);
+        
         $leave->employee->user->notify(new LeaveApprovedNotification($leave));
 
         $this->logAudit('Leave Updated and Approved', 'Updated and approved leave ID: ' . $leave->id);
