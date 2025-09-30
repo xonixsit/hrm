@@ -142,7 +142,10 @@ class LeaveController extends Controller
                 ->where('leave_type_id', $leaveType->id)
                 ->where('status', 'approved')
                 ->whereYear('from_date', $currentYear)
-                ->sum(DB::raw('DATEDIFF(to_date, from_date) + 1'));
+                ->get()
+                ->sum(function ($leave) {
+                    return $leave->from_date->diffInDays($leave->to_date) + 1;
+                });
 
             $balance = $leaveType->quota - $usedLeaves;
 
@@ -207,10 +210,13 @@ class LeaveController extends Controller
                 ->where('leave_type_id', $leave->leave_type_id)
                 ->where('status', 'approved')
                 ->whereYear('from_date', date('Y'))
-                ->sum(DB::raw('DATEDIFF(to_date, from_date) + 1'));
+                ->get()
+                ->sum(function ($leave) {
+                    return $leave->from_date->diffInDays($leave->to_date) + 1;
+                });
             
             $totalQuota = $leave->leaveType->quota ?? 25; // Default 25 days
-            $leaveBalance = max(0, $totalQuota - $usedLeaves);
+            $leaveBalance = $totalQuota - $usedLeaves;
         }
         
         // Debug: Log the leave data being passed to the frontend
