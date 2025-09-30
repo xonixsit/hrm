@@ -134,7 +134,14 @@ class LeaveController extends Controller
 
     public function create()
     {
-        $leaveTypes = LeaveType::all();
+        $leaveTypes = LeaveType::all()->map(function ($leaveType) {
+            return [
+                'id' => $leaveType->id,
+                'name' => $leaveType->name,
+                'quota' => $leaveType->quota,
+                'description' => $leaveType->description,
+            ];
+        });
         return Inertia::render('Leaves/Create', ['leaveTypes' => $leaveTypes]);
     }
 

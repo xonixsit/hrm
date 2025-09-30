@@ -278,15 +278,16 @@
                             class="inline-flex items-center p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-lg transition-all duration-200"
                             :title="'Actions'"
                           >
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-                            </svg>
+                            <EllipsisVerticalIcon class="w-5 h-5" />
                           </button>
                           
                           <!-- Unified Dropdown Menu -->
                           <div
                             v-if="activeDropdown === leave.id"
-                            class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10"
+                            :class="[
+                              'absolute mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-20',
+                              dropdownPosition[leave.id] === 'left' ? 'right-0' : 'left-0'
+                            ]"
                           >
                             <!-- View Action (always available) -->
                             <Link
