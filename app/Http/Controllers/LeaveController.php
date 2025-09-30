@@ -134,14 +134,27 @@ class LeaveController extends Controller
 
     public function create()
     {
-        $leaveTypes = LeaveType::all()->map(function ($leaveType) {
+        $employee = Auth::user()->employee;
+        $currentYear = now()->year;
+
+        $leaveTypes = LeaveType::all()->map(function ($leaveType) use ($employee, $currentYear) {
+            $usedLeaves = Leave::where('employee_id', $employee->id)
+                ->where('leave_type_id', $leaveType->id)
+                ->where('status', 'approved')
+                ->whereYear('from_date', $currentYear)
+                ->sum(DB::raw('DATEDIFF(to_date, from_date) + 1'));
+
+            $balance = $leaveType->quota - $usedLeaves;
+
             return [
                 'id' => $leaveType->id,
                 'name' => $leaveType->name,
                 'quota' => $leaveType->quota,
+                'balance' => $balance,
                 'description' => $leaveType->description,
             ];
         });
+
         return Inertia::render('Leaves/Create', ['leaveTypes' => $leaveTypes]);
     }
 
