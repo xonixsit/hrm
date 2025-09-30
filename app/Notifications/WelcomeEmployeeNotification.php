@@ -3,12 +3,11 @@
 namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use App\Models\Employee;
 
-class WelcomeEmployeeNotification extends Notification implements ShouldQueue
+class WelcomeEmployeeNotification extends Notification
 {
     use Queueable;
 
@@ -40,6 +39,10 @@ class WelcomeEmployeeNotification extends Notification implements ShouldQueue
         return (new MailMessage)
             ->subject('Welcome to ' . config('app.name', 'E-Tax Planner'))
             ->greeting('Hello ' . $notifiable->name . '!')
+            // Add BCC to sender mailbox for delivery confirmation
+            ->bcc(config('mail.from.address'), config('mail.from.name'))
+            // Ensure replies go to sender mailbox
+            ->replyTo(config('mail.from.address'), config('mail.from.name'))
             ->line('Welcome to our team! We are excited to have you join us.')
             ->line('Your employee account has been created with the following details:')
             ->line('Job Title: ' . $this->employee->job_title)

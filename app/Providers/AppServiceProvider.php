@@ -11,6 +11,10 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Query\Expression;
 
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Mail\Events\MessageSent;
+use Illuminate\Mail\Events\MessageFailed;
+use Illuminate\Support\Facades\Log;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -59,6 +63,52 @@ class AppServiceProvider extends ServiceProvider
     };
 
     $checkConfig(config()->all());
+
+    // Mail event logging to diagnose delivery issues
+    Event::listen(MessageSent::class, function (MessageSent $event) {
+        try {
+            $to = array_map(fn($addr) => method_exists($addr, 'getAddress') ? $addr->getAddress() : (string) $addr, (array) $event->message->getTo());
+            $messageId = null;
+            try {
+                $headers = method_exists($event->message, 'getHeaders') ? $event->message->getHeaders() : null;
+                if ($headers && $headers->has('Message-ID')) {
+                    $messageId = (string) $headers->get('Message-ID');
+                }
+            } catch (\Throwable $e) {
+                // ignore header parsing errors
+            }
+            Log::info('Mail message sent', [
+                'to' => $to,
+                'subject' => $event->message->getSubject(),
+                'message_id' => $messageId,
+            ]);
+        } catch (\Throwable $e) {
+            Log::warning('Failed to log MessageSent event', ['error' => $e->getMessage()]);
+        }
+    });
+
+    Event::listen(MessageFailed::class, function (MessageFailed $event) {
+        try {
+            $to = array_map(fn($addr) => method_exists($addr, 'getAddress') ? $addr->getAddress() : (string) $addr, (array) $event->message->getTo());
+            $messageId = null;
+            try {
+                $headers = method_exists($event->message, 'getHeaders') ? $event->message->getHeaders() : null;
+                if ($headers && $headers->has('Message-ID')) {
+                    $messageId = (string) $headers->get('Message-ID');
+                }
+            } catch (\Throwable $e) {
+                // ignore header parsing errors
+            }
+            Log::error('Mail message failed', [
+                'to' => $to,
+                'subject' => $event->message->getSubject(),
+                'message_id' => $messageId,
+                'error' => $event->exception ? $event->exception->getMessage() : null,
+            ]);
+        } catch (\Throwable $e) {
+            Log::warning('Failed to log MessageFailed event', ['error' => $e->getMessage()]);
+        }
+    });
 
     }
 }
