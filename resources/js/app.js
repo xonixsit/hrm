@@ -65,12 +65,13 @@ if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js').then(registration => {
       console.log('ServiceWorker registration successful with scope: ', registration.scope);
-      Notification.requestPermission().then(permission => {
-        if (permission === 'granted') {
-          console.log('Notification permission granted.');
-        }
-      });
-    }, err => {
+      // Request permission as soon as the service worker is ready
+      return Notification.requestPermission();
+    }).then(permission => {
+      if (permission === 'granted') {
+        console.log('Notification permission granted.');
+      }
+    }).catch(err => {
       console.log('ServiceWorker registration failed: ', err);
     });
   });
