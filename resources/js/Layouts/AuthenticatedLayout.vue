@@ -12,6 +12,7 @@ import { useAuth } from '@/composables/useAuth';
 import { useResponsive } from '@/composables/useResponsive';
 import { useTheme } from '@/composables/useTheme.js';
 import { useLayoutSpacing } from '@/composables/useLayoutSpacing.js';
+import { useReminder } from '@/composables/useReminder';
 
 // Access slots in script setup
 const slots = useSlots();
@@ -28,6 +29,8 @@ const { isMobile, isDesktop } = useResponsive();
 
 // Use theme composable and initialize theme system
 const { isDark, initializeTheme } = useTheme();
+
+useReminder();
 
 // Initialize theme system on mount
 onMounted(() => {
