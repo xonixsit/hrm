@@ -1,15 +1,18 @@
 import { onMounted, onUnmounted } from 'vue';
 import { usePage } from '@inertiajs/vue3';
+import { useAuth } from '@/composables/useAuth';
 
 export function useReminder() {
   const { props } = usePage();
+  const { user } = useAuth();
   let reminderInterval;
 
   const showNotification = () => {
     if (Notification.permission === 'granted') {
       navigator.serviceWorker.ready.then(registration => {
-        registration.showNotification('Clock-In Reminder', {
-          body: 'Please clock in to start your work day.',
+        const userName = user.value?.name || 'Employee';
+        registration.showNotification(`Hi ${userName}, Ready to Clock In?`, {
+          body: 'A new day of productivity awaits! Click here to start your timer.',
           icon: '/favicon.ico',
           actions: [
             { action: 'clock-in', title: 'Clock In' }

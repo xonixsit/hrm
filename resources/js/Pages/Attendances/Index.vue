@@ -363,12 +363,22 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { Link, router } from '@inertiajs/vue3';
 import { debounce } from 'lodash';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import PageLayout from '@/Components/Layout/PageLayout.vue';
 import { useAuth } from '@/composables/useAuth.js';
+import axios from 'axios';
+
+onMounted(() => {
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('action') === 'clock-in') {
+    axios.post('/api/attendance/clock-in').then(() => {
+      window.location.href = route('dashboard');
+    });
+  }
+});
 
 const props = defineProps({
   attendances: {

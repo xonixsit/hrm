@@ -61,6 +61,10 @@ Route::middleware('auth')->group(function () {
     Route::get('attendances/{attendance}/export', [AttendanceController::class, 'export'])->name('attendances.export');
     Route::post('attendances/bulk-export', [AttendanceController::class, 'bulkExport'])->name('attendances.bulkExport');
     
+    Route::get('api/csrf-token', function () {
+        return response()->json(['csrf_token' => csrf_token()]);
+    });
+
     // Real-time attendance API routes
     Route::prefix('api/attendance')->group(function () {
         Route::post('clock-in', [AttendanceController::class, 'clockIn']);
