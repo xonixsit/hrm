@@ -10,7 +10,10 @@ export function useReminder() {
       navigator.serviceWorker.ready.then(registration => {
         registration.showNotification('Clock-In Reminder', {
           body: 'Please clock in to start your work day.',
-          icon: '/favicon.ico'
+          icon: '/favicon.ico',
+          actions: [
+            { action: 'clock-in', title: 'Clock In' }
+          ]
         });
       });
     } else {
