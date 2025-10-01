@@ -3,16 +3,21 @@ import { usePage } from '@inertiajs/vue3';
 import { useAuth } from '@/composables/useAuth';
 
 export function useWorkReportReminder() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const page = usePage();
   let timer = null;
 
   const showNotification = () => {
     if (Notification.permission === 'granted') {
       navigator.serviceWorker.ready.then(registration => {
-        registration.showNotification('Work Report Reminder', {
+        const userName = user.value?.name || 'Employee';
+        registration.showNotification(`Hi ${userName}, Gentle Reminder to Submit Your Work Report`, {
           body: 'Please submit your work report for today.',
-          icon: '/favicon.ico'
+          icon: '/favicon.ico',
+          tag: 'work-report-reminder',
+          actions: [
+            { action: 'submit-work-report', title: 'Submit Now' }
+          ]
         });
       });
     } else {

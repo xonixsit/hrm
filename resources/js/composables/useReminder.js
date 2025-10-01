@@ -14,6 +14,7 @@ export function useReminder() {
         registration.showNotification(`Hi ${userName}, Ready to Clock In?`, {
           body: 'A new day of productivity awaits! Click here to start your timer.',
           icon: '/favicon.ico',
+          tag: 'clock-in-reminder',
           actions: [
             { action: 'clock-in', title: 'Clock In' }
           ]

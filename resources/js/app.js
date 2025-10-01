@@ -63,16 +63,22 @@ if (typeof window !== 'undefined') {
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').then(registration => {
-      console.log('ServiceWorker registration successful with scope: ', registration.scope);
-      // Request permission as soon as the service worker is ready
-      return Notification.requestPermission();
-    }).then(permission => {
-      if (permission === 'granted') {
-        console.log('Notification permission granted.');
-      }
-    }).catch(err => {
-      console.log('ServiceWorker registration failed: ', err);
+    // Unregister any existing service workers to ensure the new one is used
+    navigator.serviceWorker.getRegistrations().then(registrations => {
+      const unregisterPromises = registrations.map(registration => registration.unregister());
+      return Promise.all(unregisterPromises);
+    }).then(() => {
+      navigator.serviceWorker.register('/sw.js?v=4').then(registration => {
+        console.log('ServiceWorker registration successful with scope: ', registration.scope);
+        // Request permission as soon as the service worker is ready
+        return Notification.requestPermission();
+      }).then(permission => {
+        if (permission === 'granted') {
+          console.log('Notification permission granted.');
+        }
+      }).catch(err => {
+        console.log('ServiceWorker registration failed: ', err);
+      });
     });
   });
 }
