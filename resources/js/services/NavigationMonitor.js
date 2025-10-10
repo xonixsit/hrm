@@ -458,23 +458,37 @@ class NavigationMonitor {
   setupMonitoring() {
     if (typeof window === 'undefined') return
     
-    // Monitor conflict detector events
-    const originalDetectConflicts = conflictDetector.detectConflicts.bind(conflictDetector)
-    conflictDetector.detectConflicts = (...args) => {
-      const conflicts = originalDetectConflicts(...args)
-      if (conflicts.length > 0) {
-        this.logConflict(conflicts, false)
+    try {
+      // Monitor conflict detector events with error handling
+      const originalDetectConflicts = conflictDetector.detectConflicts.bind(conflictDetector)
+      conflictDetector.detectConflicts = (...args) => {
+        try {
+          const conflicts = originalDetectConflicts(...args)
+          if (conflicts && Array.isArray(conflicts) && conflicts.length > 0) {
+            this.logConflict(conflicts, false)
+          }
+          return conflicts || []
+        } catch (error) {
+          console.warn('[NAVIGATION MONITOR] Error in detectConflicts wrapper:', error)
+          return []
+        }
       }
-      return conflicts
-    }
-    
-    const originalResolveConflicts = conflictDetector.resolveConflicts.bind(conflictDetector)
-    conflictDetector.resolveConflicts = (...args) => {
-      const resolutions = originalResolveConflicts(...args)
-      if (resolutions.length > 0) {
-        this.logConflict([], true) // Log as resolved
+      
+      const originalResolveConflicts = conflictDetector.resolveConflicts.bind(conflictDetector)
+      conflictDetector.resolveConflicts = (...args) => {
+        try {
+          const resolutions = originalResolveConflicts(...args)
+          if (resolutions && Array.isArray(resolutions) && resolutions.length > 0) {
+            this.logConflict([], true) // Log as resolved
+          }
+          return resolutions || []
+        } catch (error) {
+          console.warn('[NAVIGATION MONITOR] Error in resolveConflicts wrapper:', error)
+          return []
+        }
       }
-      return resolutions
+    } catch (error) {
+      console.warn('[NAVIGATION MONITOR] Error setting up conflict detector monitoring:', error)
     }
     
     // Monitor window resize for breakpoint changes

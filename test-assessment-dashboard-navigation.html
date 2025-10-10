@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assessment Dashboard Navigation Test</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .button { padding: 10px 15px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer; }
+        .button:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <h1>Assessment Dashboard Navigation Test</h1>
+        
+        <div class="test-section">
+            <h3>Navigation Routes Test</h3>
+            <p>Testing if all navigation routes are properly defined:</p>
+            
+            <div v-for="route in testRoutes" :key="route.name" style="margin: 10px 0;">
+                <button class="button" @click="testRoute(route)">
+                    Test {{ route.name }}
+                </button>
+                <span :class="route.status === 'success' ? 'success' : route.status === 'error' ? 'error' : ''">
+                    {{ route.message }}
+                </span>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>Route Helper Function Test</h3>
+            <p>Testing the route() helper function:</p>
+            <button class="button" @click="testRouteHelper">Test Route Helper</button>
+            <div v-if="routeHelperResult">{{ routeHelperResult }}</div>
+        </div>
+
+        <div class="test-section">
+            <h3>Navigation Methods Test</h3>
+            <p>Testing navigation methods from the dashboard:</p>
+            <button class="button" @click="testNavigationMethods">Test Navigation Methods</button>
+            <div v-if="navigationResult">{{ navigationResult }}</div>
+        </div>
+    </div>
+
+    <script>
+        const { createApp } = Vue;
+
+        createApp({
+            data() {
+                return {
+                    testRoutes: [
+                        { name: 'competency-assessments.index', status: null, message: 'Not tested' },
+                        { name: 'competency-assessments.pending', status: null, message: 'Not tested' },
+                        { name: 'assessment-cycles.index', status: null, message: 'Not tested' },
+                        { name: 'competency-assessments.create', status: null, message: 'Not tested' },
+                        { name: 'competency-analytics.index', status: null, message: 'Not tested' },
+                        { name: 'competencies.index', status: null, message: 'Not tested' }
+                    ],
+                    routeHelperResult: null,
+                    navigationResult: null
+                }
+            },
+            methods: {
+                testRoute(route) {
+                    try {
+                        // Simulate route testing
+                        if (typeof window.route === 'function') {
+                            const url = window.route(route.name);
+                            route.status = 'success';
+                            route.message = `✓ Route exists: ${url}`;
+                        } else {
+                            route.status = 'error';
+                            route.message = '✗ Route helper function not available';
+                        }
+                    } catch (error) {
+                        route.status = 'error';
+                        route.message = `✗ Error: ${error.message}`;
+                    }
+                },
+                testRouteHelper() {
+                    try {
+                        if (typeof window.route === 'function') {
+                            this.routeHelperResult = '✓ Route helper function is available';
+                        } else {
+                            this.routeHelperResult = '✗ Route helper function is not available - this is the likely cause of navigation issues';
+                        }
+                    } catch (error) {
+                        this.routeHelperResult = `✗ Error testing route helper: ${error.message}`;
+                    }
+                },
+                testNavigationMethods() {
+                    const issues = [];
+                    
+                    // Check if Inertia router is available
+                    if (typeof window.Inertia === 'undefined') {
+                        issues.push('Inertia.js is not loaded');
+                    }
+                    
+                    // Check if route helper is available
+                    if (typeof window.route === 'undefined') {
+                        issues.push('Route helper function is not available');
+                    }
+                    
+                    if (issues.length === 0) {
+                        this.navigationResult = '✓ All navigation dependencies are available';
+                    } else {
+                        this.navigationResult = '✗ Issues found: ' + issues.join(', ');
+                    }
+                }
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>

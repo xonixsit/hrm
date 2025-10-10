@@ -1,27 +1,23 @@
-import { ref } from 'vue';
-
 /**
- * Navigation Conflict Detection and Prevention Service
- * Monitors and prevents navigation component conflicts
+ * Navigation Conflict Detection Service
+ * Detects and resolves conflicts between navigation components
  */
 class NavigationConflictDetector {
   constructor() {
-    this.conflicts = ref([])
-    this.activeComponents = ref(new Map())
-    this.monitoringEnabled = ref(true)
-    this.conflictHistory = ref([])
-    this.maxHistorySize = 100
-    
+    this.activeComponents = []
+    this.conflicts = []
+    this.isEnabled = true
+    this.lastCheck = Date.now()
+
     // Conflict types
     this.CONFLICT_TYPES = {
-      MULTIPLE_DESKTOP: 'multiple_desktop',
-      MULTIPLE_MOBILE: 'multiple_mobile',
-      SIMULTANEOUS_RENDER: 'simultaneous_render',
-      COMPONENT_LEAK: 'component_leak',
-      STATE_MISMATCH: 'state_mismatch',
-      BREAKPOINT_CONFLICT: 'breakpoint_conflict'
+      MULTIPLE_SAME_TYPE: 'multiple_same_type',
+      BREAKPOINT_MISMATCH: 'breakpoint_mismatch',
+      VISIBILITY_CONFLICT: 'visibility_conflict',
+      DUPLICATE_ID: 'duplicate_id',
+      MISSING_COMPONENT: 'missing_component'
     }
-    
+
     // Severity levels
     this.SEVERITY_LEVELS = {
       CRITICAL: 'critical',
@@ -29,424 +25,408 @@ class NavigationConflictDetector {
       MEDIUM: 'medium',
       LOW: 'low'
     }
-    
-    this.setupMonitoring()
   }
-  
+
   /**
    * Register a navigation component
    */
-  registerComponent(componentId, type, metadata = {}) {
-    const timestamp = Date.now()
-    const componentInfo = {
-      id: componentId,
+  registerComponent(id, type, metadata = {}) {
+    if (!this.isEnabled) return
+
+    const component = {
+      id,
       type,
-      registeredAt: timestamp,
-      metadata: {
-        ...metadata,
-        windowWidth: window.innerWidth,
-        userAgent: navigator.userAgent,
-        url: window.location.href
-      }
+      metadata,
+      registeredAt: Date.now(),
+      lastSeen: Date.now()
     }
-    
-    this.activeComponents.value.set(componentId, componentInfo)
-    
+
+    // Remove existing component with same ID
+    this.activeComponents = this.activeComponents.filter(c => c.id !== id)
+
+    // Add new component
+    this.activeComponents.push(component)
+
     // Check for conflicts after registration
     this.detectConflicts()
-    
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`[CONFLICT DETECTOR] Registered ${type} navigation:`, componentId)
-    }
-    
-    return componentInfo
+
+    return component
   }
-  
+
   /**
    * Unregister a navigation component
    */
-  unregisterComponent(componentId) {
-    const component = this.activeComponents.value.get(componentId)
-    if (component) {
-      this.activeComponents.value.delete(componentId)
-      
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`[CONFLICT DETECTOR] Unregistered ${component.type} navigation:`, componentId)
-      }
-    }
-    
-    // Check if conflicts are resolved
+  unregisterComponent(id) {
+    if (!this.isEnabled) return
+
+    this.activeComponents = this.activeComponents.filter(c => c.id !== id)
+
+    // Check for conflicts after unregistration
     this.detectConflicts()
   }
-  
+
+  /**
+   * Update component metadata
+   */
+  updateComponent(id, metadata = {}) {
+    if (!this.isEnabled) return
+
+    const component = this.activeComponents.find(c => c.id === id)
+    if (component) {
+      component.metadata = { ...component.metadata, ...metadata }
+      component.lastSeen = Date.now()
+    }
+
+    return component
+  }
+
   /**
    * Detect navigation conflicts
    */
   detectConflicts() {
-    // Temporarily disable conflict detection to fix navigation issues
-    return
-    if (!this.monitoringEnabled.value) return
-    
-    const currentConflicts = []
-    const components = Array.from(this.activeComponents.value.values())
-    
-    // Check for multiple desktop components
-    const desktopComponents = components.filter(c => c.type === 'desktop')
-    if (desktopComponents.length > 1) {
-      currentConflicts.push(this.createConflict(
-        this.CONFLICT_TYPES.MULTIPLE_DESKTOP,
-        this.SEVERITY_LEVELS.CRITICAL,
-        'Multiple desktop navigation components detected',
-        { components: desktopComponents }
-      ))
+    if (!this.isEnabled) return []
+
+    this.conflicts = []
+    this.lastCheck = Date.now()
+
+    // Ensure activeComponents is always an array
+    if (!Array.isArray(this.activeComponents)) {
+      this.activeComponents = []
     }
-    
-    // Check for multiple mobile components
-    const mobileComponents = components.filter(c => c.type === 'mobile')
-    if (mobileComponents.length > 1) {
-      currentConflicts.push(this.createConflict(
-        this.CONFLICT_TYPES.MULTIPLE_MOBILE,
-        this.SEVERITY_LEVELS.CRITICAL,
-        'Multiple mobile navigation components detected',
-        { components: mobileComponents }
-      ))
+
+    // Check for multiple components of same type
+    this.checkMultipleSameType()
+
+    // Check for breakpoint mismatches
+    this.checkBreakpointMismatches()
+
+    // Check for visibility conflicts
+    this.checkVisibilityConflicts()
+
+    // Check for duplicate IDs
+    this.checkDuplicateIds()
+
+    // Check for missing required components
+    this.checkMissingComponents()
+
+    return this.conflicts
+  }
+
+  /**
+   * Check for multiple components of the same type
+   */
+  checkMultipleSameType() {
+    const typeCounts = {}
+
+    this.activeComponents.forEach(component => {
+      typeCounts[component.type] = (typeCounts[component.type] || 0) + 1
+    })
+
+    Object.entries(typeCounts).forEach(([type, count]) => {
+      if (count > 1) {
+        this.addConflict({
+          type: this.CONFLICT_TYPES.MULTIPLE_SAME_TYPE,
+          severity: this.SEVERITY_LEVELS.HIGH,
+          message: `Multiple ${type} navigation components detected (${count})`,
+          affectedComponents: this.activeComponents.filter(c => c.type === type),
+          data: { type, count }
+        })
+      }
+    })
+  }
+
+  /**
+   * Check for breakpoint mismatches
+   */
+  checkBreakpointMismatches() {
+    const currentWidth = typeof window !== 'undefined' ? window.innerWidth : 1024
+    const expectedType = currentWidth >= 1024 ? 'desktop' : 'mobile'
+
+    const hasDesktop = this.activeComponents.some(c => c.type === 'desktop')
+    const hasMobile = this.activeComponents.some(c => c.type === 'mobile')
+
+    if (expectedType === 'desktop' && hasMobile && !hasDesktop) {
+      this.addConflict({
+        type: this.CONFLICT_TYPES.BREAKPOINT_MISMATCH,
+        severity: this.SEVERITY_LEVELS.MEDIUM,
+        message: 'Mobile navigation active on desktop breakpoint',
+        affectedComponents: this.activeComponents.filter(c => c.type === 'mobile'),
+        data: { expectedType, currentWidth }
+      })
     }
-    
-    // Check for simultaneous desktop and mobile rendering
-    if (desktopComponents.length > 0 && mobileComponents.length > 0) {
-      currentConflicts.push(this.createConflict(
-        this.CONFLICT_TYPES.SIMULTANEOUS_RENDER,
-        this.SEVERITY_LEVELS.HIGH,
-        'Both desktop and mobile navigation components are active',
-        { 
-          desktopComponents,
-          mobileComponents,
-          windowWidth: window.innerWidth
-        }
-      ))
+
+    if (expectedType === 'mobile' && hasDesktop && !hasMobile) {
+      this.addConflict({
+        type: this.CONFLICT_TYPES.BREAKPOINT_MISMATCH,
+        severity: this.SEVERITY_LEVELS.MEDIUM,
+        message: 'Desktop navigation active on mobile breakpoint',
+        affectedComponents: this.activeComponents.filter(c => c.type === 'desktop'),
+        data: { expectedType, currentWidth }
+      })
     }
-    
-    // Check for component leaks (components registered too long ago)
-    const now = Date.now()
-    const staleComponents = components.filter(c => 
-      now - c.registeredAt > 30000 // 30 seconds
-    )
-    
-    if (staleComponents.length > 0) {
-      currentConflicts.push(this.createConflict(
-        this.CONFLICT_TYPES.COMPONENT_LEAK,
-        this.SEVERITY_LEVELS.MEDIUM,
-        'Navigation components may have leaked',
-        { components: staleComponents }
-      ))
+  }
+
+  /**
+   * Check for visibility conflicts
+   */
+  checkVisibilityConflicts() {
+    if (typeof window === 'undefined') return
+
+    const visibleComponents = this.activeComponents.filter(component => {
+      const element = document.getElementById(component.id)
+      return element && element.offsetWidth > 0 && element.offsetHeight > 0
+    })
+
+    // Check if multiple navigation types are visible simultaneously
+    const visibleTypes = [...new Set(visibleComponents.map(c => c.type))]
+
+    if (visibleTypes.length > 1) {
+      this.addConflict({
+        type: this.CONFLICT_TYPES.VISIBILITY_CONFLICT,
+        severity: this.SEVERITY_LEVELS.HIGH,
+        message: `Multiple navigation types visible: ${visibleTypes.join(', ')}`,
+        affectedComponents: visibleComponents,
+        data: { visibleTypes }
+      })
     }
-    
-    // Check for breakpoint conflicts
+  }
+
+  /**
+   * Check for duplicate component IDs
+   */
+  checkDuplicateIds() {
+    const idCounts = {}
+
+    this.activeComponents.forEach(component => {
+      idCounts[component.id] = (idCounts[component.id] || 0) + 1
+    })
+
+    Object.entries(idCounts).forEach(([id, count]) => {
+      if (count > 1) {
+        this.addConflict({
+          type: this.CONFLICT_TYPES.DUPLICATE_ID,
+          severity: this.SEVERITY_LEVELS.CRITICAL,
+          message: `Duplicate component ID detected: ${id}`,
+          affectedComponents: this.activeComponents.filter(c => c.id === id),
+          data: { id, count }
+        })
+      }
+    })
+  }
+
+  /**
+   * Check for missing required components
+   */
+  checkMissingComponents() {
+    if (typeof window === 'undefined') return
+
     const currentWidth = window.innerWidth
-    const shouldBeDesktop = currentWidth >= 1024
-    const hasDesktop = desktopComponents.length > 0
-    const hasMobile = mobileComponents.length > 0
-    
-    if ((shouldBeDesktop && !hasDesktop && hasMobile) || 
-        (!shouldBeDesktop && hasDesktop && !hasMobile)) {
-      currentConflicts.push(this.createConflict(
-        this.CONFLICT_TYPES.BREAKPOINT_CONFLICT,
-        this.SEVERITY_LEVELS.HIGH,
-        'Navigation type does not match current breakpoint',
-        {
-          windowWidth: currentWidth,
-          shouldBeDesktop,
-          hasDesktop,
-          hasMobile
-        }
-      ))
+    const expectedType = currentWidth >= 1024 ? 'desktop' : 'mobile'
+
+    const hasExpectedType = this.activeComponents.some(c => c.type === expectedType)
+
+    if (!hasExpectedType && this.activeComponents.length === 0) {
+      this.addConflict({
+        type: this.CONFLICT_TYPES.MISSING_COMPONENT,
+        severity: this.SEVERITY_LEVELS.HIGH,
+        message: `No ${expectedType} navigation component found`,
+        affectedComponents: [],
+        data: { expectedType, currentWidth }
+      })
     }
-    
-    // Update conflicts
-    this.conflicts.value = currentConflicts
-    
-    // Add to history if conflicts changed
-    if (currentConflicts.length > 0) {
-      this.addToHistory(currentConflicts)
-    }
-    
-    // Log conflicts in development
-    if (process.env.NODE_ENV === 'development' && currentConflicts.length > 0) {
-      console.warn('[CONFLICT DETECTOR] Navigation conflicts detected:', currentConflicts)
-    }
-    
-    return currentConflicts
   }
-  
+
   /**
-   * Create a conflict object
+   * Add a conflict to the list
    */
-  createConflict(type, severity, message, data = {}) {
-    return {
+  addConflict(conflict) {
+    const conflictWithId = {
+      ...conflict,
       id: `conflict_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      type,
-      severity,
-      message,
-      timestamp: Date.now(),
-      data,
-      resolved: false
+      detectedAt: Date.now()
     }
+
+    this.conflicts.push(conflictWithId)
+
+    return conflictWithId
   }
-  
+
   /**
-   * Add conflicts to history
-   */
-  addToHistory(conflicts) {
-    const historyEntry = {
-      timestamp: Date.now(),
-      conflicts: conflicts.map(c => ({ ...c })),
-      windowWidth: window.innerWidth,
-      activeComponents: Array.from(this.activeComponents.value.values())
-    }
-    
-    this.conflictHistory.value.unshift(historyEntry)
-    
-    // Limit history size
-    if (this.conflictHistory.value.length > this.maxHistorySize) {
-      this.conflictHistory.value = this.conflictHistory.value.slice(0, this.maxHistorySize)
-    }
-  }
-  
-  /**
-   * Resolve conflicts automatically
+   * Resolve conflicts automatically where possible
    */
   resolveConflicts() {
-    const conflicts = this.conflicts.value
-    const resolutionActions = []
-    
-    for (const conflict of conflicts) {
-      const action = this.getResolutionAction(conflict)
-      if (action) {
-        resolutionActions.push(action)
+    if (!this.isEnabled) return []
+
+    const resolutions = []
+
+    this.conflicts.forEach(conflict => {
+      const resolution = this.attemptResolution(conflict)
+      if (resolution) {
+        resolutions.push(resolution)
       }
-    }
-    
-    // Execute resolution actions
-    for (const action of resolutionActions) {
-      try {
-        action.execute()
-        
-        if (process.env.NODE_ENV === 'development') {
-          console.log(`[CONFLICT DETECTOR] Executed resolution:`, action.description)
-        }
-      } catch (error) {
-        console.error('[CONFLICT DETECTOR] Failed to execute resolution:', error)
-      }
-    }
-    
-    // Re-detect conflicts after resolution
-    setTimeout(() => this.detectConflicts(), 100)
-    
-    return resolutionActions
+    })
+
+    // Remove resolved conflicts
+    this.conflicts = this.conflicts.filter(c =>
+      !resolutions.some(r => r.conflictId === c.id)
+    )
+
+    return resolutions
   }
-  
+
   /**
-   * Get resolution action for a conflict
+   * Attempt to resolve a specific conflict
    */
-  getResolutionAction(conflict) {
+  attemptResolution(conflict) {
     switch (conflict.type) {
-      case this.CONFLICT_TYPES.MULTIPLE_DESKTOP:
-        return {
-          description: 'Remove duplicate desktop navigation components',
-          execute: () => {
-            const components = conflict.data.components
-            // Keep the most recently registered component
-            const latest = components.reduce((latest, current) => 
-              current.registeredAt > latest.registeredAt ? current : latest
-            )
-            
-            components.forEach(component => {
-              if (component.id !== latest.id) {
-                this.forceUnregisterComponent(component.id)
-              }
-            })
-          }
-        }
-        
-      case this.CONFLICT_TYPES.MULTIPLE_MOBILE:
-        return {
-          description: 'Remove duplicate mobile navigation components',
-          execute: () => {
-            const components = conflict.data.components
-            // Keep the most recently registered component
-            const latest = components.reduce((latest, current) => 
-              current.registeredAt > latest.registeredAt ? current : latest
-            )
-            
-            components.forEach(component => {
-              if (component.id !== latest.id) {
-                this.forceUnregisterComponent(component.id)
-              }
-            })
-          }
-        }
-        
-      case this.CONFLICT_TYPES.SIMULTANEOUS_RENDER:
-        return {
-          description: 'Hide inappropriate navigation component based on breakpoint',
-          execute: () => {
-            const shouldBeDesktop = window.innerWidth >= 1024
-            const componentsToRemove = shouldBeDesktop 
-              ? conflict.data.mobileComponents 
-              : conflict.data.desktopComponents
-            
-            componentsToRemove.forEach(component => {
-              this.forceUnregisterComponent(component.id)
-            })
-          }
-        }
-        
-      case this.CONFLICT_TYPES.COMPONENT_LEAK:
-        return {
-          description: 'Clean up stale navigation components',
-          execute: () => {
-            conflict.data.components.forEach(component => {
-              this.forceUnregisterComponent(component.id)
-            })
-          }
-        }
-        
+      case this.CONFLICT_TYPES.MULTIPLE_SAME_TYPE:
+        return this.resolveMultipleSameType(conflict)
+
+      case this.CONFLICT_TYPES.BREAKPOINT_MISMATCH:
+        return this.resolveBreakpointMismatch(conflict)
+
+      case this.CONFLICT_TYPES.VISIBILITY_CONFLICT:
+        return this.resolveVisibilityConflict(conflict)
+
       default:
         return null
     }
   }
-  
+
   /**
-   * Force unregister a component (for conflict resolution)
+   * Resolve multiple same type conflict
    */
-  forceUnregisterComponent(componentId) {
-    this.unregisterComponent(componentId)
-    
-    // Also try to hide the component in DOM
-    const element = document.querySelector(`[data-navigation-id="${componentId}"]`)
-    if (element) {
-      element.style.display = 'none'
-      element.setAttribute('data-conflict-hidden', 'true')
+  resolveMultipleSameType(conflict) {
+    const components = conflict.affectedComponents
+    if (components.length <= 1) return null
+
+    // Keep the most recently registered component
+    const mostRecent = components.reduce((latest, current) =>
+      current.registeredAt > latest.registeredAt ? current : latest
+    )
+
+    // Remove older components
+    const toRemove = components.filter(c => c.id !== mostRecent.id)
+    toRemove.forEach(component => {
+      this.unregisterComponent(component.id)
+    })
+
+    return {
+      conflictId: conflict.id,
+      type: 'multiple_same_type_resolved',
+      action: 'removed_older_components',
+      kept: mostRecent.id,
+      removed: toRemove.map(c => c.id)
     }
-    
-    // Dispatch custom event for component cleanup
-    window.dispatchEvent(new CustomEvent('navigation-conflict-cleanup', {
-      detail: { componentId, reason: 'conflict_resolution' }
-    }))
   }
-  
+
   /**
-   * Setup DOM monitoring
+   * Resolve breakpoint mismatch
    */
-  setupMonitoring() {
-    if (typeof window === 'undefined') return
-    
-    // Monitor DOM changes for navigation components
-    const observer = new MutationObserver((mutations) => {
-      let shouldCheck = false
-      
-      mutations.forEach((mutation) => {
-        if (mutation.type === 'childList') {
-          // Check if navigation components were added/removed
-          const addedNodes = Array.from(mutation.addedNodes)
-          const removedNodes = Array.from(mutation.removedNodes)
-          
-          const hasNavigationChanges = [...addedNodes, ...removedNodes].some(node => {
-            if (node.nodeType !== Node.ELEMENT_NODE) return false
-            return node.matches('[data-navigation-type]') || 
-                   node.querySelector('[data-navigation-type]')
-          })
-          
-          if (hasNavigationChanges) {
-            shouldCheck = true
-          }
-        }
-      })
-      
-      if (shouldCheck) {
-        // Debounce conflict detection
-        clearTimeout(this.domCheckTimeout)
-        this.domCheckTimeout = setTimeout(() => {
-          this.detectConflicts()
-        }, 100)
+  resolveBreakpointMismatch(conflict) {
+    const currentWidth = typeof window !== 'undefined' ? window.innerWidth : 1024
+    const expectedType = currentWidth >= 1024 ? 'desktop' : 'mobile'
+
+    // This would typically trigger a navigation type switch
+    // For now, just log the recommended action
+    return {
+      conflictId: conflict.id,
+      type: 'breakpoint_mismatch_detected',
+      action: 'switch_navigation_type_recommended',
+      recommendedType: expectedType,
+      currentWidth
+    }
+  }
+
+  /**
+   * Resolve visibility conflict
+   */
+  resolveVisibilityConflict(conflict) {
+    if (typeof window === 'undefined') return null
+
+    const currentWidth = window.innerWidth
+    const expectedType = currentWidth >= 1024 ? 'desktop' : 'mobile'
+
+    // Hide components that don't match current breakpoint
+    const toHide = conflict.affectedComponents.filter(c => c.type !== expectedType)
+
+    toHide.forEach(component => {
+      const element = document.getElementById(component.id)
+      if (element) {
+        element.style.display = 'none'
       }
     })
-    
-    // Start observing
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true
-    })
-    
-    // Periodic conflict detection
-    this.periodicCheck = setInterval(() => {
-      this.detectConflicts()
-    }, 5000)
-    
-    // Window resize monitoring
-    window.addEventListener('resize', () => {
-      clearTimeout(this.resizeTimeout)
-      this.resizeTimeout = setTimeout(() => {
-        this.detectConflicts()
-      }, 250)
-    })
+
+    return {
+      conflictId: conflict.id,
+      type: 'visibility_conflict_resolved',
+      action: 'hid_mismatched_components',
+      hidden: toHide.map(c => c.id),
+      expectedType
+    }
   }
-  
+
   /**
    * Get current status
    */
   getStatus() {
     return {
-      hasConflicts: this.conflicts.value.length > 0,
-      conflictCount: this.conflicts.value.length,
-      activeComponentCount: this.activeComponents.value.size,
-      conflicts: this.conflicts.value,
-      activeComponents: Array.from(this.activeComponents.value.values()),
-      monitoringEnabled: this.monitoringEnabled.value
+      isEnabled: this.isEnabled,
+      activeComponents: this.activeComponents || [],
+      conflicts: this.conflicts || [],
+      hasConflicts: (this.conflicts || []).length > 0,
+      conflictCount: (this.conflicts || []).length,
+      lastCheck: this.lastCheck,
+      componentCount: (this.activeComponents || []).length
     }
   }
-  
+
   /**
-   * Enable/disable monitoring
-   */
-  setMonitoring(enabled) {
-    this.monitoringEnabled.value = enabled
-    
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`[CONFLICT DETECTOR] Monitoring ${enabled ? 'enabled' : 'disabled'}`)
-    }
-  }
-  
-  /**
-   * Clear all data
+   * Reset detector state
    */
   reset() {
-    this.conflicts.value = []
-    this.activeComponents.value.clear()
-    this.conflictHistory.value = []
-    
-    if (process.env.NODE_ENV === 'development') {
-      console.log('[CONFLICT DETECTOR] Reset completed')
+    this.activeComponents = []
+    this.conflicts = []
+    this.lastCheck = Date.now()
+  }
+
+  /**
+   * Enable/disable conflict detection
+   */
+  setEnabled(enabled) {
+    this.isEnabled = enabled
+
+    if (!enabled) {
+      this.conflicts = []
     }
   }
-  
+
   /**
-   * Cleanup resources
+   * Get conflicts by type
    */
-  destroy() {
-    if (this.periodicCheck) {
-      clearInterval(this.periodicCheck)
-    }
-    
-    if (this.domCheckTimeout) {
-      clearTimeout(this.domCheckTimeout)
-    }
-    
-    if (this.resizeTimeout) {
-      clearTimeout(this.resizeTimeout)
-    }
-    
-    this.reset()
+  getConflictsByType(type) {
+    return (this.conflicts || []).filter(c => c.type === type)
+  }
+
+  /**
+   * Get conflicts by severity
+   */
+  getConflictsBySeverity(severity) {
+    return (this.conflicts || []).filter(c => c.severity === severity)
+  }
+
+  /**
+   * Get component by ID
+   */
+  getComponent(id) {
+    return (this.activeComponents || []).find(c => c.id === id)
+  }
+
+  /**
+   * Get components by type
+   */
+  getComponentsByType(type) {
+    return (this.activeComponents || []).filter(c => c.type === type)
   }
 }
 

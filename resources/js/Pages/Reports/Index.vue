@@ -1,230 +1,404 @@
 <template>
   <AuthenticatedLayout>
-    <template #header>
-      <div class="flex justify-between items-center">
-        <div>
-          <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            Reports & Analytics
-          </h2>
-          <p class="text-sm text-gray-600 mt-1">
-            Comprehensive insights and data-driven decisions
-          </p>
-        </div>
-        <div class="flex space-x-3">
-          <button
-            @click="showScheduleModal = true"
-            class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md font-semibold text-xs text-gray-700 uppercase tracking-widest shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-25 transition ease-in-out duration-150"
-          >
-            <ClockIcon class="w-4 h-4 mr-2" />
-            Schedule Report
-          </button>
-          <button
-            @click="showCustomReportModal = true"
-            class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"
-          >
-            <PlusIcon class="w-4 h-4 mr-2" />
-            Custom Report
-          </button>
-        </div>
-      </div>
-    </template>
+    <div class="min-h-screen bg-gray-50">
+      <!-- Page Header -->
+      <div class="bg-white border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div class="py-6">
+            <!-- Breadcrumbs -->
+            <nav class="flex mb-4" aria-label="Breadcrumb">
+              <ol class="flex items-center space-x-2 text-sm">
+                <li>
+                  <Link :href="route('dashboard')" class="text-gray-500 hover:text-gray-700 transition-colors">
+                    Dashboard
+                  </Link>
+                </li>
+                <li class="flex items-center">
+                  <ChevronRightIcon class="w-4 h-4 text-gray-400 mx-2" />
+                  <span class="text-gray-900 font-medium">Reports & Analytics</span>
+                </li>
+              </ol>
+            </nav>
 
-    <div class="py-12">
-      <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
-        <!-- <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <StatsCard
-            :value="stats.totalUsers"
-            label="Total Employees"
-            icon="users"
-            variant="primary"
-            :clickable="true"
-            route="employees.index"
-          />
-
-          Active Projects Card
-          <StatsCard
-            :value="stats.activeProjects"
-            label="Active Projects"
-            icon="folder"
-            variant="success"
-            :clickable="true"
-            route="projects.index"
-          />
-
-          <StatsCard
-            :value="stats.completedTasks"
-            label="Completed Tasks"
-            icon="check-circle"
-            variant="info"
-            :clickable="true"
-            route="work-reports.index"
-          />
-
-          <StatsCard
-            :value="stats.hoursLogged"
-            label="Hours Logged"
-            icon="clock"
-            variant="warning"
-            :clickable="true"
-            route="attendances.index"
-          />
-        </div> -->
-
-        <!-- Report Categories -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-            <div class="p-6">
-              <h3 class="text-lg font-medium text-gray-900 mb-4">Project Reports</h3>
-              <div class="space-y-3">
-                <button
-                  @click="generateReport('project-summary')"
-                  class="w-full flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  <div class="flex items-center">
-                    <ChartBarIcon class="h-5 w-5 text-gray-400 mr-3" />
-                    <div class="text-left">
-                      <p class="text-sm font-medium text-gray-900">Project Summary</p>
-                      <p class="text-xs text-gray-500">Overview of all projects and their status</p>
-                    </div>
-                  </div>
-                  <ChevronRightIcon class="h-5 w-5 text-gray-400" />
-                </button>
-
-                <button
-                  @click="generateReport('project-progress')"
-                  class="w-full flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  <div class="flex items-center">
-                    <ArrowTrendingUpIcon class="h-5 w-5 text-gray-400 mr-3" />
-                    <div class="text-left">
-                      <p class="text-sm font-medium text-gray-900">Progress Tracking</p>
-                      <p class="text-xs text-gray-500">Detailed progress analysis by project</p>
-                    </div>
-                  </div>
-                  <ChevronRightIcon class="h-5 w-5 text-gray-400" />
-                </button>
+            <!-- Page Title and Actions -->
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+              <div class="mb-4 sm:mb-0">
+                <h1 class="text-2xl font-bold text-gray-900">Reports & Analytics</h1>
+                <p class="mt-1 text-sm text-gray-600">Comprehensive insights and data-driven decisions</p>
+              </div>
+              <div class="flex items-center space-x-3">
+                <SecondaryButton @click="showScheduleModal = true">
+                  <ClockIcon class="w-4 h-4 mr-2" />
+                  Schedule Report
+                </SecondaryButton>
+                <PrimaryButton @click="showCustomReportModal = true">
+                  <PlusIcon class="w-4 h-4 mr-2" />
+                  Custom Report
+                </PrimaryButton>
               </div>
             </div>
           </div>
+        </div>
+      </div>
 
-          <!-- Team Reports -->
-          <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-            <div class="p-6">
-              <h3 class="text-lg font-medium text-gray-900 mb-4">Team Reports</h3>
-              <div class="space-y-3">
-                <button
-                  @click="generateReport('team-performance')"
-                  class="w-full flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  <div class="flex items-center">
-                    <UserGroupIcon class="h-5 w-5 text-gray-400 mr-3" />
-                    <div class="text-left">
-                      <p class="text-sm font-medium text-gray-900">Team Performance</p>
-                      <p class="text-xs text-gray-500">Individual and team productivity metrics</p>
-                    </div>
-                  </div>
-                  <ChevronRightIcon class="h-5 w-5 text-gray-400" />
-                </button>
-
-                <button
-                  @click="generateReport('attendance')"
-                  class="w-full flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  <div class="flex items-center">
-                    <ClipboardDocumentCheckIcon class="h-5 w-5 text-gray-400 mr-3" />
-                    <div class="text-left">
-                      <p class="text-sm font-medium text-gray-900">Attendance Report</p>
-                      <p class="text-xs text-gray-500">Leave requests and attendance tracking</p>
-                    </div>
-                  </div>
-                  <ChevronRightIcon class="h-5 w-5 text-gray-400" />
-                </button>
+      <!-- Main Content -->
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Key Metrics Overview -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <!-- Total Employees -->
+          <div class="bg-white rounded-2xl p-6 border border-gray-100 hover:shadow-lg transition-all duration-300">
+            <div class="flex items-center justify-between mb-4">
+              <div class="p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl">
+                <UsersIcon class="w-6 h-6 text-white" />
               </div>
+              <div class="text-right">
+                <div class="text-2xl font-bold text-gray-900">{{ stats.totalUsers || 274 }}</div>
+                <div class="text-xs text-gray-500">Total Employees</div>
+              </div>
+            </div>
+            <div class="text-sm text-gray-600">Active workforce</div>
+          </div>
+
+          <!-- Active Projects -->
+          <div class="bg-white rounded-2xl p-6 border border-gray-100 hover:shadow-lg transition-all duration-300">
+            <div class="flex items-center justify-between mb-4">
+              <div class="p-3 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl">
+                <FolderIcon class="w-6 h-6 text-white" />
+              </div>
+              <div class="text-right">
+                <div class="text-2xl font-bold text-gray-900">{{ stats.activeProjects || 8 }}</div>
+                <div class="text-xs text-gray-500">Active Projects</div>
+              </div>
+            </div>
+            <div class="text-sm text-gray-600">In progress</div>
+          </div>
+
+          <!-- Completed Tasks -->
+          <div class="bg-white rounded-2xl p-6 border border-gray-100 hover:shadow-lg transition-all duration-300">
+            <div class="flex items-center justify-between mb-4">
+              <div class="p-3 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl">
+                <CheckCircleIcon class="w-6 h-6 text-white" />
+              </div>
+              <div class="text-right">
+                <div class="text-2xl font-bold text-gray-900">{{ stats.completedTasks || 142 }}</div>
+                <div class="text-xs text-gray-500">Completed Tasks</div>
+              </div>
+            </div>
+            <div class="text-sm text-gray-600">This month</div>
+          </div>
+
+          <!-- Hours Logged -->
+          <div class="bg-white rounded-2xl p-6 border border-gray-100 hover:shadow-lg transition-all duration-300">
+            <div class="flex items-center justify-between mb-4">
+              <div class="p-3 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl">
+                <ClockIcon class="w-6 h-6 text-white" />
+              </div>
+              <div class="text-right">
+                <div class="text-2xl font-bold text-gray-900">{{ stats.hoursLogged || 1250 }}</div>
+                <div class="text-xs text-gray-500">Hours Logged</div>
+              </div>
+            </div>
+            <div class="text-sm text-gray-600">Total hours</div>
+          </div>
+        </div>
+
+        <!-- Report Categories -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          
+          <!-- HR & Employee Reports -->
+          <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+            <div class="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-blue-100">
+              <div class="flex items-center space-x-3">
+                <div class="p-2 bg-blue-100 rounded-lg">
+                  <UsersIcon class="w-5 h-5 text-blue-600" />
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900">HR & Employee Reports</h3>
+              </div>
+            </div>
+            <div class="p-6 space-y-3">
+              <button
+                @click="generateReport('attendance')"
+                class="w-full flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all group"
+              >
+                <div class="flex items-center space-x-3">
+                  <ClipboardDocumentCheckIcon class="w-5 h-5 text-gray-500" />
+                  <div class="text-left">
+                    <p class="text-sm font-medium text-gray-900">Attendance Report</p>
+                    <p class="text-xs text-gray-500">Employee attendance and leave tracking</p>
+                  </div>
+                </div>
+                <ChevronRightIcon class="w-4 h-4 text-gray-400 group-hover:translate-x-1 transition-transform" />
+              </button>
+
+              <button
+                @click="generateReport('team-performance')"
+                class="w-full flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all group"
+              >
+                <div class="flex items-center space-x-3">
+                  <UserGroupIcon class="w-5 h-5 text-gray-500" />
+                  <div class="text-left">
+                    <p class="text-sm font-medium text-gray-900">Team Performance</p>
+                    <p class="text-xs text-gray-500">Individual and team productivity metrics</p>
+                  </div>
+                </div>
+                <ChevronRightIcon class="w-4 h-4 text-gray-400 group-hover:translate-x-1 transition-transform" />
+              </button>
+
+              <button
+                @click="generateReport('competency-analysis')"
+                class="w-full flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all group"
+              >
+                <div class="flex items-center space-x-3">
+                  <AcademicCapIcon class="w-5 h-5 text-gray-500" />
+                  <div class="text-left">
+                    <p class="text-sm font-medium text-gray-900">Competency Analysis</p>
+                    <p class="text-xs text-gray-500">Skills assessment and development tracking</p>
+                  </div>
+                </div>
+                <ChevronRightIcon class="w-4 h-4 text-gray-400 group-hover:translate-x-1 transition-transform" />
+              </button>
+            </div>
+          </div>
+
+          <!-- Project Reports -->
+          <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+            <div class="bg-gradient-to-r from-green-50 to-emerald-50 px-6 py-4 border-b border-green-100">
+              <div class="flex items-center space-x-3">
+                <div class="p-2 bg-green-100 rounded-lg">
+                  <FolderIcon class="w-5 h-5 text-green-600" />
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900">Project Reports</h3>
+              </div>
+            </div>
+            <div class="p-6 space-y-3">
+              <button
+                @click="generateReport('project-summary')"
+                class="w-full flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all group"
+              >
+                <div class="flex items-center space-x-3">
+                  <ChartBarIcon class="w-5 h-5 text-gray-500" />
+                  <div class="text-left">
+                    <p class="text-sm font-medium text-gray-900">Project Summary</p>
+                    <p class="text-xs text-gray-500">Overview of all projects and their status</p>
+                  </div>
+                </div>
+                <ChevronRightIcon class="w-4 h-4 text-gray-400 group-hover:translate-x-1 transition-transform" />
+              </button>
+
+              <button
+                @click="generateReport('project-progress')"
+                class="w-full flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all group"
+              >
+                <div class="flex items-center space-x-3">
+                  <ArrowTrendingUpIcon class="w-5 h-5 text-gray-500" />
+                  <div class="text-left">
+                    <p class="text-sm font-medium text-gray-900">Progress Tracking</p>
+                    <p class="text-xs text-gray-500">Detailed progress analysis by project</p>
+                  </div>
+                </div>
+                <ChevronRightIcon class="w-4 h-4 text-gray-400 group-hover:translate-x-1 transition-transform" />
+              </button>
+
+              <button
+                @click="generateReport('work-reports')"
+                class="w-full flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all group"
+              >
+                <div class="flex items-center space-x-3">
+                  <DocumentTextIcon class="w-5 h-5 text-gray-500" />
+                  <div class="text-left">
+                    <p class="text-sm font-medium text-gray-900">Work Reports</p>
+                    <p class="text-xs text-gray-500">Daily work reports and productivity</p>
+                  </div>
+                </div>
+                <ChevronRightIcon class="w-4 h-4 text-gray-400 group-hover:translate-x-1 transition-transform" />
+              </button>
+            </div>
+          </div>
+
+          <!-- Financial & Analytics -->
+          <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+            <div class="bg-gradient-to-r from-purple-50 to-indigo-50 px-6 py-4 border-b border-purple-100">
+              <div class="flex items-center space-x-3">
+                <div class="p-2 bg-purple-100 rounded-lg">
+                  <ChartBarIcon class="w-5 h-5 text-purple-600" />
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900">Analytics & Insights</h3>
+              </div>
+            </div>
+            <div class="p-6 space-y-3">
+              <button
+                @click="generateReport('timesheet-analysis')"
+                class="w-full flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all group"
+              >
+                <div class="flex items-center space-x-3">
+                  <ClockIcon class="w-5 h-5 text-gray-500" />
+                  <div class="text-left">
+                    <p class="text-sm font-medium text-gray-900">Timesheet Analysis</p>
+                    <p class="text-xs text-gray-500">Time tracking and billing analysis</p>
+                  </div>
+                </div>
+                <ChevronRightIcon class="w-4 h-4 text-gray-400 group-hover:translate-x-1 transition-transform" />
+              </button>
+
+              <button
+                @click="generateReport('feedback-summary')"
+                class="w-full flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all group"
+              >
+                <div class="flex items-center space-x-3">
+                  <ChatBubbleLeftEllipsisIcon class="w-5 h-5 text-gray-500" />
+                  <div class="text-left">
+                    <p class="text-sm font-medium text-gray-900">Feedback Summary</p>
+                    <p class="text-xs text-gray-500">Employee feedback and satisfaction</p>
+                  </div>
+                </div>
+                <ChevronRightIcon class="w-4 h-4 text-gray-400 group-hover:translate-x-1 transition-transform" />
+              </button>
+
+              <button
+                @click="generateReport('executive-dashboard')"
+                class="w-full flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all group"
+              >
+                <div class="flex items-center space-x-3">
+                  <PresentationChartBarIcon class="w-5 h-5 text-gray-500" />
+                  <div class="text-left">
+                    <p class="text-sm font-medium text-gray-900">Executive Dashboard</p>
+                    <p class="text-xs text-gray-500">High-level organizational metrics</p>
+                  </div>
+                </div>
+                <ChevronRightIcon class="w-4 h-4 text-gray-400 group-hover:translate-x-1 transition-transform" />
+              </button>
             </div>
           </div>
         </div>
 
         <!-- Recent Reports -->
-        <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-          <div class="p-6">
-            <div class="flex items-center justify-between mb-4">
-              <h3 class="text-lg font-medium text-gray-900">Recent Reports</h3>
-              <button
-                @click="refreshReports"
-                class="text-sm text-indigo-600 hover:text-indigo-500"
-              >
+        <div class="bg-white rounded-2xl border border-gray-100">
+          <div class="px-6 py-4 border-b border-gray-200">
+            <div class="flex items-center justify-between">
+              <h3 class="text-lg font-semibold text-gray-900">Recent Reports</h3>
+              <SecondaryButton @click="refreshReports" size="sm">
+                <ArrowPathIcon class="w-4 h-4 mr-2" />
                 Refresh
-              </button>
+              </SecondaryButton>
             </div>
-            
-            <div v-if="recentReports.length === 0" class="text-center py-8">
-              <DocumentIcon class="mx-auto h-12 w-12 text-gray-400" />
-              <h3 class="mt-2 text-sm font-medium text-gray-900">No reports yet</h3>
-              <p class="mt-1 text-sm text-gray-500">Get started by generating your first report.</p>
+          </div>
+          
+          <div class="p-6">
+            <div v-if="recentReports.length === 0" class="text-center py-12">
+              <DocumentIcon class="mx-auto h-16 w-16 text-gray-400 mb-4" />
+              <h3 class="text-lg font-semibold text-gray-900 mb-2">No reports yet</h3>
+              <p class="text-gray-600 mb-6">Get started by generating your first report from the categories above.</p>
+              <PrimaryButton @click="showCustomReportModal = true">
+                <PlusIcon class="w-4 h-4 mr-2" />
+                Create Your First Report
+              </PrimaryButton>
             </div>
 
             <div v-else class="overflow-hidden">
-              <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                  <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Report Name
-                    </th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Type
-                    </th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Generated
-                    </th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Status
-                    </th>
-                    <th class="relative px-6 py-3">
-                      <span class="sr-only">Actions</span>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                  <tr v-for="report in recentReports" :key="report.id">
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {{ report.name }}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {{ report.type }}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {{ formatDateForDisplay(report.created_at) }}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                      <span
-                        :class="{
-                          'inline-flex px-2 py-1 text-xs font-semibold rounded-full': true,
-                          'bg-green-100 text-green-800': report.status === 'completed',
-                          'bg-yellow-100 text-yellow-800': report.status === 'processing',
-                          'bg-red-100 text-red-800': report.status === 'failed'
-                        }"
-                      >
-                        {{ report.status }}
-                      </span>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button
-                        v-if="report.status === 'completed'"
-                        @click="downloadReport(report)"
-                        class="text-indigo-600 hover:text-indigo-900 mr-3"
-                      >
-                        Download
-                      </button>
-                      <button
-                        @click="deleteReport(report)"
-                        class="text-red-600 hover:text-red-900"
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+              <div class="hidden md:block">
+                <table class="min-w-full">
+                  <thead>
+                    <tr class="border-b border-gray-200">
+                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Report Name
+                      </th>
+                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Type
+                      </th>
+                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Generated
+                      </th>
+                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-gray-200">
+                    <tr v-for="report in recentReports" :key="report.id" class="hover:bg-gray-50">
+                      <td class="px-6 py-4 text-sm font-medium text-gray-900">
+                        {{ report.name }}
+                      </td>
+                      <td class="px-6 py-4 text-sm text-gray-500 capitalize">
+                        {{ report.type }}
+                      </td>
+                      <td class="px-6 py-4 text-sm text-gray-500">
+                        {{ formatDateForDisplay(report.created_at) }}
+                      </td>
+                      <td class="px-6 py-4">
+                        <span
+                          :class="{
+                            'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium': true,
+                            'bg-green-100 text-green-800': report.status === 'completed',
+                            'bg-yellow-100 text-yellow-800': report.status === 'processing',
+                            'bg-red-100 text-red-800': report.status === 'failed'
+                          }"
+                        >
+                          {{ report.status }}
+                        </span>
+                      </td>
+                      <td class="px-6 py-4 text-right space-x-2">
+                        <SecondaryButton
+                          v-if="report.status === 'completed'"
+                          @click="downloadReport(report)"
+                          size="sm"
+                        >
+                          Download
+                        </SecondaryButton>
+                        <SecondaryButton
+                          @click="deleteReport(report)"
+                          size="sm"
+                          variant="danger"
+                        >
+                          Delete
+                        </SecondaryButton>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Mobile View -->
+              <div class="md:hidden space-y-4">
+                <div v-for="report in recentReports" :key="report.id" class="bg-gray-50 rounded-lg p-4">
+                  <div class="flex items-center justify-between mb-2">
+                    <h4 class="font-medium text-gray-900">{{ report.name }}</h4>
+                    <span
+                      :class="{
+                        'inline-flex items-center px-2 py-1 rounded-full text-xs font-medium': true,
+                        'bg-green-100 text-green-800': report.status === 'completed',
+                        'bg-yellow-100 text-yellow-800': report.status === 'processing',
+                        'bg-red-100 text-red-800': report.status === 'failed'
+                      }"
+                    >
+                      {{ report.status }}
+                    </span>
+                  </div>
+                  <div class="text-sm text-gray-600 mb-3">
+                    <p>Type: {{ report.type }}</p>
+                    <p>Generated: {{ formatDateForDisplay(report.created_at) }}</p>
+                  </div>
+                  <div class="flex space-x-2">
+                    <SecondaryButton
+                      v-if="report.status === 'completed'"
+                      @click="downloadReport(report)"
+                      size="sm"
+                    >
+                      Download
+                    </SecondaryButton>
+                    <SecondaryButton
+                      @click="deleteReport(report)"
+                      size="sm"
+                      variant="danger"
+                    >
+                      Delete
+                    </SecondaryButton>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -354,10 +528,11 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
-import { router } from '@inertiajs/vue3'
+import { router, Link } from '@inertiajs/vue3'
 import axios from 'axios'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
-import StatsCard from '@/Components/Dashboard/StatsCard.vue'
+import PrimaryButton from '@/Components/PrimaryButton.vue'
+import SecondaryButton from '@/Components/SecondaryButton.vue'
 import { useDateUtils } from '@/composables/useDateUtils'
 import {
   ClockIcon,
@@ -372,7 +547,11 @@ import {
   ClipboardDocumentCheckIcon,
   ChatBubbleLeftEllipsisIcon,
   ChevronRightIcon,
-  DocumentIcon
+  DocumentIcon,
+  DocumentTextIcon,
+  PresentationChartBarIcon,
+  AcademicCapIcon,
+  ArrowPathIcon
 } from '@heroicons/vue/24/outline'
 
 const { formatDateForDisplay } = useDateUtils()

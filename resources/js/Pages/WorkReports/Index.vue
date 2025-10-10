@@ -705,7 +705,7 @@
 
 <script setup>
 import { router, Link } from '@inertiajs/vue3';
-import { computed, ref, onMounted, onUnmounted, watch } from 'vue';
+import { computed, ref, onMounted, onUnmounted, watch, nextTick } from 'vue';
 import { debounce } from 'lodash';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import PageLayout from '@/Components/Layout/PageLayout.vue';
@@ -849,11 +849,15 @@ const applyFilters = () => {
     params.date_to = localFilters.value.date_to;
   }
   
+  console.log('Applying filters with params:', params);
+  console.log('Current localFilters:', localFilters.value);
+  
   router.get(route('work-reports.index'), params, {
-    preserveState: true,
+    preserveState: false, // Force fresh data load
     preserveScroll: true,
     onFinish: () => {
       loading.value = false;
+      console.log('Filter request completed');
     },
     onError: (errors) => {
       console.error('Filter error:', errors);
@@ -958,10 +962,28 @@ const selectIntelligentPeriod = (period) => {
   activePeriod.value = period.key;
   
   const { start, end } = period.calculate();
-  localFilters.value.date_from = start.toISOString().split('T')[0];
-  localFilters.value.date_to = end.toISOString().split('T')[0];
+  const dateFrom = start.toISOString().split('T')[0];
+  const dateTo = end.toISOString().split('T')[0];
   
-  applyFilters();
+  console.log(`Selected period: ${period.label}`, {
+    key: period.key,
+    dateFrom,
+    dateTo,
+    start,
+    end,
+    currentFilters: localFilters.value
+  });
+  
+  // Update the local filters
+  localFilters.value.date_from = dateFrom;
+  localFilters.value.date_to = dateTo;
+  
+  console.log('Updated filters:', localFilters.value);
+  
+  // Apply the filters with a small delay to ensure state is updated
+  nextTick(() => {
+    applyFilters();
+  });
 };
 
 const applyDatePreset = (preset) => {

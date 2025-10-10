@@ -14,6 +14,7 @@ class Employee extends Model
         'user_id',
         'employee_code',
         'department_id',
+        'manager_id',
         'job_title',
         'join_date',
         'exit_date',
@@ -49,9 +50,19 @@ class Employee extends Model
         return $this->belongsTo(User::class, 'exit_processed_by');
     }
 
+    public function manager()
+    {
+        return $this->belongsTo(User::class, 'manager_id');
+    }
+
     public function managedDepartments()
     {
         return $this->hasMany(Department::class, 'manager_id');
+    }
+
+    public function competencyAssessments()
+    {
+        return $this->hasMany(CompetencyAssessment::class);
     }
 
     // Helper methods

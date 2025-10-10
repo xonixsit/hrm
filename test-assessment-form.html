@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assessment Form Test</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Additional styles for rich text editor */
+        .editor-content {
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            padding: 0.75rem;
+            min-height: 120px;
+            background: white;
+        }
+        
+        .editor-content:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        .upload-area {
+            border: 2px dashed #d1d5db;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .upload-area:hover {
+            border-color: #9ca3af;
+            background-color: #f9fafb;
+        }
+        
+        .file-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem;
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .rating-star {
+            width: 1.25rem;
+            height: 1.25rem;
+            color: #fbbf24;
+        }
+        
+        .rating-star.inactive {
+            color: #d1d5db;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 p-8">
+    <div id="app">
+        <div class="max-w-4xl mx-auto">
+            <h1 class="text-3xl font-bold text-gray-900 mb-8">Assessment Form Test</h1>
+            
+            <!-- Mock Assessment Form -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <assessment-form
+                    :employee="employee"
+                    :competency="competency"
+                    :assessment-type="assessmentType"
+                    :previous-assessments="previousAssessments"
+                    @submit="handleSubmit"
+                    @cancel="handleCancel"
+                    @draft-saved="handleDraftSaved"
+                    @rating-changed="handleRatingChanged"
+                />
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { createApp, ref } = Vue;
+
+        // Mock components
+        const FormField = {
+            template: `
+                <div class="mb-6">
+                    <label v-if="label" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ label }}
+                        <span v-if="required" class="text-red-500 ml-1">*</span>
+                    </label>
+                    <slot></slot>
+                    <p v-if="errorMessage" class="mt-1 text-sm text-red-600">{{ errorMessage }}</p>
+                    <p v-if="helpText && !errorMessage" class="mt-1 text-sm text-gray-500">{{ helpText }}</p>
+                </div>
+            `,
+            props: ['label', 'required', 'errorMessage', 'helpText']
+        };
+
+        const RatingInput = {
+            template: `
+                <div class="rating-input">
+                    <div v-if="showGuidelines && guidelines" class="mb-4 p-4 bg-gray-50 rounded-lg">
+                        <h4 class="text-sm font-medium text-gray-900 mb-2">Rating Guidelines</h4>
+                        <div class="space-y-2">
+                            <div v-for="(guideline, rating) in guidelines" :key="rating" class="flex items-center space-x-2">
+                                <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 text-blue-800 text-xs font-semibold">
+                                    {{ rating }}
+                                </span>
+                                <span class="text-sm">{{ guideline.label || guideline }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center space-x-4">
+                        <div v-for="rating in 5" :key="rating" class="flex flex-col items-center">
+                            <button
+                                type="button"
+                                @click="selectRating(rating)"
+                                class="w-10 h-10 rounded-full border-2 transition-all duration-200 flex items-center justify-center"
+                                :class="modelValue === rating ? 'border-blue-500 bg-blue-100 text-blue-700' : 'border-gray-300 hover:border-gray-400'"
+                            >
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                </svg>
+                            </button>
+                            <span class="text-xs text-gray-600 mt-1">{{ rating }}</span>
+                        </div>
+                    </div>
+                    
+                    <div v-if="requiresComments && modelValue" class="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                        <p class="text-sm text-amber-800">
+                            <strong>Comments Required:</strong> Please provide detailed feedback for this rating.
+                        </p>
+                    </div>
+                </div>
+            `,
+            props: ['modelValue', 'guidelines', 'showGuidelines', 'requireCommentsForExtremes', 'errorMessage', 'size'],
+            emits: ['update:modelValue', 'change'],
+            computed: {
+                requiresComments() {
+                    if (!this.requireCommentsForExtremes || !this.modelValue) return false;
+                    return this.modelValue <= 2 || this.modelValue >= 4;
+                }
+            },
+            methods: {
+                selectRating(rating) {
+                    this.$emit('update:modelValue', rating);
+                    this.$emit('change', rating);
+                }
+            }
+        };
+
+        const RichTextEditor = {
+            template: `
+                <div class="rich-text-editor">
+                    <div v-if="showToolbar" class="border-b border-gray-200 p-2 bg-gray-50 rounded-t-md">
+                        <div class="flex items-center space-x-2">
+                            <button type="button" class="p-1 text-gray-600 hover:text-gray-900 rounded">
+                                <strong>B</strong>
+                            </button>
+                            <button type="button" class="p-1 text-gray-600 hover:text-gray-900 rounded">
+                                <em>I</em>
+                            </button>
+                            <button type="button" class="p-1 text-gray-600 hover:text-gray-900 rounded">
+                                <u>U</u>
+                            </button>
+                        </div>
+                    </div>
+                    <textarea
+                        :value="modelValue"
+                        @input="$emit('update:modelValue', $event.target.value)"
+                        :placeholder="placeholder"
+                        :required="required"
+                        :maxlength="maxLength"
+                        class="editor-content w-full"
+                        :class="showToolbar ? 'rounded-t-none' : 'rounded-md'"
+                        rows="6"
+                    ></textarea>
+                    <div v-if="showCharacterCount" class="flex justify-end mt-1">
+                        <span class="text-xs text-gray-500">
+                            {{ (modelValue || '').length }}{{ maxLength ? '/' + maxLength : '' }}
+                        </span>
+                    </div>
+                </div>
+            `,
+            props: ['modelValue', 'placeholder', 'required', 'minLength', 'maxLength', 'showCharacterCount', 'showToolbar', 'errorMessage'],
+            emits: ['update:modelValue']
+        };
+
+        const FileUpload = {
+            template: `
+                <div class="file-upload">
+                    <div class="upload-area" @click="triggerUpload">
+                        <input type="file" ref="fileInput" :multiple="multiple" class="hidden" @change="handleFileSelect">
+                        <div class="text-center">
+                            <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                                <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                            <p class="mt-2 text-sm text-gray-600">
+                                <span class="font-medium text-blue-600 hover:text-blue-500">Click to upload</span>
+                                or drag and drop
+                            </p>
+                            <p class="text-xs text-gray-500">PNG, JPG, PDF up to 10MB</p>
+                        </div>
+                    </div>
+                    
+                    <div v-if="files.length > 0" class="mt-4">
+                        <h4 class="text-sm font-medium text-gray-900 mb-2">Uploaded Files</h4>
+                        <div class="space-y-2">
+                            <div v-for="(file, index) in files" :key="index" class="file-item">
+                                <span class="flex-1 text-sm text-gray-900">{{ file.name }}</span>
+                                <span class="text-xs text-gray-500">{{ formatFileSize(file.size) }}</span>
+                                <button @click="removeFile(index)" class="ml-2 text-red-600 hover:text-red-800">
+                                    ×
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `,
+            props: ['modelValue', 'multiple', 'maxFiles', 'maxFileSize', 'acceptedTypes', 'errorMessage'],
+            emits: ['update:modelValue', 'files-added', 'file-removed'],
+            data() {
+                return {
+                    files: this.modelValue || []
+                };
+            },
+            methods: {
+                triggerUpload() {
+                    this.$refs.fileInput.click();
+                },
+                handleFileSelect(event) {
+                    const newFiles = Array.from(event.target.files);
+                    this.files.push(...newFiles);
+                    this.$emit('update:modelValue', this.files);
+                    this.$emit('files-added', newFiles);
+                },
+                removeFile(index) {
+                    const removedFile = this.files.splice(index, 1)[0];
+                    this.$emit('update:modelValue', this.files);
+                    this.$emit('file-removed', removedFile);
+                },
+                formatFileSize(bytes) {
+                    if (bytes === 0) return '0 Bytes';
+                    const k = 1024;
+                    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                    const i = Math.floor(Math.log(bytes) / Math.log(k));
+                    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+                }
+            }
+        };
+
+        const BaseTextarea = {
+            template: `
+                <textarea
+                    :value="modelValue"
+                    @input="$emit('update:modelValue', $event.target.value)"
+                    :placeholder="placeholder"
+                    :rows="rows"
+                    :maxlength="maxLength"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                ></textarea>
+            `,
+            props: ['modelValue', 'placeholder', 'rows', 'maxLength', 'showCharacterCount', 'errorMessage'],
+            emits: ['update:modelValue']
+        };
+
+        const PrimaryButton = {
+            template: `
+                <button
+                    type="submit"
+                    :disabled="disabled"
+                    class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 focus:bg-blue-700 active:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition ease-in-out duration-150"
+                    :class="{ 'opacity-50 cursor-not-allowed': disabled }"
+                >
+                    <slot></slot>
+                </button>
+            `,
+            props: ['disabled']
+        };
+
+        const SecondaryButton = {
+            template: `
+                <button
+                    type="button"
+                    :disabled="disabled"
+                    class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md font-semibold text-xs text-gray-700 uppercase tracking-widest shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-25 transition ease-in-out duration-150"
+                >
+                    <slot></slot>
+                </button>
+            `,
+            props: ['disabled']
+        };
+
+        // Mock AssessmentForm component (simplified)
+        const AssessmentForm = {
+            template: `
+                <div class="assessment-form-wrapper">
+                    <!-- Employee Context -->
+                    <div class="mb-6 p-4 bg-gray-50 rounded-lg">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold">
+                                {{ getInitials(employee.name) }}
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-900">{{ employee.name }}</h3>
+                                <p class="text-sm text-gray-600">{{ employee.position || 'Employee' }}</p>
+                                <p v-if="employee.department" class="text-sm text-gray-500">{{ employee.department.name }}</p>
+                            </div>
+                            <div class="ml-auto">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    {{ getAssessmentTypeLabel() }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Competency Context -->
+                    <div class="mb-6 p-4 border border-gray-200 rounded-lg">
+                        <h2 class="text-xl font-semibold text-gray-900 mb-2">{{ competency.name }}</h2>
+                        <p class="text-gray-600 mb-4">{{ competency.description }}</p>
+                        
+                        <div v-if="competency.measurement_indicators?.length" class="mb-4">
+                            <h4 class="text-sm font-medium text-gray-900 mb-2">Key Performance Indicators</h4>
+                            <ul class="space-y-1">
+                                <li v-for="indicator in competency.measurement_indicators" :key="indicator" class="flex items-start space-x-2">
+                                    <span class="text-green-500 mt-0.5">✓</span>
+                                    <span class="text-sm text-gray-700">{{ indicator }}</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Assessment Form -->
+                    <form @submit.prevent="handleSubmit">
+                        <!-- Rating -->
+                        <form-field label="Rating" :required="true" help-text="Select a rating based on performance">
+                            <rating-input
+                                v-model="form.rating"
+                                :guidelines="competency.rating_guidelines"
+                                :show-guidelines="true"
+                                :require-comments-for-extremes="true"
+                                size="lg"
+                                @change="handleRatingChange"
+                            />
+                        </form-field>
+
+                        <!-- Comments -->
+                        <form-field 
+                            label="Comments" 
+                            :required="requiresComments"
+                            :help-text="getCommentsHelpText()"
+                        >
+                            <rich-text-editor
+                                v-model="form.comments"
+                                :placeholder="getCommentsPlaceholder()"
+                                :required="requiresComments"
+                                :min-length="requiresComments ? 50 : 0"
+                                :max-length="2000"
+                                :show-character-count="true"
+                            />
+                        </form-field>
+
+                        <!-- Evidence Files -->
+                        <form-field 
+                            label="Supporting Evidence" 
+                            help-text="Upload documents, images, or other files (optional)"
+                        >
+                            <file-upload
+                                v-model="form.evidence_files"
+                                :multiple="true"
+                                :max-files="5"
+                                :max-file-size="10"
+                                :accepted-types="['image/*', 'application/pdf', '.doc', '.docx', '.txt']"
+                            />
+                        </form-field>
+
+                        <!-- Development Notes -->
+                        <form-field 
+                            label="Development Recommendations" 
+                            help-text="Suggest specific actions or resources for improvement (optional)"
+                        >
+                            <base-textarea
+                                v-model="form.development_notes"
+                                placeholder="Provide specific recommendations for skill development..."
+                                :rows="4"
+                                :max-length="1000"
+                                :show-character-count="true"
+                            />
+                        </form-field>
+
+                        <!-- Form Actions -->
+                        <div class="flex items-center justify-between pt-6 border-t border-gray-200">
+                            <div class="flex space-x-3">
+                                <secondary-button @click="saveDraft" :disabled="form.processing">
+                                    Save Draft
+                                </secondary-button>
+                                <secondary-button @click="handleCancel" :disabled="form.processing">
+                                    Cancel
+                                </secondary-button>
+                            </div>
+                            <primary-button :disabled="!canSubmit || form.processing">
+                                <span v-if="form.processing">Submitting...</span>
+                                <span v-else>Submit Assessment</span>
+                            </primary-button>
+                        </div>
+                    </form>
+                </div>
+            `,
+            components: {
+                FormField,
+                RatingInput,
+                RichTextEditor,
+                FileUpload,
+                BaseTextarea,
+                PrimaryButton,
+                SecondaryButton
+            },
+            props: ['employee', 'competency', 'assessmentType', 'previousAssessments'],
+            emits: ['submit', 'cancel', 'draft-saved', 'rating-changed'],
+            data() {
+                return {
+                    form: {
+                        rating: null,
+                        comments: '',
+                        evidence_files: [],
+                        development_notes: '',
+                        processing: false
+                    }
+                };
+            },
+            computed: {
+                requiresComments() {
+                    if (!this.form.rating) return false;
+                    return this.form.rating <= 2 || this.form.rating >= 4;
+                },
+                canSubmit() {
+                    return this.form.rating && 
+                           (!this.requiresComments || (this.form.comments && this.form.comments.length >= 50));
+                }
+            },
+            methods: {
+                getInitials(name) {
+                    return name.split(' ').map(word => word.charAt(0)).join('').toUpperCase().slice(0, 2);
+                },
+                getAssessmentTypeLabel() {
+                    const labels = {
+                        self: 'Self Assessment',
+                        manager: 'Manager Assessment',
+                        peer: 'Peer Assessment',
+                        '360': '360° Feedback'
+                    };
+                    return labels[this.assessmentType] || 'Assessment';
+                },
+                getCommentsHelpText() {
+                    if (!this.form.rating) return 'Comments will be required based on your rating selection';
+                    
+                    const rating = parseInt(this.form.rating);
+                    if (rating <= 2) {
+                        return 'Detailed comments are required for ratings of 2 or below. Please explain areas for improvement.';
+                    }
+                    if (rating >= 4) {
+                        return 'Detailed comments are required for ratings of 4 or above. Please highlight exceptional performance.';
+                    }
+                    return 'Comments are optional for this rating, but encouraged to provide context.';
+                },
+                getCommentsPlaceholder() {
+                    if (!this.form.rating) return 'Provide detailed feedback about performance...';
+                    
+                    const rating = parseInt(this.form.rating);
+                    if (rating <= 2) {
+                        return 'Describe specific areas where improvement is needed...';
+                    }
+                    if (rating >= 4) {
+                        return 'Highlight specific examples of exceptional performance...';
+                    }
+                    return 'Provide context for your rating and specific examples...';
+                },
+                handleRatingChange(rating) {
+                    this.$emit('rating-changed', rating);
+                },
+                handleSubmit() {
+                    this.form.processing = true;
+                    setTimeout(() => {
+                        this.form.processing = false;
+                        this.$emit('submit', this.form);
+                        alert('Assessment submitted successfully!');
+                    }, 2000);
+                },
+                handleCancel() {
+                    this.$emit('cancel');
+                    alert('Assessment cancelled');
+                },
+                saveDraft() {
+                    this.$emit('draft-saved', this.form);
+                    alert('Draft saved successfully!');
+                }
+            }
+        };
+
+        createApp({
+            components: {
+                AssessmentForm
+            },
+            setup() {
+                const employee = ref({
+                    id: 1,
+                    name: 'John Doe',
+                    position: 'Software Developer',
+                    department: { name: 'Engineering' }
+                });
+
+                const competency = ref({
+                    id: 1,
+                    name: 'Communication Skills',
+                    description: 'Ability to communicate effectively with team members, stakeholders, and clients through various channels.',
+                    category: 'Soft Skills',
+                    weight: 3.5,
+                    measurement_indicators: [
+                        'Clearly articulates ideas in meetings and presentations',
+                        'Actively listens and responds appropriately to feedback',
+                        'Writes clear and concise documentation',
+                        'Facilitates productive discussions and resolves conflicts'
+                    ],
+                    rating_guidelines: {
+                        1: { label: 'Poor', description: 'Significant communication barriers, unclear expression' },
+                        2: { label: 'Needs Improvement', description: 'Some communication issues, requires guidance' },
+                        3: { label: 'Meets Expectations', description: 'Communicates effectively in most situations' },
+                        4: { label: 'Exceeds Expectations', description: 'Strong communicator, helps others improve' },
+                        5: { label: 'Outstanding', description: 'Exceptional communication skills, leads by example' }
+                    }
+                });
+
+                const assessmentType = ref('manager');
+
+                const previousAssessments = ref([
+                    {
+                        id: 1,
+                        rating: 3,
+                        submitted_at: '2024-01-15',
+                        assessor: { name: 'Jane Smith' }
+                    },
+                    {
+                        id: 2,
+                        rating: 4,
+                        submitted_at: '2023-07-15',
+                        assessor: { name: 'Mike Johnson' }
+                    }
+                ]);
+
+                const handleSubmit = (formData) => {
+                    console.log('Assessment submitted:', formData);
+                };
+
+                const handleCancel = () => {
+                    console.log('Assessment cancelled');
+                };
+
+                const handleDraftSaved = (formData) => {
+                    console.log('Draft saved:', formData);
+                };
+
+                const handleRatingChanged = (rating) => {
+                    console.log('Rating changed:', rating);
+                };
+
+                return {
+                    employee,
+                    competency,
+                    assessmentType,
+                    previousAssessments,
+                    handleSubmit,
+                    handleCancel,
+                    handleDraftSaved,
+                    handleRatingChanged
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>

@@ -14,6 +14,14 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TimesheetController;
 use App\Http\Controllers\WorkReportController;
+use App\Http\Controllers\Admin\CompetencyController;
+use App\Http\Controllers\EmployeeCompetencyController;
+use App\Http\Controllers\CompetencyAssessmentController;
+use App\Http\Controllers\CompetencyDevelopmentPlanController;
+use App\Http\Controllers\AssessmentCycleController;
+use App\Http\Controllers\AssessmentWorkflowController;
+use App\Http\Controllers\CompetencyAnalyticsController;
+use App\Http\Controllers\OrganizationalAnalyticsController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -121,6 +129,142 @@ Route::middleware('auth')->group(function () {
     
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::post('/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
+
+    Route::resource('competencies', CompetencyController::class);
+    Route::post('competencies/{competency}/toggle-status', [CompetencyController::class, 'toggleStatus'])->name('competencies.toggle-status');
+    Route::post('competencies/bulk-activate', [CompetencyController::class, 'bulkActivate'])->name('competencies.bulk-activate');
+    Route::post('competencies/bulk-deactivate', [CompetencyController::class, 'bulkDeactivate'])->name('competencies.bulk-deactivate');
+    Route::post('competencies/bulk-delete', [CompetencyController::class, 'bulkDelete'])->name('competencies.bulk-delete');
+    Route::post('competencies/{competency}/duplicate', [CompetencyController::class, 'duplicate'])->name('competencies.duplicate');
+    Route::get('competencies/export', [CompetencyController::class, 'export'])->name('competencies.export');
+    
+    // Competency Assessment routes
+    Route::get('assessment-dashboard', [CompetencyAssessmentController::class, 'dashboard'])->name('assessment-dashboard');
+    Route::get('assessment-form', [CompetencyAssessmentController::class, 'createForm'])->name('assessment-form');
+    Route::get('my-self-assessment', [CompetencyAssessmentController::class, 'createSelfAssessment'])->name('my-self-assessment');
+    
+    // File routes for assessment evidence
+    Route::post('assessment-files/{assessmentId}/upload', [App\Http\Controllers\AssessmentFileController::class, 'upload'])
+        ->name('assessment-files.upload');
+    Route::get('assessment-files/{assessmentId}/{fileName}', [App\Http\Controllers\AssessmentFileController::class, 'show'])
+        ->name('assessment-files.show');
+    Route::get('assessment-form/{competencyAssessment}/edit', [CompetencyAssessmentController::class, 'editForm'])->name('assessment-form.edit');
+    
+    // Test route for debugging
+    Route::get('test-assessment-creation', function() {
+        $employee = \App\Models\Employee::first();
+        $competency = \App\Models\Competency::first();
+        
+        if (!$employee || !$competency) {
+            return response()->json(['error' => 'No test data available']);
+        }
+        
+        try {
+            $assessment = \App\Models\CompetencyAssessment::create([
+                'employee_id' => $employee->id,
+                'competency_id' => $competency->id,
+                'assessor_id' => auth()->id(),
+                'assessment_cycle_id' => null,
+                'assessment_type' => 'manager',
+                'status' => 'draft',
+                'rating' => null,
+                'comments' => null,
+                'evidence_files' => [],
+                'development_notes' => null,
+            ]);
+            
+            return response()->json([
+                'success' => true,
+                'assessment_id' => $assessment->id,
+                'message' => 'Test assessment created successfully'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+        }
+    })->name('test-assessment-creation');
+    
+    Route::resource('competency-assessments', CompetencyAssessmentController::class);
+    Route::post('competency-assessments/{competencyAssessment}/submit', [CompetencyAssessmentController::class, 'submit'])->name('competency-assessments.submit');
+    Route::post('competency-assessments/{competencyAssessment}/approve', [CompetencyAssessmentController::class, 'approve'])->name('competency-assessments.approve');
+    Route::post('competency-assessments/{competencyAssessment}/reject', [CompetencyAssessmentController::class, 'reject'])->name('competency-assessments.reject');
+    Route::get('competency-assessments/{competencyAssessment}/evaluate', [CompetencyAssessmentController::class, 'evaluate'])->name('competency-assessments.evaluate');
+    Route::get('employees/{employee}/assessments', [CompetencyAssessmentController::class, 'byEmployee'])->name('competency-assessments.by-employee');
+    Route::get('my-assessments', [CompetencyAssessmentController::class, 'myAssessments'])->name('competency-assessments.my-assessments');
+    Route::get('pending-assessments', [CompetencyAssessmentController::class, 'pending'])->name('competency-assessments.pending');
+    Route::post('competency-assessments/bulk-create', [CompetencyAssessmentController::class, 'bulkCreate'])->name('competency-assessments.bulk-create');
+    Route::post('competency-assessments/bulk-submit', [CompetencyAssessmentController::class, 'bulkSubmit'])->name('competency-assessments.bulk-submit');
+    Route::post('competency-assessments/bulk-approve', [CompetencyAssessmentController::class, 'bulkApprove'])->name('competency-assessments.bulk-approve');
+    Route::get('competency-assessments/export', [CompetencyAssessmentController::class, 'export'])->name('competency-assessments.export');
+    
+    // Assessment Workflow routes
+    Route::get('assessment-workflow', function () {
+        return Inertia::render('Competency/AssessmentWorkflow');
+    })->name('assessment-workflow');
+
+    // System Settings routes (Admin only)
+    Route::middleware(['auth'])->prefix('admin')->group(function () {
+        Route::get('system-settings', [App\Http\Controllers\Admin\SystemSettingsController::class, 'index'])->name('system-settings.index');
+        Route::post('system-settings', [App\Http\Controllers\Admin\SystemSettingsController::class, 'update'])->name('system-settings.update');
+        Route::post('system-settings/clear-cache', [App\Http\Controllers\Admin\SystemSettingsController::class, 'clearCache'])->name('system-settings.clear-cache');
+        Route::post('system-settings/optimize', [App\Http\Controllers\Admin\SystemSettingsController::class, 'optimize'])->name('system-settings.optimize');
+        Route::get('system-settings/health', [App\Http\Controllers\Admin\SystemSettingsController::class, 'health'])->name('system-settings.health');
+    });
+    
+
+    Route::get('assessment-workflow/dashboard', [AssessmentWorkflowController::class, 'dashboard'])->name('assessment-workflow.dashboard');
+    Route::post('competency-assessments/{competencyAssessment}/transition-status', [AssessmentWorkflowController::class, 'transitionStatus'])->name('assessment-workflow.transition-status');
+    Route::post('assessment-workflow/bulk-process', [AssessmentWorkflowController::class, 'bulkProcess'])->name('assessment-workflow.bulk-process');
+    Route::post('competency-assessments/{competencyAssessment}/extend-deadline', [AssessmentWorkflowController::class, 'extendDeadline'])->name('assessment-workflow.extend-deadline');
+    Route::post('competency-assessments/{competencyAssessment}/reassign', [AssessmentWorkflowController::class, 'reassign'])->name('assessment-workflow.reassign');
+    Route::get('competency-assessments/{competencyAssessment}/workflow-history', [AssessmentWorkflowController::class, 'getWorkflowHistory'])->name('assessment-workflow.history');
+    Route::get('assessment-workflow/pending-approvals', [AssessmentWorkflowController::class, 'getPendingApprovals'])->name('assessment-workflow.pending-approvals');
+    
+    // Development Plan routes
+    Route::resource('development-plans', CompetencyDevelopmentPlanController::class);
+    Route::post('development-plans/{developmentPlan}/update-status', [CompetencyDevelopmentPlanController::class, 'updateStatus'])->name('development-plans.update-status');
+    Route::post('development-plans/{developmentPlan}/add-action', [CompetencyDevelopmentPlanController::class, 'addAction'])->name('development-plans.add-action');
+    Route::post('development-plans/{developmentPlan}/update-action', [CompetencyDevelopmentPlanController::class, 'updateAction'])->name('development-plans.update-action');
+    Route::post('development-plans/{developmentPlan}/update-progress', [CompetencyDevelopmentPlanController::class, 'updateProgress'])->name('development-plans.update-progress');
+    
+    // Assessment Cycle routes
+    Route::get('assessment-cycle-manager', [AssessmentCycleController::class, 'manager'])->name('assessment-cycle-manager');
+    Route::resource('assessment-cycles', AssessmentCycleController::class)->except(['index']);
+    Route::post('assessment-cycles/{assessmentCycle}/start', [AssessmentCycleController::class, 'start'])->name('assessment-cycles.start');
+    Route::post('assessment-cycles/{assessmentCycle}/complete', [AssessmentCycleController::class, 'complete'])->name('assessment-cycles.complete');
+    Route::post('assessment-cycles/{assessmentCycle}/cancel', [AssessmentCycleController::class, 'cancel'])->name('assessment-cycles.cancel');
+    Route::post('assessment-cycles/{assessmentCycle}/extend-deadline', [AssessmentCycleController::class, 'extendDeadline'])->name('assessment-cycles.extend-deadline');
+    Route::post('assessment-cycles/{assessmentCycle}/send-reminders', [AssessmentCycleController::class, 'sendReminders'])->name('assessment-cycles.send-reminders');
+    Route::get('assessment-cycles/{assessmentCycle}/progress-report', [AssessmentCycleController::class, 'progressReport'])->name('assessment-cycles.progress-report');
+    Route::post('assessment-cycles/{assessmentCycle}/duplicate', [AssessmentCycleController::class, 'duplicate'])->name('assessment-cycles.duplicate');
+    
+    // Competency Analytics routes
+    Route::prefix('competency-analytics')->name('competency-analytics.')->group(function () {
+        Route::get('/', [CompetencyAnalyticsController::class, 'index'])->name('index');
+        Route::get('/dashboard', [CompetencyAnalyticsController::class, 'dashboard'])->name('dashboard');
+        Route::get('/employee/{employee}', [CompetencyAnalyticsController::class, 'employee'])->name('employee');
+        Route::get('/department/{department}', [CompetencyAnalyticsController::class, 'department'])->name('department');
+        Route::get('/skill-gaps', [CompetencyAnalyticsController::class, 'skillGaps'])->name('skill-gaps');
+        Route::get('/trends', [CompetencyAnalyticsController::class, 'trends'])->name('trends');
+        Route::get('/compare', [CompetencyAnalyticsController::class, 'compare'])->name('compare');
+        Route::get('/reports', [CompetencyAnalyticsController::class, 'reports'])->name('reports');
+        Route::post('/generate-report', [CompetencyAnalyticsController::class, 'generateReport'])->name('generate-report');
+        Route::post('/export', [CompetencyAnalyticsController::class, 'export'])->name('export');
+        Route::get('/download/{filename}', [CompetencyAnalyticsController::class, 'download'])->name('download');
+        Route::get('/insights', [CompetencyAnalyticsController::class, 'insights'])->name('insights');
+        Route::get('/distribution', [CompetencyAnalyticsController::class, 'distribution'])->name('distribution');
+        Route::post('/development-plans-report', [CompetencyAnalyticsController::class, 'developmentPlansReport'])->name('development-plans-report');
+    });
+
+    // Organizational Analytics routes
+    Route::prefix('organizational-analytics')->name('organizational-analytics.')->group(function () {
+        Route::get('/', [OrganizationalAnalyticsController::class, 'index'])->name('index');
+        Route::post('/export', [OrganizationalAnalyticsController::class, 'export'])->name('export');
+        Route::get('/download/{filename}', [OrganizationalAnalyticsController::class, 'download'])->name('download');
+    });
 });
 
 require __DIR__.'/auth.php';

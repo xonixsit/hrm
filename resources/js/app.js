@@ -5,7 +5,7 @@ import { createInertiaApp, router } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createApp, h } from 'vue';
 import { ZiggyVue } from '../../vendor/tightenco/ziggy';
-import NavigationConflictDetector from '@/services/NavigationConflictDetector.js';
+import { conflictDetector } from '@/services/NavigationConflictDetector.js';
 
 // Define process.env for compatibility with code that uses it
 try {
@@ -96,7 +96,7 @@ createInertiaApp({
             .use(ZiggyVue);
 
         // Make conflictDetector globally available
-        app.config.globalProperties.$conflictDetector = new NavigationConflictDetector();
+        app.config.globalProperties.$conflictDetector = conflictDetector;
         
         // Add global error handler to Vue app
         app.config.errorHandler = (error, instance, info) => {

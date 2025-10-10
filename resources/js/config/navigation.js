@@ -122,11 +122,34 @@ export const navigationStructure = {
       ]
     },
     {
+        id: 'competency',
+        label: 'Competency',
+        icon: 'academic-cap',
+        roles: ['Admin'],
+        order: 6,
+        children: [
+          {
+            id: 'competencies',
+            label: 'Competencies',
+            icon: 'academic-cap',
+            route: 'competencies.index',
+            roles: ['Admin']
+          },
+          {
+            id: 'employee-competencies',
+            label: 'Assess Employee',
+            icon: 'user-check',
+            route: 'employee-competencies.index',
+            roles: ['Admin']
+          }
+        ]
+    },
+    {
       id: 'settings',
       label: 'Settings',
       icon: 'cog',
       roles: ['Admin'],
-      order: 6,
+      order: 7,
       children: [
         {
           id: 'system-settings',

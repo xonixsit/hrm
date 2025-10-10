@@ -251,6 +251,13 @@ class WorkReportController extends Controller
         $dateFrom = $request->filled('date_from') ? trim($request->date_from) : null;
         $dateTo = $request->filled('date_to') ? trim($request->date_to) : null;
         
+        // Debug logging
+        \Log::info('Performance Stats Date Filters', [
+            'date_from' => $dateFrom,
+            'date_to' => $dateTo,
+            'request_params' => $request->all()
+        ]);
+        
         // Validate date format
         if ($dateFrom && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateFrom)) {
             $dateFrom = null;
@@ -311,7 +318,7 @@ class WorkReportController extends Controller
         // Calculate trend (compare with previous period)
         $callsTrend = $this->calculateTrend($request, $user, $stats->total_calls);
         
-        return [
+        $result = [
             'total_calls' => (int) $stats->total_calls,
             'successful_calls' => (int) $stats->successful_calls,
             'calls_not_received' => (int) $stats->calls_not_received,
@@ -325,6 +332,15 @@ class WorkReportController extends Controller
             'daily_average' => $dailyAverage,
             'calls_trend' => $callsTrend
         ];
+        
+        // Debug logging
+        \Log::info('Performance Stats Result', [
+            'date_filters' => ['from' => $dateFrom, 'to' => $dateTo],
+            'raw_stats' => $stats->toArray(),
+            'calculated_result' => $result
+        ]);
+        
+        return $result;
     }
 
     /**

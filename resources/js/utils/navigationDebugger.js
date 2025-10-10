@@ -545,15 +545,24 @@ class NavigationDebugger {
   autoDebugOnIssues() {
     if (!this.autoDebug) return
     
-    // Monitor for conflicts
-    const originalDetectConflicts = conflictDetector.detectConflicts.bind(conflictDetector)
-    conflictDetector.detectConflicts = (...args) => {
-      const conflicts = originalDetectConflicts(...args)
-      if (conflicts.length > 0) {
-        console.warn('🚨 Auto-debug triggered by conflicts')
-        this.debug(this.DEBUG_CATEGORIES.CONFLICT, true)
+    try {
+      // Monitor for conflicts with error handling
+      const originalDetectConflicts = conflictDetector.detectConflicts.bind(conflictDetector)
+      conflictDetector.detectConflicts = (...args) => {
+        try {
+          const conflicts = originalDetectConflicts(...args)
+          if (conflicts && Array.isArray(conflicts) && conflicts.length > 0) {
+            console.warn('🚨 Auto-debug triggered by conflicts')
+            this.debug(this.DEBUG_CATEGORIES.CONFLICT, true)
+          }
+          return conflicts || []
+        } catch (error) {
+          console.warn('[NAVIGATION DEBUGGER] Error in detectConflicts wrapper:', error)
+          return []
+        }
       }
-      return conflicts
+    } catch (error) {
+      console.warn('[NAVIGATION DEBUGGER] Error setting up conflict detector monitoring:', error)
     }
     
     // Monitor for errors

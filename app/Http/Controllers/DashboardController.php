@@ -11,6 +11,8 @@ use App\Models\Employee;
 use App\Models\User;
 use App\Models\Department;
 use App\Models\Project;
+use App\Models\CompetencyAssessment;
+use App\Models\AssessmentCycle;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -32,15 +34,26 @@ class DashboardController extends Controller
             $totalDepartments = Department::count();
             $activeProjects = Project::where('status', 'active')->count();
 
+            // Competency metrics for admin
+            $pendingAssessments = CompetencyAssessment::where('status', 'submitted')->count();
+            $activeAssessmentCycles = AssessmentCycle::where('status', 'active')->count();
+            $completedAssessmentsThisMonth = CompetencyAssessment::where('status', 'approved')
+                ->whereMonth('updated_at', now()->month)
+                ->count();
+
             $data['adminStats'] = [
                 'totalEmployees' => $totalEmployees,
                 'pendingLeaves' => $pendingLeaves,
                 'totalDepartments' => $totalDepartments,
                 'activeProjects' => $activeProjects,
+                'pendingAssessments' => $pendingAssessments,
+                'activeAssessmentCycles' => $activeAssessmentCycles,
+                'completedAssessmentsThisMonth' => $completedAssessmentsThisMonth,
                 'employeeTrend' => $this->calculateEmployeeTrend(),
                 'leaveTrend' => $this->calculateLeaveTrend(),
                 'departmentTrend' => $this->calculateDepartmentTrend(),
                 'projectTrend' => $this->calculateProjectTrend(),
+                'assessmentTrend' => $this->calculateAssessmentTrend(),
             ];
 
             $data['systemActivities'] = $this->getSystemActivities();
@@ -60,11 +73,22 @@ class DashboardController extends Controller
             $teamSize = $teamEmployeeIds->count();
             $pendingTeamLeaves = Leave::where('status', 'pending')->whereIn('employee_id', $teamEmployeeIds)->count();
             $pendingTeamTimesheets = Timesheet::where('status', 'pending')->whereIn('employee_id', $teamEmployeeIds)->count();
+            
+            // Team competency metrics
+            $teamPendingAssessments = CompetencyAssessment::where('status', 'submitted')
+                ->whereIn('employee_id', $teamEmployeeIds)
+                ->count();
+            $teamCompletedAssessments = CompetencyAssessment::where('status', 'approved')
+                ->whereIn('employee_id', $teamEmployeeIds)
+                ->whereMonth('updated_at', now()->month)
+                ->count();
 
             $data['managerStats'] = [
                 'teamSize' => $teamSize,
                 'pendingLeaves' => $pendingTeamLeaves,
                 'pendingTimesheets' => $pendingTeamTimesheets,
+                'teamPendingAssessments' => $teamPendingAssessments,
+                'teamCompletedAssessments' => $teamCompletedAssessments,
                 'teamPerformance' => 85, // Calculate based on your metrics
             ];
 
@@ -89,12 +113,27 @@ class DashboardController extends Controller
                 // Get current attendance status
                 $currentAttendance = $this->getCurrentAttendanceStatus($employeeId);
 
+                // Employee competency metrics
+                $myPendingAssessments = CompetencyAssessment::where('employee_id', $employeeId)
+                    ->whereIn('status', ['draft', 'submitted'])
+                    ->count();
+                $myCompletedAssessments = CompetencyAssessment::where('employee_id', $employeeId)
+                    ->where('status', 'approved')
+                    ->count();
+                $myAverageRating = CompetencyAssessment::where('employee_id', $employeeId)
+                    ->where('status', 'approved')
+                    ->whereNotNull('rating')
+                    ->avg('rating');
+
                 $data['employeeStats'] = [
                     'pendingLeaves' => $myPendingLeaves,
                     'approvedLeaves' => $myApprovedLeaves,
                     'totalLeaves' => $myTotalLeaves,
                     'attendanceRate' => $this->calculateAttendanceRate($employeeId),
                     'hoursToday' => $currentAttendance['todays_summary']['total_hours'] ?? '0h 0m',
+                    'myPendingAssessments' => $myPendingAssessments,
+                    'myCompletedAssessments' => $myCompletedAssessments,
+                    'myAverageRating' => $myAverageRating ? round($myAverageRating, 1) : null,
                     'tasksCompleted' => 0, // TODO: Implement task counting
                     'leaveBalance' => 25, // TODO: Calculate actual leave balance
                     'upcomingDeadlines' => 0, // TODO: Implement deadline counting
@@ -152,6 +191,15 @@ class DashboardController extends Controller
     {
         $currentMonth = Project::where('status', 'active')->whereMonth('created_at', now()->month)->count();
         $lastMonth = Project::where('status', 'active')->whereMonth('created_at', now()->subMonth()->month)->count();
+        
+        if ($lastMonth == 0) return 0;
+        return round((($currentMonth - $lastMonth) / $lastMonth) * 100, 1);
+    }
+
+    private function calculateAssessmentTrend()
+    {
+        $currentMonth = CompetencyAssessment::where('status', 'approved')->whereMonth('updated_at', now()->month)->count();
+        $lastMonth = CompetencyAssessment::where('status', 'approved')->whereMonth('updated_at', now()->subMonth()->month)->count();
         
         if ($lastMonth == 0) return 0;
         return round((($currentMonth - $lastMonth) / $lastMonth) * 100, 1);
@@ -276,6 +324,27 @@ class DashboardController extends Controller
             ]);
         }
 
+        // Recent Competency Assessment Activities
+        $recentAssessments = CompetencyAssessment::with(['employee.user', 'competency'])
+            ->whereIn('status', ['approved', 'rejected', 'submitted'])
+            ->where('updated_at', '>=', now()->subDays(7))
+            ->latest('updated_at')
+            ->take(5)
+            ->get();
+
+        foreach ($recentAssessments as $assessment) {
+            $statusText = $assessment->status === 'submitted' ? 'submitted' : $assessment->status;
+            $activities->push([
+                'id' => 'assessment_' . $assessment->id,
+                'type' => $assessment->status === 'approved' ? 'approve' : ($assessment->status === 'rejected' ? 'reject' : 'create'),
+                'status' => $assessment->status === 'approved' ? 'success' : ($assessment->status === 'rejected' ? 'error' : 'info'),
+                'title' => 'Assessment ' . $statusText,
+                'description' => ($assessment->competency->name ?? 'Competency') . ' assessment for ' . $assessment->employee->user->name,
+                'timestamp' => $assessment->updated_at->toISOString(),
+                'user' => ['name' => ucfirst($assessment->assessment_type) . ' Assessor', 'avatar' => null]
+            ]);
+        }
+
         // Sort all activities by timestamp (most recent first) and take top 10
         return $activities
             ->sortByDesc('timestamp')
@@ -318,7 +387,23 @@ class DashboardController extends Controller
                 ];
             });
 
-        return $leaves->concat($timesheets)->sortByDesc('created_at')->take(10)->values()->all();
+        $assessments = CompetencyAssessment::where('status', 'submitted')
+            ->with(['employee.user', 'competency'])
+            ->latest()
+            ->take(5)
+            ->get()
+            ->map(function ($assessment) {
+                return [
+                    'id' => $assessment->id,
+                    'type' => 'competency-assessment',
+                    'title' => 'Competency Assessment',
+                    'description' => ($assessment->competency->name ?? 'Assessment') . ' - ' . ucfirst($assessment->assessment_type) . ' assessment',
+                    'requester' => $assessment->employee->user->name ?? 'Unknown',
+                    'created_at' => $assessment->created_at,
+                ];
+            });
+
+        return $leaves->concat($timesheets)->concat($assessments)->sortByDesc('created_at')->take(10)->values()->all();
     }
 
     private function getSystemHealth()

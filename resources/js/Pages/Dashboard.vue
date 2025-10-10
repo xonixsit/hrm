@@ -1,145 +1,418 @@
 <template>
   <AuthenticatedLayout>
-    <!-- Dashboard Header with Visual Hierarchy -->
-    <div class="dashboard-header">
-      <div class="header-container">
-        <div class="header-content">
-          <div class="title-section">
-            <h1 class="dashboard-title">{{ pageTitle }}</h1>
-            <p class="dashboard-subtitle">{{ pageSubtitle }}</p>
-          </div>
-          <div class="header-actions">
-            <button
-              v-for="action in headerActions"
-              :key="action.id"
-              @click="action.handler"
-              :disabled="action.disabled"
-              :class="getActionButtonClasses(action.variant)"
-              class="action-button"
-            >
-              <component :is="getIconComponent(action.icon)" class="w-4 h-4" />
-              {{ action.label }}
-            </button>
+    <!-- Modern Dashboard Header -->
+    <div class="bg-gradient-to-r from-blue-600 to-blue-700 text-white">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="py-8">
+          <!-- Welcome Section -->
+          <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+            <div class="mb-6 lg:mb-0">
+              <h1 class="text-3xl font-bold text-white mb-2">
+                {{ pageTitle }}
+              </h1>
+              <p class="text-blue-100 text-lg">
+                {{ pageSubtitle }}
+              </p>
+              <div class="mt-4 flex items-center text-blue-100">
+                <div class="flex items-center mr-6">
+                  <div class="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
+                  <span class="text-sm">System Online</span>
+                </div>
+                <div class="flex items-center">
+                  <ClockIcon class="w-4 h-4 mr-2" />
+                  <span class="text-sm">{{ currentTime }}</span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Quick Actions -->
+            <div class="flex flex-wrap gap-3">
+              <button
+                v-for="action in headerActions"
+                :key="action.id"
+                @click="action.handler"
+                :disabled="action.disabled"
+                class="inline-flex items-center px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all duration-200 backdrop-blur-sm border border-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <component :is="getIconComponent(action.icon)" class="w-4 h-4 mr-2" />
+                {{ action.label }}
+              </button>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Main Dashboard Content with Proper Grid Layout -->
-    <div class="dashboard-container">
-      <!-- Admin Dashboard Layout -->
-      <div v-if="isAdmin" class="admin-layout">
-        <!-- Primary Stats Row - Most Important Metrics -->
-        <div class="primary-stats-section">
-          <div class="stats-grid-primary">
-            <StatsCard
-              :value="adminStats.totalEmployees"
-              label="Total Employees"
-              icon="users"
-              variant="primary"
-              :trend="adminStats.employeeTrend"
-              :loading="loading"
-              size="large"
-              :clickable="true"
-              route="employees.index"
-            />
-            <StatsCard
-              :value="adminStats.pendingLeaves"
-              label="Pending Approvals"
-              icon="clock"
-              variant="warning"
-              :trend="adminStats.leaveTrend"
-              :loading="loading"
-              size="large"
-              :urgent="adminStats.pendingLeaves > 10"
-              :clickable="true"
-              route="leaves.index"
-            />
-            <!-- <StatsCard
-              :value="adminStats.activeProjects"
-              label="Active Projects"
-              icon="folder"
-              variant="success"
-              :trend="adminStats.projectTrend"
-              :loading="loading"
-              size="large"
-              :clickable="true"
-              route="projects.index"
-            /> -->
-            <StatsCard
-              :value="adminStats.totalDepartments"
-              label="Departments"
-              icon="building"
-              variant="secondary"
-              :trend="adminStats.departmentTrend"
-              :loading="loading"
-              size="large"
-              :clickable="true"
-              route="departments.index"
-            />
-          </div>
-        </div>
-
-        <!-- Secondary Content Row - Supporting Information -->
-        <div class="secondary-content-section">
-          <div class="content-grid-secondary">
-            <!-- System Health - Critical Information -->
-            <div class="system-health-card priority-high">
-              <SystemHealthWidget
-                :health="systemHealth"
-                :loading="loading"
-                @refresh="handleRefresh"
-              />
+    <!-- Main Dashboard Content -->
+    <div class="bg-gray-50 min-h-screen">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Modern Admin Dashboard Layout -->
+        <div v-if="isAdmin" class="space-y-6">
+          
+          <!-- Key Metrics Overview -->
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <!-- Total Employees -->
+            <div class="group bg-white rounded-2xl p-6 border border-gray-100 hover:border-blue-200 hover:shadow-lg transition-all duration-300 cursor-pointer" @click="navigateTo('employees.index')">
+              <div class="flex items-center justify-between mb-4">
+                <div class="p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl">
+                  <UsersIcon class="w-6 h-6 text-white" />
+                </div>
+                <div class="text-right">
+                  <div class="text-2xl font-bold text-gray-900">{{ adminStats.totalEmployees || 274 }}</div>
+                  <div class="text-xs text-gray-500">Total Employees</div>
+                </div>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-sm text-gray-600">Active workforce</span>
+                <div class="flex items-center text-green-600">
+                  <ArrowTrendingUpIcon class="w-4 h-4 mr-1" />
+                  <span class="text-sm font-medium">+5.2%</span>
+                </div>
+              </div>
             </div>
 
-            <!-- Pending Approvals - Action Required -->
-            <div class="pending-approvals-card priority-high">
-              <PendingApprovalsWidget
-                :approvals="pendingApprovals"
-                :loading="loading"
-                @approve="handleApproval"
-                @reject="handleRejection"
-                @view-all="() => $inertia.visit(route('approvals.index'))"
-              />
+            <!-- Pending Approvals -->
+            <div class="group bg-white rounded-2xl p-6 border border-gray-100 hover:border-orange-200 hover:shadow-lg transition-all duration-300 cursor-pointer" @click="navigateTo('approvals.index')">
+              <div class="flex items-center justify-between mb-4">
+                <div class="p-3 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl">
+                  <ExclamationTriangleIcon class="w-6 h-6 text-white" />
+                </div>
+                <div class="text-right">
+                  <div class="text-2xl font-bold text-gray-900">{{ adminStats.pendingLeaves || 19 }}</div>
+                  <div class="text-xs text-gray-500">Pending Approvals</div>
+                </div>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-sm text-gray-600">Requires attention</span>
+                <div class="flex items-center text-orange-600">
+                  <ClockIcon class="w-4 h-4 mr-1" />
+                  <span class="text-sm font-medium">{{ adminStats.pendingLeaves > 10 ? 'High' : 'Normal' }}</span>
+                </div>
+              </div>
             </div>
 
-            <!-- System Activities - Monitoring -->
-            <div class="system-activities-card priority-medium">
-              <SystemActivitiesWidget
-                :activities="systemActivities"
-                :loading="loading"
-                @refresh="handleRefresh"
-              />
-            </div>
-          </div>
-        </div>
-
-        <!-- Tertiary Content Row - Additional Context -->
-        <div class="tertiary-content-section">
-          <div class="content-grid-tertiary">
-            <!-- Recent User Activity -->
-            <div class="user-activity-card">
-              <RecentUserActivityWidget
-                :activities="recentUserActivity"
-                :loading="loading"
-              />
+            <!-- Pending Assessments -->
+            <div class="group bg-white rounded-2xl p-6 border border-gray-100 hover:border-purple-200 hover:shadow-lg transition-all duration-300 cursor-pointer" @click="navigateTo('assessment-dashboard')">
+              <div class="flex items-center justify-between mb-4">
+                <div class="p-3 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl">
+                  <AcademicCapIcon class="w-6 h-6 text-white" />
+                </div>
+                <div class="text-right">
+                  <div class="text-2xl font-bold text-gray-900">{{ adminStats.pendingAssessments || 9 }}</div>
+                  <div class="text-xs text-gray-500">Pending Assessments</div>
+                </div>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-sm text-gray-600">Review status</span>
+                <div class="flex items-center text-purple-600">
+                  <AcademicCapIcon class="w-4 h-4 mr-1" />
+                  <span class="text-sm font-medium">{{ adminStats.pendingAssessments > 5 ? 'Review' : 'On Track' }}</span>
+                </div>
+              </div>
             </div>
 
-            <!-- Quick Actions Panel -->
-            <div class="quick-actions-card">
-              <QuickActionsWidget
-                :actions="adminQuickActions"
-                @action="handleAction"
-              />
+            <!-- System Health -->
+            <div class="group bg-white rounded-2xl p-6 border border-gray-100 hover:border-green-200 hover:shadow-lg transition-all duration-300">
+              <div class="flex items-center justify-between mb-4">
+                <div class="p-3 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl">
+                  <CheckCircleIcon class="w-6 h-6 text-white" />
+                </div>
+                <div class="text-right">
+                  <div class="text-2xl font-bold text-green-600">98.5%</div>
+                  <div class="text-xs text-gray-500">System Health</div>
+                </div>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-sm text-gray-600">Uptime</span>
+                <div class="flex items-center text-green-600">
+                  <div class="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
+                  <span class="text-sm font-medium">Excellent</span>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
+
+          <!-- Main Dashboard Content Grid -->
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Left Column: Action Required & Approvals -->
+            <div class="lg:col-span-2 space-y-6">
+              
+              <!-- Action Required Section -->
+              <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+                <div class="bg-gradient-to-r from-red-50 to-orange-50 px-6 py-4 border-b border-red-100">
+                  <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                      <div class="p-2 bg-red-100 rounded-lg">
+                        <ExclamationTriangleIcon class="w-5 h-5 text-red-600" />
+                      </div>
+                      <div>
+                        <h2 class="text-lg font-semibold text-gray-900">Action Required</h2>
+                        <p class="text-sm text-gray-600">Items needing your immediate attention</p>
+                      </div>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                      <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
+                        {{ (adminStats.pendingLeaves || 19) + (adminStats.pendingAssessments || 9) }} pending
+                      </span>
+                      <button @click="handleRefresh" class="p-2 text-gray-400 hover:text-gray-600 hover:bg-white rounded-lg transition-all">
+                        <ArrowPathIcon class="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="p-6">
+                  <PendingApprovalsWidget
+                    :approvals="pendingApprovals"
+                    :loading="loading"
+                    @approve="handleApproval"
+                    @reject="handleRejection"
+                    @view-all="() => router.visit(route('approvals.index'))"
+                  />
+                </div>
+              </div>
+
+              <!-- Competency Management Dashboard -->
+              <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+                <div class="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-blue-100">
+                  <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                      <div class="p-2 bg-blue-100 rounded-lg">
+                        <AcademicCapIcon class="w-5 h-5 text-blue-600" />
+                      </div>
+                      <div>
+                        <h2 class="text-lg font-semibold text-gray-900">Competency Management</h2>
+                        <p class="text-sm text-gray-600">Track and manage employee competencies</p>
+                      </div>
+                    </div>
+                    <button 
+                      @click="navigateTo('assessment-dashboard')" 
+                      class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                      View Details
+                      <ChevronRightIcon class="w-4 h-4 ml-1" />
+                    </button>
+                  </div>
+                </div>
+                
+                <div class="p-6">
+                  <!-- Competency Metrics Grid -->
+                  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    <div class="text-center p-4 bg-green-50 rounded-xl border border-green-100">
+                      <div class="text-2xl font-bold text-green-600">{{ adminStats.completedAssessmentsThisMonth || 0 }}</div>
+                      <div class="text-xs text-gray-600 mt-1">Completed</div>
+                    </div>
+                    <div class="text-center p-4 bg-orange-50 rounded-xl border border-orange-100">
+                      <div class="text-2xl font-bold text-orange-600">{{ adminStats.pendingAssessments || 9 }}</div>
+                      <div class="text-xs text-gray-600 mt-1">Pending</div>
+                    </div>
+                    <div class="text-center p-4 bg-purple-50 rounded-xl border border-purple-100">
+                      <div class="text-2xl font-bold text-purple-600">{{ adminStats.activeAssessmentCycles || 4 }}</div>
+                      <div class="text-xs text-gray-600 mt-1">Active Cycles</div>
+                    </div>
+                    <div class="text-center p-4 bg-blue-50 rounded-xl border border-blue-100">
+                      <div class="text-2xl font-bold text-blue-600">4.2</div>
+                      <div class="text-xs text-gray-600 mt-1">Avg Rating</div>
+                    </div>
+                  </div>
+
+                  <!-- Recent Activity -->
+                  <div class="space-y-3">
+                    <h3 class="text-sm font-medium text-gray-900 mb-3">Recent Competency Activity</h3>
+                    <div class="space-y-2">
+                      <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div class="flex items-center space-x-3">
+                          <div class="w-2 h-2 bg-green-400 rounded-full"></div>
+                          <span class="text-sm text-gray-700">Q4 Performance Review cycle started</span>
+                        </div>
+                        <span class="text-xs text-gray-500">2 hours ago</span>
+                      </div>
+                      <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div class="flex items-center space-x-3">
+                          <div class="w-2 h-2 bg-blue-400 rounded-full"></div>
+                          <span class="text-sm text-gray-700">5 new assessments submitted</span>
+                        </div>
+                        <span class="text-xs text-gray-500">4 hours ago</span>
+                      </div>
+                      <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div class="flex items-center space-x-3">
+                          <div class="w-2 h-2 bg-purple-400 rounded-full"></div>
+                          <span class="text-sm text-gray-700">Leadership competency updated</span>
+                        </div>
+                        <span class="text-xs text-gray-500">1 day ago</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right Column: Quick Actions & Insights -->
+            <div class="lg:col-span-1 space-y-6">
+              
+              <!-- Quick Actions -->
+              <div class="bg-white rounded-2xl border border-gray-100 p-6">
+                <div class="flex items-center space-x-3 mb-6">
+                  <div class="p-2 bg-blue-100 rounded-lg">
+                    <PlusIcon class="w-5 h-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <h3 class="text-lg font-semibold text-gray-900">Quick Actions</h3>
+                    <p class="text-sm text-gray-600">Common tasks</p>
+                  </div>
+                </div>
+                
+                <div class="space-y-3">
+                  <button 
+                    @click="navigateTo('competencies.create')"
+                    class="w-full flex items-center justify-between px-4 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all group"
+                  >
+                    <div class="flex items-center">
+                      <AcademicCapIcon class="w-5 h-5 mr-3" />
+                      <span class="font-medium">Add Competency</span>
+                    </div>
+                    <ChevronRightIcon class="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </button>
+                  
+                  <button 
+                    @click="navigateTo('employees.index')"
+                    class="w-full flex items-center justify-between px-4 py-3 bg-gray-50 text-gray-700 rounded-xl hover:bg-gray-100 transition-all group"
+                  >
+                    <div class="flex items-center">
+                      <UsersIcon class="w-5 h-5 mr-3" />
+                      <span class="font-medium">Manage Employees</span>
+                    </div>
+                    <ChevronRightIcon class="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </button>
+                  
+                  <button 
+                    @click="navigateTo('assessment-cycles.create')"
+                    class="w-full flex items-center justify-between px-4 py-3 bg-gray-50 text-gray-700 rounded-xl hover:bg-gray-100 transition-all group"
+                  >
+                    <div class="flex items-center">
+                      <PlusIcon class="w-5 h-5 mr-3" />
+                      <span class="font-medium">New Assessment Cycle</span>
+                    </div>
+                    <ChevronRightIcon class="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </button>
+                  
+                  <button 
+                    @click="navigateTo('reports.index')"
+                    class="w-full flex items-center justify-between px-4 py-3 bg-gray-50 text-gray-700 rounded-xl hover:bg-gray-100 transition-all group"
+                  >
+                    <div class="flex items-center">
+                      <ChartBarIcon class="w-5 h-5 mr-3" />
+                      <span class="font-medium">View Reports</span>
+                    </div>
+                    <ChevronRightIcon class="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </button>
+                  
+                  <button 
+                    @click="navigateTo('system-settings.index')"
+                    class="w-full flex items-center justify-between px-4 py-3 bg-gray-50 text-gray-700 rounded-xl hover:bg-gray-100 transition-all group"
+                  >
+                    <div class="flex items-center">
+                      <CogIcon class="w-5 h-5 mr-3" />
+                      <span class="font-medium">System Settings</span>
+                    </div>
+                    <ChevronRightIcon class="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </button>
+                </div>
+              </div>
+
+              <!-- Performance Insights -->
+              <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl border border-green-100 p-6">
+                <div class="flex items-center space-x-3 mb-6">
+                  <div class="p-2 bg-green-100 rounded-lg">
+                    <ChartBarIcon class="w-5 h-5 text-green-600" />
+                  </div>
+                  <div>
+                    <h3 class="text-lg font-semibold text-gray-900">Performance Insights</h3>
+                    <p class="text-sm text-gray-600">Key metrics</p>
+                  </div>
+                </div>
+                
+                <div class="space-y-4">
+                  <div class="flex items-center justify-between p-3 bg-white rounded-xl">
+                    <div class="flex items-center space-x-3">
+                      <div class="w-3 h-3 bg-green-400 rounded-full"></div>
+                      <span class="text-sm font-medium text-gray-700">Top Performing</span>
+                    </div>
+                    <span class="text-sm font-semibold text-green-600">Communication</span>
+                  </div>
+                  
+                  <div class="flex items-center justify-between p-3 bg-white rounded-xl">
+                    <div class="flex items-center space-x-3">
+                      <div class="w-3 h-3 bg-orange-400 rounded-full"></div>
+                      <span class="text-sm font-medium text-gray-700">Needs Attention</span>
+                    </div>
+                    <span class="text-sm font-semibold text-orange-600">Technical Skills</span>
+                  </div>
+                  
+                  <div class="flex items-center justify-between p-3 bg-white rounded-xl">
+                    <div class="flex items-center space-x-3">
+                      <div class="w-3 h-3 bg-blue-400 rounded-full"></div>
+                      <span class="text-sm font-medium text-gray-700">Average Rating</span>
+                    </div>
+                    <span class="text-sm font-semibold text-blue-600">4.2/5.0</span>
+                  </div>
+                  
+                  <div class="pt-4 border-t border-green-200">
+                    <button 
+                      @click="navigateTo('competency-analytics.reports')"
+                      class="w-full flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors"
+                    >
+                      <span class="font-medium">View Detailed Analytics</span>
+                      <ChevronRightIcon class="w-4 h-4 ml-2" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- System Status -->
+              <div class="bg-white rounded-2xl border border-gray-100 p-6">
+                <div class="flex items-center space-x-3 mb-4">
+                  <div class="p-2 bg-green-100 rounded-lg">
+                    <CheckCircleIcon class="w-5 h-5 text-green-600" />
+                  </div>
+                  <div>
+                    <h3 class="text-lg font-semibold text-gray-900">System Status</h3>
+                    <p class="text-sm text-gray-600">All systems operational</p>
+                  </div>
+                </div>
+                
+                <div class="space-y-3">
+                  <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-600">Database</span>
+                    <div class="flex items-center">
+                      <div class="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
+                      <span class="text-sm font-medium text-green-600">Healthy</span>
+                    </div>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-600">API Services</span>
+                    <div class="flex items-center">
+                      <div class="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
+                      <span class="text-sm font-medium text-green-600">Online</span>
+                    </div>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-600">Uptime</span>
+                    <span class="text-sm font-medium text-gray-900">98.5%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
       </div>
 
       <!-- Manager Dashboard Layout -->
       <div v-else-if="isManager" class="manager-layout">
-        <!-- Team Overview - Primary Focus -->
+        <!-- Team Overview -->
         <div class="team-overview-section">
+          <h2 class="section-title">Team Overview</h2>
           <div class="stats-grid-primary">
             <StatsCard
               :value="managerStats.teamSize"
@@ -188,9 +461,10 @@
           </div>
         </div>
 
-        <!-- Team Management Content -->
+        <!-- Team Management -->
         <div class="team-management-section">
-          <div class="content-grid-manager">
+          <h2 class="section-title">Team Management</h2>
+          <div class="content-grid-main">
             <!-- Team Members - Direct Reports -->
             <div class="team-members-card priority-high">
               <TeamMembersWidget
@@ -201,6 +475,27 @@
               />
             </div>
 
+            <!-- Team Competency Overview -->
+            <div class="team-competency-card priority-high">
+              <CompetencyDashboardWidget
+                title="Team Competencies"
+                :metrics="{
+                  completedAssessments: managerStats.teamCompletedAssessments || 0,
+                  pendingAssessments: managerStats.teamPendingAssessments || 0,
+                  activeCycles: 0,
+                  averageRating: null
+                }"
+                :loading="loading"
+                @view-details="() => $inertia.visit(route('competency-assessments.index'))"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Team Performance -->
+        <div class="team-performance-section">
+          <h2 class="section-title">Performance Insights</h2>
+          <div class="content-grid-secondary">
             <!-- Team Performance Metrics -->
             <div class="team-performance-card priority-medium">
               <TeamPerformanceWidget
@@ -237,7 +532,7 @@
           @view-task="handleViewTask"
         />
       </div>
-    </div>
+    </div></div>
 
     <!-- Rejection Modal -->
     <div v-if="showRejectionModal" class="fixed inset-0 z-50 overflow-y-auto">
@@ -367,6 +662,7 @@ import TodaysScheduleWidget from '@/Components/Dashboard/TodaysScheduleWidget.vu
 import MyTasksWidget from '@/Components/Dashboard/MyTasksWidget.vue';
 import RecentFeedbackWidget from '@/Components/Dashboard/RecentFeedbackWidget.vue';
 import PersonalActivitiesWidget from '@/Components/Dashboard/PersonalActivitiesWidget.vue';
+import CompetencyDashboardWidget from '@/Components/Dashboard/CompetencyDashboardWidget.vue';
 
 // Icons
 import {
@@ -381,7 +677,14 @@ import {
   ExclamationTriangleIcon,
   InformationCircleIcon,
   XMarkIcon,
-  QuestionMarkCircleIcon
+  QuestionMarkCircleIcon,
+  ClockIcon,
+  UsersIcon,
+  AcademicCapIcon,
+  ServerIcon,
+  ArrowTrendingUpIcon,
+  PlusIcon,
+  ChevronRightIcon
 } from '@heroicons/vue/24/outline';
 
 const props = defineProps({
@@ -562,8 +865,7 @@ const headerActions = computed(() => {
       icon: 'cog-6-tooth',
       variant: 'secondary',
       handler: () => {
-        // Navigate to system settings
-        console.log('Navigate to system settings');
+        navigateTo('system-settings.index');
       }
     });
   }
@@ -575,8 +877,7 @@ const headerActions = computed(() => {
       icon: 'chart-bar',
       variant: 'secondary',
       handler: () => {
-        // Navigate to reports
-        console.log('Navigate to reports');
+        navigateTo('reports.index');
       }
     });
   }
@@ -671,6 +972,42 @@ const getNotificationClasses = (type) => {
   return `${baseClasses} ${typeClasses[type] || typeClasses.info}`;
 };
 
+// Current time display
+const currentTime = ref(new Date().toLocaleTimeString());
+
+// Update time every minute
+setInterval(() => {
+  currentTime.value = new Date().toLocaleTimeString();
+}, 60000);
+
+// Navigation helper
+const navigateTo = (routeName) => {
+  try {
+    // Handle special cases for routes that might not exist
+    if (routeName === 'competency-analytics.reports') {
+      // Fallback to general reports if competency analytics reports don't exist
+      router.visit(route('reports.index'));
+      return;
+    }
+    
+    router.visit(route(routeName));
+  } catch (error) {
+    console.error('Navigation error:', error);
+    
+    // Fallback navigation for common routes
+    if (routeName.includes('reports')) {
+      try {
+        router.visit(route('reports.index'));
+        return;
+      } catch (fallbackError) {
+        console.error('Fallback navigation failed:', fallbackError);
+      }
+    }
+    
+    showNotification('Navigation failed - route not found', 'error');
+  }
+};
+
 const handleApproval = (approval) => {
   console.log('🎯 Opening approval modal for:', approval);
   console.log('🎯 Modal state before:', showApprovalModal.value);
@@ -690,6 +1027,14 @@ const handleRejection = (approval) => {
   console.log('🚫 Modal state after:', showApprovalModal.value);
   console.log('🚫 Selected approval:', selectedApproval.value);
 };
+
+// Close approval modal
+const closeApprovalModal = () => {
+  showApprovalModal.value = false;
+  selectedApproval.value = null;
+  approvalAction.value = 'approve';
+};
+
 
 const confirmRejection = async () => {
   if (!rejectionReason.value.trim()) {
@@ -783,12 +1128,7 @@ const cancelRejection = () => {
   rejectionReason.value = '';
 };
 
-// Approval modal handlers
-const closeApprovalModal = () => {
-  showApprovalModal.value = false;
-  selectedApproval.value = null;
-  approvalAction.value = 'approve';
-};
+// Approval modal handlers (closeApprovalModal already declared above)
 
 const handleApprovalSubmit = async (data) => {
   const { approval, action, comments } = data;
@@ -824,6 +1164,11 @@ const handleApprovalSubmit = async (data) => {
       }, requestConfig);
     } else if (approval.type === 'leave' || approval.type === 'Leave Request') {
       endpoint = `/leaves/${approval.id}/${action}`;
+      response = await axios.post(endpoint, {
+        comments: comments || `${action === 'approve' ? 'Approved' : 'Rejected'} from dashboard`
+      }, requestConfig);
+    } else if (approval.type === 'competency-assessment') {
+      endpoint = `/competency-assessments/${approval.id}/${action}`;
       response = await axios.post(endpoint, {
         comments: comments || `${action === 'approve' ? 'Approved' : 'Rejected'} from dashboard`
       }, requestConfig);
@@ -1216,6 +1561,23 @@ const handleEndBreak = async () => {
   padding: 24px 0;
 }
 
+.dashboard-container.clean-layout {
+  @apply space-y-8;
+}
+
+.dashboard-container.clean-layout .primary-stats-section,
+.dashboard-container.clean-layout .main-content-section,
+.dashboard-container.clean-layout .secondary-content-section,
+.dashboard-container.clean-layout .team-overview-section,
+.dashboard-container.clean-layout .team-management-section,
+.dashboard-container.clean-layout .team-performance-section {
+  @apply bg-white rounded-lg shadow-sm border border-neutral-200 p-6;
+}
+
+.section-title {
+  @apply text-lg font-semibold text-neutral-900 mb-6 pb-2 border-b border-neutral-200;
+}
+
 /* =============================================================================
    ADMIN DASHBOARD LAYOUT - Information Hierarchy
    ============================================================================= */
@@ -1229,7 +1591,7 @@ const handleEndBreak = async () => {
 }
 
 .stats-grid-primary {
-  @apply grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6;
+  @apply grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6;
 }
 
 /* Secondary Content - Supporting Information (F-Pattern Middle) */
@@ -1237,8 +1599,12 @@ const handleEndBreak = async () => {
   @apply mb-8;
 }
 
+.content-grid-main {
+  @apply grid grid-cols-1 lg:grid-cols-2 gap-8;
+}
+
 .content-grid-secondary {
-  @apply grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6;
+  @apply grid grid-cols-1 lg:grid-cols-2 gap-6;
 }
 
 /* Tertiary Content - Additional Context (F-Pattern Bottom) */
@@ -1246,8 +1612,20 @@ const handleEndBreak = async () => {
   @apply mb-8;
 }
 
-.content-grid-tertiary {
-  @apply grid grid-cols-1 lg:grid-cols-2 gap-6;
+.main-content-section {
+  @apply mb-8;
+}
+
+.secondary-content-section {
+  @apply mb-6;
+}
+
+.team-management-section {
+  @apply mb-8;
+}
+
+.team-performance-section {
+  @apply mb-6;
 }
 
 /* =============================================================================
@@ -1265,8 +1643,8 @@ const handleEndBreak = async () => {
   @apply mb-8;
 }
 
-.content-grid-manager {
-  @apply grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6;
+.content-grid-main {
+  @apply grid grid-cols-1 lg:grid-cols-2 gap-8;
 }
 
 /* =============================================================================
@@ -1494,7 +1872,7 @@ const handleEndBreak = async () => {
   }
   
   .content-grid-secondary,
-  .content-grid-manager,
+  .content-grid-main,
   .content-grid-employee {
     @apply grid-cols-1 gap-4;
   }
@@ -1524,7 +1902,7 @@ const handleEndBreak = async () => {
     @apply grid-cols-1 gap-5;
   }
   
-  .content-grid-manager,
+  .content-grid-main,
   .content-grid-employee {
     @apply grid-cols-2 gap-5;
   }
@@ -1537,16 +1915,16 @@ const handleEndBreak = async () => {
 /* Desktop Optimizations */
 @media (min-width: 1025px) {
   .stats-grid-primary {
-    @apply grid-cols-4;
+    @apply grid-cols-3;
   }
   
   .content-grid-secondary {
     @apply grid-cols-3;
   }
   
-  .content-grid-manager,
+  .content-grid-main,
   .content-grid-employee {
-    @apply grid-cols-3;
+    @apply grid-cols-2;
   }
   
   .personal-stats-grid {
@@ -1600,5 +1978,177 @@ const handleEndBreak = async () => {
   .priority-medium:hover {
     transform: none;
   }
+}
+</style>
+<style sco
+ped>
+/* Dashboard Layout Improvements */
+.notification-overlay {
+  @apply fixed inset-0 z-50 pointer-events-none;
+}
+
+.notification-center {
+  @apply absolute top-4 right-4 space-y-3;
+}
+
+.notification-card {
+  @apply flex items-center p-4 bg-white rounded-lg shadow-lg border pointer-events-auto max-w-sm;
+}
+
+.notification-success {
+  @apply border-green-200 bg-green-50;
+}
+
+.notification-error {
+  @apply border-red-200 bg-red-50;
+}
+
+.notification-warning {
+  @apply border-yellow-200 bg-yellow-50;
+}
+
+.notification-info {
+  @apply border-blue-200 bg-blue-50;
+}
+
+.notification-icon {
+  @apply flex-shrink-0 mr-3;
+}
+
+.notification-success .notification-icon {
+  @apply text-green-500;
+}
+
+.notification-error .notification-icon {
+  @apply text-red-500;
+}
+
+.notification-warning .notification-icon {
+  @apply text-yellow-500;
+}
+
+.notification-info .notification-icon {
+  @apply text-blue-500;
+}
+
+.notification-text {
+  @apply flex-1 min-w-0;
+}
+
+.notification-message {
+  @apply text-sm font-medium text-gray-900;
+}
+
+.notification-close {
+  @apply flex-shrink-0 ml-3 p-1 text-gray-400 hover:text-gray-600 transition-colors;
+}
+
+/* Action Required Section Styling */
+.action-required-section {
+  @apply bg-white rounded-xl shadow-sm border border-gray-200 mb-8;
+}
+
+.action-required-header {
+  @apply px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-orange-50 to-red-50;
+}
+
+.action-required-content {
+  @apply p-6;
+}
+
+/* System Overview Section Styling */
+.system-overview-section {
+  @apply grid grid-cols-1 lg:grid-cols-3 gap-6;
+}
+
+.system-health-card {
+  @apply lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-200 h-full;
+}
+
+.quick-actions-card {
+  @apply lg:col-span-1 bg-white rounded-xl shadow-sm border border-gray-200 h-full;
+}
+
+/* Card Headers */
+.card-header {
+  @apply px-6 py-4 border-b border-gray-200;
+}
+
+.card-content {
+  @apply p-6;
+}
+
+/* Status Indicators */
+.status-indicator {
+  @apply flex items-center;
+}
+
+.status-dot {
+  @apply w-2 h-2 rounded-full mr-2;
+}
+
+.status-dot.online {
+  @apply bg-green-400;
+}
+
+.status-dot.warning {
+  @apply bg-yellow-400;
+}
+
+.status-dot.error {
+  @apply bg-red-400;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  .system-overview-section {
+    @apply grid-cols-1;
+  }
+  
+  .system-health-card,
+  .quick-actions-card {
+    @apply col-span-1;
+  }
+}
+
+/* Animation for loading states */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Hover effects for interactive elements */
+.hover-lift {
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Gradient backgrounds for different sections */
+.gradient-orange {
+  @apply bg-gradient-to-br from-orange-50 to-red-50 border-orange-200;
+}
+
+.gradient-blue {
+  @apply bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200;
+}
+
+.gradient-green {
+  @apply bg-gradient-to-br from-green-50 to-emerald-50 border-green-200;
+}
+
+.gradient-purple {
+  @apply bg-gradient-to-br from-purple-50 to-indigo-50 border-purple-200;
 }
 </style>

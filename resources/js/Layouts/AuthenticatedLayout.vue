@@ -14,6 +14,7 @@ import { useTheme } from '@/composables/useTheme.js';
 import { useLayoutSpacing } from '@/composables/useLayoutSpacing.js';
 import { useReminder } from '@/composables/useReminder';
 import { useWorkReportReminder } from '@/composables/useWorkReportReminder';
+import { useFlashMessages } from '@/composables/useFlashMessages';
 
 // Access slots in script setup
 const slots = useSlots();
@@ -33,6 +34,7 @@ const { isDark, initializeTheme } = useTheme();
 
 useReminder();
 useWorkReportReminder();
+useFlashMessages();
 
 // Initialize theme system on mount
 onMounted(() => {

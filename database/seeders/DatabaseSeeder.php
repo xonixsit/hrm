@@ -18,7 +18,9 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             RoleSeeder::class,
+            CompetencyPermissionSeeder::class,
             DepartmentSeeder::class,
+            CompetencySeeder::class,
         ]);
 
         // Create admin users first

@@ -2,136 +2,120 @@
 
 require_once 'vendor/autoload.php';
 
+// Bootstrap Laravel
 $app = require_once 'bootstrap/app.php';
 $app->make('Illuminate\Contracts\Console\Kernel')->bootstrap();
 
-use App\Models\User;
-use App\Models\Employee;
 use App\Models\WorkReport;
+use App\Models\Employee;
 use Carbon\Carbon;
 
-echo "=== Creating Sample Work Reports ===\n\n";
+echo "=== CREATING SAMPLE WORK REPORTS ===\n\n";
 
-// Find the employee user
-$user = User::where('email', 'employee@example.com')->first();
+// Get all employees
+$employees = Employee::with('user')->get();
 
-if (!$user) {
-    echo "❌ User employee@example.com not found!\n";
-    echo "Please run the database seeder first: php artisan db:seed\n";
+if ($employees->isEmpty()) {
+    echo "❌ No employees found! Please create employees first.\n";
     exit(1);
 }
 
-$employee = $user->employee;
+echo "👥 Found {$employees->count()} employees\n";
 
-if (!$employee) {
-    echo "❌ Employee record not found for employee@example.com!\n";
-    echo "Please run the database seeder first: php artisan db:seed\n";
-    exit(1);
+// Clear existing work reports
+WorkReport::truncate();
+echo "🗑️ Cleared existing work reports\n";
+
+// Create work reports for different date ranges
+$dates = [];
+
+// This week (7 days)
+for ($i = 0; $i < 7; $i++) {
+    $dates[] = Carbon::now()->subDays($i)->format('Y-m-d');
 }
 
-echo "✅ Found employee: {$user->name} (ID: {$employee->id})\n\n";
+// This month (additional days)
+for ($i = 7; $i < 30; $i++) {
+    if (rand(1, 3) === 1) { // 33% chance for each day
+        $dates[] = Carbon::now()->subDays($i)->format('Y-m-d');
+    }
+}
 
-// Clear existing work reports for this employee
-WorkReport::where('employee_id', $employee->id)->delete();
-echo "🧹 Cleared existing work reports\n\n";
+// This year (additional months)
+for ($i = 1; $i < 12; $i++) {
+    for ($j = 0; $j < rand(2, 8); $j++) { // 2-8 reports per month
+        $dates[] = Carbon::now()->subMonths($i)->subDays(rand(0, 28))->format('Y-m-d');
+    }
+}
 
-// Generate work reports for the last 30 days
-$startDate = Carbon::now()->subDays(30);
-$endDate = Carbon::now();
+$dates = array_unique($dates);
+sort($dates);
 
-echo "📅 Generating work reports from {$startDate->format('Y-m-d')} to {$endDate->format('Y-m-d')}\n\n";
+echo "📅 Will create reports for " . count($dates) . " different dates\n";
+echo "📊 Date range: " . min($dates) . " to " . max($dates) . "\n\n";
 
-$workReports = [];
-$totalDays = 0;
+$totalReports = 0;
 
-for ($date = $startDate->copy(); $date->lte($endDate); $date->addDay()) {
-    // Skip weekends for more realistic data
-    if ($date->isWeekend()) {
-        continue;
+foreach ($employees as $employee) {
+    $employeeReports = 0;
+    
+    // Each employee gets reports for random dates
+    $employeeDates = array_rand(array_flip($dates), min(count($dates), rand(10, 25)));
+    if (!is_array($employeeDates)) {
+        $employeeDates = [$employeeDates];
     }
     
-    $totalDays++;
-    
-    // Generate realistic but varied data
-    $totalCalls = rand(80, 150);
-    $successfulCalls = rand(40, 80);
-    $notReceived = rand(20, 40);
-    $disconnected = rand(5, 15);
-    $followUpCalls = rand(10, 25);
-    
-    // Ensure the numbers make sense
-    $remaining = $totalCalls - $successfulCalls - $notReceived - $disconnected;
-    if ($remaining < 0) {
-        $notReceived = max(0, $notReceived + $remaining);
+    foreach ($employeeDates as $date) {
+        // Generate realistic call data
+        $totalCalls = rand(5, 50);
+        $successfulCalls = rand(0, $totalCalls);
+        $notReceived = rand(0, $totalCalls - $successfulCalls);
+        $disconnected = rand(0, $totalCalls - $successfulCalls - $notReceived);
+        $followUp = max(0, $totalCalls - $successfulCalls - $notReceived - $disconnected);
+        
+        WorkReport::create([
+            'employee_id' => $employee->id,
+            'date' => $date,
+            'calls' => $totalCalls,
+            'successful_calls' => $successfulCalls,
+            'calls_not_received' => $notReceived,
+            'disconnected_calls' => $disconnected,
+            'follow_up_calls' => $followUp,
+            'emails' => rand(0, 20),
+            'whatsapp' => rand(0, 15),
+            'sms' => rand(0, 10),
+            'notes' => "Sample report for {$date}",
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        
+        $employeeReports++;
+        $totalReports++;
     }
     
-    $workReport = [
-        'employee_id' => $employee->id,
-        'date' => $date->format('Y-m-d'),
-        'calls' => $totalCalls,
-        'successful_calls' => $successfulCalls,
-        'calls_not_received' => $notReceived,
-        'disconnected_calls' => $disconnected,
-        'follow_up_calls' => $followUpCalls,
-        'emails' => rand(15, 45),
-        'whatsapp' => rand(20, 60),
-        'sms' => rand(10, 30),
-        'notes' => generateRandomNote(),
-        'created_at' => $date->format('Y-m-d H:i:s'),
-        'updated_at' => $date->format('Y-m-d H:i:s'),
-    ];
-    
-    $workReports[] = $workReport;
+    echo "✅ Created {$employeeReports} reports for {$employee->user->name}\n";
 }
 
-// Function to generate random notes
-function generateRandomNote() {
-    $notes = [
-        'Good response from clients today. Several interested prospects.',
-        'Challenging day with many disconnected calls. Need to review call timing.',
-        'Excellent conversion rate today. Clients were very responsive.',
-        'Focused on follow-up calls with previous prospects. Good engagement.',
-        'Mixed results today. Some clients showed strong interest.',
-        'High email response rate. WhatsApp messages were well received.',
-        'Productive day with quality conversations and potential leads.',
-        'Several clients requested more information via email.',
-        'Good day for SMS campaigns. Higher than usual response rate.',
-        'Focused on relationship building with existing clients.',
-        null, // Some days might not have notes
-        null,
-    ];
-    
-    return $notes[array_rand($notes)];
-}
+echo "\n🎉 Successfully created {$totalReports} work reports!\n";
 
-// Insert all work reports
-foreach ($workReports as $reportData) {
-    $reportData['notes'] = generateRandomNote();
-    WorkReport::create($reportData);
-}
+// Show summary stats
+$stats = WorkReport::selectRaw('
+    COUNT(*) as total_reports,
+    COUNT(DISTINCT employee_id) as employees_with_reports,
+    COUNT(DISTINCT date) as unique_dates,
+    SUM(calls) as total_calls,
+    SUM(successful_calls) as total_successful,
+    MIN(date) as earliest_date,
+    MAX(date) as latest_date
+')->first();
 
-echo "✅ Created {$totalDays} work reports for weekdays\n";
-echo "📊 Sample data includes:\n";
-echo "   - Varied call volumes (80-150 per day)\n";
-echo "   - Realistic success rates (40-80 successful calls)\n";
-echo "   - Follow-up calls (10-25 per day)\n";
-echo "   - Email activity (15-45 per day)\n";
-echo "   - WhatsApp messages (20-60 per day)\n";
-echo "   - SMS campaigns (10-30 per day)\n";
-echo "   - Random notes for some days\n\n";
+echo "\n📈 SUMMARY STATISTICS:\n";
+echo str_repeat("=", 40) . "\n";
+echo "Total Reports: {$stats->total_reports}\n";
+echo "Employees with Reports: {$stats->employees_with_reports}\n";
+echo "Unique Dates: {$stats->unique_dates}\n";
+echo "Total Calls: {$stats->total_calls}\n";
+echo "Total Successful: {$stats->total_successful}\n";
+echo "Date Range: {$stats->earliest_date} to {$stats->latest_date}\n";
 
-// Show some statistics
-$totalReports = WorkReport::where('employee_id', $employee->id)->count();
-$avgCalls = WorkReport::where('employee_id', $employee->id)->avg('calls');
-$totalEmails = WorkReport::where('employee_id', $employee->id)->sum('emails');
-$totalWhatsApp = WorkReport::where('employee_id', $employee->id)->sum('whatsapp');
-
-echo "📈 Statistics:\n";
-echo "   - Total reports: {$totalReports}\n";
-echo "   - Average calls per day: " . round($avgCalls, 1) . "\n";
-echo "   - Total emails sent: {$totalEmails}\n";
-echo "   - Total WhatsApp messages: {$totalWhatsApp}\n\n";
-
-echo "🎉 Sample work reports created successfully!\n";
-echo "You can now view them at: /work-reports\n";
-echo "Login as employee@example.com (password: password) to see the data.\n";
+echo "\n✅ Sample data created! Now test the date filtering in /work-reports\n";

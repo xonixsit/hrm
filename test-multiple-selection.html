@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multiple Employee Selection Test</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .employee-option { 
+            padding: 10px; 
+            border: 1px solid #ccc; 
+            margin: 5px 0; 
+            cursor: pointer; 
+            background: white;
+        }
+        .employee-option.selected { 
+            background: #e3f2fd; 
+            border-color: #2196f3;
+        }
+        .selected-employees { 
+            margin-top: 20px; 
+            padding: 15px; 
+            background: #f5f5f5; 
+            border-radius: 5px;
+        }
+        .selected-employee {
+            display: inline-block;
+            background: #4caf50;
+            color: white;
+            padding: 5px 10px;
+            margin: 2px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <h2>Multiple Employee Selection Test</h2>
+        
+        <div>
+            <h3>Available Employees:</h3>
+            <div 
+                v-for="employee in employees" 
+                :key="employee.id"
+                @click="selectEmployee(employee)"
+                class="employee-option"
+                :class="{ 'selected': selectedEmployeeIds.includes(employee.id) }"
+            >
+                <strong>{{ employee.name }}</strong> - {{ employee.position }}
+                <span v-if="selectedEmployeeIds.includes(employee.id)"> ✓</span>
+            </div>
+        </div>
+
+        <div v-if="selectedEmployees.length > 0" class="selected-employees">
+            <h3>Selected Employees ({{ selectedEmployees.length }}):</h3>
+            <div>
+                <span 
+                    v-for="employee in selectedEmployees" 
+                    :key="employee.id"
+                    class="selected-employee"
+                >
+                    {{ employee.name }}
+                </span>
+            </div>
+            <button @click="clearAll" style="margin-top: 10px;">Clear All</button>
+        </div>
+
+        <div style="margin-top: 20px;">
+            <h4>Debug Info:</h4>
+            <p>Selected IDs: {{ selectedEmployeeIds }}</p>
+            <p>Selected Count: {{ selectedEmployees.length }}</p>
+        </div>
+    </div>
+
+    <script>
+        const { createApp, ref, computed } = Vue;
+
+        createApp({
+            setup() {
+                const selectedEmployeeIds = ref([]);
+                
+                const employees = ref([
+                    { id: 1, name: 'John Doe', position: 'Developer' },
+                    { id: 2, name: 'Jane Smith', position: 'Designer' },
+                    { id: 3, name: 'Bob Johnson', position: 'Manager' },
+                    { id: 4, name: 'Alice Brown', position: 'Analyst' }
+                ]);
+
+                const selectedEmployees = computed(() => {
+                    return employees.value.filter(e => selectedEmployeeIds.value.includes(e.id));
+                });
+
+                const selectEmployee = (employee) => {
+                    const index = selectedEmployeeIds.value.indexOf(employee.id);
+                    if (index > -1) {
+                        // Employee already selected, remove them
+                        selectedEmployeeIds.value.splice(index, 1);
+                    } else {
+                        // Employee not selected, add them
+                        selectedEmployeeIds.value.push(employee.id);
+                    }
+                    console.log('Selected IDs:', selectedEmployeeIds.value);
+                    console.log('Selected Employees:', selectedEmployees.value);
+                };
+
+                const clearAll = () => {
+                    selectedEmployeeIds.value = [];
+                };
+
+                return {
+                    employees,
+                    selectedEmployeeIds,
+                    selectedEmployees,
+                    selectEmployee,
+                    clearAll
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>

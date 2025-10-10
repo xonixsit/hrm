@@ -152,6 +152,51 @@
 
 
 
+    <!-- Competency Overview Section -->
+    <div class="competency-overview-section" v-if="stats.myPendingAssessments !== undefined">
+      <div class="competency-stats-grid">
+        <div class="competency-stat-card">
+          <div class="stat-icon">
+            <CheckCircleIcon class="w-6 h-6 text-primary-600" />
+          </div>
+          <div class="stat-content">
+            <div class="stat-value">{{ stats.myCompletedAssessments || 0 }}</div>
+            <div class="stat-label">Completed Assessments</div>
+          </div>
+        </div>
+        
+        <div class="competency-stat-card">
+          <div class="stat-icon">
+            <ClockIcon class="w-6 h-6 text-warning-600" />
+          </div>
+          <div class="stat-content">
+            <div class="stat-value">{{ stats.myPendingAssessments || 0 }}</div>
+            <div class="stat-label">Pending Assessments</div>
+          </div>
+        </div>
+        
+        <div class="competency-stat-card" v-if="stats.myAverageRating">
+          <div class="stat-icon">
+            <StarIcon class="w-6 h-6 text-success-600" />
+          </div>
+          <div class="stat-content">
+            <div class="stat-value">{{ stats.myAverageRating }}/5</div>
+            <div class="stat-label">Average Rating</div>
+          </div>
+        </div>
+        
+        <div class="competency-stat-card" v-else>
+          <div class="stat-icon">
+            <StarIcon class="w-6 h-6 text-neutral-400" />
+          </div>
+          <div class="stat-content">
+            <div class="stat-value">-</div>
+            <div class="stat-label">Average Rating</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Main Dashboard Content -->
     <div class="dashboard-content">
       <!-- Left Column -->
@@ -665,20 +710,28 @@ const breakTimeFills = computed(() => {
 
 const employeeQuickActions = computed(() => [
   {
+    id: 'my-assessments',
+    label: 'My Assessments',
+    description: 'View and complete competency assessments',
+    icon: CheckCircleIcon,
+    variant: 'primary',
+    route: 'competency-assessments.my-assessments'
+  },
+  {
     id: 'request-leave',
     label: 'Request Leave',
     description: 'Submit a new leave request',
     icon: CalendarIcon,
-    variant: 'primary',
+    variant: 'secondary',
     route: 'leaves.create'
   },
   {
-    id: 'view-performance',
-    label: 'Performance',
-    description: 'View your performance metrics',
-    icon: CheckCircleIcon,
+    id: 'assessment-dashboard',
+    label: 'Assessment Dashboard',
+    description: 'View assessment overview and analytics',
+    icon: ExclamationTriangleIcon,
     variant: 'success',
-    route: 'performance.index'
+    route: 'assessment-dashboard'
   }
 ]);
 
@@ -933,6 +986,35 @@ onUnmounted(() => {
 <style scoped>
 .employee-dashboard {
   @apply space-y-8;
+}
+
+/* Competency Overview Section */
+.competency-overview-section {
+  @apply bg-white rounded-lg border border-neutral-200 p-6;
+}
+
+.competency-stats-grid {
+  @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4;
+}
+
+.competency-stat-card {
+  @apply flex items-center space-x-4 p-4 bg-gradient-to-r from-neutral-50 to-neutral-100 rounded-lg border border-neutral-200;
+}
+
+.stat-icon {
+  @apply flex-shrink-0;
+}
+
+.stat-content {
+  @apply flex-1;
+}
+
+.stat-value {
+  @apply text-2xl font-bold text-neutral-900;
+}
+
+.stat-label {
+  @apply text-sm text-neutral-600 font-medium;
 }
 
 /* Motivational Message Block */

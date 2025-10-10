@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RatingInput Component Test</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .rating-input-wrapper {
+            width: 100%;
+        }
+
+        .rating-scale--horizontal .rating-options {
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        .rating-option {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: all 0.2s;
+        }
+
+        .rating-button {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s;
+            cursor: pointer;
+            width: 2.5rem;
+            height: 2.5rem;
+            background: white;
+            border: 2px solid #d1d5db;
+            color: #6b7280;
+        }
+
+        .rating-button:hover {
+            border-color: #9ca3af;
+            background: #f9fafb;
+        }
+
+        .rating-option--selected .rating-button {
+            background: #dbeafe;
+            border-color: #3b82f6;
+            color: #1d4ed8;
+        }
+
+        .rating-label {
+            text-align: center;
+            margin-top: 0.5rem;
+        }
+
+        .rating-text {
+            font-size: 0.75rem;
+            font-weight: 500;
+            display: block;
+        }
+
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        .comments-notice {
+            margin-top: 0.75rem;
+            padding: 0.75rem;
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: 0.5rem;
+        }
+    </style>
+</head>
+<body class="p-8 bg-gray-50">
+    <div id="app">
+        <div class="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow">
+            <h1 class="text-2xl font-bold mb-6">RatingInput Component Test</h1>
+            
+            <div class="space-y-8">
+                <!-- Basic Rating Input -->
+                <div>
+                    <h2 class="text-lg font-semibold mb-4">Basic Rating Input</h2>
+                    <rating-input 
+                        v-model="rating1" 
+                        label="Rate Performance"
+                        @change="onRatingChange"
+                    />
+                    <p class="mt-2 text-sm text-gray-600">Selected: {{ rating1 || 'None' }}</p>
+                </div>
+
+                <!-- Rating Input with Guidelines -->
+                <div>
+                    <h2 class="text-lg font-semibold mb-4">With Guidelines</h2>
+                    <rating-input 
+                        v-model="rating2" 
+                        label="Rate Quality"
+                        :guidelines="guidelines"
+                        :show-guidelines="true"
+                    />
+                    <p class="mt-2 text-sm text-gray-600">Selected: {{ rating2 || 'None' }}</p>
+                </div>
+
+                <!-- Rating Input with Comments Requirement -->
+                <div>
+                    <h2 class="text-lg font-semibold mb-4">With Comments Requirement</h2>
+                    <rating-input 
+                        v-model="rating3" 
+                        label="Rate Overall Performance"
+                        :require-comments-for-extremes="true"
+                    />
+                    <p class="mt-2 text-sm text-gray-600">Selected: {{ rating3 || 'None' }}</p>
+                    <p v-if="rating3" class="mt-1 text-sm" :class="requiresComments(rating3) ? 'text-amber-600' : 'text-green-600'">
+                        Comments {{ requiresComments(rating3) ? 'Required' : 'Optional' }}
+                    </p>
+                </div>
+
+                <!-- Number Display -->
+                <div>
+                    <h2 class="text-lg font-semibold mb-4">Number Display</h2>
+                    <rating-input 
+                        v-model="rating4" 
+                        label="Rate Experience"
+                        display-type="numbers"
+                    />
+                    <p class="mt-2 text-sm text-gray-600">Selected: {{ rating4 || 'None' }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { createApp, ref, computed } = Vue;
+
+        // Simple RatingInput component for testing
+        const RatingInput = {
+            props: {
+                modelValue: {
+                    type: [Number, String],
+                    default: null
+                },
+                label: {
+                    type: String,
+                    default: ''
+                },
+                guidelines: {
+                    type: [Object, Array],
+                    default: null
+                },
+                showGuidelines: {
+                    type: Boolean,
+                    default: true
+                },
+                displayType: {
+                    type: String,
+                    default: 'stars'
+                },
+                requireCommentsForExtremes: {
+                    type: Boolean,
+                    default: true
+                }
+            },
+            emits: ['update:modelValue', 'change'],
+            setup(props, { emit }) {
+                const inputId = computed(() => `rating-input-${Math.random().toString(36).substr(2, 9)}`);
+                
+                const defaultRatingOptions = [
+                    { value: 1, label: 'Poor' },
+                    { value: 2, label: 'Needs Improvement' },
+                    { value: 3, label: 'Meets Expectations' },
+                    { value: 4, label: 'Exceeds Expectations' },
+                    { value: 5, label: 'Outstanding' }
+                ];
+
+                const requiresComments = computed(() => {
+                    if (!props.requireCommentsForExtremes || !props.modelValue) return false;
+                    const rating = parseInt(props.modelValue);
+                    return rating <= 2 || rating >= 4;
+                });
+
+                const handleRatingChange = (rating) => {
+                    const numericRating = parseInt(rating);
+                    emit('update:modelValue', numericRating);
+                    emit('change', numericRating);
+                };
+
+                const getCommentsRequirementText = () => {
+                    const rating = parseInt(props.modelValue);
+                    if (rating <= 2) {
+                        return 'Please provide detailed comments explaining areas for improvement.';
+                    }
+                    if (rating >= 4) {
+                        return 'Please provide detailed comments highlighting exceptional performance.';
+                    }
+                    return '';
+                };
+
+                return {
+                    inputId,
+                    defaultRatingOptions,
+                    requiresComments,
+                    handleRatingChange,
+                    getCommentsRequirementText
+                };
+            },
+            template: `
+                <div class="rating-input-wrapper">
+                    <!-- Label -->
+                    <label v-if="label" class="block text-sm font-medium mb-2 text-gray-700">
+                        {{ label }}
+                    </label>
+
+                    <!-- Guidelines -->
+                    <div v-if="guidelines && showGuidelines" class="mb-4 p-4 bg-gray-50 rounded-lg border">
+                        <h4 class="text-sm font-medium text-gray-900 mb-3">Rating Guidelines</h4>
+                        <div class="space-y-2">
+                            <div v-for="(guideline, rating) in guidelines" :key="rating" class="flex items-start space-x-3">
+                                <span class="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
+                                    {{ rating }}
+                                </span>
+                                <div class="text-sm text-gray-700">{{ guideline }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Rating Scale -->
+                    <div class="rating-scale">
+                        <div class="rating-options">
+                            <div 
+                                v-for="rating in defaultRatingOptions" 
+                                :key="rating.value"
+                                class="rating-option"
+                                :class="{ 'rating-option--selected': modelValue === rating.value }"
+                            >
+                                <input
+                                    :id="inputId + '-' + rating.value"
+                                    type="radio"
+                                    :name="inputId"
+                                    :value="rating.value"
+                                    :checked="modelValue === rating.value"
+                                    class="sr-only"
+                                    @change="handleRatingChange(rating.value)"
+                                />
+                                
+                                <label
+                                    :for="inputId + '-' + rating.value"
+                                    class="rating-button"
+                                    :title="rating.label"
+                                >
+                                    <!-- Star or Number -->
+                                    <span v-if="displayType === 'numbers'" class="font-semibold">
+                                        {{ rating.value }}
+                                    </span>
+                                    <svg v-else class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                    </svg>
+                                </label>
+                                
+                                <div class="rating-label">
+                                    <span class="rating-text text-gray-600">{{ rating.label }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Comments Notice -->
+                    <div v-if="requiresComments && modelValue" class="comments-notice">
+                        <p class="text-sm font-medium text-amber-900">Comments Required</p>
+                        <p class="text-xs text-amber-700 mt-1">
+                            {{ getCommentsRequirementText() }}
+                        </p>
+                    </div>
+                </div>
+            `
+        };
+
+        createApp({
+            components: {
+                RatingInput
+            },
+            setup() {
+                const rating1 = ref(null);
+                const rating2 = ref(null);
+                const rating3 = ref(null);
+                const rating4 = ref(null);
+
+                const guidelines = {
+                    1: 'Performance significantly below expectations',
+                    2: 'Performance below expectations, requires development',
+                    3: 'Performance meets job requirements and standards',
+                    4: 'Performance consistently above expectations',
+                    5: 'Exceptional performance, significantly exceeds expectations'
+                };
+
+                const onRatingChange = (rating) => {
+                    console.log('Rating changed:', rating);
+                };
+
+                const requiresComments = (rating) => {
+                    if (!rating) return false;
+                    const numRating = parseInt(rating);
+                    return numRating <= 2 || numRating >= 4;
+                };
+
+                return {
+                    rating1,
+                    rating2,
+                    rating3,
+                    rating4,
+                    guidelines,
+                    onRatingChange,
+                    requiresComments
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
