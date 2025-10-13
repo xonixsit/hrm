@@ -9,6 +9,7 @@ use App\Models\CompetencyAssessment;
 use App\Models\Department;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Collection;
 
 class OrganizationalAnalyticsService
@@ -56,6 +57,11 @@ class OrganizationalAnalyticsService
     public function getPerformanceMetrics($timeRange = '30d')
     {
         try {
+            // Check if competency_assessments table exists
+            if (!Schema::hasTable('competency_assessments')) {
+                return $this->getEmptyPerformanceMetrics();
+            }
+            
             $startDate = $this->getStartDateFromRange($timeRange);
             
             $assessments = CompetencyAssessment::whereIn('status', ['approved', 'submitted'])
@@ -391,42 +397,57 @@ class OrganizationalAnalyticsService
     public function getRiskAssessment()
     {
         try {
-            // High attrition risk employees - those with low performance ratings
-            $highAttritionRisk = DB::table('employees')
-                ->join('competency_assessments', 'employees.id', '=', 'competency_assessments.employee_id')
-                ->where('competency_assessments.rating', '<', 3)
-                ->where('competency_assessments.created_at', '>=', Carbon::now()->subMonths(6))
-                ->whereNull('employees.deleted_at')
-                ->where('employees.status', '=', 'active')
-                ->distinct('employees.id')
-                ->count();
+            // Check if required tables exist
+            if (!Schema::hasTable('competency_assessments') || !Schema::hasTable('employees')) {
+                $highAttritionRisk = 0;
+            } else {
+                // High attrition risk employees - those with low performance ratings
+                $highAttritionRisk = DB::table('employees')
+                    ->join('competency_assessments', 'employees.id', '=', 'competency_assessments.employee_id')
+                    ->where('competency_assessments.rating', '<', 3)
+                    ->where('competency_assessments.created_at', '>=', Carbon::now()->subMonths(6))
+                    ->whereNull('employees.deleted_at')
+                    ->where('employees.status', '=', 'active')
+                    ->distinct('employees.id')
+                    ->count();
+            }
         } catch (\Exception $e) {
             $highAttritionRisk = 0;
         }
 
         try {
-            // Performance concerns - employees with consistently low ratings
-            $performanceConcerns = DB::table('competency_assessments')
-                ->where('rating', '<', 3)
-                ->whereIn('status', ['approved', 'submitted'])
-                ->where('created_at', '>=', Carbon::now()->subMonths(3))
-                ->distinct('employee_id')
-                ->count();
+            // Check if table exists
+            if (!Schema::hasTable('competency_assessments')) {
+                $performanceConcerns = 0;
+            } else {
+                // Performance concerns - employees with consistently low ratings
+                $performanceConcerns = DB::table('competency_assessments')
+                    ->where('rating', '<', 3)
+                    ->whereIn('status', ['approved', 'submitted'])
+                    ->where('created_at', '>=', Carbon::now()->subMonths(3))
+                    ->distinct('employee_id')
+                    ->count();
+            }
         } catch (\Exception $e) {
             $performanceConcerns = 0;
         }
 
         try {
-            // Skill gaps - competencies with low average ratings across organization
-            $skillGapsQuery = DB::table('competencies')
-                ->join('competency_assessments', 'competencies.id', '=', 'competency_assessments.competency_id')
-                ->whereIn('competency_assessments.status', ['approved', 'submitted'])
-                ->select('competencies.id', DB::raw('AVG(competency_assessments.rating) as avg_rating'))
-                ->groupBy('competencies.id')
-                ->having('avg_rating', '<', 3)
-                ->get();
-            
-            $skillGaps = $skillGapsQuery->count();
+            // Check if required tables exist
+            if (!Schema::hasTable('competencies') || !Schema::hasTable('competency_assessments')) {
+                $skillGaps = 0;
+            } else {
+                // Skill gaps - competencies with low average ratings across organization
+                $skillGapsQuery = DB::table('competencies')
+                    ->join('competency_assessments', 'competencies.id', '=', 'competency_assessments.competency_id')
+                    ->whereIn('competency_assessments.status', ['approved', 'submitted'])
+                    ->select('competencies.id', DB::raw('AVG(competency_assessments.rating) as avg_rating'))
+                    ->groupBy('competencies.id')
+                    ->having('avg_rating', '<', 3)
+                    ->get();
+                
+                $skillGaps = $skillGapsQuery->count();
+            }
         } catch (\Exception $e) {
             $skillGaps = 0;
         }
@@ -441,11 +462,21 @@ class OrganizationalAnalyticsService
 
     public function getSkillsMatrix()
     {
-        $competencies = DB::table('competencies')
-            ->join('competency_assessments', 'competencies.id', '=', 'competency_assessments.competency_id')
-            ->whereIn('competency_assessments.status', ['approved', 'submitted'])
-            ->select('competencies.name', 'competency_assessments.rating')
-            ->get();
+        try {
+            // Check if required tables exist
+            if (!Schema::hasTable('competencies') || !Schema::hasTable('competency_assessments')) {
+                return $this->getEmptySkillsMatrix();
+            }
+            
+            $competencies = DB::table('competencies')
+                ->join('competency_assessments', 'competencies.id', '=', 'competency_assessments.competency_id')
+                ->whereIn('competency_assessments.status', ['approved', 'submitted'])
+                ->select('competencies.name', 'competency_assessments.rating')
+                ->get();
+        } catch (\Exception $e) {
+            \Log::warning('Skills matrix query failed: ' . $e->getMessage());
+            return $this->getEmptySkillsMatrix();
+        }
 
         $skillCategories = [
             'Technical Skills' => [],
@@ -546,5 +577,33 @@ class OrganizationalAnalyticsService
         }
 
         return 'Technical Skills'; // Default category
+    }
+    
+    private function getEmptyPerformanceMetrics()
+    {
+        return [
+            'distribution' => [
+                'excellent' => 0,
+                'good' => 0,
+                'average' => 0,
+                'needs_improvement' => 0
+            ],
+            'department_performance' => [],
+            'skills_analysis' => []
+        ];
+    }
+    
+    private function getEmptySkillsMatrix()
+    {
+        return [
+            'Technical Skills' => ['expert' => 0, 'proficient' => 0, 'needs_development' => 0],
+            'Leadership' => ['expert' => 0, 'proficient' => 0, 'needs_development' => 0],
+            'Communication' => ['expert' => 0, 'proficient' => 0, 'needs_development' => 0],
+            'Project Management' => ['expert' => 0, 'proficient' => 0, 'needs_development' => 0],
+            'Problem Solving' => ['expert' => 0, 'proficient' => 0, 'needs_development' => 0],
+            'Teamwork' => ['expert' => 0, 'proficient' => 0, 'needs_development' => 0],
+            'Innovation' => ['expert' => 0, 'proficient' => 0, 'needs_development' => 0],
+            'Customer Focus' => ['expert' => 0, 'proficient' => 0, 'needs_development' => 0]
+        ];
     }
 }
