@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue';
 import { router, Link } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import { useFlashMessages } from '@/composables/useFlashMessages';
 import {
   PlusIcon,
   FunnelIcon,
@@ -26,6 +27,9 @@ const props = defineProps({
     filters: Object,
     stats: Object
 });
+
+// Initialize flash messages
+useFlashMessages();
 
 const selectedCompetencies = ref([]);
 const showFilters = ref(false);
@@ -163,14 +167,8 @@ const showImpactAnalysis = (competency) => {
 };
 
 const duplicateCompetency = (competency) => {
-    console.log('Duplicate competency clicked:', competency);
     if (confirm(`Are you sure you want to duplicate "${competency.name}"?`)) {
-        router.post(route('competencies.duplicate', competency.id), {}, {
-            onSuccess: () => {
-                // Refresh the page to show the duplicated competency
-                router.reload();
-            }
-        });
+        router.post(route('competencies.duplicate', competency.id));
     }
 };
 

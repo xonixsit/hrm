@@ -214,7 +214,7 @@ class CompetencyController extends Controller
     /**
      * Toggle competency active status.
      */
-    public function toggleStatus(Competency $competency): JsonResponse
+    public function toggleStatus(Competency $competency)
     {
         $competency->update([
             'is_active' => !$competency->is_active,
@@ -223,10 +223,7 @@ class CompetencyController extends Controller
 
         $status = $competency->is_active ? 'activated' : 'deactivated';
 
-        return response()->json([
-            'message' => "Competency {$status} successfully.",
-            'competency' => $competency
-        ]);
+        return redirect()->back()->with('success', "Competency \"{$competency->name}\" {$status} successfully.");
     }
 
     /**
@@ -294,7 +291,7 @@ class CompetencyController extends Controller
     /**
      * Duplicate a competency.
      */
-    public function duplicate(Competency $competency): JsonResponse
+    public function duplicate(Competency $competency)
     {
         $newCompetency = $competency->replicate();
         $newCompetency->name = $competency->name . ' (Copy)';
@@ -302,10 +299,7 @@ class CompetencyController extends Controller
         $newCompetency->updated_by = Auth::id();
         $newCompetency->save();
 
-        return response()->json([
-            'message' => 'Competency duplicated successfully.',
-            'competency' => $newCompetency->load(['department', 'creator'])
-        ], 201);
+        return redirect()->back()->with('success', "Competency \"{$competency->name}\" duplicated successfully as \"{$newCompetency->name}\".");
     }
 
     /**
@@ -426,7 +420,7 @@ class CompetencyController extends Controller
     /**
      * Bulk activate competencies.
      */
-    public function bulkActivate(Request $request): JsonResponse
+    public function bulkActivate(Request $request)
     {
         $request->validate([
             'competency_ids' => 'required|array',
@@ -434,17 +428,18 @@ class CompetencyController extends Controller
         ]);
 
         $count = Competency::whereIn('id', $request->competency_ids)
-            ->update(['is_active' => true]);
+            ->update([
+                'is_active' => true,
+                'updated_by' => Auth::id()
+            ]);
 
-        return response()->json([
-            'message' => "{$count} competencies activated successfully."
-        ]);
+        return redirect()->back()->with('success', "{$count} competencies activated successfully.");
     }
 
     /**
      * Bulk deactivate competencies.
      */
-    public function bulkDeactivate(Request $request): JsonResponse
+    public function bulkDeactivate(Request $request)
     {
         $request->validate([
             'competency_ids' => 'required|array',
@@ -452,17 +447,18 @@ class CompetencyController extends Controller
         ]);
 
         $count = Competency::whereIn('id', $request->competency_ids)
-            ->update(['is_active' => false]);
+            ->update([
+                'is_active' => false,
+                'updated_by' => Auth::id()
+            ]);
 
-        return response()->json([
-            'message' => "{$count} competencies deactivated successfully."
-        ]);
+        return redirect()->back()->with('success', "{$count} competencies deactivated successfully.");
     }
 
     /**
      * Bulk delete competencies.
      */
-    public function bulkDelete(Request $request): JsonResponse
+    public function bulkDelete(Request $request)
     {
         $request->validate([
             'competency_ids' => 'required|array',
@@ -476,16 +472,12 @@ class CompetencyController extends Controller
             ->toArray();
 
         if (!empty($competenciesWithAssessments)) {
-            return response()->json([
-                'error' => 'Cannot delete competencies with existing assessments: ' . implode(', ', $competenciesWithAssessments)
-            ], 422);
+            return redirect()->back()->with('error', 'Cannot delete competencies with existing assessments: ' . implode(', ', $competenciesWithAssessments));
         }
 
         $count = Competency::whereIn('id', $request->competency_ids)->delete();
 
-        return response()->json([
-            'message' => "{$count} competencies deleted successfully."
-        ]);
+        return redirect()->back()->with('success', "{$count} competencies deleted successfully.");
     }
 
     /**
