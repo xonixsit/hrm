@@ -41,7 +41,8 @@
               <div class="mb-4 sm:mb-0">
                 <h1 class="text-2xl font-bold text-gray-900">Create Timesheet Entry</h1>
                 <p class="mt-1 text-sm text-gray-600">
-                  Add a new time entry for your work activities
+                  <span v-if="canSelectEmployee">Add a new time entry for any employee</span>
+                  <span v-else>Add a new time entry for your work activities</span>
                 </p>
               </div>
             </div>
@@ -54,6 +55,30 @@
         <div class="bg-white rounded-lg shadow-sm border border-gray-200">
           <div class="p-8">
             <form @submit.prevent="form.post(route('timesheets.store'))" class="space-y-6">
+              <!-- Employee Selection (Admin/Manager only) -->
+              <div v-if="canSelectEmployee">
+                <label for="employee_id" class="block text-sm font-medium text-gray-700">
+                  Employee <span class="text-red-500">*</span>
+                </label>
+                <select 
+                  id="employee_id"
+                  v-model="form.employee_id" 
+                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                  :class="{ 'border-red-300': form.errors.employee_id }"
+                >
+                  <option value="">Select an employee</option>
+                  <option v-for="employee in employees" :key="employee.id" :value="employee.id">
+                    {{ employee.name }} - {{ employee.department }}
+                  </option>
+                </select>
+                <div v-if="form.errors.employee_id" class="mt-1 text-sm text-red-600">
+                  {{ form.errors.employee_id }}
+                </div>
+                <p class="mt-1 text-xs text-gray-500">
+                  Select the employee this timesheet entry is for
+                </p>
+              </div>
+
               <!-- Project Selection -->
               <div>
                 <label for="project_id" class="block text-sm font-medium text-gray-700">
@@ -188,12 +213,15 @@ import { useForm, Link } from '@inertiajs/vue3';
 import { onMounted } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 
-defineProps({
+const props = defineProps({
   projects: Array,
   tasks: Array,
+  employees: Array,
+  canSelectEmployee: Boolean,
 });
 
 const form = useForm({
+  employee_id: '',
   project_id: '',
   task_id: '',
   date: '',

@@ -20,6 +20,7 @@ class Timesheet extends Model
         'approved_by',
         'approved_at',
         'approval_comments',
+        'created_by',
     ];
 
     protected $casts = [
@@ -46,5 +47,10 @@ class Timesheet extends Model
     public function approver()
     {
         return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
     }
 }

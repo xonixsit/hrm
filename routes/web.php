@@ -153,6 +153,26 @@ Route::middleware('auth')->group(function () {
     Route::get('assessment-form/{competencyAssessment}/edit', [CompetencyAssessmentController::class, 'editForm'])->name('assessment-form.edit');
     
     // Test route for debugging
+    // Test timesheet admin functionality
+    Route::get('test-timesheet-admin', function() {
+        $user = Auth::user();
+        $employees = \App\Models\Employee::with('user')->get()->map(function ($employee) {
+            return [
+                'id' => $employee->id,
+                'name' => $employee->user->name ?? 'No User',
+                'can_create_for' => $user->hasRole('Admin') || $user->hasRole('Manager')
+            ];
+        });
+        
+        return response()->json([
+            'current_user' => $user->name,
+            'user_roles' => $user->roles->pluck('name'),
+            'can_select_employee' => $user->hasRole('Admin') || $user->hasRole('Manager'),
+            'available_employees' => $employees,
+            'total_employees' => $employees->count()
+        ]);
+    })->name('test-timesheet-admin');
+
     // Test projects setup
     Route::get('test-projects', function() {
         $projects = \App\Models\Project::select('name', 'is_default', 'client', 'priority', 'status')->get();

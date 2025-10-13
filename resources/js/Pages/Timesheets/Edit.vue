@@ -85,6 +85,31 @@
             </div>
 
             <form @submit.prevent="updateTimesheet" class="space-y-6">
+              <!-- Employee Selection (Admin/Manager only) -->
+              <div v-if="canSelectEmployee">
+                <label for="employee_id" class="block text-sm font-medium text-gray-700">
+                  Employee <span class="text-red-500">*</span>
+                </label>
+                <select 
+                  id="employee_id"
+                  v-model="form.employee_id" 
+                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                  :class="{ 'border-red-300': form.errors.employee_id }"
+                  :disabled="!canEdit"
+                >
+                  <option value="">Select an employee</option>
+                  <option v-for="employee in employees" :key="employee.id" :value="employee.id">
+                    {{ employee.name }} - {{ employee.department }}
+                  </option>
+                </select>
+                <div v-if="form.errors.employee_id" class="mt-1 text-sm text-red-600">
+                  {{ form.errors.employee_id }}
+                </div>
+                <p class="mt-1 text-xs text-gray-500">
+                  Select the employee this timesheet entry is for
+                </p>
+              </div>
+
               <!-- Project Selection -->
               <div>
                 <label for="project_id" class="block text-sm font-medium text-gray-700">
@@ -369,11 +394,14 @@ const props = defineProps({
   timesheet: Object,
   projects: Array,
   tasks: Array,
+  employees: Array,
+  canSelectEmployee: Boolean,
 });
 
 const page = usePage();
 
 const form = useForm({
+  employee_id: props.timesheet.employee_id,
   project_id: props.timesheet.project_id,
   task_id: props.timesheet.task_id || '',
   date: props.timesheet.date,

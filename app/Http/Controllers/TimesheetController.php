@@ -21,24 +21,56 @@ class TimesheetController extends Controller
     {
         $user = Auth::user();
         if ($user->hasRole('Admin') || $user->hasRole('Manager')) {
-            $timesheets = Timesheet::with(['employee.user', 'project', 'task'])->paginate(10);
+            $timesheets = Timesheet::with(['employee.user', 'project', 'task', 'creator'])->paginate(10);
         } else {
             $employee = $user->employee;
-            $timesheets = Timesheet::where('employee_id', $employee->id)->with(['project', 'task'])->paginate(10);
+            $timesheets = Timesheet::where('employee_id', $employee->id)->with(['project', 'task', 'creator'])->paginate(10);
         }
         return Inertia::render('Timesheets/Index', ['timesheets' => $timesheets]);
     }
 
     public function create()
     {
+        $user = Auth::user();
         $projects = Project::all();
         $tasks = Task::all();
-        return Inertia::render('Timesheets/Create', ['projects' => $projects, 'tasks' => $tasks]);
+        
+        // Get employees list for admins/managers
+        $employees = [];
+        if ($user->hasRole('Admin') || $user->hasRole('Manager')) {
+            $employees = Employee::with('user')
+                ->whereHas('user') // Only get employees that have users
+                ->where('status', 'active') // Only active employees
+                ->orderBy('id')
+                ->get()
+                ->map(function ($employee) {
+                    return [
+                        'id' => $employee->id,
+                        'name' => $employee->user->name,
+                        'employee_code' => $employee->employee_code,
+                        'department' => $employee->department->name ?? 'No Department'
+                    ];
+                })
+                ->filter(function ($employee) {
+                    return !empty($employee['name']); // Filter out any with empty names
+                })
+                ->values(); // Reset array keys
+        }
+        
+        return Inertia::render('Timesheets/Create', [
+            'projects' => $projects, 
+            'tasks' => $tasks,
+            'employees' => $employees,
+            'canSelectEmployee' => $user->hasRole('Admin') || $user->hasRole('Manager')
+        ]);
     }
 
     public function store(Request $request)
     {
+        $user = Auth::user();
+        
         $validated = $request->validate([
+            'employee_id' => 'nullable|exists:employees,id',
             'project_id' => 'required|exists:projects,id',
             'task_id' => 'nullable|exists:tasks,id',
             'date' => 'required|date',
@@ -46,13 +78,33 @@ class TimesheetController extends Controller
             'description' => 'nullable|string',
         ]);
 
-        $validated['employee_id'] = Auth::user()->employee->id;
+        // Determine which employee this timesheet is for
+        if ($user->hasRole('Admin') || $user->hasRole('Manager')) {
+            // Admin/Manager can create for any employee
+            if (isset($validated['employee_id'])) {
+                $employeeId = $validated['employee_id'];
+            } else {
+                // If no employee selected, default to their own
+                $employeeId = $user->employee->id;
+            }
+        } else {
+            // Regular employees can only create for themselves
+            $employeeId = $user->employee->id;
+        }
+
+        $validated['employee_id'] = $employeeId;
         $validated['status'] = 'pending';
+        $validated['created_by'] = $user->id;
 
-        Timesheet::create($validated);
+        $timesheet = Timesheet::create($validated);
 
-        $this->logAudit('Timesheet Created', 'Created timesheet for date: ' . $validated['date']);
-        return redirect()->route('timesheets.index')->with('success', 'Timesheet entry created.');
+        // Get employee name for audit log
+        $employee = Employee::with('user')->find($employeeId);
+        $employeeName = $employee->user->name ?? 'Unknown';
+
+        $this->logAudit('Timesheet Created', "Created timesheet for {$employeeName} on date: " . $validated['date']);
+        
+        return redirect()->route('timesheets.index')->with('success', 'Timesheet entry created successfully.');
     }
 
     public function show(Timesheet $timesheet)
@@ -63,16 +115,49 @@ class TimesheetController extends Controller
 
     public function edit(Timesheet $timesheet)
     {
+        $user = Auth::user();
         $projects = Project::all();
         $tasks = Task::all();
-        return Inertia::render('Timesheets/Edit', ['timesheet' => $timesheet, 'projects' => $projects, 'tasks' => $tasks]);
+        
+        // Get employees list for admins/managers
+        $employees = [];
+        if ($user->hasRole('Admin') || $user->hasRole('Manager')) {
+            $employees = Employee::with('user')
+                ->whereHas('user') // Only get employees that have users
+                ->where('status', 'active') // Only active employees
+                ->orderBy('id')
+                ->get()
+                ->map(function ($employee) {
+                    return [
+                        'id' => $employee->id,
+                        'name' => $employee->user->name,
+                        'employee_code' => $employee->employee_code,
+                        'department' => $employee->department->name ?? 'No Department'
+                    ];
+                })
+                ->filter(function ($employee) {
+                    return !empty($employee['name']); // Filter out any with empty names
+                })
+                ->values(); // Reset array keys
+        }
+        
+        return Inertia::render('Timesheets/Edit', [
+            'timesheet' => $timesheet, 
+            'projects' => $projects, 
+            'tasks' => $tasks,
+            'employees' => $employees,
+            'canSelectEmployee' => $user->hasRole('Admin') || $user->hasRole('Manager')
+        ]);
     }
 
     public function update(Request $request, Timesheet $timesheet)
     {
         $this->authorize('update', $timesheet);
+        
+        $user = Auth::user();
 
         $validated = $request->validate([
+            'employee_id' => 'nullable|exists:employees,id',
             'project_id' => 'required|exists:projects,id',
             'task_id' => 'nullable|exists:tasks,id',
             'date' => 'required|date',
@@ -81,7 +166,15 @@ class TimesheetController extends Controller
             'status' => 'sometimes|in:pending,approved,rejected',
         ]);
 
-        $timesheet->update($validated);
+        // Only allow admins/managers to change the employee
+        if (($user->hasRole('Admin') || $user->hasRole('Manager')) && isset($validated['employee_id'])) {
+            // Admin/Manager can change the employee
+            $timesheet->update($validated);
+        } else {
+            // Regular users cannot change employee_id
+            unset($validated['employee_id']);
+            $timesheet->update($validated);
+        }
 
         if (isset($validated['status'])) {
             if ($validated['status'] === 'approved') {
