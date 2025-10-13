@@ -385,18 +385,28 @@ class CompetencyController extends Controller
      */
     private function getCompetencyCategories(): array
     {
-        return [
-            'Attendance & Punctuality',
-            'Performance in Sales/Targets',
-            'File Handling & Accuracy',
-            'Calling & Call Backs',
-            'Assessment Scores',
-            'Quality of Work',
-            'Teamwork & Cooperation',
-            'Adaptability & Learning',
-            'Communication Skills',
-            'Discipline & Integrity'
+        // Get categories from existing competencies in database
+        $existingCategories = Competency::distinct('category')
+            ->whereNotNull('category')
+            ->pluck('category')
+            ->toArray();
+
+        // Default categories based on workplace competency framework
+        $defaultCategories = [
+            'Behavioral Competencies',
+            'Performance Competencies', 
+            'Technical Competencies',
+            'Communication Competencies',
+            'Learning & Development'
         ];
+
+        // Merge existing and default categories, remove duplicates
+        $allCategories = array_unique(array_merge($existingCategories, $defaultCategories));
+        
+        // Sort alphabetically
+        sort($allCategories);
+        
+        return $allCategories;
     }
 
     /**
