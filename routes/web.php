@@ -153,6 +153,53 @@ Route::middleware('auth')->group(function () {
     Route::get('assessment-form/{competencyAssessment}/edit', [CompetencyAssessmentController::class, 'editForm'])->name('assessment-form.edit');
     
     // Test route for debugging
+    // Test assessment authorization
+    Route::get('test-assessment-auth', function() {
+        $user = Auth::user();
+        $assessments = \App\Models\CompetencyAssessment::with(['employee.user', 'assessor'])
+            ->limit(5)
+            ->get()
+            ->map(function($assessment) use ($user) {
+                $controller = new \App\Http\Controllers\CompetencyAssessmentController(
+                    new \App\Services\CompetencyAssessmentService()
+                );
+                
+                return [
+                    'id' => $assessment->id,
+                    'type' => $assessment->assessment_type,
+                    'employee' => $assessment->employee->user->name ?? 'Unknown',
+                    'assessor' => $assessment->assessor->name ?? 'Unknown',
+                    'status' => $assessment->status,
+                    'current_user' => $user->name,
+                    'can_edit' => $controller->canEditAssessment($assessment),
+                    'can_view' => $controller->canViewAssessment($assessment),
+                ];
+            });
+            
+        return response()->json([
+            'current_user' => $user->name,
+            'user_roles' => $user->roles->pluck('name'),
+            'assessments' => $assessments
+        ]);
+    })->name('test-assessment-auth');
+
+    // Test timesheet date formatting
+    Route::get('test-timesheet-date', function() {
+        $timesheet = \App\Models\Timesheet::first();
+        if (!$timesheet) {
+            return response()->json(['error' => 'No timesheet found']);
+        }
+        
+        return response()->json([
+            'timesheet_id' => $timesheet->id,
+            'raw_date' => $timesheet->getRawOriginal('date'),
+            'formatted_date' => $timesheet->date,
+            'date_for_input' => $timesheet->date->format('Y-m-d'),
+            'iso_string' => $timesheet->date->toISOString(),
+            'json_format' => $timesheet->date->toJSON()
+        ]);
+    })->name('test-timesheet-date');
+
     // Test timesheet admin functionality
     Route::get('test-timesheet-admin', function() {
         $user = Auth::user();

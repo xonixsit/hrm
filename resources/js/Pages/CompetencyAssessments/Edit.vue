@@ -26,6 +26,32 @@
         </div>
       </div>
 
+      <!-- Self-Assessment Warning for Admins -->
+      <div v-if="assessment.assessment_type === 'self' && isViewingOthersAssessment" class="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-md">
+        <div class="flex items-start">
+          <svg class="w-5 h-5 text-amber-400 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+          </svg>
+          <div>
+            <h4 class="text-sm font-medium text-amber-800">Self-Assessment Viewing Notice</h4>
+            <p class="text-sm text-amber-700 mt-1">
+              You are viewing <strong>{{ assessment.employee?.user?.name }}'s</strong> self-assessment. 
+              Self-assessments can only be edited by the employee themselves to maintain assessment integrity.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cannot Edit Warning -->
+      <div v-if="!canEdit" class="mb-6 p-4 bg-gray-50 border border-gray-200 rounded-md">
+        <div class="flex items-center">
+          <svg class="w-5 h-5 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          </svg>
+          <p class="text-sm text-gray-600">This assessment is read-only and cannot be edited.</p>
+        </div>
+      </div>
+
       <!-- Form -->
       <div class="bg-white rounded-lg shadow-sm border border-gray-200">
           <form @submit.prevent="updateAssessment" class="p-6 space-y-6">
@@ -220,7 +246,9 @@ const props = defineProps({
   competencies: Array,
   assessmentCycles: Array,
   assessmentTypes: Array,
-  errors: Object
+  errors: Object,
+  canEdit: Boolean,
+  isViewingOthersAssessment: Boolean
 });
 
 const form = ref({

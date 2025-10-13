@@ -716,7 +716,9 @@ class CompetencyAssessmentController extends Controller
             'employees' => Employee::with('user')->select('id', 'user_id')->get(),
             'competencies' => Competency::where('is_active', true)->with('department')->get(),
             'assessmentCycles' => AssessmentCycle::select('id', 'name')->get(),
-            'assessmentTypes' => ['self', 'manager', 'peer', '360']
+            'assessmentTypes' => ['self', 'manager', 'peer', '360'],
+            'canEdit' => $this->canEditAssessment($competencyAssessment),
+            'isViewingOthersAssessment' => $this->isViewingOthersAssessment($competencyAssessment)
         ]);
     }
 
@@ -1446,7 +1448,7 @@ class CompetencyAssessmentController extends Controller
     /**
      * Check if the current user can view the assessment.
      */
-    private function canViewAssessment(CompetencyAssessment $assessment): bool
+    public function canViewAssessment(CompetencyAssessment $assessment): bool
     {
         $user = Auth::user();
         
@@ -1477,23 +1479,63 @@ class CompetencyAssessmentController extends Controller
     }
 
     /**
-     * Check if the current user can edit the assessment.
+     * Check if the current user is viewing someone else's assessment.
      */
-    private function canEditAssessment(CompetencyAssessment $assessment): bool
+    public function isViewingOthersAssessment(CompetencyAssessment $assessment): bool
     {
         $user = Auth::user();
         
-        // Admins and HR can edit any assessment (even submitted ones)
-        if ($user->hasRole(['Admin', 'HR'])) {
-            return true;
+        // For self-assessments, check if the viewer is not the employee
+        if ($assessment->assessment_type === 'self') {
+            return $assessment->employee_id !== $user->employee?->id;
         }
         
-        // For non-admin users, only draft assessments can be edited
+        // For other assessment types, check if the viewer is not the assessor
+        return $assessment->assessor_id !== $user->id;
+    }
+
+    /**
+     * Check if the current user can edit the assessment.
+     */
+    public function canEditAssessment(CompetencyAssessment $assessment): bool
+    {
+        $user = Auth::user();
+        
+        // Only draft assessments can be edited (regardless of role)
         if (!$assessment->isDraft()) {
             return false;
         }
         
-        // Use the same logic as view, but only for drafts
+        // Self-assessments can ONLY be edited by the employee themselves
+        if ($assessment->assessment_type === 'self') {
+            return $assessment->employee_id === $user->employee?->id;
+        }
+        
+        // Manager assessments can be edited by:
+        // 1. The assigned assessor (manager)
+        // 2. Admins/HR (for administrative purposes)
+        if ($assessment->assessment_type === 'manager') {
+            return $assessment->assessor_id === $user->id || 
+                   $user->hasRole(['Admin', 'HR']);
+        }
+        
+        // Peer assessments can be edited by:
+        // 1. The assigned assessor (peer)
+        // 2. Admins/HR (for administrative purposes)
+        if ($assessment->assessment_type === 'peer') {
+            return $assessment->assessor_id === $user->id || 
+                   $user->hasRole(['Admin', 'HR']);
+        }
+        
+        // 360 assessments can be edited by:
+        // 1. The assigned assessor
+        // 2. Admins/HR (for administrative purposes)
+        if ($assessment->assessment_type === '360') {
+            return $assessment->assessor_id === $user->id || 
+                   $user->hasRole(['Admin', 'HR']);
+        }
+        
+        // Default: Use the same logic as view for other cases
         return $this->canViewAssessment($assessment);
     }
 

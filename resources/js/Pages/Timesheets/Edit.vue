@@ -166,9 +166,13 @@
                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                   :class="{ 'border-red-300': form.errors.date }"
                   :disabled="!canEdit"
+                  :placeholder="!form.date ? 'Select date' : ''"
                 />
                 <div v-if="form.errors.date" class="mt-1 text-sm text-red-600">
                   {{ form.errors.date }}
+                </div>
+                <div v-if="!form.date" class="mt-1 text-xs text-amber-600">
+                  Please select a date for this timesheet entry
                 </div>
               </div>
 
@@ -385,7 +389,7 @@
 
 <script setup>
 import { useForm, Link, router, usePage } from '@inertiajs/vue3';
-import { computed, ref, onMounted } from 'vue';
+import { computed, ref, onMounted, watch } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { EyeIcon } from '@heroicons/vue/24/outline';
 import axios from 'axios';
@@ -400,11 +404,41 @@ const props = defineProps({
 
 const page = usePage();
 
+// Format date for HTML date input (YYYY-MM-DD)
+const formatDateForInput = (date) => {
+  if (!date) return '';
+  
+  try {
+    // Handle different date formats
+    let d;
+    if (typeof date === 'string') {
+      // If it's already in YYYY-MM-DD format, return as is
+      if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+        return date;
+      }
+      d = new Date(date);
+    } else {
+      d = new Date(date);
+    }
+    
+    // Check if date is valid
+    if (isNaN(d.getTime())) {
+      console.warn('Invalid date provided:', date);
+      return '';
+    }
+    
+    return d.toISOString().split('T')[0];
+  } catch (error) {
+    console.error('Error formatting date:', error, date);
+    return '';
+  }
+};
+
 const form = useForm({
   employee_id: props.timesheet.employee_id,
   project_id: props.timesheet.project_id,
   task_id: props.timesheet.task_id || '',
-  date: props.timesheet.date,
+  date: formatDateForInput(props.timesheet.date),
   hours: props.timesheet.hours,
   description: props.timesheet.description || '',
   status: props.timesheet.status,
@@ -510,6 +544,19 @@ const syncWithAttendance = async () => {
     syncingAttendance.value = false;
   }
 };
+
+// Debug logging (remove in production)
+if (process.env.NODE_ENV === 'development') {
+  console.log('Original timesheet date:', props.timesheet.date);
+  console.log('Formatted date for input:', formatDateForInput(props.timesheet.date));
+}
+
+// Watch for changes in the timesheet prop and update form date
+watch(() => props.timesheet.date, (newDate) => {
+  if (newDate && !form.date) {
+    form.date = formatDateForInput(newDate);
+  }
+}, { immediate: true });
 
 // Load attendance data when component mounts
 onMounted(() => {
