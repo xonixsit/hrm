@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Attendance;
 use App\Models\Employee;
+use App\Models\Timesheet;
+use App\Models\Project;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -219,17 +221,28 @@ class AttendanceController extends Controller
             'status' => 'clocked_out'
         ]);
 
+        // Synchronize with timesheet
+        $timesheetResult = $this->syncAttendanceToTimesheet($attendance);
+
         $this->logAudit('Attendance Clock Out', 'Clocked out for employee ID: ' . $employee->id);
         
         // Broadcast real-time update
         $this->broadcastAttendanceUpdate($employee->id, $attendance);
         
+        $message = 'Clocked out successfully.';
+        if ($timesheetResult['created']) {
+            $message .= " Timesheet entry created automatically ({$timesheetResult['hours']} hours).";
+        } elseif ($timesheetResult['updated'] ?? false) {
+            $message .= " Existing timesheet updated ({$timesheetResult['hours']} hours).";
+        }
+
         return response()->json([
             'success' => true,
-            'message' => 'Clocked out successfully.',
+            'message' => $message,
             'attendance' => $attendance,
             'work_duration' => $attendance->work_duration,
-            'break_duration' => $attendance->break_duration
+            'break_duration' => $attendance->break_duration,
+            'timesheet_sync' => $timesheetResult
         ]);
     }
 
@@ -666,5 +679,160 @@ class AttendanceController extends Controller
         };
 
         return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * Synchronize attendance record with timesheet entry
+     */
+    private function syncAttendanceToTimesheet(Attendance $attendance)
+    {
+        try {
+            // Only sync if employee has clocked out (complete work session)
+            if (!$attendance->clock_out || $attendance->status !== 'clocked_out') {
+                return ['created' => false, 'message' => 'Attendance not complete'];
+            }
+
+            // Check if timesheet entry already exists for this date
+            $existingTimesheet = Timesheet::where('employee_id', $attendance->employee_id)
+                ->whereDate('date', $attendance->date)
+                ->first();
+
+            // Calculate hours worked (convert minutes to hours with 2 decimal places)
+            $hoursWorked = round($attendance->work_minutes / 60, 2);
+
+            // Get default project (you might want to make this configurable)
+            $defaultProject = Project::where('is_default', true)->first() 
+                ?? Project::first(); // Fallback to first project if no default
+
+            if (!$defaultProject) {
+                Log::warning('No default project found for timesheet sync', [
+                    'attendance_id' => $attendance->id,
+                    'employee_id' => $attendance->employee_id
+                ]);
+                return ['created' => false, 'message' => 'No default project available'];
+            }
+
+            if ($existingTimesheet) {
+                // Update existing timesheet with attendance data
+                $existingTimesheet->update([
+                    'hours' => $hoursWorked,
+                    'description' => $this->generateTimesheetDescription($attendance),
+                    'status' => 'pending' // Reset to pending if it was previously approved
+                ]);
+
+                Log::info('Updated existing timesheet from attendance', [
+                    'timesheet_id' => $existingTimesheet->id,
+                    'attendance_id' => $attendance->id,
+                    'hours' => $hoursWorked
+                ]);
+
+                return [
+                    'created' => false,
+                    'updated' => true,
+                    'timesheet_id' => $existingTimesheet->id,
+                    'hours' => $hoursWorked,
+                    'message' => 'Existing timesheet updated'
+                ];
+            } else {
+                // Create new timesheet entry
+                $timesheet = Timesheet::create([
+                    'employee_id' => $attendance->employee_id,
+                    'project_id' => $defaultProject->id,
+                    'task_id' => null, // No specific task by default
+                    'date' => $attendance->date,
+                    'hours' => $hoursWorked,
+                    'description' => $this->generateTimesheetDescription($attendance),
+                    'status' => 'pending'
+                ]);
+
+                Log::info('Created new timesheet from attendance', [
+                    'timesheet_id' => $timesheet->id,
+                    'attendance_id' => $attendance->id,
+                    'hours' => $hoursWorked
+                ]);
+
+                return [
+                    'created' => true,
+                    'timesheet_id' => $timesheet->id,
+                    'hours' => $hoursWorked,
+                    'message' => 'New timesheet created'
+                ];
+            }
+
+        } catch (\Exception $e) {
+            Log::error('Failed to sync attendance to timesheet', [
+                'attendance_id' => $attendance->id,
+                'employee_id' => $attendance->employee_id,
+                'error' => $e->getMessage()
+            ]);
+
+            return [
+                'created' => false,
+                'error' => true,
+                'message' => 'Sync failed: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Generate a description for the timesheet based on attendance data
+     */
+    private function generateTimesheetDescription(Attendance $attendance)
+    {
+        $clockIn = $attendance->clock_in->format('H:i');
+        $clockOut = $attendance->clock_out->format('H:i');
+        $workDuration = $attendance->work_duration;
+        $breakDuration = $attendance->break_duration;
+        $breakSessions = count($attendance->break_sessions ?? []);
+
+        $description = "Tax services work - Auto-generated from attendance tracking\n";
+        $description .= "Work session: {$clockIn} - {$clockOut} ({$workDuration})";
+        
+        if ($breakSessions > 0) {
+            $description .= "\nBreak time: {$breakDuration} ({$breakSessions} session" . ($breakSessions > 1 ? 's' : '') . ")";
+        }
+
+        $description .= "\n\nActivities may include: Tax preparation, client consultations, filing services, bookkeeping, or administrative tasks";
+
+        if ($attendance->location) {
+            $description .= "\nWork location: {$attendance->location}";
+        }
+
+        if ($attendance->notes) {
+            $description .= "\nAdditional notes: {$attendance->notes}";
+        }
+
+        return $description;
+    }
+
+    /**
+     * Get or create default project for timesheet sync (Tax Services)
+     */
+    private function getDefaultProjectForTimesheet()
+    {
+        // Try to get a project marked as default
+        $defaultProject = Project::where('is_default', true)->first();
+        
+        if (!$defaultProject) {
+            // If no default project, try to get a tax-related project
+            $defaultProject = Project::where('name', 'LIKE', '%tax%')
+                ->orWhere('name', 'LIKE', '%filing%')
+                ->orWhere('name', 'LIKE', '%preparation%')
+                ->first();
+        }
+
+        if (!$defaultProject) {
+            // Create a default project if none exists for tax services company
+            $defaultProject = Project::create([
+                'name' => 'Tax Preparation & Filing Services',
+                'description' => 'Default project for tax preparation, filing services, client consultations, and general tax-related work activities',
+                'client' => 'Internal Operations',
+                'status' => 'active',
+                'is_default' => true,
+                'priority' => 'high'
+            ]);
+        }
+
+        return $defaultProject;
     }
 }

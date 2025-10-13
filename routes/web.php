@@ -61,6 +61,8 @@ Route::middleware('auth')->group(function () {
     Route::post('timesheets/bulk-approve', [TimesheetController::class, 'bulkApprove'])->name('timesheets.bulk-approve');
     Route::get('timesheets/pending/approvals', [TimesheetController::class, 'pendingApprovals'])->name('timesheets.pending-approvals');
     Route::get('api/timesheets/approval-stats', [TimesheetController::class, 'approvalStats'])->name('timesheets.approval-stats');
+    Route::post('timesheets/{timesheet}/sync-attendance', [TimesheetController::class, 'syncWithAttendance'])->name('timesheets.sync-attendance');
+    Route::get('timesheets/{timesheet}/attendance-data', [TimesheetController::class, 'getAttendanceData'])->name('timesheets.attendance-data');
     Route::get('work-reports/leaderboard', [WorkReportController::class, 'leaderboard'])->name('work-reports.leaderboard');
     Route::resource('work-reports', WorkReportController::class);
     Route::resource('attendances', AttendanceController::class);
@@ -151,6 +153,38 @@ Route::middleware('auth')->group(function () {
     Route::get('assessment-form/{competencyAssessment}/edit', [CompetencyAssessmentController::class, 'editForm'])->name('assessment-form.edit');
     
     // Test route for debugging
+    // Test projects setup
+    Route::get('test-projects', function() {
+        $projects = \App\Models\Project::select('name', 'is_default', 'client', 'priority', 'status')->get();
+        return response()->json([
+            'projects' => $projects,
+            'default_project' => \App\Models\Project::where('is_default', true)->first(),
+            'total_projects' => $projects->count()
+        ]);
+    })->name('test-projects');
+
+    // Test analytics service
+    Route::get('test-analytics', function() {
+        try {
+            $service = new \App\Services\CompetencyAnalyticsService();
+            $skillGaps = $service->generateSkillGapAnalysis();
+            $distribution = $service->getCompetencyDistribution();
+            
+            return response()->json([
+                'success' => true,
+                'skill_gaps' => $skillGaps,
+                'distribution' => $distribution,
+                'message' => 'Analytics service is working correctly'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+        }
+    })->name('test-analytics');
+
     Route::get('test-assessment-creation', function() {
         $employee = \App\Models\Employee::first();
         $competency = \App\Models\Competency::first();

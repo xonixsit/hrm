@@ -1,15 +1,58 @@
 <template>
   <AuthenticatedLayout>
-    <template #header>
-      <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-        Create Timesheet Entry
-      </h2>
-    </template>
+    <div class="min-h-screen bg-gray-50">
+      <!-- Page Header -->
+      <div class="bg-white border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div class="py-6">
+            <!-- Breadcrumbs -->
+            <nav class="flex mb-4" aria-label="Breadcrumb">
+              <ol class="flex items-center space-x-2 text-sm">
+                <li>
+                  <Link :href="route('dashboard')"
+                    class="text-gray-500 hover:text-gray-700 transition-colors">
+                    Dashboard
+                  </Link>
+                </li>
+                <li class="flex items-center">
+                  <svg class="w-4 h-4 text-gray-400 mx-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd"
+                      d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                      clip-rule="evenodd" />
+                  </svg>
+                  <Link :href="route('timesheets.index')"
+                    class="text-gray-500 hover:text-gray-700 transition-colors">
+                    Timesheets
+                  </Link>
+                </li>
+                <li class="flex items-center">
+                  <svg class="w-4 h-4 text-gray-400 mx-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd"
+                      d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                      clip-rule="evenodd" />
+                  </svg>
+                  <span class="text-gray-900 font-medium">Create Entry</span>
+                </li>
+              </ol>
+            </nav>
 
-    <div class="py-12">
-      <div class="max-w-2xl mx-auto sm:px-6 lg:px-8">
-        <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-          <div class="p-6 text-gray-900">
+            <!-- Page Title and Actions -->
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+              <div class="mb-4 sm:mb-0">
+                <h1 class="text-2xl font-bold text-gray-900">Create Timesheet Entry</h1>
+                <p class="mt-1 text-sm text-gray-600">
+                  Add a new time entry for your work activities
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Content -->
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+          <div class="p-8">
             <form @submit.prevent="form.post(route('timesheets.store'))" class="space-y-6">
               <!-- Project Selection -->
               <div>

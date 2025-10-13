@@ -52,6 +52,12 @@ class Attendance extends Model
         return $this->belongsTo(User::class, 'edited_by');
     }
 
+    public function timesheet()
+    {
+        return $this->hasOne(Timesheet::class, 'employee_id', 'employee_id')
+            ->whereColumn('date', 'date');
+    }
+
     /**
      * Start a break session
      */

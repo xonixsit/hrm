@@ -195,20 +195,16 @@ class CompetencyController extends Controller
     /**
      * Remove the specified competency from storage.
      */
-    public function destroy(Competency $competency): JsonResponse
+    public function destroy(Competency $competency)
     {
         // Check if competency has assessments
         if ($competency->assessments()->exists()) {
-            return response()->json([
-                'message' => 'Cannot delete competency with existing assessments. Deactivate instead.'
-            ], 422);
+            return redirect()->back()->with('error', 'Cannot delete competency with existing assessments. Deactivate instead.');
         }
 
         $competency->delete();
 
-        return response()->json([
-            'message' => 'Competency deleted successfully.'
-        ]);
+        return redirect()->route('competencies.index')->with('success', 'Competency deleted successfully.');
     }
 
     /**
@@ -305,7 +301,7 @@ class CompetencyController extends Controller
     /**
      * Export competencies to CSV.
      */
-    public function export(Request $request): JsonResponse
+    public function export(Request $request)
     {
         $query = Competency::with(['department']);
 
@@ -322,27 +318,52 @@ class CompetencyController extends Controller
             $query->where('is_active', $request->boolean('is_active'));
         }
 
-        $competencies = $query->get();
-
-        $csvData = [];
-        $csvData[] = ['Name', 'Category', 'Department', 'Weight', 'Active', 'Role Specific', 'Description'];
-
-        foreach ($competencies as $competency) {
-            $csvData[] = [
-                $competency->name,
-                $competency->category,
-                $competency->department?->name ?? 'General',
-                $competency->weight,
-                $competency->is_active ? 'Yes' : 'No',
-                $competency->role_specific ? 'Yes' : 'No',
-                $competency->description
-            ];
+        if ($request->filled('role_specific')) {
+            $query->where('role_specific', $request->boolean('role_specific'));
         }
 
-        return response()->json([
-            'data' => $csvData,
-            'filename' => 'competencies_' . now()->format('Y-m-d_H-i-s') . '.csv'
-        ]);
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        $competencies = $query->orderBy('name')->get();
+
+        $filename = 'competencies_' . now()->format('Y-m-d_H-i-s') . '.csv';
+        
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ];
+
+        $callback = function() use ($competencies) {
+            $file = fopen('php://output', 'w');
+            
+            // Add CSV headers
+            fputcsv($file, ['Name', 'Category', 'Department', 'Weight', 'Active', 'Role Specific', 'Description', 'Measurement Indicators', 'Created At']);
+            
+            // Add data rows
+            foreach ($competencies as $competency) {
+                fputcsv($file, [
+                    $competency->name,
+                    $competency->category,
+                    $competency->department?->name ?? 'General',
+                    $competency->weight,
+                    $competency->is_active ? 'Yes' : 'No',
+                    $competency->role_specific ? 'Yes' : 'No',
+                    $competency->description,
+                    is_array($competency->measurement_indicators) ? implode('; ', $competency->measurement_indicators) : '',
+                    $competency->created_at->format('Y-m-d H:i:s')
+                ]);
+            }
+            
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 
     /**

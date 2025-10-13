@@ -197,29 +197,44 @@ class CompetencyAnalyticsController extends Controller
      */
     public function reports(Request $request)
     {
-        $reportType = $request->get('type', 'overview');
-        $filters = $request->only([
-            'department_id', 'employee_id', 'date_from', 'date_to', 
-            'competency_ids', 'assessment_type'
-        ]);
+        try {
+            $reportType = $request->get('type', 'overview');
+            $filters = $request->only([
+                'department_id', 'employee_id', 'date_from', 'date_to', 
+                'competency_ids', 'assessment_type'
+            ]);
 
-        $reportData = $this->generateReportData($reportType, $filters);
+            $reportData = $this->generateReportData($reportType, $filters);
 
-        return Inertia::render('Competency/CompetencyReports', [
-            'reportType' => $reportType,
-            'reportData' => $reportData,
-            'filters' => $filters,
-            'departments' => Department::select('id', 'name')->get(),
-            'employees' => Employee::with(['user:id,name', 'department:id,name'])->get()->map(function ($employee) {
-                return [
-                    'id' => $employee->id,
-                    'name' => $employee->user->name ?? 'Unknown',
-                    'department_id' => $employee->department_id,
-                    'department' => $employee->department
-                ];
-            }),
-            'competencies' => Competency::select('id', 'name', 'category')->where('is_active', true)->get(),
-        ]);
+            return Inertia::render('Competency/CompetencyReports', [
+                'reportType' => $reportType,
+                'reportData' => $reportData,
+                'filters' => $filters,
+                'departments' => Department::select('id', 'name')->get(),
+                'employees' => Employee::with(['user:id,name', 'department:id,name'])->get()->map(function ($employee) {
+                    return [
+                        'id' => $employee->id,
+                        'name' => $employee->user->name ?? 'Unknown',
+                        'department_id' => $employee->department_id,
+                        'department' => $employee->department
+                    ];
+                }),
+                'competencies' => Competency::select('id', 'name', 'category')->where('is_active', true)->get(),
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Reports page failed to load: ' . $e->getMessage());
+            
+            return Inertia::render('Competency/CompetencyReports', [
+                'reportType' => 'overview',
+                'reportData' => [],
+                'filters' => [],
+                'departments' => [],
+                'employees' => [],
+                'competencies' => [],
+                'error' => 'Failed to load reports data. Please try again.'
+            ]);
+        }
     }
 
     /**
@@ -227,34 +242,48 @@ class CompetencyAnalyticsController extends Controller
      */
     public function generateReport(Request $request): JsonResponse
     {
-        $request->validate([
-            'type' => 'required|in:overview,skill_gaps,employee_performance,department_comparison,trend_analysis',
-            'format' => 'sometimes|in:json,pdf,excel',
-            'department_id' => 'sometimes|exists:departments,id',
-            'employee_ids' => 'sometimes|string',
-            'competency_ids' => 'sometimes|string',
-            'date_from' => 'sometimes|date',
-            'date_to' => 'sometimes|date|after_or_equal:date_from',
-        ]);
-
-        $reportType = $request->type;
-        $format = $request->get('format', 'json');
-        $filters = $request->only([
-            'department_id', 'employee_ids', 'competency_ids', 
-            'date_from', 'date_to', 'assessment_type'
-        ]);
-
-        $reportData = $this->generateReportData($reportType, $filters);
-
-        if ($format === 'json') {
-            return response()->json([
-                'success' => true,
-                'data' => $reportData
+        try {
+            $request->validate([
+                'type' => 'required|in:overview,skill_gaps,employee_performance,department_comparison,trend_analysis',
+                'format' => 'sometimes|in:json,pdf,excel',
+                'department_id' => 'sometimes|exists:departments,id',
+                'employee_ids' => 'sometimes|string',
+                'competency_ids' => 'sometimes|string',
+                'date_from' => 'sometimes|date',
+                'date_to' => 'sometimes|date|after_or_equal:date_from',
             ]);
-        }
 
-        // For PDF/Excel formats, we'll return a download response
-        return $this->downloadReport($reportData, $reportType, $format);
+            $reportType = $request->type;
+            $format = $request->get('format', 'json');
+            $filters = $request->only([
+                'department_id', 'employee_ids', 'competency_ids', 
+                'date_from', 'date_to', 'assessment_type'
+            ]);
+
+            $reportData = $this->generateReportData($reportType, $filters);
+
+            if ($format === 'json') {
+                return response()->json([
+                    'success' => true,
+                    'data' => $reportData
+                ]);
+            }
+
+            // For PDF/Excel formats, we'll return a download response
+            return $this->downloadReport($reportData, $reportType, $format);
+
+        } catch (\Exception $e) {
+            \Log::error('Report generation failed: ' . $e->getMessage(), [
+                'request' => $request->all(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Report generation failed: ' . $e->getMessage(),
+                'error' => config('app.debug') ? $e->getTraceAsString() : 'Internal server error'
+            ], 500);
+        }
     }
 
     /**

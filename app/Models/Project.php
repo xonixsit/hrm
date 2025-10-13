@@ -24,6 +24,7 @@ class Project extends Model
         'end_date',
         'progress',
         'manager_id',
+        'is_default',
     ];
 
     protected $casts = [
@@ -32,6 +33,7 @@ class Project extends Model
         'end_date' => 'date',
         'budget' => 'decimal:2',
         'progress' => 'integer',
+        'is_default' => 'boolean',
     ];
 
     protected $appends = [

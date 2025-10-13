@@ -218,51 +218,43 @@ class CompetencyAnalyticsService
      */
     public function generateSkillGapAnalysis(?Department $department = null, array $employeeIds = [], array $competencyIds = []): array
     {
-        $query = CompetencyAssessment::query()
-            ->where('status', 'approved')
-            ->with(['employee', 'competency']);
+        try {
+            $query = CompetencyAssessment::query()
+                ->where('status', 'approved')
+                ->with(['employee.user', 'competency']);
 
-        // Filter by department
-        if ($department) {
-            $query->whereHas('employee', function ($q) use ($department) {
-                $q->where('department_id', $department->id);
-            });
-        }
-
-        // Filter by specific employees
-        if (!empty($employeeIds)) {
-            $query->whereIn('employee_id', $employeeIds);
-        }
-
-        // Filter by specific competencies
-        if (!empty($competencyIds)) {
-            $query->whereIn('competency_id', $competencyIds);
-        }
-
-        // Get latest assessments for each employee-competency combination
-        $query->whereIn('id', function ($subQuery) use ($department, $employeeIds, $competencyIds) {
-            $subQuery->select(DB::raw('MAX(id)'))
-                ->from('competency_assessments')
-                ->where('status', 'approved');
-
+            // Filter by department
             if ($department) {
-                $subQuery->whereHas('employee', function ($q) use ($department) {
+                $query->whereHas('employee', function ($q) use ($department) {
                     $q->where('department_id', $department->id);
                 });
             }
 
+            // Filter by specific employees
             if (!empty($employeeIds)) {
-                $subQuery->whereIn('employee_id', $employeeIds);
+                $query->whereIn('employee_id', $employeeIds);
             }
 
+            // Filter by specific competencies
             if (!empty($competencyIds)) {
-                $subQuery->whereIn('competency_id', $competencyIds);
+                $query->whereIn('competency_id', $competencyIds);
             }
 
-            $subQuery->groupBy('employee_id', 'competency_id');
-        });
+            $assessments = $query->get();
 
-        $assessments = $query->get();
+            if ($assessments->isEmpty()) {
+                return [
+                    'employee_profiles' => [],
+                    'competency_gaps' => [],
+                    'critical_gaps' => [],
+                    'summary' => [
+                        'total_employees' => 0,
+                        'total_competencies' => 0,
+                        'average_rating' => 0,
+                        'gap_count' => 0
+                    ]
+                ];
+            }
 
         $skillGaps = [];
         $competencyStats = [];
@@ -273,7 +265,7 @@ class CompetencyAnalyticsService
             $competencyName = $assessment->competency->name;
             $category = $assessment->competency->category;
             $employeeId = $assessment->employee_id;
-            $employeeName = $assessment->employee->name;
+            $employeeName = $assessment->employee->user->name ?? 'Unknown Employee';
             $rating = $assessment->rating;
 
             // Competency statistics
@@ -355,17 +347,34 @@ class CompetencyAnalyticsService
             return $stats['gap_severity'] === 'high' && $stats['average_rating'] < 2.5;
         });
 
-        return [
-            'competency_gaps' => array_values($competencyStats),
-            'employee_profiles' => array_values($employeeStats),
-            'critical_gaps' => array_values($criticalGaps),
-            'summary' => [
-                'total_competencies_analyzed' => count($competencyStats),
-                'total_employees_analyzed' => count($employeeStats),
-                'high_priority_gaps' => count($criticalGaps),
-                'average_organizational_rating' => $this->calculateOverallAverageRating($assessments)
-            ]
-        ];
+            return [
+                'competency_gaps' => array_values($competencyStats),
+                'employee_profiles' => array_values($employeeStats),
+                'critical_gaps' => array_values($criticalGaps),
+                'summary' => [
+                    'total_competencies_analyzed' => count($competencyStats),
+                    'total_employees_analyzed' => count($employeeStats),
+                    'high_priority_gaps' => count($criticalGaps),
+                    'average_organizational_rating' => $this->calculateOverallAverageRating($assessments)
+                ]
+            ];
+
+        } catch (\Exception $e) {
+            \Log::error('Skill gap analysis failed: ' . $e->getMessage());
+            
+            return [
+                'employee_profiles' => [],
+                'competency_gaps' => [],
+                'critical_gaps' => [],
+                'summary' => [
+                    'total_employees' => 0,
+                    'total_competencies' => 0,
+                    'average_rating' => 0,
+                    'gap_count' => 0,
+                    'error' => 'Analysis failed: ' . $e->getMessage()
+                ]
+            ];
+        }
     }
 
     /**
@@ -431,14 +440,15 @@ class CompetencyAnalyticsService
      */
     public function getCompetencyDistribution(array $filters = []): array
     {
-        $query = CompetencyAssessment::query()
-            ->where('status', 'approved')
-            ->with(['competency', 'employee']);
+        try {
+            $query = CompetencyAssessment::query()
+                ->where('status', 'approved')
+                ->with(['competency', 'employee']);
 
-        // Apply filters
-        $this->applyFilters($query, $filters);
+            // Apply filters
+            $this->applyFilters($query, $filters);
 
-        $assessments = $query->get();
+            $assessments = $query->get();
 
         $distribution = [
             'rating_distribution' => [
@@ -491,7 +501,19 @@ class CompetencyAnalyticsService
                 : 0;
         }
 
-        return $distribution;
+            return $distribution;
+
+        } catch (\Exception $e) {
+            \Log::error('Competency distribution analysis failed: ' . $e->getMessage());
+            
+            return [
+                'rating_distribution' => [1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0],
+                'category_distribution' => [],
+                'assessment_type_distribution' => [],
+                'total_assessments' => 0,
+                'error' => 'Distribution analysis failed: ' . $e->getMessage()
+            ];
+        }
     }
 
     /**

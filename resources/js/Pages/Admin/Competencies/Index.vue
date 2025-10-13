@@ -173,24 +173,20 @@ const duplicateCompetency = (competency) => {
 };
 
 const exportCompetencies = () => {
-    router.get(route('competencies.export'), filters.value, {
-        onSuccess: (page) => {
-            // Handle CSV download
-            const csvData = page.props.csvData;
-            const filename = page.props.filename;
-            
-            if (csvData && filename) {
-                const csvContent = csvData.map(row => row.join(',')).join('\n');
-                const blob = new Blob([csvContent], { type: 'text/csv' });
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = filename;
-                a.click();
-                window.URL.revokeObjectURL(url);
-            }
+    // Build query string from current filters
+    const params = new URLSearchParams();
+    
+    Object.keys(filters.value).forEach(key => {
+        if (filters.value[key] !== null && filters.value[key] !== '') {
+            params.append(key, filters.value[key]);
         }
     });
+    
+    // Create download URL with filters
+    const exportUrl = route('competencies.export') + (params.toString() ? '?' + params.toString() : '');
+    
+    // Trigger download
+    window.location.href = exportUrl;
 };
 </script>
 

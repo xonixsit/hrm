@@ -106,6 +106,126 @@ class TimesheetController extends Controller
     }
 
     /**
+     * Sync timesheet with attendance data
+     */
+    public function syncWithAttendance(Request $request, Timesheet $timesheet)
+    {
+        $this->authorize('update', $timesheet);
+
+        try {
+            // Find attendance record for the same employee and date
+            $attendance = \App\Models\Attendance::where('employee_id', $timesheet->employee_id)
+                ->whereDate('date', $timesheet->date)
+                ->where('status', 'clocked_out')
+                ->first();
+
+            if (!$attendance) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No completed attendance record found for this date.'
+                ], 404);
+            }
+
+            // Calculate hours from attendance
+            $hoursWorked = round($attendance->work_minutes / 60, 2);
+
+            // Update timesheet with attendance data
+            $timesheet->update([
+                'hours' => $hoursWorked,
+                'description' => $this->generateTimesheetDescriptionFromAttendance($attendance, $timesheet->description)
+            ]);
+
+            $this->logAudit('Timesheet Synced with Attendance', "Synced timesheet ID: {$timesheet->id} with attendance data");
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Timesheet synchronized with attendance data successfully.',
+                'timesheet' => $timesheet->fresh(),
+                'attendance_data' => [
+                    'work_duration' => $attendance->work_duration,
+                    'break_duration' => $attendance->break_duration,
+                    'clock_in' => $attendance->clock_in->format('H:i'),
+                    'clock_out' => $attendance->clock_out->format('H:i')
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to sync with attendance: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get attendance data for a timesheet
+     */
+    public function getAttendanceData(Request $request, Timesheet $timesheet)
+    {
+        $attendance = \App\Models\Attendance::where('employee_id', $timesheet->employee_id)
+            ->whereDate('date', $timesheet->date)
+            ->first();
+
+        if (!$attendance) {
+            return response()->json([
+                'has_attendance' => false,
+                'message' => 'No attendance record found for this date.'
+            ]);
+        }
+
+        return response()->json([
+            'has_attendance' => true,
+            'attendance' => [
+                'clock_in' => $attendance->clock_in?->format('H:i'),
+                'clock_out' => $attendance->clock_out?->format('H:i'),
+                'work_duration' => $attendance->work_duration,
+                'break_duration' => $attendance->break_duration,
+                'work_minutes' => $attendance->work_minutes,
+                'calculated_hours' => round($attendance->work_minutes / 60, 2),
+                'status' => $attendance->status,
+                'break_sessions' => count($attendance->break_sessions ?? [])
+            ],
+            'sync_needed' => $attendance->status === 'clocked_out' && 
+                           round($attendance->work_minutes / 60, 2) != $timesheet->hours
+        ]);
+    }
+
+    /**
+     * Generate timesheet description from attendance data
+     */
+    private function generateTimesheetDescriptionFromAttendance($attendance, $existingDescription = '')
+    {
+        $clockIn = $attendance->clock_in->format('H:i');
+        $clockOut = $attendance->clock_out ? $attendance->clock_out->format('H:i') : 'Not clocked out';
+        $workDuration = $attendance->work_duration;
+        $breakDuration = $attendance->break_duration;
+        $breakSessions = count($attendance->break_sessions ?? []);
+
+        $syncInfo = "\n\n--- Synced with Attendance ---\n";
+        $syncInfo .= "Clock in: {$clockIn}, Clock out: {$clockOut}\n";
+        $syncInfo .= "Work duration: {$workDuration}";
+        
+        if ($breakSessions > 0) {
+            $syncInfo .= ", Break time: {$breakDuration} ({$breakSessions} session" . ($breakSessions > 1 ? 's' : '') . ")";
+        }
+
+        if ($attendance->location) {
+            $syncInfo .= "\nLocation: {$attendance->location}";
+        }
+
+        // Preserve existing description and add sync info
+        if ($existingDescription && !str_contains($existingDescription, '--- Synced with Attendance ---')) {
+            return $existingDescription . $syncInfo;
+        } elseif (str_contains($existingDescription, '--- Synced with Attendance ---')) {
+            // Replace existing sync info
+            $parts = explode('--- Synced with Attendance ---', $existingDescription);
+            return trim($parts[0]) . $syncInfo;
+        } else {
+            return trim($syncInfo);
+        }
+    }
+
+    /**
      * Approve a timesheet
      */
     public function approve(Request $request, Timesheet $timesheet)
