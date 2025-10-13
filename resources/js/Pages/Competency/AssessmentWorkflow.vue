@@ -1,5 +1,5 @@
 <template>
-    <AppLayout title="Assessment Workflow Management">
+    <AuthenticatedLayout title="Assessment Workflow Management">
         <template #header>
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
                 Assessment Workflow Management
@@ -257,12 +257,12 @@
                 </div>
             </div>
         </div>
-    </AppLayout>
+    </AuthenticatedLayout>
 </template>
 
 <script>
 import { ref, computed, onMounted } from 'vue'
-import AppLayout from '@/Layouts/AppLayout.vue'
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 import RatingDisplay from '@/Components/Competency/RatingDisplay.vue'
 import WorkflowStatusBadge from '@/Components/Competency/WorkflowStatusBadge.vue'
 import BulkActionModal from '@/Components/Competency/BulkActionModal.vue'
@@ -270,7 +270,7 @@ import { router } from '@inertiajs/vue3'
 
 export default {
     components: {
-        AppLayout,
+        AuthenticatedLayout,
         RatingDisplay,
         WorkflowStatusBadge,
         BulkActionModal
