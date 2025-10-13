@@ -488,4 +488,3 @@ onMounted(() => {
   loadAttendanceData();
 });
 </script>
-</template>
