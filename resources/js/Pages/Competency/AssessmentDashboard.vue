@@ -146,11 +146,18 @@
                   </div>
                   <div class="assessment-actions">
                     <button
+                      v-if="canAssess(assessment)"
                       @click.stop="startAssessment(assessment)"
                       class="btn-sm btn-primary"
                     >
                       Assess
                     </button>
+                    <span
+                      v-else
+                      class="text-xs text-gray-500 italic"
+                    >
+                      {{ assessment.assessment_type === 'self' ? 'Employee only' : 'Not assigned' }}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -508,10 +515,50 @@ const navigateToCycle = (cycle) => {
 
 const startAssessment = (assessment) => {
   try {
+    // Get current user
+    const page = usePage();
+    const currentUser = page.props.auth?.user;
+    
+    // Check if this is a self-assessment and if the current user is the employee
+    if (assessment.assessment_type === 'self') {
+      // For self-assessments, only the employee themselves can assess
+      if (currentUser.id !== assessment.employee.user_id) {
+        showNotification('Self-assessments can only be completed by the employee themselves.', 'error');
+        return;
+      }
+    } else {
+      // For other assessment types, check if user is the assigned assessor
+      if (currentUser.id !== assessment.assessor_id) {
+        showNotification('You are not authorized to complete this assessment.', 'error');
+        return;
+      }
+    }
+    
     router.visit(route('competency-assessments.evaluate', assessment.id));
   } catch (error) {
     console.error('Navigation error:', error);
     showNotification('Navigation failed. Please try again.', 'error');
+  }
+};
+
+// Check if current user can assess a specific assessment
+const canAssess = (assessment) => {
+  try {
+    const page = usePage();
+    const currentUser = page.props.auth?.user;
+    
+    if (!currentUser) return false;
+    
+    // For self-assessments, only the employee themselves can assess
+    if (assessment.assessment_type === 'self') {
+      return currentUser.id === assessment.employee.user_id;
+    }
+    
+    // For other assessment types, check if user is the assigned assessor
+    return currentUser.id === assessment.assessor_id;
+  } catch (error) {
+    console.error('Error checking assessment permissions:', error);
+    return false;
   }
 };
 
