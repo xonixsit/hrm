@@ -295,6 +295,45 @@ Route::middleware('auth')->group(function () {
     Route::get('competency-assessments/{competencyAssessment}/evaluate', [CompetencyAssessmentController::class, 'evaluate'])->name('competency-assessments.evaluate');
     Route::get('employees/{employee}/assessments', [CompetencyAssessmentController::class, 'byEmployee'])->name('competency-assessments.by-employee');
     Route::get('my-assessments', [CompetencyAssessmentController::class, 'myAssessments'])->name('competency-assessments.my-assessments');
+    
+    // Debug route to test my assessments data
+    Route::get('debug-my-assessments', function() {
+        $user = Auth::user();
+        $employee = \App\Models\Employee::where('user_id', $user->id)->first();
+        
+        $query = \App\Models\CompetencyAssessment::with(['employee.user', 'competency', 'assessor', 'assessmentCycle'])
+            ->where(function ($q) use ($user, $employee) {
+                $q->where('assessor_id', $user->id);
+                if ($employee) {
+                    $q->orWhere(function ($subQ) use ($employee) {
+                        $subQ->where('employee_id', $employee->id)
+                             ->where('assessment_type', 'self');
+                    });
+                }
+            });
+        
+        $assessments = $query->orderBy('created_at', 'desc')->get();
+        
+        return response()->json([
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email
+            ],
+            'employee_id' => $employee?->id,
+            'total_assessments' => $assessments->count(),
+            'assessments' => $assessments->map(function($assessment) {
+                return [
+                    'id' => $assessment->id,
+                    'employee_name' => $assessment->employee->user->name,
+                    'competency_name' => $assessment->competency->name,
+                    'assessment_type' => $assessment->assessment_type,
+                    'status' => $assessment->status,
+                    'created_at' => $assessment->created_at
+                ];
+            })
+        ]);
+    })->name('debug-my-assessments');
     Route::get('pending-assessments', [CompetencyAssessmentController::class, 'pending'])->name('competency-assessments.pending');
     Route::post('competency-assessments/bulk-create', [CompetencyAssessmentController::class, 'bulkCreate'])->name('competency-assessments.bulk-create');
     Route::post('competency-assessments/bulk-submit', [CompetencyAssessmentController::class, 'bulkSubmit'])->name('competency-assessments.bulk-submit');
