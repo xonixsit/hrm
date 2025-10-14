@@ -356,7 +356,7 @@
 
 <script setup>
 import { computed, ref, onMounted } from 'vue';
-import { router, Link } from '@inertiajs/vue3';
+import { router, Link, usePage } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import StatsCard from '@/Components/Dashboard/StatsCard.vue';
 import {
