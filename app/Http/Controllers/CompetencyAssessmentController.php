@@ -444,7 +444,27 @@ class CompetencyAssessmentController extends Controller
      */
     public function index(Request $request): Response
     {
+        $user = Auth::user();
+        $employee = Employee::where('user_id', $user->id)->first();
+        
         $query = CompetencyAssessment::with(['employee.user', 'competency', 'assessor', 'assessmentCycle']);
+        
+        // Apply Role-Based Access Control
+        if (!$user->hasRole(['admin', 'hr'])) {
+            // For non-admin/HR users, only show assessments they're involved in
+            $query->where(function ($q) use ($user, $employee) {
+                // Include assessments where user is the assessor
+                $q->where('assessor_id', $user->id);
+                
+                // Include self-assessments where user is the employee being assessed
+                if ($employee) {
+                    $q->orWhere(function ($subQ) use ($employee) {
+                        $subQ->where('employee_id', $employee->id)
+                             ->where('assessment_type', 'self');
+                    });
+                }
+            });
+        }
 
         // Apply filters
         if ($request->filled('employee_id')) {
@@ -516,7 +536,7 @@ class CompetencyAssessmentController extends Controller
                 'assessment_type', 'status', 'rating', 'date_from', 'date_to', 'search',
                 'sort_by', 'sort_order'
             ]),
-            'stats' => $this->getAssessmentStats()
+            'stats' => $this->getAssessmentStats($user, $employee)
         ]);
     }
 
@@ -1644,17 +1664,39 @@ class CompetencyAssessmentController extends Controller
     /**
      * Get assessment statistics.
      */
-    private function getAssessmentStats(): array
+    private function getAssessmentStats($user = null, $employee = null): array
     {
+        // If no user provided, use current authenticated user (for backward compatibility)
+        if (!$user) {
+            $user = Auth::user();
+            $employee = Employee::where('user_id', $user->id)->first();
+        }
+        
+        // Base query for stats
+        $baseQuery = CompetencyAssessment::query();
+        
+        // Apply same RBA logic as index method
+        if (!$user->hasRole(['admin', 'hr'])) {
+            $baseQuery->where(function ($q) use ($user, $employee) {
+                $q->where('assessor_id', $user->id);
+                if ($employee) {
+                    $q->orWhere(function ($subQ) use ($employee) {
+                        $subQ->where('employee_id', $employee->id)
+                             ->where('assessment_type', 'self');
+                    });
+                }
+            });
+        }
+        
         return [
-            'total_assessments' => CompetencyAssessment::count(),
-            'draft_assessments' => CompetencyAssessment::where('status', 'draft')->count(),
-            'submitted_assessments' => CompetencyAssessment::where('status', 'submitted')->count(),
-            'approved_assessments' => CompetencyAssessment::where('status', 'approved')->count(),
-            'rejected_assessments' => CompetencyAssessment::where('status', 'rejected')->count(),
-            'average_rating' => CompetencyAssessment::where('status', 'approved')->avg('rating') ?? 0,
-            'assessments_this_month' => CompetencyAssessment::whereMonth('created_at', now()->month)->count(),
-            'unique_employees_assessed' => CompetencyAssessment::distinct('employee_id')->count()
+            'total_assessments' => (clone $baseQuery)->count(),
+            'draft_assessments' => (clone $baseQuery)->where('status', 'draft')->count(),
+            'submitted_assessments' => (clone $baseQuery)->where('status', 'submitted')->count(),
+            'approved_assessments' => (clone $baseQuery)->where('status', 'approved')->count(),
+            'rejected_assessments' => (clone $baseQuery)->where('status', 'rejected')->count(),
+            'average_rating' => (clone $baseQuery)->where('status', 'approved')->avg('rating') ?? 0,
+            'assessments_this_month' => (clone $baseQuery)->whereMonth('created_at', now()->month)->count(),
+            'unique_employees_assessed' => (clone $baseQuery)->distinct('employee_id')->count()
         ];
     }
 }
