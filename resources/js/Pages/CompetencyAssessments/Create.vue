@@ -182,17 +182,7 @@
                         </div>
                       </div>
                       
-                      <!-- Quick Assessment Button -->
-                      <div class="ml-4 flex items-center space-x-2">
-                        <button
-                          @click.stop="quickCreateAssessment(employee)"
-                          class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-100 border border-blue-200 rounded-md hover:bg-blue-200 transition-colors"
-                          title="Quick create assessment for this employee"
-                        >
-                          <PlusIcon class="w-3 h-3 mr-1" />
-                          Assess
-                        </button>
-                      </div>
+
                     </div>
                   </div>
                 </div>
@@ -265,23 +255,12 @@
                           </span>
                         </div>
                       </div>
-                      <div class="ml-3 flex items-start space-x-2">
-                        <div class="flex-shrink-0">
-                          <CheckIcon 
-                            v-if="form.competency_ids.includes(competency.id)" 
-                            class="w-5 h-5 text-blue-600" 
-                          />
-                          <div v-else class="w-5 h-5 border-2 border-gray-300 rounded"></div>
-                        </div>
-                        <!-- Quick Assessment Button -->
-                        <button
-                          @click.stop="quickCreateAssessmentForCompetency(competency)"
-                          class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-green-700 bg-green-100 border border-green-200 rounded-md hover:bg-green-200 transition-colors"
-                          title="Quick create assessment for this competency"
-                        >
-                          <PlusIcon class="w-3 h-3 mr-1" />
-                          Assess
-                        </button>
+                      <div class="ml-3 flex-shrink-0">
+                        <CheckIcon 
+                          v-if="form.competency_ids.includes(competency.id)" 
+                          class="w-5 h-5 text-blue-600" 
+                        />
+                        <div v-else class="w-5 h-5 border-2 border-gray-300 rounded"></div>
                       </div>
                     </div>
                   </div>
@@ -328,7 +307,7 @@
                   v-if="canSubmit && totalAssessments === 1"
                   @click="navigateToAssessment" 
                   type="button"
-                  class="bg-green-50 text-green-700 border-green-200 hover:bg-green-100"
+                  class="bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100"
                 >
                   <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
@@ -597,53 +576,7 @@ const navigateToAssessment = () => {
   router.visit(url);
 };
 
-const quickCreateAssessment = (employee) => {
-  // If no competency selected, show alert
-  if (form.competency_ids.length === 0) {
-    alert('Please select at least one competency first');
-    return;
-  }
 
-  // Use the first selected competency or prompt user to select one
-  const competencyId = form.competency_ids[0];
-  
-  const params = new URLSearchParams({
-    employee_id: employee.id,
-    competency_id: competencyId,
-    assessment_type: form.assessment_type
-  });
-
-  if (form.assessment_cycle_id) {
-    params.append('assessment_cycle_id', form.assessment_cycle_id);
-  }
-
-  const url = `${route('assessment-form')}?${params.toString()}`;
-  router.visit(url);
-};
-
-const quickCreateAssessmentForCompetency = (competency) => {
-  // If no employee selected, show alert
-  if (form.employee_ids.length === 0) {
-    alert('Please select at least one employee first');
-    return;
-  }
-
-  // Use the first selected employee
-  const employeeId = form.employee_ids[0];
-  
-  const params = new URLSearchParams({
-    employee_id: employeeId,
-    competency_id: competency.id,
-    assessment_type: form.assessment_type
-  });
-
-  if (form.assessment_cycle_id) {
-    params.append('assessment_cycle_id', form.assessment_cycle_id);
-  }
-
-  const url = `${route('assessment-form')}?${params.toString()}`;
-  router.visit(url);
-};
 
 const goBack = () => {
   router.visit(route('assessment-dashboard'));
