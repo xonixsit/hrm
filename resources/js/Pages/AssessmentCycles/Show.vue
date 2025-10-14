@@ -232,6 +232,14 @@
               </div>
               <div class="p-6 space-y-3">
                 <button
+                  @click="createAssessment"
+                  class="w-full inline-flex items-center justify-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                >
+                  <PlusIcon class="w-4 h-4 mr-2" />
+                  Create Assessment
+                </button>
+                
+                <button
                   @click="completeCycle"
                   :disabled="processing"
                   class="w-full inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
@@ -276,7 +284,8 @@ import {
   StarIcon,
   PlayIcon,
   CheckIcon,
-  ExclamationTriangleIcon
+  ExclamationTriangleIcon,
+  PlusIcon
 } from '@heroicons/vue/24/outline';
 
 const props = defineProps({
@@ -370,6 +379,17 @@ const completeCycle = () => {
       }
     });
   }
+};
+
+const createAssessment = () => {
+  // Navigate to assessment creation page with the cycle pre-selected
+  const params = new URLSearchParams({
+    assessment_cycle_id: props.cycle.id,
+    assessment_type: 'manager'
+  });
+  
+  const url = `${route('competency-assessments.create')}?${params.toString()}`;
+  router.visit(url);
 };
 
 const formatStatus = (status) => {

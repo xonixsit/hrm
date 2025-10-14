@@ -328,6 +328,16 @@
               <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-2">
                   <SecondaryButton
+                    @click.stop="createAssessmentForCycle(cycle)"
+                    size="sm"
+                    :disabled="cycle.status !== 'active'"
+                    class="text-xs bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200"
+                  >
+                    <PlusIcon class="w-3 h-3 mr-1" />
+                    Create Assessment
+                  </SecondaryButton>
+                  
+                  <SecondaryButton
                     @click.stop="editCycle(cycle)"
                     size="sm"
                     :disabled="cycle.status === 'completed'"
@@ -351,7 +361,7 @@
                     v-else-if="cycle.status === 'active'"
                     @click.stop="completeCycle(cycle)"
                     size="sm"
-                    class="text-xs bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200"
+                    class="text-xs bg-green-50 text-green-700 hover:bg-green-100 border-green-200"
                   >
                     <CheckIcon class="w-3 h-3 mr-1" />
                     Complete
@@ -450,6 +460,16 @@
                 <!-- Actions -->
                 <div class="col-span-1 flex items-center justify-end space-x-2">
                   <SecondaryButton
+                    @click.stop="createAssessmentForCycle(cycle)"
+                    size="sm"
+                    :disabled="cycle.status !== 'active'"
+                    class="text-xs bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200"
+                  >
+                    <PlusIcon class="w-3 h-3 mr-1" />
+                    Assess
+                  </SecondaryButton>
+                  
+                  <SecondaryButton
                     @click.stop="editCycle(cycle)"
                     size="sm"
                     :disabled="cycle.status === 'completed'"
@@ -515,6 +535,16 @@
                   </div>
                   
                   <div class="flex items-center space-x-2">
+                    <SecondaryButton
+                      @click.stop="createAssessmentForCycle(cycle)"
+                      size="sm"
+                      :disabled="cycle.status !== 'active'"
+                      class="text-xs bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200"
+                    >
+                      <PlusIcon class="w-3 h-3 mr-1" />
+                      Assess
+                    </SecondaryButton>
+                    
                     <SecondaryButton
                       @click.stop="editCycle(cycle)"
                       size="sm"
@@ -883,6 +913,17 @@ const deleteCycle = (cycle) => {
   };
   showConfirmation.value = true;
   hideContextMenu();
+};
+
+const createAssessmentForCycle = (cycle) => {
+  // Navigate to assessment creation page with the cycle pre-selected
+  const params = new URLSearchParams({
+    assessment_cycle_id: cycle.id,
+    assessment_type: 'manager'
+  });
+  
+  const url = `${route('competency-assessments.create')}?${params.toString()}`;
+  router.visit(url);
 };
 
 const performCycleAction = (cycleId, action, successMessage) => {
