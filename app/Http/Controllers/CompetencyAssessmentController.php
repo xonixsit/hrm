@@ -450,7 +450,7 @@ class CompetencyAssessmentController extends Controller
         $query = CompetencyAssessment::with(['employee.user', 'competency', 'assessor', 'assessmentCycle']);
         
         // Apply Role-Based Access Control
-        if (!$user->hasRole(['admin', 'hr'])) {
+        if (!$user->hasRole(['admin', 'hr', 'Admin', 'HR'])) {
             // For non-admin/HR users, only show assessments they're involved in
             $query->where(function ($q) use ($user, $employee) {
                 // Include assessments where user is the assessor
@@ -1676,7 +1676,7 @@ class CompetencyAssessmentController extends Controller
         $baseQuery = CompetencyAssessment::query();
         
         // Apply same RBA logic as index method
-        if (!$user->hasRole(['admin', 'hr'])) {
+        if (!$user->hasRole(['admin', 'hr', 'Admin', 'HR'])) {
             $baseQuery->where(function ($q) use ($user, $employee) {
                 $q->where('assessor_id', $user->id);
                 if ($employee) {
