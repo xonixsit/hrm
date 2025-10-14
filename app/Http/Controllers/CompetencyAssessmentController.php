@@ -1168,6 +1168,17 @@ class CompetencyAssessmentController extends Controller
 
         $assessments = $query->orderBy('created_at', 'desc')->paginate(15);
 
+        // Debug logging
+        \Log::info('MyAssessments Debug', [
+            'user_id' => $user->id,
+            'user_name' => $user->name,
+            'employee_id' => $employee?->id,
+            'total_assessments' => $assessments->total(),
+            'assessments_on_page' => $assessments->count(),
+            'first_assessment_id' => $assessments->count() > 0 ? $assessments->first()->id : null,
+            'request_filters' => $request->only(['status', 'assessment_cycle_id', 'employee_id'])
+        ]);
+
         // Get statistics
         $statsQuery = CompetencyAssessment::where(function ($q) use ($user, $employee) {
             $q->where('assessor_id', $user->id);

@@ -267,8 +267,26 @@ console.log('MyAssessments props:', {
   assessments: props.assessments,
   stats: props.stats,
   assessmentsData: props.assessments?.data,
-  assessmentsTotal: props.assessments?.total
+  assessmentsTotal: props.assessments?.total,
+  assessmentsCount: props.assessments?.data?.length,
+  filters: props.filters
 });
+
+// Additional debugging for each assessment
+if (props.assessments?.data) {
+  console.log('Individual assessments:');
+  props.assessments.data.forEach((assessment, index) => {
+    console.log(`Assessment ${index + 1}:`, {
+      id: assessment.id,
+      employee: assessment.employee?.user?.name,
+      competency: assessment.competency?.name,
+      type: assessment.assessment_type,
+      status: assessment.status
+    });
+  });
+} else {
+  console.log('No assessments data found');
+}
 
 // Computed properties for PageLayout
 const breadcrumbs = computed(() => [
