@@ -1216,6 +1216,13 @@ class CompetencyAssessmentController extends Controller
                 'errors' => $e->errors()
             ], 422);
         } catch (\Exception $e) {
+            \Log::error('Bulk assessment creation failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'request_data' => $validated ?? $request->all(),
+                'user_id' => Auth::id()
+            ]);
+            
             return response()->json([
                 'message' => 'Failed to create bulk assessments.',
                 'error' => $e->getMessage()
