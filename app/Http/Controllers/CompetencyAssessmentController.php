@@ -1200,8 +1200,28 @@ class CompetencyAssessmentController extends Controller
      */
     public function pending(Request $request): Response
     {
+        $user = Auth::user();
+        $employee = Employee::where('user_id', $user->id)->first();
+        
         $query = CompetencyAssessment::with(['employee.user', 'competency', 'assessor', 'assessmentCycle'])
             ->where('status', 'draft');
+            
+        // Apply Role-Based Access Control
+        if (!$user->hasRole(['admin', 'hr', 'Admin', 'HR'])) {
+            // For non-admin/HR users, only show assessments they're involved in
+            $query->where(function ($q) use ($user, $employee) {
+                // Include assessments where user is the assessor
+                $q->where('assessor_id', $user->id);
+                
+                // Include self-assessments where user is the employee being assessed
+                if ($employee) {
+                    $q->orWhere(function ($subQ) use ($employee) {
+                        $subQ->where('employee_id', $employee->id)
+                             ->where('assessment_type', 'self');
+                    });
+                }
+            });
+        }
 
         // Apply additional filters if needed
         if ($request->filled('employee_id')) {

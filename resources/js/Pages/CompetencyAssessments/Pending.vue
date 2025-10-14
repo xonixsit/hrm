@@ -116,12 +116,19 @@
                     View
                   </Link>
                   <Link
+                    v-if="canAssess(assessment)"
                     :href="route('competency-assessments.evaluate', assessment.id)"
                     class="inline-flex items-center px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                   >
                     <PencilIcon class="w-4 h-4 mr-2" />
                     Complete Assessment
                   </Link>
+                  <span
+                    v-else
+                    class="inline-flex items-center px-3 py-2 text-sm text-gray-500 italic"
+                  >
+                    {{ assessment.assessment_type === 'self' ? 'Employee only' : 'Not assigned' }}
+                  </span>
                 </div>
               </div>
             </div>
@@ -156,7 +163,7 @@
 
 <script setup>
 import { ref, computed } from 'vue';
-import { router, Link } from '@inertiajs/vue3';
+import { router, Link, usePage } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import PageLayout from '@/Components/Layout/PageLayout.vue';
 import {
@@ -214,6 +221,27 @@ const clearFilters = () => {
     competency_id: ''
   };
   applyFilters();
+};
+
+// Check if current user can assess a specific assessment
+const canAssess = (assessment) => {
+  try {
+    const page = usePage();
+    const currentUser = page.props.auth?.user;
+    
+    if (!currentUser) return false;
+    
+    // For self-assessments, only the employee themselves can assess
+    if (assessment.assessment_type === 'self') {
+      return currentUser.id === assessment.employee.user_id;
+    }
+    
+    // For other assessment types, check if user is the assigned assessor
+    return currentUser.id === assessment.assessor_id;
+  } catch (error) {
+    console.error('Error checking assessment permissions:', error);
+    return false;
+  }
 };
 
 const formatAssessmentType = (type) => {
