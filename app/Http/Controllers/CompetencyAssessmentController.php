@@ -1116,8 +1116,22 @@ class CompetencyAssessmentController extends Controller
      */
     public function myAssessments(Request $request): Response
     {
+        $user = Auth::user();
+        $employee = Employee::where('user_id', $user->id)->first();
+        
         $query = CompetencyAssessment::with(['employee.user', 'competency', 'assessor', 'assessmentCycle'])
-            ->where('assessor_id', Auth::id());
+            ->where(function ($q) use ($user, $employee) {
+                // Include assessments where user is the assessor
+                $q->where('assessor_id', $user->id);
+                
+                // Include self-assessments where user is the employee being assessed
+                if ($employee) {
+                    $q->orWhere(function ($subQ) use ($employee) {
+                        $subQ->where('employee_id', $employee->id)
+                             ->where('assessment_type', 'self');
+                    });
+                }
+            });
 
         // Apply filters
         if ($request->filled('status')) {
@@ -1135,10 +1149,20 @@ class CompetencyAssessmentController extends Controller
         $assessments = $query->orderBy('created_at', 'desc')->paginate(15);
 
         // Get statistics
+        $statsQuery = CompetencyAssessment::where(function ($q) use ($user, $employee) {
+            $q->where('assessor_id', $user->id);
+            if ($employee) {
+                $q->orWhere(function ($subQ) use ($employee) {
+                    $subQ->where('employee_id', $employee->id)
+                         ->where('assessment_type', 'self');
+                });
+            }
+        });
+        
         $stats = [
-            'total' => CompetencyAssessment::where('assessor_id', Auth::id())->count(),
-            'pending' => CompetencyAssessment::where('assessor_id', Auth::id())->where('status', 'draft')->count(),
-            'completed' => CompetencyAssessment::where('assessor_id', Auth::id())->whereIn('status', ['submitted', 'approved'])->count(),
+            'total' => (clone $statsQuery)->count(),
+            'pending' => (clone $statsQuery)->where('status', 'draft')->count(),
+            'completed' => (clone $statsQuery)->whereIn('status', ['submitted', 'approved'])->count(),
         ];
 
         return Inertia::render('CompetencyAssessments/MyAssessments', [

@@ -539,11 +539,18 @@ class CompetencyAssessmentService
         try {
             foreach ($employees as $employeeId) {
                 foreach ($competencies as $competencyId) {
+                    // For self-assessments, the assessor should be the employee themselves
+                    $assessorId = $assessor->id;
+                    if ($assessmentType === 'self') {
+                        $employee = Employee::find($employeeId);
+                        $assessorId = $employee ? $employee->user_id : $assessor->id;
+                    }
+                    
                     // Check if assessment already exists
                     $existing = CompetencyAssessment::where([
                         'employee_id' => $employeeId,
                         'competency_id' => $competencyId,
-                        'assessor_id' => $assessor->id,
+                        'assessor_id' => $assessorId,
                         'assessment_cycle_id' => $cycle?->id,
                     ])->first();
 
@@ -551,7 +558,7 @@ class CompetencyAssessmentService
                         $assessment = CompetencyAssessment::create([
                             'employee_id' => $employeeId,
                             'competency_id' => $competencyId,
-                            'assessor_id' => $assessor->id,
+                            'assessor_id' => $assessorId,
                             'assessment_cycle_id' => $cycle?->id,
                             'assessment_type' => $assessmentType,
                             'status' => 'draft',
