@@ -135,7 +135,7 @@
                       </div>
                       <div>
                         <Link
-                          :href="route('competency-assessments.by-employee', assessment.employee?.id)"
+                          :href="safeRoute('competency-assessments.by-employee', assessment.employee?.id)"
                           class="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline"
                         >
                           {{ assessment.employee?.user?.name || 'Unknown' }}
@@ -190,7 +190,7 @@
                 <!-- Actions -->
                 <div class="flex items-center space-x-3 ml-6">
                   <Link
-                    :href="route('competency-assessments.show', assessment.id)"
+                    :href="safeRoute('competency-assessments.show', assessment.id)"
                     class="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                   >
                     <EyeIcon class="w-4 h-4 mr-2" />
@@ -198,7 +198,7 @@
                   </Link>
                   <Link
                     v-if="assessment.status === 'draft'"
-                    :href="route('competency-assessments.evaluate', assessment.id)"
+                    :href="safeRoute('competency-assessments.evaluate', assessment.id)"
                     class="inline-flex items-center px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                   >
                     <PencilIcon class="w-4 h-4 mr-2" />
@@ -262,16 +262,24 @@ const props = defineProps({
   filters: Object
 });
 
+// Debug logging to help identify issues
+console.log('MyAssessments props:', {
+  assessments: props.assessments,
+  stats: props.stats,
+  assessmentsData: props.assessments?.data,
+  assessmentsTotal: props.assessments?.total
+});
+
 // Computed properties for PageLayout
 const breadcrumbs = computed(() => [
-  { label: 'Dashboard', href: route('dashboard') },
+  { label: 'Dashboard', href: typeof route !== 'undefined' ? route('dashboard') : '/dashboard' },
   { label: 'My Assessments', href: null }
 ]);
 
 const headerActions = computed(() => [
   {
     label: 'All Assessments',
-    href: route('competency-assessments.index'),
+    href: typeof route !== 'undefined' ? route('competency-assessments.index') : '/competency-assessments',
     variant: 'secondary'
   }
 ]);
@@ -283,10 +291,28 @@ const filters = ref({
 });
 
 const applyFilters = () => {
-  router.get(route('competency-assessments.my-assessments'), filters.value, {
-    preserveState: true,
-    preserveScroll: true
-  });
+  try {
+    // Check if route function is available
+    if (typeof route === 'undefined') {
+      console.error('Route function is not available');
+      return;
+    }
+    
+    const routeUrl = route('competency-assessments.my-assessments');
+    if (!routeUrl) {
+      console.error('Route URL could not be generated');
+      return;
+    }
+    
+    router.get(routeUrl, filters.value, {
+      preserveState: true,
+      preserveScroll: true
+    }).catch(error => {
+      console.error('Error applying filters:', error);
+    });
+  } catch (error) {
+    console.error('Error in applyFilters:', error);
+  }
 };
 
 const clearFilters = () => {
@@ -344,6 +370,20 @@ const formatDate = (date) => {
     month: 'short',
     day: 'numeric'
   });
+};
+
+// Safe route helper functions
+const safeRoute = (routeName, params = null) => {
+  try {
+    if (typeof route === 'undefined') {
+      console.warn(`Route function not available for: ${routeName}`);
+      return '#';
+    }
+    return route(routeName, params);
+  } catch (error) {
+    console.error(`Error generating route ${routeName}:`, error);
+    return '#';
+  }
 };
 </script>
 
