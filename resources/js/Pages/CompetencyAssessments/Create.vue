@@ -99,6 +99,26 @@
                 </select>
               </div>
                 
+              <!-- Select All / Clear All Actions -->
+              <div v-if="displayedEmployees.length > 0" class="flex items-center justify-between text-sm">
+                <button
+                  type="button"
+                  @click="selectAllEmployees"
+                  class="text-blue-600 hover:text-blue-800 font-medium"
+                  :disabled="allDisplayedEmployeesSelected"
+                >
+                  Select All ({{ displayedEmployees.length }})
+                </button>
+                <button
+                  v-if="selectedEmployees.length > 0"
+                  type="button"
+                  @click="clearAllEmployees"
+                  class="text-blue-600 hover:text-blue-800 font-medium"
+                >
+                  Clear All
+                </button>
+              </div>
+
               <!-- Employee List -->
               <div v-if="displayedEmployees.length > 0" class="max-h-60 overflow-y-auto border border-gray-200 rounded-lg">
                 <div
@@ -135,17 +155,6 @@
                   </div>
                 </div>
               </div>
-
-              <!-- Clear All Button -->
-              <div v-if="selectedEmployees.length > 0" class="flex justify-end">
-                <button
-                  type="button"
-                  @click="clearAllEmployees"
-                  class="text-sm text-blue-600 hover:text-blue-800 font-medium"
-                >
-                  Clear All
-                </button>
-              </div>
             </div>
 
             <!-- Competency Selection -->
@@ -172,6 +181,26 @@
                     {{ category }}
                   </option>
                 </select>
+              </div>
+
+              <!-- Select All / Clear All Actions -->
+              <div v-if="selectedCategory && competenciesByCategory.length > 0" class="flex items-center justify-between text-sm">
+                <button
+                  type="button"
+                  @click="selectAllCompetencies"
+                  class="text-blue-600 hover:text-blue-800 font-medium"
+                  :disabled="allCategoryCompetenciesSelected"
+                >
+                  Select All ({{ competenciesByCategory.length }})
+                </button>
+                <button
+                  v-if="selectedCompetencies.length > 0"
+                  type="button"
+                  @click="clearAllCompetencies"
+                  class="text-blue-600 hover:text-blue-800 font-medium"
+                >
+                  Clear All
+                </button>
               </div>
 
               <!-- Competency List -->
@@ -201,17 +230,6 @@
                     </div>
                   </div>
                 </div>
-              </div>
-
-              <!-- Clear All Button -->
-              <div v-if="selectedCompetencies.length > 0" class="flex justify-end">
-                <button
-                  type="button"
-                  @click="clearAllCompetencies"
-                  class="text-sm text-blue-600 hover:text-blue-800 font-medium"
-                >
-                  Clear All
-                </button>
               </div>
             </div>
 
@@ -357,6 +375,17 @@ const selectedCycle = computed(() => {
   return props.assessmentCycles.find(cycle => cycle.id === form.assessment_cycle_id);
 });
 
+// Select All computed properties
+const allDisplayedEmployeesSelected = computed(() => {
+  if (displayedEmployees.value.length === 0) return false;
+  return displayedEmployees.value.every(employee => form.employee_ids.includes(employee.id));
+});
+
+const allCategoryCompetenciesSelected = computed(() => {
+  if (competenciesByCategory.value.length === 0) return false;
+  return competenciesByCategory.value.every(competency => form.competency_ids.includes(competency.id));
+});
+
 const canSubmit = computed(() => {
   return form.employee_ids.length > 0 && form.competency_ids.length > 0 && !form.processing;
 });
@@ -425,7 +454,21 @@ const clearAllCompetencies = () => {
   form.competency_ids = [];
 };
 
-const handleSubmit = () => {
+const selectAllEmployees = () => {
+  const displayedEmployeeIds = displayedEmployees.value.map(employee => employee.id);
+  // Add all displayed employees that aren't already selected
+  const newIds = displayedEmployeeIds.filter(id => !form.employee_ids.includes(id));
+  form.employee_ids = [...form.employee_ids, ...newIds];
+};
+
+const selectAllCompetencies = () => {
+  const categoryCompetencyIds = competenciesByCategory.value.map(competency => competency.id);
+  // Add all competencies in the category that aren't already selected
+  const newIds = categoryCompetencyIds.filter(id => !form.competency_ids.includes(id));
+  form.competency_ids = [...form.competency_ids, ...newIds];
+};
+
+const handleSubmit = async () => {
   if (form.employee_ids.length === 0 || form.competency_ids.length === 0) {
     alert('Please select at least one employee and one competency');
     return;
@@ -450,33 +493,44 @@ const handleSubmit = () => {
     router.visit(url);
   } else {
     // Multiple assessments - create in bulk for each competency
-    // Since backend expects one competency at a time, we'll create multiple requests
-    const promises = form.competency_ids.map(competencyId => {
-      const bulkForm = useForm({
-        employee_ids: form.employee_ids,
-        competency_id: competencyId, // Single competency ID as expected by backend
-        assessment_type: form.assessment_type,
-        assessment_cycle_id: form.assessment_cycle_id
-      });
-      
-      return new Promise((resolve, reject) => {
-        bulkForm.post(route('competency-assessments.bulk-create'), {
-          onSuccess: () => resolve(),
-          onError: (errors) => reject(errors)
-        });
-      });
-    });
-
     form.processing = true;
     
-    Promise.all(promises)
-      .then(() => {
-        router.visit(route('competency-assessments.index'));
-      })
-      .catch((error) => {
-        console.error('Error creating bulk assessments:', error);
-        form.processing = false;
-      });
+    try {
+      let successCount = 0;
+      
+      // Create assessments for each competency sequentially
+      for (const competencyId of form.competency_ids) {
+        await new Promise((resolve, reject) => {
+          // Use Inertia's router.post for proper CSRF handling
+          router.post(route('competency-assessments.bulk-create'), {
+            employee_ids: form.employee_ids,
+            competency_id: competencyId,
+            assessment_type: form.assessment_type,
+            assessment_cycle_id: form.assessment_cycle_id
+          }, {
+            preserveState: true,
+            preserveScroll: true,
+            onSuccess: () => {
+              successCount++;
+              resolve();
+            },
+            onError: (errors) => {
+              console.error('Bulk create error:', errors);
+              reject(new Error(Object.values(errors).flat().join(', ')));
+            }
+          });
+        });
+      }
+      
+      // Success - redirect to assessments index
+      form.processing = false;
+      router.visit(route('competency-assessments.index'));
+      
+    } catch (error) {
+      console.error('Error creating bulk assessments:', error);
+      form.processing = false;
+      alert(`Failed to create assessments: ${error.message}`);
+    }
   }
 };
 
