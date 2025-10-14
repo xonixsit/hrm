@@ -1205,12 +1205,39 @@ class CompetencyAssessmentController extends Controller
                 $validated['assessment_type']
             );
 
+            // Load relationships for the assessments
+            $assessmentIds = $assessments->pluck('id');
+            $loadedAssessments = CompetencyAssessment::with(['employee.user', 'competency'])
+                ->whereIn('id', $assessmentIds)
+                ->get();
+
+            \Log::info('Bulk assessments created successfully', [
+                'count' => $assessments->count(),
+                'user_id' => Auth::id()
+            ]);
+
+            // For Inertia requests, redirect with success message
+            if ($request->header('X-Inertia')) {
+                return redirect()->back()->with('success', "Successfully created {$assessments->count()} assessments.");
+            }
+
             return response()->json([
                 'message' => 'Assessments created successfully.',
                 'count' => $assessments->count(),
-                'assessments' => $assessments->load(['employee.user', 'competency'])
+                'assessments' => $loadedAssessments
             ], 201);
         } catch (ValidationException $e) {
+            \Log::error('Bulk assessment validation failed', [
+                'errors' => $e->errors(),
+                'request_data' => $request->all(),
+                'user_id' => Auth::id()
+            ]);
+            
+            // For Inertia requests, redirect back with errors
+            if ($request->header('X-Inertia')) {
+                return redirect()->back()->withErrors($e->errors());
+            }
+            
             return response()->json([
                 'message' => 'Validation failed.',
                 'errors' => $e->errors()
@@ -1222,6 +1249,11 @@ class CompetencyAssessmentController extends Controller
                 'request_data' => $validated ?? $request->all(),
                 'user_id' => Auth::id()
             ]);
+            
+            // For Inertia requests, redirect back with error message
+            if ($request->header('X-Inertia')) {
+                return redirect()->back()->with('error', 'Failed to create bulk assessments: ' . $e->getMessage());
+            }
             
             return response()->json([
                 'message' => 'Failed to create bulk assessments.',
