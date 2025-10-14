@@ -49,20 +49,8 @@
         <!-- Filters -->
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
           <div class="p-6">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Employee</label>
-                <select
-                  v-model="filters.employee_id"
-                  @change="applyFilters"
-                  class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                >
-                  <option value="">All Employees</option>
-                  <option v-for="employee in employees" :key="employee.id" :value="employee.id">
-                    {{ employee.user?.name || 'Unknown' }}
-                  </option>
-                </select>
-              </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <!-- Employee filter removed - users only see their own assessments -->
               
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
@@ -303,7 +291,6 @@ const headerActions = computed(() => [
 ]);
 
 const filters = ref({
-  employee_id: props.filters?.employee_id || '',
   status: props.filters?.status || '',
   assessment_cycle_id: props.filters?.assessment_cycle_id || ''
 });
@@ -335,7 +322,6 @@ const applyFilters = () => {
 
 const clearFilters = () => {
   filters.value = {
-    employee_id: '',
     status: '',
     assessment_cycle_id: ''
   };

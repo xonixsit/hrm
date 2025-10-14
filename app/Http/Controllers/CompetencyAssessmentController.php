@@ -1162,9 +1162,9 @@ class CompetencyAssessmentController extends Controller
             $query->where('assessment_cycle_id', $request->assessment_cycle_id);
         }
 
-        if ($request->filled('employee_id')) {
-            $query->where('employee_id', $request->employee_id);
-        }
+        // Note: employee_id filter is not applied in myAssessments 
+        // because users should see their own assessments regardless of filter
+        // The RBA logic above already handles showing only relevant assessments
 
         $assessments = $query->orderBy('created_at', 'desc')->paginate(15);
 
@@ -1176,7 +1176,7 @@ class CompetencyAssessmentController extends Controller
             'total_assessments' => $assessments->total(),
             'assessments_on_page' => $assessments->count(),
             'first_assessment_id' => $assessments->count() > 0 ? $assessments->first()->id : null,
-            'request_filters' => $request->only(['status', 'assessment_cycle_id', 'employee_id'])
+            'request_filters' => $request->only(['status', 'assessment_cycle_id'])
         ]);
 
         // Get statistics
@@ -1202,7 +1202,7 @@ class CompetencyAssessmentController extends Controller
             'employees' => Employee::with('user')->select('id', 'user_id')->get(),
             'assessmentCycles' => AssessmentCycle::where('is_active', true)->select('id', 'name')->orderBy('name')->get(),
             'statusOptions' => ['draft', 'submitted', 'approved', 'rejected'],
-            'filters' => $request->only(['status', 'assessment_cycle_id', 'employee_id'])
+            'filters' => $request->only(['status', 'assessment_cycle_id'])
         ]);
     }
 
