@@ -1181,7 +1181,7 @@ class CompetencyAssessmentController extends Controller
     /**
      * Bulk create assessments.
      */
-    public function bulkCreate(Request $request): JsonResponse
+    public function bulkCreate(Request $request)
     {
         try {
             $validated = $request->validate([
