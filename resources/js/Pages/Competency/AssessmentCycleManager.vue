@@ -327,53 +327,61 @@
             <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 rounded-b-lg">
               <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-2">
-                  <SecondaryButton
+                  <button
                     @click.stop="createAssessmentForCycle(cycle)"
-                    size="sm"
                     :disabled="cycle.status !== 'active'"
-                    class="text-xs bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200"
+                    :class="[
+                      'inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md transition-colors',
+                      cycle.status === 'active'
+                        ? 'bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100'
+                        : 'bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed'
+                    ]"
                   >
                     <PlusIcon class="w-3 h-3 mr-1" />
                     Create Assessment
-                  </SecondaryButton>
+                  </button>
                   
-                  <SecondaryButton
+                  <button
                     @click.stop="editCycle(cycle)"
-                    size="sm"
                     :disabled="cycle.status === 'completed'"
-                    class="text-xs"
+                    :class="[
+                      'inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md transition-colors',
+                      cycle.status !== 'completed'
+                        ? 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                        : 'bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed'
+                    ]"
                   >
                     <PencilIcon class="w-3 h-3 mr-1" />
                     Edit
-                  </SecondaryButton>
+                  </button>
                   
-                  <SecondaryButton
+                  <button
                     v-if="cycle.status === 'planned'"
                     @click.stop="startCycle(cycle)"
-                    size="sm"
-                    class="text-xs bg-green-50 text-green-700 hover:bg-green-100 border-green-200"
+                    class="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md transition-colors bg-green-50 text-green-700 border border-green-200 hover:bg-green-100"
                   >
                     <PlayIcon class="w-3 h-3 mr-1" />
                     Start
-                  </SecondaryButton>
+                  </button>
                   
-                  <SecondaryButton
+                  <button
                     v-else-if="cycle.status === 'active'"
                     @click.stop="completeCycle(cycle)"
-                    size="sm"
-                    class="text-xs bg-green-50 text-green-700 hover:bg-green-100 border-green-200"
+                    class="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md transition-colors bg-green-50 text-green-700 border border-green-200 hover:bg-green-100"
                   >
                     <CheckIcon class="w-3 h-3 mr-1" />
                     Complete
-                  </SecondaryButton>
+                  </button>
                 </div>
 
-                <button
-                  @click.stop="showCycleMenu(cycle, $event)"
-                  class="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
-                >
-                  <EllipsisVerticalIcon class="w-4 h-4" />
-                </button>
+                <div class="relative">
+                  <button
+                    @click.stop="showCycleMenu(cycle, $event)"
+                    class="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
+                  >
+                    <EllipsisVerticalIcon class="w-4 h-4" />
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -459,32 +467,42 @@
                 
                 <!-- Actions -->
                 <div class="col-span-1 flex items-center justify-end space-x-2">
-                  <SecondaryButton
+                  <button
                     @click.stop="createAssessmentForCycle(cycle)"
-                    size="sm"
                     :disabled="cycle.status !== 'active'"
-                    class="text-xs bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200"
+                    :class="[
+                      'inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md transition-colors',
+                      cycle.status === 'active'
+                        ? 'bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100'
+                        : 'bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed'
+                    ]"
                   >
                     <PlusIcon class="w-3 h-3 mr-1" />
                     Assess
-                  </SecondaryButton>
+                  </button>
                   
-                  <SecondaryButton
+                  <button
                     @click.stop="editCycle(cycle)"
-                    size="sm"
                     :disabled="cycle.status === 'completed'"
-                    class="text-xs"
+                    :class="[
+                      'inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md transition-colors',
+                      cycle.status !== 'completed'
+                        ? 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                        : 'bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed'
+                    ]"
                   >
                     <PencilIcon class="w-3 h-3 mr-1" />
                     Edit
-                  </SecondaryButton>
-                  
-                  <button
-                    @click.stop="showCycleMenu(cycle, $event)"
-                    class="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
-                  >
-                    <EllipsisVerticalIcon class="w-4 h-4" />
                   </button>
+                  
+                  <div class="relative">
+                    <button
+                      @click.stop="showCycleMenu(cycle, $event)"
+                      class="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
+                    >
+                      <EllipsisVerticalIcon class="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -535,31 +553,42 @@
                   </div>
                   
                   <div class="flex items-center space-x-2">
-                    <SecondaryButton
+                    <button
                       @click.stop="createAssessmentForCycle(cycle)"
-                      size="sm"
                       :disabled="cycle.status !== 'active'"
-                      class="text-xs bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200"
+                      :class="[
+                        'inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md transition-colors',
+                        cycle.status === 'active'
+                          ? 'bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100'
+                          : 'bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed'
+                      ]"
                     >
                       <PlusIcon class="w-3 h-3 mr-1" />
                       Assess
-                    </SecondaryButton>
-                    
-                    <SecondaryButton
-                      @click.stop="editCycle(cycle)"
-                      size="sm"
-                      :disabled="cycle.status === 'completed'"
-                      class="text-xs"
-                    >
-                      Edit
-                    </SecondaryButton>
+                    </button>
                     
                     <button
-                      @click.stop="showCycleMenu(cycle, $event)"
-                      class="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
+                      @click.stop="editCycle(cycle)"
+                      :disabled="cycle.status === 'completed'"
+                      :class="[
+                        'inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md transition-colors',
+                        cycle.status !== 'completed'
+                          ? 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                          : 'bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed'
+                      ]"
                     >
-                      <EllipsisVerticalIcon class="w-4 h-4" />
+                      <PencilIcon class="w-3 h-3 mr-1" />
+                      Edit
                     </button>
+                    
+                    <div class="relative">
+                      <button
+                        @click.stop="showCycleMenu(cycle, $event)"
+                        class="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
+                      >
+                        <EllipsisVerticalIcon class="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -578,6 +607,15 @@
     >
       <div class="menu-items">
         <button
+          v-if="contextMenu.cycle?.status === 'active'"
+          @click="createAssessmentForCycle(contextMenu.cycle)"
+          class="menu-item"
+        >
+          <PlusIcon class="menu-icon" />
+          Create Assessment
+        </button>
+        
+        <button
           v-if="contextMenu.cycle?.status === 'planned'"
           @click="startCycle(contextMenu.cycle)"
           class="menu-item"
@@ -594,6 +632,8 @@
           <CheckIcon class="menu-icon" />
           Complete Cycle
         </button>
+        
+        <hr v-if="contextMenu.cycle?.status === 'active'" class="menu-divider" />
         
         <button
           @click="duplicateCycle(contextMenu.cycle)"
