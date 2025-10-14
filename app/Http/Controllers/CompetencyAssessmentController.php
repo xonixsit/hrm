@@ -1165,18 +1165,6 @@ class CompetencyAssessmentController extends Controller
             'completed' => (clone $statsQuery)->whereIn('status', ['submitted', 'approved'])->count(),
         ];
 
-        // Debug logging
-        \Log::info('MyAssessments Debug', [
-            'user_id' => $user->id,
-            'user_name' => $user->name,
-            'employee_id' => $employee?->id,
-            'total_assessments' => $assessments->total(),
-            'assessments_on_page' => $assessments->count(),
-            'stats' => $stats,
-            'filters_applied' => $request->only(['status', 'assessment_cycle_id', 'employee_id']),
-            'first_assessment_id' => $assessments->count() > 0 ? $assessments->first()->id : null
-        ]);
-
         return Inertia::render('CompetencyAssessments/MyAssessments', [
             'assessments' => $assessments,
             'stats' => $stats,

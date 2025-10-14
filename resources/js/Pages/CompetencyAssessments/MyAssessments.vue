@@ -16,7 +16,7 @@
               </div>
               <div class="ml-4">
                 <p class="text-sm font-medium text-gray-500">Total Assigned</p>
-                <p class="text-2xl font-bold text-gray-900">{{ stats.total }}</p>
+                <p class="text-2xl font-bold text-gray-900">{{ stats?.total || 0 }}</p>
               </div>
             </div>
           </div>
@@ -28,7 +28,7 @@
               </div>
               <div class="ml-4">
                 <p class="text-sm font-medium text-gray-500">Pending</p>
-                <p class="text-2xl font-bold text-gray-900">{{ stats.pending }}</p>
+                <p class="text-2xl font-bold text-gray-900">{{ stats?.pending || 0 }}</p>
               </div>
             </div>
           </div>
@@ -40,7 +40,7 @@
               </div>
               <div class="ml-4">
                 <p class="text-sm font-medium text-gray-500">Completed</p>
-                <p class="text-2xl font-bold text-gray-900">{{ stats.completed }}</p>
+                <p class="text-2xl font-bold text-gray-900">{{ stats?.completed || 0 }}</p>
               </div>
             </div>
           </div>
@@ -108,11 +108,11 @@
         <div class="bg-white rounded-lg shadow-sm border border-gray-200">
           <div class="px-6 py-4 border-b border-gray-200">
             <h3 class="text-lg font-medium text-gray-900">
-              Assessments ({{ assessments.total }})
+              Assessments ({{ assessments?.total || 0 }})
             </h3>
           </div>
           
-          <div v-if="assessments.data.length === 0" class="p-12 text-center">
+          <div v-if="!assessments?.data || assessments.data.length === 0" class="p-12 text-center">
             <ClipboardDocumentCheckIcon class="w-12 h-12 text-gray-400 mx-auto mb-4" />
             <h3 class="text-lg font-medium text-gray-900 mb-2">No Assessments Found</h3>
             <p class="text-gray-500">You don't have any assessments assigned to you yet.</p>
@@ -120,8 +120,8 @@
           
           <div v-else class="divide-y divide-gray-200">
             <div
-              v-for="assessment in assessments.data"
-              :key="assessment.id"
+              v-for="assessment in (assessments?.data || [])"
+              :key="assessment?.id || Math.random()"
               class="p-6 hover:bg-gray-50 transition-colors duration-200"
             >
               <div class="flex items-center justify-between">
