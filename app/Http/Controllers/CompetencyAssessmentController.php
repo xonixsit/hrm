@@ -1153,22 +1153,58 @@ class CompetencyAssessmentController extends Controller
         
         $employee = Employee::where('user_id', $user->id)->first();
         
-        // Check if user has employee record
+        // Enhanced debugging for employee lookup
+        \Log::info('MyAssessments: Employee lookup', [
+            'user_id' => $user->id,
+            'user_email' => $user->email,
+            'user_name' => $user->name,
+            'employee_found' => $employee !== null,
+            'employee_id' => $employee?->id,
+            'employee_user_id' => $employee?->user_id
+        ]);
+        
+        // PRODUCTION FIX: If no employee found by user_id, try alternative lookups
         if (!$employee) {
-            \Log::warning('MyAssessments: No employee record found for user', [
+            \Log::info('MyAssessments: No employee found by user_id, trying alternative lookups');
+            
+            // Try to find employee by email match
+            $employeeByEmail = Employee::whereHas('user', function($q) use ($user) {
+                $q->where('email', $user->email);
+            })->first();
+            
+            if ($employeeByEmail) {
+                \Log::info('MyAssessments: Found employee by email match', [
+                    'employee_id' => $employeeByEmail->id,
+                    'employee_user_id' => $employeeByEmail->user_id
+                ]);
+                $employee = $employeeByEmail;
+            }
+            
+            // If still no employee, try to find by name similarity
+            if (!$employee) {
+                $employeeByName = Employee::whereHas('user', function($q) use ($user) {
+                    $q->where('name', 'like', '%' . explode(' ', $user->name)[0] . '%');
+                })->first();
+                
+                if ($employeeByName) {
+                    \Log::info('MyAssessments: Found employee by name similarity', [
+                        'employee_id' => $employeeByName->id,
+                        'employee_user_id' => $employeeByName->user_id
+                    ]);
+                    $employee = $employeeByName;
+                }
+            }
+        }
+        
+        // PRODUCTION FIX: Don't block if no employee record - continue with query
+        if (!$employee) {
+            \Log::warning('MyAssessments: No employee record found, but continuing with user-based query', [
                 'user_id' => $user->id,
-                'user_email' => $user->email
+                'user_email' => $user->email,
+                'user_name' => $user->name
             ]);
             
-            return Inertia::render('CompetencyAssessments/MyAssessments', [
-                'assessments' => new \Illuminate\Pagination\LengthAwarePaginator([], 0, 15),
-                'stats' => ['total' => 0, 'pending' => 0, 'completed' => 0],
-                'employees' => [],
-                'assessmentCycles' => [],
-                'statusOptions' => ['draft', 'submitted', 'approved', 'rejected'],
-                'filters' => $request->only(['status', 'assessment_cycle_id']),
-                'error' => 'No employee record found for your account. Please contact HR.'
-            ]);
+            // Continue execution - the query will still find assessments assigned to this user
         }
         
         $query = CompetencyAssessment::with(['employee.user', 'competency', 'assessor', 'assessmentCycle'])
@@ -1183,6 +1219,13 @@ class CompetencyAssessmentController extends Controller
                              ->where('assessment_type', 'self');
                     });
                 }
+                
+                // PRODUCTION FIX: Also include assessments where the employee's user matches current user
+                // This handles cases where user_id relationships might be inconsistent
+                $q->orWhereHas('employee.user', function ($userQuery) use ($user) {
+                    $userQuery->where('email', $user->email)
+                              ->orWhere('name', $user->name);
+                });
             });
 
         // Apply filters with debugging
@@ -1237,7 +1280,7 @@ class CompetencyAssessmentController extends Controller
             ]);
         }
 
-        // Get statistics
+        // Get statistics using the same query logic
         $statsQuery = CompetencyAssessment::where(function ($q) use ($user, $employee) {
             $q->where('assessor_id', $user->id);
             if ($employee) {
@@ -1246,6 +1289,12 @@ class CompetencyAssessmentController extends Controller
                          ->where('assessment_type', 'self');
                 });
             }
+            
+            // PRODUCTION FIX: Also include assessments where the employee's user matches current user
+            $q->orWhereHas('employee.user', function ($userQuery) use ($user) {
+                $userQuery->where('email', $user->email)
+                          ->orWhere('name', $user->name);
+            });
         });
         
         $stats = [
