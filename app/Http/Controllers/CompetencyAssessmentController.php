@@ -1144,68 +1144,9 @@ class CompetencyAssessmentController extends Controller
             return redirect()->route('login');
         }
         
-        // Debug: Log all request parameters
-        \Log::info('MyAssessments: Request parameters', [
-            'all_params' => $request->all(),
-            'query_params' => $request->query(),
-            'url' => $request->fullUrl()
-        ]);
-        
         $employee = Employee::where('user_id', $user->id)->first();
         
-        // Enhanced debugging for employee lookup
-        \Log::info('MyAssessments: Employee lookup', [
-            'user_id' => $user->id,
-            'user_email' => $user->email,
-            'user_name' => $user->name,
-            'employee_found' => $employee !== null,
-            'employee_id' => $employee?->id,
-            'employee_user_id' => $employee?->user_id
-        ]);
-        
-        // PRODUCTION FIX: If no employee found by user_id, try alternative lookups
-        if (!$employee) {
-            \Log::info('MyAssessments: No employee found by user_id, trying alternative lookups');
-            
-            // Try to find employee by email match
-            $employeeByEmail = Employee::whereHas('user', function($q) use ($user) {
-                $q->where('email', $user->email);
-            })->first();
-            
-            if ($employeeByEmail) {
-                \Log::info('MyAssessments: Found employee by email match', [
-                    'employee_id' => $employeeByEmail->id,
-                    'employee_user_id' => $employeeByEmail->user_id
-                ]);
-                $employee = $employeeByEmail;
-            }
-            
-            // If still no employee, try to find by name similarity
-            if (!$employee) {
-                $employeeByName = Employee::whereHas('user', function($q) use ($user) {
-                    $q->where('name', 'like', '%' . explode(' ', $user->name)[0] . '%');
-                })->first();
-                
-                if ($employeeByName) {
-                    \Log::info('MyAssessments: Found employee by name similarity', [
-                        'employee_id' => $employeeByName->id,
-                        'employee_user_id' => $employeeByName->user_id
-                    ]);
-                    $employee = $employeeByName;
-                }
-            }
-        }
-        
-        // PRODUCTION FIX: Don't block if no employee record - continue with query
-        if (!$employee) {
-            \Log::warning('MyAssessments: No employee record found, but continuing with user-based query', [
-                'user_id' => $user->id,
-                'user_email' => $user->email,
-                'user_name' => $user->name
-            ]);
-            
-            // Continue execution - the query will still find assessments assigned to this user
-        }
+
         
         $query = CompetencyAssessment::with(['employee.user', 'competency', 'assessor', 'assessmentCycle'])
             ->where(function ($q) use ($user, $employee) {
@@ -1228,57 +1169,16 @@ class CompetencyAssessmentController extends Controller
                 });
             });
 
-        // Apply filters with debugging
+        // Apply filters
         if ($request->filled('status')) {
-            \Log::info('MyAssessments: Applying status filter', ['status' => $request->status]);
             $query->where('status', $request->status);
         }
 
         if ($request->filled('assessment_cycle_id')) {
-            \Log::info('MyAssessments: Applying assessment_cycle_id filter', ['assessment_cycle_id' => $request->assessment_cycle_id]);
             $query->where('assessment_cycle_id', $request->assessment_cycle_id);
         }
-        
-        // Log the final query before execution
-        \Log::info('MyAssessments: Final query', [
-            'sql' => $query->toSql(),
-            'bindings' => $query->getBindings()
-        ]);
-
-        // Note: employee_id filter is not applied in myAssessments 
-        // because users should see their own assessments regardless of filter
-        // The RBA logic above already handles showing only relevant assessments
 
         $assessments = $query->orderBy('created_at', 'desc')->paginate(15);
-
-        // Enhanced debug logging
-        \Log::info('MyAssessments Debug', [
-            'user_id' => $user->id,
-            'user_name' => $user->name,
-            'user_email' => $user->email,
-            'employee_id' => $employee?->id,
-            'employee_exists' => $employee !== null,
-            'query_sql' => $query->toSql(),
-            'query_bindings' => $query->getBindings(),
-            'total_assessments' => $assessments->total(),
-            'assessments_on_page' => $assessments->count(),
-            'first_assessment_id' => $assessments->count() > 0 ? $assessments->first()->id : null,
-            'request_filters' => $request->only(['status', 'assessment_cycle_id']),
-            'request_all' => $request->all()
-        ]);
-        
-        // Additional debugging - check what assessments exist for this user
-        if ($employee) {
-            $directAssessments = CompetencyAssessment::where('assessor_id', $user->id)->count();
-            $selfAssessments = CompetencyAssessment::where('employee_id', $employee->id)
-                ->where('assessment_type', 'self')->count();
-            
-            \Log::info('MyAssessments Additional Debug', [
-                'direct_assessments_count' => $directAssessments,
-                'self_assessments_count' => $selfAssessments,
-                'all_employee_assessments' => CompetencyAssessment::where('employee_id', $employee->id)->count()
-            ]);
-        }
 
         // Get statistics using the same query logic
         $statsQuery = CompetencyAssessment::where(function ($q) use ($user, $employee) {
@@ -1303,13 +1203,7 @@ class CompetencyAssessmentController extends Controller
             'completed' => (clone $statsQuery)->whereIn('status', ['submitted', 'approved'])->count(),
         ];
 
-        // Final debug log before rendering
-        \Log::info('MyAssessments: Rendering view', [
-            'assessments_total' => $assessments->total(),
-            'assessments_count' => $assessments->count(),
-            'stats' => $stats,
-            'filters_passed' => $request->only(['status', 'assessment_cycle_id'])
-        ]);
+
 
         return Inertia::render('CompetencyAssessments/MyAssessments', [
             'assessments' => $assessments,
