@@ -29,7 +29,7 @@ class EmailPreferencesController extends Controller
             'assessment_rejected' => 'boolean',
             'daily_digest' => 'boolean',
             'weekly_digest' => 'boolean',
-            'digest_time' => 'string|regex:/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/',
+            'digest_time' => ['string', 'regex:/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/'],
             'digest_day' => 'string|in:monday,tuesday,wednesday,thursday,friday,saturday,sunday',
             'pending_reminders' => 'boolean',
             'reminder_frequency_hours' => 'integer|min:1|max:168',
