@@ -199,6 +199,53 @@
                             </div>
                         </div>
 
+                        <!-- Birthday Notifications -->
+                        <div class="mb-8">
+                            <h3 class="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                                🎂 Birthday Notifications
+                            </h3>
+                            <div class="space-y-4">
+                                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                                    <div>
+                                        <label class="text-sm font-medium text-gray-700">Birthday Wishes</label>
+                                        <p class="text-xs text-gray-500">Receive birthday wishes on your special day</p>
+                                    </div>
+                                    <input 
+                                        type="checkbox" 
+                                        v-model="form.birthday_notifications"
+                                        class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                                    >
+                                </div>
+                                
+                                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                                    <div>
+                                        <label class="text-sm font-medium text-gray-700">Birthday Reminders</label>
+                                        <p class="text-xs text-gray-500">Get notified about colleagues' upcoming birthdays</p>
+                                    </div>
+                                    <input 
+                                        type="checkbox" 
+                                        v-model="form.birthday_reminders"
+                                        class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                                    >
+                                </div>
+                                
+                                <div v-if="form.birthday_reminders" class="ml-4 p-4 bg-pink-50 rounded-lg">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Reminder Days Ahead</label>
+                                    <select 
+                                        v-model="form.birthday_reminder_days"
+                                        class="mt-1 block w-32 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                    >
+                                        <option value="1">1 day</option>
+                                        <option value="2">2 days</option>
+                                        <option value="3">3 days</option>
+                                        <option value="5">5 days</option>
+                                        <option value="7">1 week</option>
+                                    </select>
+                                    <p class="text-xs text-gray-500 mt-1">How many days ahead to be reminded</p>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- General Preferences -->
                         <div class="mb-8">
                             <h3 class="text-lg font-medium text-gray-900 mb-4 flex items-center">
@@ -274,6 +321,9 @@ const form = useForm({
     reminder_frequency_hours: props.preferences.reminder_frequency_hours,
     system_notifications: props.preferences.system_notifications,
     marketing_emails: props.preferences.marketing_emails,
+    birthday_notifications: props.preferences.birthday_notifications,
+    birthday_reminders: props.preferences.birthday_reminders,
+    birthday_reminder_days: props.preferences.birthday_reminder_days,
 })
 
 const updatePreferences = () => {

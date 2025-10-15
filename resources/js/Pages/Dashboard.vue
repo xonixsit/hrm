@@ -322,6 +322,13 @@
                 </div>
               </div>
 
+              <!-- Birthday Notifications -->
+              <BirthdayNotifications 
+                :todays-birthdays="birthdayData.todaysBirthdays"
+                :upcoming-birthdays="birthdayData.upcomingBirthdays"
+                :stats="birthdayData.stats"
+              />
+
               <!-- Performance Insights -->
               <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl border border-green-100 p-6">
                 <div class="flex items-center space-x-3 mb-6">
@@ -663,6 +670,7 @@ import MyTasksWidget from '@/Components/Dashboard/MyTasksWidget.vue';
 import RecentFeedbackWidget from '@/Components/Dashboard/RecentFeedbackWidget.vue';
 import PersonalActivitiesWidget from '@/Components/Dashboard/PersonalActivitiesWidget.vue';
 import CompetencyDashboardWidget from '@/Components/Dashboard/CompetencyDashboardWidget.vue';
+import BirthdayNotifications from '@/Components/Dashboard/BirthdayNotifications.vue';
 
 // Icons
 import {
@@ -775,6 +783,14 @@ const props = defineProps({
         monthly_hours: '0h 0m',
         average_daily: '0h 0m'
       }
+    })
+  },
+  birthdayData: {
+    type: Object,
+    default: () => ({
+      todaysBirthdays: [],
+      upcomingBirthdays: [],
+      stats: null
     })
   }
 });

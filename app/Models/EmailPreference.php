@@ -27,6 +27,9 @@ class EmailPreference extends Model
         'reminder_frequency_hours',
         'system_notifications',
         'marketing_emails',
+        'birthday_notifications',
+        'birthday_reminders',
+        'birthday_reminder_days',
     ];
 
     protected $casts = [
@@ -42,7 +45,10 @@ class EmailPreference extends Model
         'pending_reminders' => 'boolean',
         'system_notifications' => 'boolean',
         'marketing_emails' => 'boolean',
+        'birthday_notifications' => 'boolean',
+        'birthday_reminders' => 'boolean',
         'reminder_frequency_hours' => 'integer',
+        'birthday_reminder_days' => 'integer',
     ];
 
     public function user(): BelongsTo
@@ -73,6 +79,9 @@ class EmailPreference extends Model
                 'reminder_frequency_hours' => 24,
                 'system_notifications' => true,
                 'marketing_emails' => false,
+                'birthday_notifications' => true,
+                'birthday_reminders' => true,
+                'birthday_reminder_days' => 3,
             ]
         );
     }

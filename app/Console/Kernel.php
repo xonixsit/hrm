@@ -40,6 +40,18 @@ class Kernel extends ConsoleKernel
         $schedule->command('queue:prune-failed --hours=168')
                  ->weekly()
                  ->runInBackground();
+
+        // Send birthday wishes every day at 8:00 AM
+        $schedule->command('birthday:send-wishes')
+                 ->dailyAt('08:00')
+                 ->withoutOverlapping()
+                 ->runInBackground();
+
+        // Send birthday reminders every Monday at 9:00 AM
+        $schedule->command('birthday:send-reminders')
+                 ->weeklyOn(1, '09:00')
+                 ->withoutOverlapping()
+                 ->runInBackground();
     }
 
     /**

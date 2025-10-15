@@ -35,6 +35,9 @@ class EmailPreferencesController extends Controller
             'reminder_frequency_hours' => 'integer|min:1|max:168',
             'system_notifications' => 'boolean',
             'marketing_emails' => 'boolean',
+            'birthday_notifications' => 'boolean',
+            'birthday_reminders' => 'boolean',
+            'birthday_reminder_days' => 'integer|min:1|max:7',
         ]);
 
         $preferences = auth()->user()->getEmailPreferences();

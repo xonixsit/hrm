@@ -13,18 +13,58 @@ use App\Models\Department;
 use App\Models\Project;
 use App\Models\CompetencyAssessment;
 use App\Models\AssessmentCycle;
+use App\Services\BirthdayService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class DashboardController extends Controller
 {
+    protected BirthdayService $birthdayService;
+
+    public function __construct(BirthdayService $birthdayService)
+    {
+        $this->birthdayService = $birthdayService;
+    }
+
     public function index()
     {
         $user = Auth::user();
         $role = $user->getRoleNames()->first();
 
         $data = [];
+
+        // Add birthday data for all users
+        $data['birthdayData'] = [
+            'todaysBirthdays' => $this->birthdayService->getTodaysBirthdays()->map(function ($employee) {
+                return [
+                    'id' => $employee->id,
+                    'user' => [
+                        'name' => $employee->user->name,
+                        'email' => $employee->user->email,
+                    ],
+                    'job_title' => $employee->job_title,
+                    'department' => $employee->department ? $employee->department->name : null,
+                    'age' => $employee->getAge(),
+                ];
+            }),
+            'upcomingBirthdays' => $this->birthdayService->getUpcomingBirthdays(7)->map(function ($birthday) {
+                return [
+                    'employee' => [
+                        'id' => $birthday['employee']->id,
+                        'user' => [
+                            'name' => $birthday['employee']->user->name,
+                            'email' => $birthday['employee']->user->email,
+                        ],
+                        'job_title' => $birthday['employee']->job_title,
+                        'department' => $birthday['employee']->department ? $birthday['employee']->department->name : null,
+                    ],
+                    'birthday_date' => $birthday['birthday_date']->toISOString(),
+                    'days_until' => $birthday['days_until'],
+                ];
+            }),
+            'stats' => $this->birthdayService->getBirthdayStats(),
+        ];
 
         if (in_array($role, ['Admin', 'HR'])) {
             // Admin/HR Dashboard Data
