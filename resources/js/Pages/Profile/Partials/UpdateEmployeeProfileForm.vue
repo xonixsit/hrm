@@ -171,6 +171,14 @@ const relationshipOptions = [
   { label: 'Other', value: 'other' }
 ];
 
+const employmentTypeOptions = [
+  { label: 'Full Time', value: 'full_time' },
+  { label: 'Part Time', value: 'part_time' },
+  { label: 'Contract', value: 'contract' },
+  { label: 'Intern', value: 'intern' },
+  { label: 'Consultant', value: 'consultant' }
+];
+
 // Helper function to format date for HTML input
 const formatDateForInput = (date) => {
   if (!date) return '';

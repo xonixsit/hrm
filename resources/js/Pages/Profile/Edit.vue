@@ -65,6 +65,20 @@ const calculateYearsOfService = () => {
   return `${years} year${years > 1 ? 's' : ''}`;
 };
 
+const formatEmploymentType = (type) => {
+  if (!type) return 'Full Time';
+  
+  const typeMap = {
+    'full_time': 'Full Time',
+    'part_time': 'Part Time',
+    'contract': 'Contract',
+    'intern': 'Intern',
+    'consultant': 'Consultant'
+  };
+  
+  return typeMap[type] || type;
+};
+
 const breadcrumbs = computed(() => [
   { label: 'Dashboard', href: '/dashboard' },
   { label: 'My Profile', current: true }
@@ -138,74 +152,74 @@ const breadcrumbs = computed(() => [
             </FormLayout>
 
             <!-- Employment Summary -->
-            <div v-if="hasEmployeeProfile" class="mt-6">
-                <FormLayout 
-                    title="Employment Summary" 
-                    description="Your current employment information"
-                    variant="card"
-                >
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        <div class="bg-neutral-50 rounded-lg p-4">
-                            <div class="flex items-center space-x-3">
-                                <CalendarIcon class="h-8 w-8 text-primary-600" />
-                                <div>
-                                    <p class="text-sm font-medium text-neutral-600">Time with Company</p>
-                                    <p class="text-lg font-semibold text-neutral-900">{{ calculateYearsOfService() }}</p>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="bg-neutral-50 rounded-lg p-4">
-                            <div class="flex items-center space-x-3">
-                                <BuildingOfficeIcon class="h-8 w-8 text-success-600" />
-                                <div>
-                                    <p class="text-sm font-medium text-neutral-600">Department</p>
-                                    <p class="text-sm font-semibold text-neutral-900">{{ employee.department?.name || 'N/A' }}</p>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="bg-neutral-50 rounded-lg p-4">
-                            <div class="flex items-center space-x-3">
-                                <PhoneIcon class="h-8 w-8 text-info-600" />
-                                <div>
-                                    <p class="text-sm font-medium text-neutral-600">Contact</p>
-                                    <p class="text-sm font-semibold text-neutral-900">{{ employee.phone || 'Not provided' }}</p>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="bg-neutral-50 rounded-lg p-4">
-                            <div class="flex items-center space-x-3">
-                                <EnvelopeIcon class="h-8 w-8 text-warning-600" />
-                                <div>
-                                    <p class="text-sm font-medium text-neutral-600">Email</p>
-                                    <p class="text-sm font-semibold text-neutral-900 truncate">{{ user.email }}</p>
-                                </div>
+            <FormLayout 
+                v-if="hasEmployeeProfile"
+                title="Employment Summary" 
+                description="Your current employment information"
+                variant="card"
+                class="mt-6"
+            >
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="bg-neutral-50 rounded-lg p-4">
+                        <div class="flex items-center space-x-3">
+                            <CalendarIcon class="h-8 w-8 text-primary-600" />
+                            <div>
+                                <p class="text-sm font-medium text-neutral-600">Time with Company</p>
+                                <p class="text-lg font-semibold text-neutral-900">{{ calculateYearsOfService() }}</p>
                             </div>
                         </div>
                     </div>
+                    
+                    <div class="bg-neutral-50 rounded-lg p-4">
+                        <div class="flex items-center space-x-3">
+                            <BuildingOfficeIcon class="h-8 w-8 text-success-600" />
+                            <div>
+                                <p class="text-sm font-medium text-neutral-600">Department</p>
+                                <p class="text-sm font-semibold text-neutral-900">{{ employee.department?.name || 'N/A' }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-neutral-50 rounded-lg p-4">
+                        <div class="flex items-center space-x-3">
+                            <PhoneIcon class="h-8 w-8 text-info-600" />
+                            <div>
+                                <p class="text-sm font-medium text-neutral-600">Contact</p>
+                                <p class="text-sm font-semibold text-neutral-900">{{ employee.phone || 'Not provided' }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-neutral-50 rounded-lg p-4">
+                        <div class="flex items-center space-x-3">
+                            <EnvelopeIcon class="h-8 w-8 text-warning-600" />
+                            <div>
+                                <p class="text-sm font-medium text-neutral-600">Email</p>
+                                <p class="text-sm font-semibold text-neutral-900 truncate">{{ user.email }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-                    <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <dt class="text-sm font-medium text-neutral-500">Job Title</dt>
-                            <dd class="text-sm font-medium text-neutral-900 mt-1">{{ employee.job_title || 'Not specified' }}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-sm font-medium text-neutral-500">Manager</dt>
-                            <dd class="text-sm font-medium text-neutral-900 mt-1">{{ employee.manager?.name || 'Not assigned' }}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-sm font-medium text-neutral-500">Join Date</dt>
-                            <dd class="text-sm font-medium text-neutral-900 mt-1">{{ formatDate(employee.join_date) }}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-sm font-medium text-neutral-500">Employment Type</dt>
-                            <dd class="text-sm font-medium text-neutral-900 mt-1">{{ employee.employment_type || 'Full Time' }}</dd>
-                        </div>
+                <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <dt class="text-sm font-medium text-neutral-500">Job Title</dt>
+                        <dd class="text-sm font-medium text-neutral-900 mt-1">{{ employee.job_title || 'Not specified' }}</dd>
                     </div>
-                </FormLayout>
-            </div>
+                    <div>
+                        <dt class="text-sm font-medium text-neutral-500">Manager</dt>
+                        <dd class="text-sm font-medium text-neutral-900 mt-1">{{ employee.manager?.name || 'Not assigned' }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm font-medium text-neutral-500">Join Date</dt>
+                        <dd class="text-sm font-medium text-neutral-900 mt-1">{{ formatDate(employee.join_date) }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm font-medium text-neutral-500">Employment Type</dt>
+                        <dd class="text-sm font-medium text-neutral-900 mt-1">{{ formatEmploymentType(employee.employment_type) }}</dd>
+                    </div>
+                </div>
+            </FormLayout>
 
             <!-- No Employee Profile Message -->
             <div v-if="!hasEmployeeProfile" class="bg-warning-50 border border-warning-200 rounded-lg p-6">
