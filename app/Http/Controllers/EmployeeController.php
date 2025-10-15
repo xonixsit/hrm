@@ -259,8 +259,28 @@ class EmployeeController extends Controller
 
     public function show(Employee $employee)
     {
+        // Check if user can view this employee
+        $this->authorize('view', $employee);
+        
         $employee->load('department', 'user', 'manager');
-        return Inertia::render('Employees/Show', ['employee' => $employee]);
+        
+        // Determine permissions for the current user
+        $user = auth()->user();
+        $permissions = [
+            'canViewPersonalInfo' => $user->hasAnyRole(['Admin', 'HR']) || $user->id === $employee->user_id,
+            'canViewContactInfo' => $user->hasAnyRole(['Admin', 'HR', 'Manager']) || $user->id === $employee->user_id,
+            'canViewSalaryInfo' => $user->hasAnyRole(['Admin', 'HR']),
+            'canEdit' => $user->can('update', $employee),
+            'canEditEmploymentInfo' => $user->hasAnyRole(['Admin', 'HR', 'Manager']),
+            'canMarkAsExit' => $user->hasAnyRole(['Admin', 'HR']),
+            'canReactivate' => $user->hasRole('Admin'),
+            'canDelete' => $user->can('delete', $employee),
+        ];
+        
+        return Inertia::render('Employees/Show', [
+            'employee' => $employee,
+            'permissions' => $permissions
+        ]);
     }
 
     public function edit(Employee $employee)
