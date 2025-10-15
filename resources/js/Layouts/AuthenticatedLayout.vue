@@ -347,6 +347,9 @@ const contentOverlayClasses = computed(() => {
                                 <DropdownLink :href="route('profile.edit')">
                                     Profile Settings
                                 </DropdownLink>
+                                <DropdownLink :href="route('email-preferences.show')">
+                                    📧 Email Preferences
+                                </DropdownLink>
                                 <DropdownLink :href="route('logout')" method="post" as="button">
                                     Log Out
                                 </DropdownLink>

@@ -26,218 +26,266 @@
         </div>
       </div>
 
-      <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-        <div class="p-6 text-gray-900">
-
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <!-- Main Content -->
-          <div class="lg:col-span-2 space-y-6">
-            <!-- Assessment Overview -->
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-              <div class="px-6 py-4 border-b border-gray-200">
-                <h3 class="text-lg font-medium text-gray-900">Assessment Overview</h3>
-              </div>
-              <div class="p-6">
-                <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <dt class="text-sm font-medium text-gray-500">Employee</dt>
-                    <dd class="mt-1 text-sm text-gray-900">{{ assessment.employee?.user?.name }}</dd>
-                  </div>
-                  <div>
-                    <dt class="text-sm font-medium text-gray-500">Competency</dt>
-                    <dd class="mt-1 text-sm text-gray-900">{{ assessment.competency?.name }}</dd>
-                  </div>
-                  <div>
-                    <dt class="text-sm font-medium text-gray-500">Assessment Type</dt>
-                    <dd class="mt-1 text-sm text-gray-900">{{ formatAssessmentType(assessment.assessment_type) }}</dd>
-                  </div>
-                  <div>
-                    <dt class="text-sm font-medium text-gray-500">Status</dt>
-                    <dd class="mt-1">
-                      <span :class="getStatusClasses(assessment.status)" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium">
-                        {{ formatStatus(assessment.status) }}
+      <!-- Modern Layout with Better Visual Hierarchy -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Main Content -->
+        <div class="lg:col-span-2 space-y-8">
+          <!-- Hero Section with Assessment Overview -->
+          <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200 overflow-hidden">
+            <div class="px-8 py-6">
+              <div class="flex items-start justify-between">
+                <div class="flex-1">
+                  <div class="flex items-center space-x-3 mb-4">
+                    <div class="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
+                      <span class="text-lg font-semibold text-blue-600">
+                        {{ getInitials(assessment.employee?.user?.name) }}
                       </span>
-                    </dd>
-                  </div>
-                  <div>
-                    <dt class="text-sm font-medium text-gray-500">Assessor</dt>
-                    <dd class="mt-1 text-sm text-gray-900">{{ assessment.assessor?.name || 'Not assigned' }}</dd>
-                  </div>
-                  <div>
-                    <dt class="text-sm font-medium text-gray-500">Created Date</dt>
-                    <dd class="mt-1 text-sm text-gray-900">{{ formatDate(assessment.created_at) }}</dd>
-                  </div>
-                </dl>
-              </div>
-            </div>
-
-            <!-- Rating -->
-            <div v-if="assessment.rating" class="bg-white rounded-lg shadow-sm border border-gray-200">
-              <div class="px-6 py-4 border-b border-gray-200">
-                <h3 class="text-lg font-medium text-gray-900">Rating</h3>
-              </div>
-              <div class="p-6">
-                <div class="flex items-center space-x-4">
-                  <div class="flex">
-                    <StarIcon
-                      v-for="i in 5"
-                      :key="i"
-                      :class="[
-                        i <= assessment.rating ? 'text-yellow-400' : 'text-gray-300',
-                        'h-6 w-6'
-                      ]"
-                    />
-                  </div>
-                  <span class="text-2xl font-bold text-gray-900">{{ assessment.rating }}/5</span>
-                  <span class="text-sm text-gray-500">{{ getRatingLabel(assessment.rating) }}</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Comments -->
-            <div v-if="assessment.comments" class="bg-white rounded-lg shadow-sm border border-gray-200">
-              <div class="px-6 py-4 border-b border-gray-200">
-                <h3 class="text-lg font-medium text-gray-900">Comments</h3>
-              </div>
-              <div class="p-6">
-                <p class="text-gray-700 whitespace-pre-wrap">{{ assessment.comments }}</p>
-              </div>
-            </div>
-
-            <!-- Development Notes -->
-            <div v-if="assessment.development_notes" class="bg-white rounded-lg shadow-sm border border-gray-200">
-              <div class="px-6 py-4 border-b border-gray-200">
-                <h3 class="text-lg font-medium text-gray-900">Development Notes</h3>
-              </div>
-              <div class="p-6">
-                <p class="text-gray-700 whitespace-pre-wrap">{{ assessment.development_notes }}</p>
-              </div>
-            </div>
-
-            <!-- Supporting Evidence -->
-            <div v-if="assessment.evidence_files && assessment.evidence_files.length > 0" class="bg-white rounded-lg shadow-sm border border-gray-200">
-              <div class="px-6 py-4 border-b border-gray-200">
-                <h3 class="text-lg font-medium text-gray-900">Supporting Evidence</h3>
-              </div>
-              <div class="p-6">
-                <div class="space-y-3">
-                  <div 
-                    v-for="(fileName, index) in assessment.evidence_files" 
-                    :key="index"
-                    class="flex items-center justify-between p-3 bg-gray-50 rounded-md hover:bg-gray-100 transition-colors"
-                  >
-                    <div class="flex items-center">
-                      <DocumentIcon class="w-5 h-5 text-gray-400 mr-3" />
-                      <span class="text-sm text-gray-900">{{ fileName }}</span>
                     </div>
-                    <button
-                      @click="viewFile(fileName)"
-                      class="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded text-blue-700 bg-blue-100 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                    >
-                      <EyeIcon class="w-4 h-4 mr-1" />
-                      View
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Sidebar -->
-          <div class="space-y-6">
-            <!-- Actions -->
-            <div v-if="canApprove && assessment.status === 'submitted'" class="bg-white rounded-lg shadow-sm border border-gray-200">
-              <div class="px-6 py-4 border-b border-gray-200">
-                <h3 class="text-lg font-medium text-gray-900">Actions</h3>
-              </div>
-              <div class="p-6 space-y-3">
-                <button
-                  @click="approveAssessment"
-                  :disabled="processing"
-                  class="w-full inline-flex items-center justify-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
-                >
-                  <CheckIcon class="w-4 h-4 mr-2" />
-                  Approve Assessment
-                </button>
-                <button
-                  @click="rejectAssessment"
-                  :disabled="processing"
-                  class="w-full inline-flex items-center justify-center px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50"
-                >
-                  <XMarkIcon class="w-4 h-4 mr-2" />
-                  Reject Assessment
-                </button>
-              </div>
-            </div>
-
-            <!-- Competency Details -->
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-              <div class="px-6 py-4 border-b border-gray-200">
-                <h3 class="text-lg font-medium text-gray-900">Competency Details</h3>
-              </div>
-              <div class="p-6">
-                <dl class="space-y-3">
-                  <div>
-                    <dt class="text-sm font-medium text-gray-500">Category</dt>
-                    <dd class="mt-1 text-sm text-gray-900">{{ assessment.competency?.category }}</dd>
-                  </div>
-                  <div v-if="assessment.competency?.description">
-                    <dt class="text-sm font-medium text-gray-500">Description</dt>
-                    <dd class="mt-1 text-sm text-gray-700">{{ assessment.competency.description }}</dd>
-                  </div>
-                  <div v-if="assessment.competency?.weight">
-                    <dt class="text-sm font-medium text-gray-500">Weight</dt>
-                    <dd class="mt-1 text-sm text-gray-900">{{ assessment.competency.weight }}%</dd>
-                  </div>
-                </dl>
-              </div>
-            </div>
-
-            <!-- Related Assessments -->
-            <div v-if="relatedAssessments?.length" class="bg-white rounded-lg shadow-sm border border-gray-200">
-              <div class="px-6 py-4 border-b border-gray-200">
-                <h3 class="text-lg font-medium text-gray-900">Related Assessments</h3>
-              </div>
-              <div class="p-6">
-                <div class="space-y-3">
-                  <div
-                    v-for="related in relatedAssessments"
-                    :key="related.id"
-                    class="flex items-center justify-between p-3 bg-gray-50 rounded-md"
-                  >
                     <div>
-                      <div class="text-sm font-medium text-gray-900">
-                        {{ formatAssessmentType(related.assessment_type) }}
-                      </div>
-                      <div class="text-xs text-gray-500">
-                        {{ formatDate(related.created_at) }}
-                      </div>
+                      <h1 class="text-2xl font-bold text-gray-900">{{ assessment.employee?.user?.name }}</h1>
+                      <p class="text-lg text-gray-600">{{ assessment.competency?.name }}</p>
                     </div>
-                    <div class="flex items-center space-x-2">
-                      <div v-if="related.rating" class="flex">
-                        <StarIcon
-                          v-for="i in 5"
-                          :key="i"
-                          :class="[
-                            i <= related.rating ? 'text-yellow-400' : 'text-gray-300',
-                            'h-3 w-3'
-                          ]"
-                        />
-                      </div>
-                      <Link
-                        :href="route('competency-assessments.show', related.id)"
-                        class="text-xs text-blue-600 hover:text-blue-900"
-                      >
-                        View
-                      </Link>
+                  </div>
+                  
+                  <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="bg-white/60 rounded-lg p-3">
+                      <dt class="text-xs font-medium text-gray-500 uppercase tracking-wide">Type</dt>
+                      <dd class="mt-1 text-sm font-semibold text-gray-900">{{ formatAssessmentType(assessment.assessment_type) }}</dd>
+                    </div>
+                    <div class="bg-white/60 rounded-lg p-3">
+                      <dt class="text-xs font-medium text-gray-500 uppercase tracking-wide">Status</dt>
+                      <dd class="mt-1">
+                        <span :class="getStatusClasses(assessment.status)" class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium">
+                          {{ formatStatus(assessment.status) }}
+                        </span>
+                      </dd>
+                    </div>
+                    <div class="bg-white/60 rounded-lg p-3">
+                      <dt class="text-xs font-medium text-gray-500 uppercase tracking-wide">Assessor</dt>
+                      <dd class="mt-1 text-sm font-semibold text-gray-900">{{ assessment.assessor?.name || 'Not assigned' }}</dd>
+                    </div>
+                    <div class="bg-white/60 rounded-lg p-3">
+                      <dt class="text-xs font-medium text-gray-500 uppercase tracking-wide">Date</dt>
+                      <dd class="mt-1 text-sm font-semibold text-gray-900">{{ formatDate(assessment.created_at) }}</dd>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
 
+          <!-- Rating Section -->
+          <div v-if="assessment.rating" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div class="bg-gradient-to-r from-yellow-50 to-orange-50 px-6 py-4 border-b border-yellow-200">
+              <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                <StarIcon class="w-5 h-5 text-yellow-500 mr-2" />
+                Performance Rating
+              </h3>
+            </div>
+            <div class="p-6">
+              <div class="text-center">
+                <div class="flex justify-center mb-4">
+                  <StarIcon
+                    v-for="i in 5"
+                    :key="i"
+                    :class="[
+                      i <= assessment.rating ? 'text-yellow-400' : 'text-gray-300',
+                      'h-8 w-8'
+                    ]"
+                  />
+                </div>
+                <div class="space-y-2">
+                  <div class="text-4xl font-bold text-gray-900">{{ assessment.rating }}<span class="text-2xl text-gray-500">/5</span></div>
+                  <div class="text-lg font-medium text-gray-600">{{ getRatingLabel(assessment.rating) }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Comments Section -->
+          <div v-if="assessment.comments" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div class="bg-gradient-to-r from-green-50 to-emerald-50 px-6 py-4 border-b border-green-200">
+              <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                <svg class="w-5 h-5 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-3.582 8-8 8a8.959 8.959 0 01-4.906-1.456L3 21l2.456-5.094A8.959 8.959 0 013 12c0-4.418 3.582-8 8-8s8 3.582 8 8z" />
+                </svg>
+                Assessment Comments
+              </h3>
+            </div>
+            <div class="p-6">
+              <div class="prose prose-sm max-w-none">
+                <p class="text-gray-700 leading-relaxed whitespace-pre-wrap">{{ assessment.comments }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Development Notes Section -->
+          <div v-if="assessment.development_notes" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div class="bg-gradient-to-r from-purple-50 to-violet-50 px-6 py-4 border-b border-purple-200">
+              <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                <svg class="w-5 h-5 text-purple-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+                Development Notes
+              </h3>
+            </div>
+            <div class="p-6">
+              <div class="prose prose-sm max-w-none">
+                <p class="text-gray-700 leading-relaxed whitespace-pre-wrap">{{ assessment.development_notes }}</p>
+              </div>
+            </div>
+          </div>
+          </div>
+
+        <!-- Enhanced Sidebar -->
+        <div class="space-y-6">
+          <!-- Supporting Evidence Files -->
+          <div v-if="assessment.evidence_files && assessment.evidence_files.length > 0" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div class="bg-gradient-to-r from-blue-50 to-cyan-50 px-6 py-4 border-b border-blue-200">
+              <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                <DocumentIcon class="w-5 h-5 text-blue-600 mr-2" />
+                Supporting Evidence
+                <span class="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                  {{ assessment.evidence_files.length }}
+                </span>
+              </h3>
+            </div>
+            <div class="p-4">
+              <div class="space-y-2">
+                <div 
+                  v-for="(fileName, index) in assessment.evidence_files" 
+                  :key="index"
+                  class="group flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-blue-50 transition-all duration-200 border border-transparent hover:border-blue-200"
+                >
+                  <div class="flex items-center min-w-0 flex-1">
+                    <div class="flex-shrink-0">
+                      <DocumentIcon class="w-5 h-5 text-gray-400 group-hover:text-blue-500" />
+                    </div>
+                    <div class="ml-3 min-w-0 flex-1">
+                      <p class="text-sm font-medium text-gray-900 truncate">{{ getFileName(fileName) }}</p>
+                      <p class="text-xs text-gray-500">{{ getFileExtension(fileName) }}</p>
+                    </div>
+                  </div>
+                  <button
+                    @click="viewFile(fileName)"
+                    class="ml-3 inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                  >
+                    <EyeIcon class="w-4 h-4 mr-1" />
+                    View
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div v-if="canApprove && assessment.status === 'submitted'" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div class="bg-gradient-to-r from-green-50 to-emerald-50 px-6 py-4 border-b border-green-200">
+              <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                <svg class="w-5 h-5 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Review Actions
+              </h3>
+            </div>
+            <div class="p-6 space-y-3">
+              <button
+                @click="approveAssessment"
+                :disabled="processing"
+                class="w-full inline-flex items-center justify-center px-4 py-3 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 transition-colors shadow-sm"
+              >
+                <CheckIcon class="w-4 h-4 mr-2" />
+                Approve Assessment
+              </button>
+              <button
+                @click="rejectAssessment"
+                :disabled="processing"
+                class="w-full inline-flex items-center justify-center px-4 py-3 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 transition-colors shadow-sm"
+              >
+                <XMarkIcon class="w-4 h-4 mr-2" />
+                Reject Assessment
+              </button>
+            </div>
+          </div>
+
+          <!-- Competency Details -->
+          <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div class="bg-gradient-to-r from-indigo-50 to-purple-50 px-6 py-4 border-b border-indigo-200">
+              <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                <svg class="w-5 h-5 text-indigo-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+                Competency Info
+              </h3>
+            </div>
+            <div class="p-6">
+              <dl class="space-y-4">
+                <div class="bg-gray-50 rounded-lg p-3">
+                  <dt class="text-xs font-medium text-gray-500 uppercase tracking-wide">Category</dt>
+                  <dd class="mt-1 text-sm font-semibold text-gray-900">{{ assessment.competency?.category }}</dd>
+                </div>
+                <div v-if="assessment.competency?.description" class="bg-gray-50 rounded-lg p-3">
+                  <dt class="text-xs font-medium text-gray-500 uppercase tracking-wide">Description</dt>
+                  <dd class="mt-1 text-sm text-gray-700 leading-relaxed">{{ assessment.competency.description }}</dd>
+                </div>
+                <div v-if="assessment.competency?.weight" class="bg-gray-50 rounded-lg p-3">
+                  <dt class="text-xs font-medium text-gray-500 uppercase tracking-wide">Weight</dt>
+                  <dd class="mt-1 text-sm font-semibold text-gray-900">{{ assessment.competency.weight }}%</dd>
+                </div>
+              </dl>
+            </div>
+          </div>
+
+          <!-- Related Assessments -->
+          <div v-if="relatedAssessments?.length" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div class="bg-gradient-to-r from-gray-50 to-slate-50 px-6 py-4 border-b border-gray-200">
+              <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                <svg class="w-5 h-5 text-gray-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+                Related Assessments
+                <span class="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                  {{ relatedAssessments.length }}
+                </span>
+              </h3>
+            </div>
+            <div class="p-4">
+              <div class="space-y-2">
+                <div
+                  v-for="related in relatedAssessments"
+                  :key="related.id"
+                  class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  <div class="flex-1">
+                    <div class="text-sm font-medium text-gray-900">
+                      {{ formatAssessmentType(related.assessment_type) }}
+                    </div>
+                    <div class="text-xs text-gray-500">
+                      {{ formatDate(related.created_at) }}
+                    </div>
+                  </div>
+                  <div class="flex items-center space-x-3">
+                    <div v-if="related.rating" class="flex">
+                      <StarIcon
+                        v-for="i in 5"
+                        :key="i"
+                        :class="[
+                          i <= related.rating ? 'text-yellow-400' : 'text-gray-300',
+                          'h-3 w-3'
+                        ]"
+                      />
+                    </div>
+                    <Link
+                      :href="route('competency-assessments.show', related.id)"
+                      class="inline-flex items-center px-2 py-1 text-xs font-medium rounded text-blue-700 bg-blue-100 hover:bg-blue-200 transition-colors"
+                    >
+                      View
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -397,5 +445,29 @@ const formatDate = (date) => {
     month: 'long',
     day: 'numeric'
   });
+};
+
+// Helper methods for the new layout
+const getInitials = (name) => {
+  if (!name) return '?';
+  return name
+    .split(' ')
+    .map(word => word.charAt(0))
+    .join('')
+    .toUpperCase()
+    .substring(0, 2);
+};
+
+const getFileName = (filePath) => {
+  if (!filePath) return '';
+  const parts = filePath.split('/');
+  return parts[parts.length - 1];
+};
+
+const getFileExtension = (filePath) => {
+  if (!filePath) return '';
+  const fileName = getFileName(filePath);
+  const parts = fileName.split('.');
+  return parts.length > 1 ? parts[parts.length - 1].toUpperCase() : 'FILE';
 };
 </script>

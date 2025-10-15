@@ -61,4 +61,17 @@ class User extends Authenticatable
     {
         return $this->hasMany(CompetencyAssessment::class, 'assessor_id');
     }
+
+    public function emailPreferences()
+    {
+        return $this->hasOne(EmailPreference::class);
+    }
+
+    /**
+     * Get email preferences for this user (create if not exists)
+     */
+    public function getEmailPreferences(): EmailPreference
+    {
+        return EmailPreference::getForUser($this);
+    }
 }

@@ -9,6 +9,7 @@ use App\Models\Employee;
 use App\Models\Competency;
 use App\Models\User;
 use App\Services\CompetencyAssessmentService;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
@@ -21,10 +22,14 @@ use Inertia\Response;
 class CompetencyAssessmentController extends Controller
 {
     protected CompetencyAssessmentService $assessmentService;
+    protected NotificationService $notificationService;
 
-    public function __construct(CompetencyAssessmentService $assessmentService)
-    {
+    public function __construct(
+        CompetencyAssessmentService $assessmentService,
+        NotificationService $notificationService
+    ) {
         $this->assessmentService = $assessmentService;
+        $this->notificationService = $notificationService;
     }
 
     /**
@@ -530,20 +535,25 @@ class CompetencyAssessmentController extends Controller
 
         $assessments = $query->paginate(15)->withQueryString();
 
+        // Role-based filter options
+        $isAdminOrHR = $user->hasRole(['admin', 'hr', 'Admin', 'HR']);
+        
         return Inertia::render('CompetencyAssessments/Index', [
             'assessments' => $assessments,
-            'employees' => Employee::with('user')->select('id', 'user_id')->get(),
+            'employees' => $isAdminOrHR ? Employee::with('user')->select('id', 'user_id')->get() : [],
             'competencies' => Competency::where('is_active', true)->select('id', 'name')->orderBy('name')->get(),
             'assessmentCycles' => AssessmentCycle::select('id', 'name')->orderBy('name')->get(),
-            'assessors' => User::select('id', 'name')->orderBy('name')->get(),
-            'assessmentTypes' => ['self', 'manager', 'peer', '360'],
+            'assessors' => $isAdminOrHR ? User::select('id', 'name')->orderBy('name')->get() : [],
+            'assessmentTypes' => $isAdminOrHR ? ['self', 'manager', 'peer', '360'] : ['self'],
             'statusOptions' => ['draft', 'submitted', 'approved', 'rejected'],
             'filters' => $request->only([
                 'employee_id', 'competency_id', 'assessor_id', 'assessment_cycle_id',
                 'assessment_type', 'status', 'rating', 'date_from', 'date_to', 'search',
                 'sort_by', 'sort_order'
             ]),
-            'stats' => $this->getAssessmentStats($user, $employee)
+            'stats' => $this->getAssessmentStats($user, $employee),
+            'canFilterByEmployee' => $isAdminOrHR,
+            'canFilterByAssessor' => $isAdminOrHR
         ]);
     }
 
@@ -657,6 +667,9 @@ class CompetencyAssessmentController extends Controller
             ]);
             
             \Log::info('=== ASSESSMENT CREATED ===', ['assessment_id' => $assessment->id]);
+
+            // Send notification for new assessment assignment
+            $this->notificationService->sendAssessmentAssigned($assessment);
 
             return redirect()->route('competency-assessments.evaluate', $assessment->id)
                 ->with('success', 'Assessment created successfully.');
@@ -861,6 +874,9 @@ class CompetencyAssessmentController extends Controller
 
             $this->assessmentService->submitAssessment($competencyAssessment, $validated);
 
+            // Send notification for assessment submission
+            $this->notificationService->sendAssessmentSubmitted($competencyAssessment);
+
             return redirect()->route('competency-assessments.show', $competencyAssessment->id)
                 ->with('success', 'Assessment submitted successfully.');
         } catch (ValidationException $e) {
@@ -895,6 +911,9 @@ class CompetencyAssessmentController extends Controller
                 $validated['approval_notes'] ?? null
             );
 
+            // Send notification for assessment approval
+            $this->notificationService->sendAssessmentApproved($competencyAssessment);
+
             return redirect()->route('competency-assessments.show', $competencyAssessment->id)
                 ->with('success', 'Assessment approved successfully.');
         } catch (ValidationException $e) {
@@ -928,6 +947,9 @@ class CompetencyAssessmentController extends Controller
                 Auth::user(),
                 $validated['rejection_reason']
             );
+
+            // Send notification for assessment rejection
+            $this->notificationService->sendAssessmentRejected($competencyAssessment, $validated['rejection_reason']);
 
             return redirect()->route('competency-assessments.show', $competencyAssessment->id)
                 ->with('success', 'Assessment rejected successfully.');

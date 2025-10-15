@@ -11,8 +11,8 @@
           <!-- Filters -->
           <div class="bg-gray-50 rounded-lg border border-gray-200 mb-6">
             <div class="p-6">
-            <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
-              <div>
+            <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4" :class="{ 'lg:grid-cols-5': canFilterByEmployee }">
+              <div v-if="canFilterByEmployee">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Employee</label>
                 <select
                   v-model="filters.employee_id"
@@ -225,7 +225,9 @@ const props = defineProps({
   assessmentTypes: Array,
   statusOptions: Array,
   filters: Object,
-  stats: Object
+  stats: Object,
+  canFilterByEmployee: Boolean,
+  canFilterByAssessor: Boolean
 });
 
 const filters = ref({

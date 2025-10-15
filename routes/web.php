@@ -449,6 +449,10 @@ Route::middleware('auth')->group(function () {
         Route::post('/export', [OrganizationalAnalyticsController::class, 'export'])->name('export');
         Route::get('/download/{filename}', [OrganizationalAnalyticsController::class, 'download'])->name('download');
     });
+
+    // Email Preferences routes
+    Route::get('/email-preferences', [App\Http\Controllers\EmailPreferencesController::class, 'show'])->name('email-preferences.show');
+    Route::put('/email-preferences', [App\Http\Controllers\EmailPreferencesController::class, 'update'])->name('email-preferences.update');
 });
 
 require __DIR__.'/auth.php';

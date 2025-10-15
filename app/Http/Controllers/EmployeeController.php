@@ -120,22 +120,60 @@ class EmployeeController extends Controller
     public function create()
     {
         $departments = Department::all();
-        return Inertia::render('Employees/Create', ['departments' => $departments]);
+        $managers = User::whereHas('roles', function ($query) {
+            $query->whereIn('name', ['Admin', 'Manager', 'HR']);
+        })->select('id', 'name')->get();
+        
+        return Inertia::render('Employees/Create', [
+            'departments' => $departments,
+            'managers' => $managers
+        ]);
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
+            // User Information
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users',
             'password' => 'required|string|min:8',
+            
+            // Employee Basic Information
+            'employee_code' => 'nullable|unique:employees',
             'department_id' => 'required|exists:departments,id',
+            'manager_id' => 'nullable|exists:users,id',
             'job_title' => 'required|string|max:255',
-            'employee_code' => 'required|unique:employees',
             'join_date' => 'required|date',
             'contract_type' => 'required|string',
-            // Add other fields as needed
+            
+            // Personal Information
+            'date_of_birth' => 'nullable|date|before:today',
+            'gender' => 'nullable|in:male,female,other,prefer_not_to_say',
+            'phone' => 'nullable|string|max:20',
+            'personal_email' => 'nullable|email',
+            'nationality' => 'nullable|string|max:100',
+            
+            // Address Information
+            'current_address' => 'nullable|string|max:500',
+            'permanent_address' => 'nullable|string|max:500',
+            
+            // Emergency Contact
+            'emergency_contact_name' => 'nullable|string|max:255',
+            'emergency_contact_relationship' => 'nullable|string|max:100',
+            'emergency_contact_phone' => 'nullable|string|max:20',
+            'emergency_contact_email' => 'nullable|email',
+            
+            // Employment Details
+            'employment_type' => 'nullable|in:full_time,part_time,contract,intern,consultant',
+            'work_location' => 'nullable|string|max:255',
+            'salary' => 'nullable|numeric|min:0',
+            'salary_currency' => 'nullable|string|size:3',
         ]);
+
+        // Generate employee code if not provided
+        if (empty($validated['employee_code'])) {
+            $validated['employee_code'] = $this->generateEmployeeCode($validated['name']);
+        }
 
         $user = User::create([
             'name' => $validated['name'],
@@ -148,11 +186,34 @@ class EmployeeController extends Controller
         $employee = Employee::create([
             'user_id' => $user->id,
             'department_id' => $validated['department_id'],
+            'manager_id' => $validated['manager_id'],
             'employee_code' => $validated['employee_code'],
             'job_title' => $validated['job_title'],
             'join_date' => $validated['join_date'],
             'contract_type' => $validated['contract_type'],
-            // Add other fields
+            
+            // Personal Information
+            'date_of_birth' => $validated['date_of_birth'],
+            'gender' => $validated['gender'],
+            'phone' => $validated['phone'],
+            'personal_email' => $validated['personal_email'],
+            'nationality' => $validated['nationality'],
+            
+            // Address Information
+            'current_address' => $validated['current_address'],
+            'permanent_address' => $validated['permanent_address'],
+            
+            // Emergency Contact
+            'emergency_contact_name' => $validated['emergency_contact_name'],
+            'emergency_contact_relationship' => $validated['emergency_contact_relationship'],
+            'emergency_contact_phone' => $validated['emergency_contact_phone'],
+            'emergency_contact_email' => $validated['emergency_contact_email'],
+            
+            // Employment Details
+            'employment_type' => $validated['employment_type'] ?? 'full_time',
+            'work_location' => $validated['work_location'],
+            'salary' => $validated['salary'],
+            'salary_currency' => $validated['salary_currency'] ?? 'USD',
         ]);
 
         // Send welcome email to the employee
@@ -173,6 +234,29 @@ class EmployeeController extends Controller
         return redirect()->route('employees.index')->with('success', 'Employee created successfully.');
     }
 
+    /**
+     * Generate a unique employee code
+     */
+    private function generateEmployeeCode($name)
+    {
+        $initials = collect(explode(' ', $name))
+            ->map(fn($word) => strtoupper(substr($word, 0, 1)))
+            ->join('');
+        
+        $timestamp = now()->format('ymd');
+        $baseCode = "EMP{$initials}{$timestamp}";
+        
+        // Ensure uniqueness
+        $counter = 1;
+        $code = $baseCode;
+        while (Employee::where('employee_code', $code)->exists()) {
+            $code = $baseCode . str_pad($counter, 2, '0', STR_PAD_LEFT);
+            $counter++;
+        }
+        
+        return $code;
+    }
+
     public function show(Employee $employee)
     {
         $employee->load('department', 'user');
@@ -182,27 +266,82 @@ class EmployeeController extends Controller
     public function edit(Employee $employee)
     {
         $departments = Department::all();
-        $employee->load('department', 'user');
-        $contractTypes = Employee::select('contract_type')->distinct()->pluck('contract_type');
+        $managers = User::whereHas('roles', function ($query) {
+            $query->whereIn('name', ['Admin', 'Manager', 'HR']);
+        })->select('id', 'name')->get();
         
-        return Inertia::render('Employees/Edit', ['employee' => $employee, 'departments' => $departments, 'contractTypes' => $contractTypes]);
+        $employee->load('department', 'user', 'manager');
+        $contractTypes = Employee::select('contract_type')->distinct()->whereNotNull('contract_type')->pluck('contract_type');
+        
+        return Inertia::render('Employees/Edit', [
+            'employee' => $employee,
+            'departments' => $departments,
+            'managers' => $managers,
+            'contractTypes' => $contractTypes
+        ]);
     }
 
     public function update(Request $request, Employee $employee)
     {
-        $validated = $request->validate([
-            'department_id' => 'required|exists:departments,id',
-            'job_title' => 'required|string|max:255',
-            'employee_code' => 'required|unique:employees,employee_code,' . $employee->id,
-            'join_date' => 'required|date',
-            'contract_type' => 'required|string',
-            // Add other fields
-        ]);
+        // Check permissions based on user role
+        $user = auth()->user();
+        $canEditPersonalInfo = $user->hasAnyRole(['Admin', 'HR']) || $user->id === $employee->user_id;
+        $canEditEmploymentInfo = $user->hasAnyRole(['Admin', 'HR', 'Manager']);
+        $canEditSalaryInfo = $user->hasAnyRole(['Admin', 'HR']);
 
-        $employee->update($validated);
+        $rules = [
+            // Basic employment info (Admin, HR, Manager can edit)
+            'department_id' => $canEditEmploymentInfo ? 'required|exists:departments,id' : 'sometimes',
+            'manager_id' => $canEditEmploymentInfo ? 'nullable|exists:users,id' : 'sometimes',
+            'job_title' => $canEditEmploymentInfo ? 'required|string|max:255' : 'sometimes',
+            'employee_code' => $canEditEmploymentInfo ? 'required|unique:employees,employee_code,' . $employee->id : 'sometimes',
+            'join_date' => $canEditEmploymentInfo ? 'required|date' : 'sometimes',
+            'contract_type' => $canEditEmploymentInfo ? 'required|string' : 'sometimes',
+            'employment_type' => $canEditEmploymentInfo ? 'nullable|in:full_time,part_time,contract,intern,consultant' : 'sometimes',
+            'work_location' => $canEditEmploymentInfo ? 'nullable|string|max:255' : 'sometimes',
+        ];
 
-        if ($request->has('name')) {
-            $employee->user->update(['name' => $request->name]);
+        // Personal info (Admin, HR, or self can edit)
+        if ($canEditPersonalInfo) {
+            $rules = array_merge($rules, [
+                'name' => 'required|string|max:255',
+                'date_of_birth' => 'nullable|date|before:today',
+                'gender' => 'nullable|in:male,female,other,prefer_not_to_say',
+                'nationality' => 'nullable|string|max:100',
+            ]);
+        }
+
+        // Contact info (Admin, HR, or self can edit)
+        if ($canEditPersonalInfo) {
+            $rules = array_merge($rules, [
+                'phone' => 'nullable|string|max:20',
+                'personal_email' => 'nullable|email',
+                'current_address' => 'nullable|string|max:500',
+                'permanent_address' => 'nullable|string|max:500',
+                'emergency_contact_name' => 'nullable|string|max:255',
+                'emergency_contact_relationship' => 'nullable|string|max:100',
+                'emergency_contact_phone' => 'nullable|string|max:20',
+                'emergency_contact_email' => 'nullable|email',
+            ]);
+        }
+
+        // Salary info (Admin, HR only)
+        if ($canEditSalaryInfo) {
+            $rules = array_merge($rules, [
+                'salary' => 'nullable|numeric|min:0',
+                'salary_currency' => 'nullable|string|size:3',
+            ]);
+        }
+
+        $validated = $request->validate($rules);
+
+        // Update employee record
+        $employeeData = collect($validated)->except(['name'])->toArray();
+        $employee->update($employeeData);
+
+        // Update user name if provided and allowed
+        if (isset($validated['name']) && $canEditPersonalInfo) {
+            $employee->user->update(['name' => $validated['name']]);
         }
 
         $this->logAudit('Employee Updated', 'Updated employee: ' . $employee->employee_code);

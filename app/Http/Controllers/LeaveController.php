@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use App\Traits\AuditLogTrait;
+use App\Services\NotificationService;
 use App\Notifications\LeaveAppliedNotification;
 use App\Notifications\LeaveApplicationConfirmationNotification;
 use App\Notifications\LeaveApprovedNotification;
@@ -19,6 +20,13 @@ use Illuminate\Support\Facades\DB;
 class LeaveController extends Controller
 {
     use AuditLogTrait;
+    
+    protected NotificationService $notificationService;
+
+    public function __construct(NotificationService $notificationService)
+    {
+        $this->notificationService = $notificationService;
+    }
 
     public function index(Request $request)
     {
@@ -190,6 +198,9 @@ class LeaveController extends Controller
             $admin->notify(new LeaveAppliedNotification($leave));
         }
 
+        // Send email notification using our new service
+        $this->notificationService->sendLeaveRequestSubmitted($leave);
+
         $this->logAudit('Leave Created', 'Created leave request for dates: ' . $validated['from_date'] . ' to ' . $validated['to_date']);
         return redirect()->route('leaves.index')->with('success', 'Leave request submitted.');
     }
@@ -300,6 +311,9 @@ class LeaveController extends Controller
         
         $leave->employee->user->notify(new LeaveApprovedNotification($leave));
 
+        // Send email notification using our new service
+        $this->notificationService->sendLeaveRequestApproved($leave);
+
         $this->logAudit('Leave Approved', 'Approved leave ID: ' . $leave->id);
         
         // Handle AJAX requests (but not Inertia requests)
@@ -339,6 +353,9 @@ class LeaveController extends Controller
         $leave->load(['employee.user', 'leaveType', 'approver']);
         
         $leave->employee->user->notify(new LeaveRejectedNotification($leave));
+
+        // Send email notification using our new service
+        $this->notificationService->sendLeaveRequestRejected($leave, $request->input('comments', ''));
 
         $this->logAudit('Leave Rejected', 'Rejected leave ID: ' . $leave->id);
         

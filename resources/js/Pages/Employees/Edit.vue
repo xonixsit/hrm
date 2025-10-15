@@ -52,6 +52,7 @@
               placeholder="John Doe"
               :error="!!form.errors.name"
               required
+              :disabled="!canEditPersonalInfo"
             />
           </FormField>
 
@@ -65,6 +66,178 @@
               type="text"
               placeholder="EMP001"
               :error="!!form.errors.employee_code"
+              :disabled="!canEditEmploymentInfo"
+            />
+          </FormField>
+
+          <FormField
+            label="Date of Birth"
+            :error="form.errors.date_of_birth"
+            help="Employee's date of birth"
+          >
+            <BaseInput
+              v-model="form.date_of_birth"
+              type="date"
+              :error="!!form.errors.date_of_birth"
+              :disabled="!canEditPersonalInfo"
+            />
+          </FormField>
+
+          <FormField
+            label="Gender"
+            :error="form.errors.gender"
+            help="Select the employee's gender"
+          >
+            <BaseSelect
+              v-model="form.gender"
+              :options="genderOptions"
+              :error="!!form.errors.gender"
+              placeholder="Select gender"
+              :disabled="!canEditPersonalInfo"
+            />
+          </FormField>
+
+          <FormField
+            label="Phone Number"
+            :error="form.errors.phone"
+            help="Primary contact number"
+          >
+            <BaseInput
+              v-model="form.phone"
+              type="tel"
+              placeholder="+1 (555) 123-4567"
+              :error="!!form.errors.phone"
+              :disabled="!canEditContactInfo"
+            />
+          </FormField>
+
+          <FormField
+            label="Personal Email"
+            :error="form.errors.personal_email"
+            help="Personal email address (different from work email)"
+          >
+            <BaseInput
+              v-model="form.personal_email"
+              type="email"
+              placeholder="john.doe@personal.com"
+              :error="!!form.errors.personal_email"
+              :disabled="!canEditContactInfo"
+            />
+          </FormField>
+
+          <FormField
+            label="Nationality"
+            :error="form.errors.nationality"
+            help="Employee's nationality"
+          >
+            <BaseInput
+              v-model="form.nationality"
+              type="text"
+              placeholder="American"
+              :error="!!form.errors.nationality"
+              :disabled="!canEditPersonalInfo"
+            />
+          </FormField>
+        </div>
+      </FormSection>
+
+      <!-- Address Information Section -->
+      <FormSection
+        title="Address Information"
+        description="Current and permanent address details"
+        v-if="canViewContactInfo"
+      >
+        <div class="grid grid-cols-1 gap-6">
+          <FormField
+            label="Current Address"
+            :error="form.errors.current_address"
+            help="Current residential address"
+          >
+            <BaseTextarea
+              v-model="form.current_address"
+              placeholder="123 Main Street, City, State, ZIP"
+              :error="!!form.errors.current_address"
+              rows="3"
+              :disabled="!canEditContactInfo"
+            />
+          </FormField>
+
+          <FormField
+            label="Permanent Address"
+            :error="form.errors.permanent_address"
+            help="Permanent residential address (if different from current)"
+          >
+            <BaseTextarea
+              v-model="form.permanent_address"
+              placeholder="456 Home Street, City, State, ZIP"
+              :error="!!form.errors.permanent_address"
+              rows="3"
+              :disabled="!canEditContactInfo"
+            />
+          </FormField>
+        </div>
+      </FormSection>
+
+      <!-- Emergency Contact Section -->
+      <FormSection
+        title="Emergency Contact"
+        description="Contact person in case of emergency"
+        v-if="canViewContactInfo"
+      >
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <FormField
+            label="Emergency Contact Name"
+            :error="form.errors.emergency_contact_name"
+            help="Full name of emergency contact person"
+          >
+            <BaseInput
+              v-model="form.emergency_contact_name"
+              type="text"
+              placeholder="Jane Doe"
+              :error="!!form.errors.emergency_contact_name"
+              :disabled="!canEditContactInfo"
+            />
+          </FormField>
+
+          <FormField
+            label="Relationship"
+            :error="form.errors.emergency_contact_relationship"
+            help="Relationship to the employee"
+          >
+            <BaseSelect
+              v-model="form.emergency_contact_relationship"
+              :options="relationshipOptions"
+              :error="!!form.errors.emergency_contact_relationship"
+              placeholder="Select relationship"
+              :disabled="!canEditContactInfo"
+            />
+          </FormField>
+
+          <FormField
+            label="Emergency Contact Phone"
+            :error="form.errors.emergency_contact_phone"
+            help="Phone number of emergency contact"
+          >
+            <BaseInput
+              v-model="form.emergency_contact_phone"
+              type="tel"
+              placeholder="+1 (555) 987-6543"
+              :error="!!form.errors.emergency_contact_phone"
+              :disabled="!canEditContactInfo"
+            />
+          </FormField>
+
+          <FormField
+            label="Emergency Contact Email"
+            :error="form.errors.emergency_contact_email"
+            help="Email address of emergency contact"
+          >
+            <BaseInput
+              v-model="form.emergency_contact_email"
+              type="email"
+              placeholder="jane.doe@email.com"
+              :error="!!form.errors.emergency_contact_email"
+              :disabled="!canEditContactInfo"
             />
           </FormField>
         </div>
@@ -86,9 +259,9 @@
               type="text"
               placeholder="Software Developer"
               :error="!!form.errors.job_title"
+              :disabled="!canEditEmploymentInfo"
             />
           </FormField>
-      
 
           <FormField
             label="Department"
@@ -98,13 +271,29 @@
             <BaseSelect
               v-model="form.department_id"
               :options="departments"
-                option-label="name"
+              option-label="name"
               option-value="id"
               placeholder="Select department"
-              :error-message="form.errors.department_id"
+              :error="!!form.errors.department_id"
+              :disabled="!canEditEmploymentInfo"
             />
           </FormField>
-         
+
+          <FormField
+            label="Manager"
+            :error="form.errors.manager_id"
+            help="Select the employee's direct manager"
+          >
+            <BaseSelect
+              v-model="form.manager_id"
+              :options="managers"
+              option-label="name"
+              option-value="id"
+              :error="!!form.errors.manager_id"
+              placeholder="Select manager"
+              :disabled="!canEditEmploymentInfo"
+            />
+          </FormField>
          
           <FormField
             label="Join Date"
@@ -115,9 +304,7 @@
               v-model="form.join_date"
               type="date"
               :error="!!form.errors.join_date"
-              :value="form.join_date"
-              @input="form.join_date = $event.target.value"
-
+              :disabled="!canEditEmploymentInfo"
             />
           </FormField>
 
@@ -126,17 +313,99 @@
             :error="form.errors.contract_type"
             help="Type of employment contract"
           >
-            
             <BaseSelect
               v-model="form.contract_type"
-              :options="contractTypes"
+              :options="contractTypeOptions"
               :error="!!form.errors.contract_type"
-              placeholder="Select contract type" class="asolute"
+              placeholder="Select contract type"
+              :disabled="!canEditEmploymentInfo"
             />
           </FormField>
 
+          <FormField
+            label="Employment Type"
+            :error="form.errors.employment_type"
+            help="Type of employment"
+          >
+            <BaseSelect
+              v-model="form.employment_type"
+              :options="employmentTypes"
+              :error="!!form.errors.employment_type"
+              placeholder="Select employment type"
+              :disabled="!canEditEmploymentInfo"
+            />
+          </FormField>
+
+          <FormField
+            label="Work Location"
+            :error="form.errors.work_location"
+            help="Primary work location"
+          >
+            <BaseInput
+              v-model="form.work_location"
+              type="text"
+              placeholder="Main Office, Remote, etc."
+              :error="!!form.errors.work_location"
+              :disabled="!canEditEmploymentInfo"
+            />
+          </FormField>
         </div>
-      
+
+        <!-- Salary Information (Admin/HR Only) -->
+        <div v-if="canViewSalaryInfo" class="mt-6">
+          <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+            <div class="flex items-start space-x-3">
+              <div class="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center mt-0.5">
+                <span class="text-xs text-white font-bold">$</span>
+              </div>
+              <div>
+                <h4 class="text-sm font-medium text-blue-800">Salary Information</h4>
+                <p class="text-sm text-blue-700 mt-1">
+                  This information is confidential and only visible to authorized personnel.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <FormField
+              label="Salary"
+              :error="form.errors.salary"
+              help="Annual salary"
+            >
+              <BaseInput
+                v-model="form.salary"
+                type="number"
+                step="0.01"
+                placeholder="50000.00"
+                :error="!!form.errors.salary"
+                :disabled="!canEditSalaryInfo"
+              />
+            </FormField>
+
+            <FormField
+              label="Salary Currency"
+              :error="form.errors.salary_currency"
+              help="Currency for salary"
+            >
+              <BaseSelect
+                v-model="form.salary_currency"
+                :options="currencyOptions"
+                :error="!!form.errors.salary_currency"
+                placeholder="Select currency"
+                :disabled="!canEditSalaryInfo"
+              />
+            </FormField>
+          </div>
+        </div>
+      </FormSection>
+
+      <!-- Password Reset Section (Admin Only) -->
+      <FormSection
+        title="Password Reset"
+        description="Reset the employee's login password"
+        v-if="canResetPassword"
+      >
         <div class="bg-warning-50 border border-warning-200 rounded-lg p-4 mb-4">
           <div class="flex items-start space-x-3">
             <ExclamationTriangleIcon class="w-5 h-5 text-warning-600 mt-0.5 flex-shrink-0" />
@@ -232,6 +501,7 @@ import FormSection from '@/Components/Forms/FormSection.vue'
 import FormField from '@/Components/Forms/FormField.vue'
 import BaseInput from '@/Components/Base/BaseInput.vue'
 import BaseSelect from '@/Components/Base/BaseSelect.vue'
+import BaseTextarea from '@/Components/Base/BaseTextarea.vue'
 import { 
   XMarkIcon, 
   CheckIcon, 
@@ -254,6 +524,10 @@ const props = defineProps({
   contractTypes: {
     type: Array,
     default: () => []
+  },
+  managers: {
+    type: Array,
+    default: () => []
   }
 })
 
@@ -262,16 +536,110 @@ const props = defineProps({
 
 
 // Composables
-const { hasRole } = useAuth()
+const { hasRole, user } = useAuth()
+
+// RBAC Permissions
+const canEditPersonalInfo = computed(() => {
+  return hasRole(['Admin', 'HR']) || user.value?.id === props.employee.user_id
+})
+
+const canEditContactInfo = computed(() => {
+  return hasRole(['Admin', 'HR']) || user.value?.id === props.employee.user_id
+})
+
+const canEditEmploymentInfo = computed(() => {
+  return hasRole(['Admin', 'HR', 'Manager'])
+})
+
+const canEditSalaryInfo = computed(() => {
+  return hasRole(['Admin', 'HR'])
+})
+
+const canViewContactInfo = computed(() => {
+  return hasRole(['Admin', 'HR', 'Manager']) || user.value?.id === props.employee.user_id
+})
+
+const canViewSalaryInfo = computed(() => {
+  return hasRole(['Admin', 'HR'])
+})
+
+// Form Options
+const genderOptions = [
+  { label: 'Male', value: 'male' },
+  { label: 'Female', value: 'female' },
+  { label: 'Other', value: 'other' },
+  { label: 'Prefer not to say', value: 'prefer_not_to_say' }
+]
+
+const relationshipOptions = [
+  { label: 'Spouse', value: 'spouse' },
+  { label: 'Parent', value: 'parent' },
+  { label: 'Child', value: 'child' },
+  { label: 'Sibling', value: 'sibling' },
+  { label: 'Friend', value: 'friend' },
+  { label: 'Other Relative', value: 'other_relative' },
+  { label: 'Other', value: 'other' }
+]
+
+const employmentTypes = [
+  { label: 'Full Time', value: 'full_time' },
+  { label: 'Part Time', value: 'part_time' },
+  { label: 'Contract', value: 'contract' },
+  { label: 'Intern', value: 'intern' },
+  { label: 'Consultant', value: 'consultant' }
+]
+
+const currencyOptions = [
+  { label: 'USD - US Dollar', value: 'USD' },
+  { label: 'EUR - Euro', value: 'EUR' },
+  { label: 'GBP - British Pound', value: 'GBP' },
+  { label: 'CAD - Canadian Dollar', value: 'CAD' },
+  { label: 'AUD - Australian Dollar', value: 'AUD' },
+  { label: 'INR - Indian Rupee', value: 'INR' }
+]
+
+const contractTypeOptions = computed(() => {
+  return props.contractTypes.map(type => ({ 
+    label: type, 
+    value: type 
+  }))
+})
 
 // Form setup
 const form = useForm({
+  // User Information
   name: props.employee.user?.name || '',
-  department_id: props.employee.department_id || '',
-  job_title: props.employee.job_title || '',
+  
+  // Employee Basic Information
   employee_code: props.employee.employee_code || '',
+  department_id: props.employee.department_id || '',
+  manager_id: props.employee.manager_id || '',
+  job_title: props.employee.job_title || '',
   join_date: props.employee.join_date ? new Date(props.employee.join_date).toISOString().split('T')[0] : '',
   contract_type: props.employee.contract_type || '',
+  
+  // Personal Information
+  date_of_birth: props.employee.date_of_birth ? new Date(props.employee.date_of_birth).toISOString().split('T')[0] : '',
+  gender: props.employee.gender || '',
+  phone: props.employee.phone || '',
+  personal_email: props.employee.personal_email || '',
+  nationality: props.employee.nationality || '',
+  
+  // Address Information
+  current_address: props.employee.current_address || '',
+  permanent_address: props.employee.permanent_address || '',
+  
+  // Emergency Contact
+  emergency_contact_name: props.employee.emergency_contact_name || '',
+  emergency_contact_relationship: props.employee.emergency_contact_relationship || '',
+  emergency_contact_phone: props.employee.emergency_contact_phone || '',
+  emergency_contact_email: props.employee.emergency_contact_email || '',
+  
+  // Employment Details
+  employment_type: props.employee.employment_type || 'full_time',
+  work_location: props.employee.work_location || '',
+  salary: props.employee.salary || '',
+  salary_currency: props.employee.salary_currency || 'USD'
 })
 
 
@@ -341,12 +709,31 @@ const isFormValid = computed(() => {
 
 // Check if form has changes
 const hasChanges = computed(() => {
-  return form.name !== props.employee.user.name ||
-         form.department_id !== props.employee.department_id ||
-         form.job_title !== props.employee.job_title ||
-         form.employee_code !== props.employee.employee_code ||
-         form.join_date !== props.employee.join_date ||
-         form.contract_type !== props.employee.contract_type
+  const originalJoinDate = props.employee.join_date ? new Date(props.employee.join_date).toISOString().split('T')[0] : ''
+  const originalDOB = props.employee.date_of_birth ? new Date(props.employee.date_of_birth).toISOString().split('T')[0] : ''
+  
+  return form.name !== (props.employee.user?.name || '') ||
+         form.department_id !== (props.employee.department_id || '') ||
+         form.manager_id !== (props.employee.manager_id || '') ||
+         form.job_title !== (props.employee.job_title || '') ||
+         form.employee_code !== (props.employee.employee_code || '') ||
+         form.join_date !== originalJoinDate ||
+         form.contract_type !== (props.employee.contract_type || '') ||
+         form.date_of_birth !== originalDOB ||
+         form.gender !== (props.employee.gender || '') ||
+         form.phone !== (props.employee.phone || '') ||
+         form.personal_email !== (props.employee.personal_email || '') ||
+         form.nationality !== (props.employee.nationality || '') ||
+         form.current_address !== (props.employee.current_address || '') ||
+         form.permanent_address !== (props.employee.permanent_address || '') ||
+         form.emergency_contact_name !== (props.employee.emergency_contact_name || '') ||
+         form.emergency_contact_relationship !== (props.employee.emergency_contact_relationship || '') ||
+         form.emergency_contact_phone !== (props.employee.emergency_contact_phone || '') ||
+         form.emergency_contact_email !== (props.employee.emergency_contact_email || '') ||
+         form.employment_type !== (props.employee.employment_type || 'full_time') ||
+         form.work_location !== (props.employee.work_location || '') ||
+         form.salary !== (props.employee.salary || '') ||
+         form.salary_currency !== (props.employee.salary_currency || 'USD')
 })
 
 // Password reset permissions and validation
@@ -382,13 +769,7 @@ const formatDate = (dateString) => {
     minute: '2-digit'
   });
 
-const formattedContractTypes = computed(() => {
-  return props.contractTypes.map(type => ({ label: type, value: type }));
-});
 
-const formattedDepartments = computed(() => {
-  return props.departments.map(dept => ({ label: dept.name, value: dept.id }));
-});
 }
 
 const getTimeWithCompany = (joinDate) => {
