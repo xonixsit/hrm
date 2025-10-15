@@ -296,6 +296,50 @@ Route::middleware('auth')->group(function () {
     Route::get('employees/{employee}/assessments', [CompetencyAssessmentController::class, 'byEmployee'])->name('competency-assessments.by-employee');
     Route::get('my-assessments', [CompetencyAssessmentController::class, 'myAssessments'])->name('competency-assessments.my-assessments');
     
+    // Debug route for my assessments
+    Route::get('debug-my-assessments-page', function(Request $request) {
+        $user = Auth::user();
+        $employee = \App\Models\Employee::where('user_id', $user->id)->first();
+        
+        $query = \App\Models\CompetencyAssessment::with(['employee.user', 'competency', 'assessor', 'assessmentCycle'])
+            ->where(function ($q) use ($user, $employee) {
+                $q->where('assessor_id', $user->id);
+                if ($employee) {
+                    $q->orWhere(function ($subQ) use ($employee) {
+                        $subQ->where('employee_id', $employee->id)
+                             ->where('assessment_type', 'self');
+                    });
+                }
+            });
+
+        $assessments = $query->orderBy('created_at', 'desc')->paginate(15);
+        
+        $statsQuery = \App\Models\CompetencyAssessment::where(function ($q) use ($user, $employee) {
+            $q->where('assessor_id', $user->id);
+            if ($employee) {
+                $q->orWhere(function ($subQ) use ($employee) {
+                    $subQ->where('employee_id', $employee->id)
+                         ->where('assessment_type', 'self');
+                });
+            }
+        });
+        
+        $stats = [
+            'total' => (clone $statsQuery)->count(),
+            'pending' => (clone $statsQuery)->where('status', 'draft')->count(),
+            'completed' => (clone $statsQuery)->whereIn('status', ['submitted', 'approved'])->count(),
+        ];
+
+        return Inertia::render('Debug/MyAssessmentsDebug', [
+            'assessments' => $assessments,
+            'stats' => $stats,
+            'employees' => \App\Models\Employee::with('user')->select('id', 'user_id')->get(),
+            'assessmentCycles' => \App\Models\AssessmentCycle::where('is_active', true)->select('id', 'name')->orderBy('name')->get(),
+            'statusOptions' => ['draft', 'submitted', 'approved', 'rejected'],
+            'filters' => $request->only(['status', 'assessment_cycle_id'])
+        ]);
+    })->name('debug-my-assessments-page');
+    
     // Debug route to test my assessments data
     Route::get('debug-my-assessments', function() {
         $user = Auth::user();
