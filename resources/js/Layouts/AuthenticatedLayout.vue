@@ -344,7 +344,7 @@ const contentOverlayClasses = computed(() => {
                                         isDark ? 'text-neutral-400' : 'text-neutral-500'
                                     ]">{{ userEmail }}</p>
                                 </div>
-                                <DropdownLink :href="route('employees.my-profile')">
+                                <DropdownLink :href="route('profile.edit')">
                                     👤 My Profile
                                 </DropdownLink>
                                 <DropdownLink :href="route('profile.edit')">

@@ -274,7 +274,7 @@ const bottomNavItems = computed(() => [
     id: 'my-profile',
     label: 'Profile',
     icon: 'user',
-    route: 'employees.my-profile',
+    route: 'profile.edit',
     roles: ['Admin', 'Manager', 'Employee']
   }
 ].filter(item => item.roles.some(role => userRoles.value.includes(role))));

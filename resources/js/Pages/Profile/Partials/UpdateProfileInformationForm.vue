@@ -18,7 +18,6 @@ defineProps({
 const { user } = useAuth();
 
 const form = useForm({
-    name: user.value?.name || '',
     email: user.value?.email || '',
 });
 </script>
@@ -39,22 +38,6 @@ const form = useForm({
             @submit.prevent="form.patch(route('profile.update'))"
             class="mt-6 space-y-6"
         >
-            <div>
-                <InputLabel for="name" value="Name" />
-
-                <TextInput
-                    id="name"
-                    type="text"
-                    class="mt-1 block w-full"
-                    v-model="form.name"
-                    required
-                    autofocus
-                    autocomplete="name"
-                />
-
-                <InputError class="mt-2" :message="form.errors.name" />
-            </div>
-
             <div>
                 <InputLabel for="email" value="Email" />
 

@@ -430,7 +430,7 @@ const navigationItems = computed(() => {
     id: 'my-profile',
     label: 'My Profile',
     icon: 'user',
-    route: 'employees.my-profile',
+    route: 'profile.edit',
   });
 
   if (roles.includes('Admin') || roles.includes('Manager')) {

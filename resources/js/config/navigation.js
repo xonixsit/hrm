@@ -19,7 +19,7 @@ export const navigationStructure = {
       id: 'my-profile',
       label: 'My Profile',
       icon: 'user',
-      route: 'employees.my-profile',
+      route: 'profile.edit',
       roles: ['Admin', 'Manager', 'Employee'],
       order: 1.5
     },

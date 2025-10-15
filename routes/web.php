@@ -35,6 +35,7 @@ Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['au
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::patch('/profile/employee', [ProfileController::class, 'updateEmployee'])->name('profile.update-employee');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     // Form Layout Demo
     Route::get('/form-layout-demo', function () {
