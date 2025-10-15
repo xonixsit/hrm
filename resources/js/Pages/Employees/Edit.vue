@@ -536,31 +536,31 @@ const props = defineProps({
 
 
 // Composables
-const { hasRole, user } = useAuth()
+const { hasRole, hasAnyRole, user } = useAuth()
 
 // RBAC Permissions
 const canEditPersonalInfo = computed(() => {
-  return hasRole(['Admin', 'HR']) || user.value?.id === props.employee.user_id
+  return hasAnyRole(['Admin', 'HR']) || user.value?.id === props.employee.user_id
 })
 
 const canEditContactInfo = computed(() => {
-  return hasRole(['Admin', 'HR']) || user.value?.id === props.employee.user_id
+  return hasAnyRole(['Admin', 'HR']) || user.value?.id === props.employee.user_id
 })
 
 const canEditEmploymentInfo = computed(() => {
-  return hasRole(['Admin', 'HR', 'Manager'])
+  return hasAnyRole(['Admin', 'HR', 'Manager'])
 })
 
 const canEditSalaryInfo = computed(() => {
-  return hasRole(['Admin', 'HR'])
+  return hasAnyRole(['Admin', 'HR'])
 })
 
 const canViewContactInfo = computed(() => {
-  return hasRole(['Admin', 'HR', 'Manager']) || user.value?.id === props.employee.user_id
+  return hasAnyRole(['Admin', 'HR', 'Manager']) || user.value?.id === props.employee.user_id
 })
 
 const canViewSalaryInfo = computed(() => {
-  return hasRole(['Admin', 'HR'])
+  return hasAnyRole(['Admin', 'HR'])
 })
 
 // Form Options

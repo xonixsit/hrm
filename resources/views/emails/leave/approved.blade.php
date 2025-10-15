@@ -48,8 +48,8 @@
 @endif
 
 <div style="text-align: center; margin: 30px 0;">
-    <a href="{{ url('/leave-requests/' . $leaveRequest->id) }}" class="btn">View Leave Details</a>
-    <a href="{{ url('/leave-requests') }}" class="btn btn-success">My Leave Requests</a>
+    <a href="{{ route('leaves.show', $leaveRequest->id) }}" class="btn">View Leave Details</a>
+    <a href="{{ route('leaves.index') }}" class="btn btn-success">My Leave Requests</a>
 </div>
 
 <p>Please ensure you complete any handover tasks before your leave begins.</p>

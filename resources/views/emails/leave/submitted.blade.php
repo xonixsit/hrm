@@ -46,8 +46,8 @@
 @endif
 
 <div style="text-align: center; margin: 30px 0;">
-    <a href="{{ url('/leave-requests/' . $leaveRequest->id) }}" class="btn">View Leave Request</a>
-    <a href="{{ url('/leave-requests') }}" class="btn btn-success">Manage Leave Requests</a>
+    <a href="{{ route('leaves.show', $leaveRequest->id) }}" class="btn">View Leave Request</a>
+    <a href="{{ route('leaves.index') }}" class="btn btn-success">Manage Leave Requests</a>
 </div>
 
 <p>Please review and take appropriate action on this leave request.</p>

@@ -59,8 +59,8 @@
 @endif
 
 <div style="text-align: center; margin: 30px 0;">
-    <a href="{{ url('/competency-assessments/' . $assessment->id . '/evaluate') }}" class="btn btn-success">Complete Assessment</a>
-    <a href="{{ url('/my-assessments') }}" class="btn">View My Assessments</a>
+    <a href="{{ route('competency-assessments.evaluate', $assessment->id) }}" class="btn btn-success">Complete Assessment</a>
+    <a href="{{ route('competency-assessments.my-assessments') }}" class="btn">View My Assessments</a>
 </div>
 
 <p>Please complete this assessment at your earliest convenience. If you have any questions, feel free to reach out to your manager or HR team.</p>

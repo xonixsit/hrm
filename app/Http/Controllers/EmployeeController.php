@@ -259,7 +259,7 @@ class EmployeeController extends Controller
 
     public function show(Employee $employee)
     {
-        $employee->load('department', 'user');
+        $employee->load('department', 'user', 'manager');
         return Inertia::render('Employees/Show', ['employee' => $employee]);
     }
 

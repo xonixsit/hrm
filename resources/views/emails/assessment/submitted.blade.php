@@ -70,8 +70,8 @@
 @endif
 
 <div style="text-align: center; margin: 30px 0;">
-    <a href="{{ url('/competency-assessments/' . $assessment->id) }}" class="btn">Review Assessment</a>
-    <a href="{{ url('/competency-assessments') }}" class="btn btn-success">Manage Assessments</a>
+    <a href="{{ route('competency-assessments.show', $assessment->id) }}" class="btn">Review Assessment</a>
+    <a href="{{ route('competency-assessments.index') }}" class="btn btn-success">Manage Assessments</a>
 </div>
 
 <p>Please review this assessment and take appropriate action.</p>

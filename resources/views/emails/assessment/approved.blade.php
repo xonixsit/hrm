@@ -72,8 +72,8 @@
 @endif
 
 <div style="text-align: center; margin: 30px 0;">
-    <a href="{{ url('/competency-assessments/' . $assessment->id) }}" class="btn">View Assessment</a>
-    <a href="{{ url('/my-assessments') }}" class="btn btn-success">My Assessments</a>
+    <a href="{{ route('competency-assessments.show', $assessment->id) }}" class="btn">View Assessment</a>
+    <a href="{{ route('competency-assessments.my-assessments') }}" class="btn btn-success">My Assessments</a>
 </div>
 
 <p>This assessment is now part of your official performance record. Keep up the great work!</p>

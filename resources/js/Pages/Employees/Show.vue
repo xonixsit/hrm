@@ -109,7 +109,7 @@
                 <UserIcon class="h-5 w-5 text-gray-400 mr-2" />
                 <h3 class="text-lg font-medium text-gray-900">Personal Information</h3>
               </div>
-              <p class="text-sm text-gray-600 mt-1">Basic personal and contact details</p>
+              <p class="text-sm text-gray-600 mt-1">Personal details and contact information</p>
             </div>
             <div class="px-6 py-4">
               <dl class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -125,13 +125,71 @@
                   <dt class="text-sm font-medium text-gray-500 mb-1">Employee Code</dt>
                   <dd class="text-sm font-medium text-gray-900">{{ employee.employee_code || 'Not assigned' }}</dd>
                 </div>
+                <div v-if="canViewPersonalInfo">
+                  <dt class="text-sm font-medium text-gray-500 mb-1">Date of Birth</dt>
+                  <dd class="text-sm font-medium text-gray-900">{{ formatDate(employee.date_of_birth) || 'Not provided' }}</dd>
+                </div>
+                <div v-if="canViewPersonalInfo">
+                  <dt class="text-sm font-medium text-gray-500 mb-1">Gender</dt>
+                  <dd class="text-sm font-medium text-gray-900">{{ formatGender(employee.gender) || 'Not provided' }}</dd>
+                </div>
+                <div v-if="canViewPersonalInfo">
+                  <dt class="text-sm font-medium text-gray-500 mb-1">Nationality</dt>
+                  <dd class="text-sm font-medium text-gray-900">{{ employee.nationality || 'Not provided' }}</dd>
+                </div>
                 <div>
                   <dt class="text-sm font-medium text-gray-500 mb-1">Phone</dt>
                   <dd class="text-sm font-medium text-gray-900">{{ employee.phone || 'Not provided' }}</dd>
                 </div>
-                <div class="md:col-span-2">
+                <div v-if="canViewContactInfo">
+                  <dt class="text-sm font-medium text-gray-500 mb-1">Personal Email</dt>
+                  <dd class="text-sm font-medium text-gray-900">{{ employee.personal_email || 'Not provided' }}</dd>
+                </div>
+                <div v-if="canViewContactInfo && employee.current_address" class="md:col-span-2">
+                  <dt class="text-sm font-medium text-gray-500 mb-1">Current Address</dt>
+                  <dd class="text-sm font-medium text-gray-900">{{ employee.current_address }}</dd>
+                </div>
+                <div v-if="canViewContactInfo && employee.permanent_address" class="md:col-span-2">
+                  <dt class="text-sm font-medium text-gray-500 mb-1">Permanent Address</dt>
+                  <dd class="text-sm font-medium text-gray-900">{{ employee.permanent_address }}</dd>
+                </div>
+                <!-- Legacy address field for backward compatibility -->
+                <div v-if="!employee.current_address && !employee.permanent_address && employee.address" class="md:col-span-2">
                   <dt class="text-sm font-medium text-gray-500 mb-1">Address</dt>
-                  <dd class="text-sm font-medium text-gray-900">{{ employee.address || 'Not provided' }}</dd>
+                  <dd class="text-sm font-medium text-gray-900">{{ employee.address }}</dd>
+                </div>
+              </dl>
+            </div>
+          </div>
+
+          <!-- Emergency Contact Information -->
+          <div v-if="canViewContactInfo && hasEmergencyContact" class="bg-white shadow-sm rounded-lg border border-gray-200">
+            <div class="px-6 py-4 border-b border-gray-200">
+              <div class="flex items-center">
+                <svg class="h-5 w-5 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
+                <h3 class="text-lg font-medium text-gray-900">Emergency Contact</h3>
+              </div>
+              <p class="text-sm text-gray-600 mt-1">Contact person in case of emergency</p>
+            </div>
+            <div class="px-6 py-4">
+              <dl class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div v-if="employee.emergency_contact_name">
+                  <dt class="text-sm font-medium text-gray-500 mb-1">Contact Name</dt>
+                  <dd class="text-sm font-medium text-gray-900">{{ employee.emergency_contact_name }}</dd>
+                </div>
+                <div v-if="employee.emergency_contact_relationship">
+                  <dt class="text-sm font-medium text-gray-500 mb-1">Relationship</dt>
+                  <dd class="text-sm font-medium text-gray-900">{{ formatRelationship(employee.emergency_contact_relationship) }}</dd>
+                </div>
+                <div v-if="employee.emergency_contact_phone">
+                  <dt class="text-sm font-medium text-gray-500 mb-1">Phone Number</dt>
+                  <dd class="text-sm font-medium text-gray-900">{{ employee.emergency_contact_phone }}</dd>
+                </div>
+                <div v-if="employee.emergency_contact_email">
+                  <dt class="text-sm font-medium text-gray-500 mb-1">Email Address</dt>
+                  <dd class="text-sm font-medium text-gray-900">{{ employee.emergency_contact_email }}</dd>
                 </div>
               </dl>
             </div>
@@ -156,6 +214,18 @@
                   <dt class="text-sm font-medium text-gray-500 mb-1">Job Title</dt>
                   <dd class="text-sm font-medium text-gray-900">{{ employee.job_title || 'No title assigned' }}</dd>
                 </div>
+                <div v-if="employee.manager">
+                  <dt class="text-sm font-medium text-gray-500 mb-1">Manager</dt>
+                  <dd class="text-sm font-medium text-gray-900">{{ employee.manager?.name || 'No manager assigned' }}</dd>
+                </div>
+                <div>
+                  <dt class="text-sm font-medium text-gray-500 mb-1">Employment Type</dt>
+                  <dd class="flex items-center">
+                    <span :class="getEmploymentTypeBadgeClasses(employee.employment_type)" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium">
+                      {{ formatEmploymentType(employee.employment_type) || 'Full Time' }}
+                    </span>
+                  </dd>
+                </div>
                 <div>
                   <dt class="text-sm font-medium text-gray-500 mb-1">Contract Type</dt>
                   <dd class="flex items-center">
@@ -165,12 +235,96 @@
                   </dd>
                 </div>
                 <div>
+                  <dt class="text-sm font-medium text-gray-500 mb-1">Work Location</dt>
+                  <dd class="text-sm font-medium text-gray-900">{{ employee.work_location || 'Not specified' }}</dd>
+                </div>
+                <div>
                   <dt class="text-sm font-medium text-gray-500 mb-1">Join Date</dt>
                   <dd class="text-sm font-medium text-gray-900">{{ formatDate(employee.join_date) }}</dd>
                 </div>
                 <div class="md:col-span-2">
                   <dt class="text-sm font-medium text-gray-500 mb-1">Time with Company</dt>
                   <dd class="text-sm font-medium text-gray-900">{{ getTimeWithCompany(employee.join_date) }}</dd>
+                </div>
+              </dl>
+            </div>
+          </div>
+
+          <!-- Salary Information (Admin/HR Only) -->
+          <div v-if="canViewSalaryInfo && (employee.salary || employee.bank_name)" class="bg-white shadow-sm rounded-lg border border-gray-200">
+            <div class="px-6 py-4 border-b border-gray-200">
+              <div class="flex items-center">
+                <svg class="h-5 w-5 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                </svg>
+                <h3 class="text-lg font-medium text-gray-900">Compensation & Banking</h3>
+              </div>
+              <p class="text-sm text-gray-600 mt-1">Salary and banking information (confidential)</p>
+            </div>
+            <div class="px-6 py-4">
+              <dl class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div v-if="employee.salary">
+                  <dt class="text-sm font-medium text-gray-500 mb-1">Annual Salary</dt>
+                  <dd class="text-sm font-medium text-gray-900">{{ formatSalary(employee.salary, employee.salary_currency) }}</dd>
+                </div>
+                <div v-if="employee.bank_name">
+                  <dt class="text-sm font-medium text-gray-500 mb-1">Bank Name</dt>
+                  <dd class="text-sm font-medium text-gray-900">{{ employee.bank_name }}</dd>
+                </div>
+                <div v-if="employee.bank_account_number">
+                  <dt class="text-sm font-medium text-gray-500 mb-1">Account Number</dt>
+                  <dd class="text-sm font-medium text-gray-900">{{ maskAccountNumber(employee.bank_account_number) }}</dd>
+                </div>
+                <div v-if="employee.bank_routing_number">
+                  <dt class="text-sm font-medium text-gray-500 mb-1">Routing Number</dt>
+                  <dd class="text-sm font-medium text-gray-900">{{ employee.bank_routing_number }}</dd>
+                </div>
+              </dl>
+            </div>
+          </div>
+
+          <!-- Additional Information -->
+          <div v-if="hasAdditionalInfo" class="bg-white shadow-sm rounded-lg border border-gray-200">
+            <div class="px-6 py-4 border-b border-gray-200">
+              <div class="flex items-center">
+                <svg class="h-5 w-5 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <h3 class="text-lg font-medium text-gray-900">Additional Information</h3>
+              </div>
+              <p class="text-sm text-gray-600 mt-1">Skills, certifications, and other details</p>
+            </div>
+            <div class="px-6 py-4">
+              <dl class="space-y-6">
+                <div v-if="employee.skills">
+                  <dt class="text-sm font-medium text-gray-500 mb-2">Skills</dt>
+                  <dd class="text-sm text-gray-900">
+                    <div class="flex flex-wrap gap-2">
+                      <span v-for="skill in parseSkills(employee.skills)" :key="skill" 
+                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        {{ skill }}
+                      </span>
+                    </div>
+                  </dd>
+                </div>
+                <div v-if="employee.certifications">
+                  <dt class="text-sm font-medium text-gray-500 mb-2">Certifications</dt>
+                  <dd class="text-sm text-gray-900">
+                    <div class="flex flex-wrap gap-2">
+                      <span v-for="cert in parseCertifications(employee.certifications)" :key="cert"
+                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        {{ cert }}
+                      </span>
+                    </div>
+                  </dd>
+                </div>
+                <div v-if="employee.education">
+                  <dt class="text-sm font-medium text-gray-500 mb-1">Education</dt>
+                  <dd class="text-sm text-gray-900 whitespace-pre-line">{{ employee.education }}</dd>
+                </div>
+                <div v-if="employee.notes">
+                  <dt class="text-sm font-medium text-gray-500 mb-1">Notes</dt>
+                  <dd class="text-sm text-gray-900 whitespace-pre-line">{{ employee.notes }}</dd>
                 </div>
               </dl>
             </div>
@@ -460,6 +614,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 import PageLayout from '@/Components/Layout/PageLayout.vue'
 import InfoCard from '@/Components/Layout/InfoCard.vue'
 import { usePermissions } from '@/composables/usePermissions.js'
+import { useAuth } from '@/composables/useAuth.js'
 import { 
   PencilIcon, 
   TrashIcon, 
@@ -483,6 +638,34 @@ const props = defineProps({
 
 // Composables
 const { hasPermission } = usePermissions()
+const { hasAnyRole, user } = useAuth()
+
+// RBAC Permissions
+const canViewPersonalInfo = computed(() => {
+  return hasAnyRole(['Admin', 'HR']) || user.value?.id === props.employee.user_id
+})
+
+const canViewContactInfo = computed(() => {
+  return hasAnyRole(['Admin', 'HR', 'Manager']) || user.value?.id === props.employee.user_id
+})
+
+const canViewSalaryInfo = computed(() => {
+  return hasAnyRole(['Admin', 'HR'])
+})
+
+// Helper computed properties
+const hasEmergencyContact = computed(() => {
+  return props.employee.emergency_contact_name || 
+         props.employee.emergency_contact_phone || 
+         props.employee.emergency_contact_email
+})
+
+const hasAdditionalInfo = computed(() => {
+  return props.employee.skills || 
+         props.employee.certifications || 
+         props.employee.education || 
+         props.employee.notes
+})
 
 // Reactive state
 const loading = ref(false)
@@ -747,6 +930,98 @@ const getTimeWithCompany = (joinDate) => {
       result += `, ${remainingMonths} month${remainingMonths === 1 ? '' : 's'}`
     }
     return result
+  }
+}
+
+// Helper methods for new fields
+const formatGender = (gender) => {
+  const genderMap = {
+    'male': 'Male',
+    'female': 'Female', 
+    'other': 'Other',
+    'prefer_not_to_say': 'Prefer not to say'
+  }
+  return genderMap[gender] || gender
+}
+
+const formatEmploymentType = (type) => {
+  const typeMap = {
+    'full_time': 'Full Time',
+    'part_time': 'Part Time',
+    'contract': 'Contract',
+    'intern': 'Intern',
+    'consultant': 'Consultant'
+  }
+  return typeMap[type] || type
+}
+
+const formatRelationship = (relationship) => {
+  const relationshipMap = {
+    'spouse': 'Spouse',
+    'parent': 'Parent',
+    'child': 'Child',
+    'sibling': 'Sibling',
+    'friend': 'Friend',
+    'other_relative': 'Other Relative',
+    'other': 'Other'
+  }
+  return relationshipMap[relationship] || relationship
+}
+
+const formatSalary = (salary, currency = 'USD') => {
+  if (!salary) return 'Not specified'
+  const formatter = new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: currency || 'USD'
+  })
+  return formatter.format(salary)
+}
+
+const maskAccountNumber = (accountNumber) => {
+  if (!accountNumber) return 'Not provided'
+  if (accountNumber.length <= 4) return accountNumber
+  return '*'.repeat(accountNumber.length - 4) + accountNumber.slice(-4)
+}
+
+const parseSkills = (skills) => {
+  if (!skills) return []
+  if (typeof skills === 'string') {
+    try {
+      return JSON.parse(skills)
+    } catch {
+      return skills.split(',').map(s => s.trim()).filter(s => s)
+    }
+  }
+  return Array.isArray(skills) ? skills : []
+}
+
+const parseCertifications = (certifications) => {
+  if (!certifications) return []
+  if (typeof certifications === 'string') {
+    try {
+      return JSON.parse(certifications)
+    } catch {
+      return certifications.split(',').map(s => s.trim()).filter(s => s)
+    }
+  }
+  return Array.isArray(certifications) ? certifications : []
+}
+
+const getEmploymentTypeBadgeClasses = (type) => {
+  const baseClasses = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium'
+  switch (type) {
+    case 'full_time':
+      return `${baseClasses} bg-green-100 text-green-800`
+    case 'part_time':
+      return `${baseClasses} bg-yellow-100 text-yellow-800`
+    case 'contract':
+      return `${baseClasses} bg-blue-100 text-blue-800`
+    case 'intern':
+      return `${baseClasses} bg-purple-100 text-purple-800`
+    case 'consultant':
+      return `${baseClasses} bg-indigo-100 text-indigo-800`
+    default:
+      return `${baseClasses} bg-gray-100 text-gray-800`
   }
 }
 

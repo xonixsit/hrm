@@ -248,14 +248,14 @@
             @endif
 
             <div style="text-align: center; margin-top: 30px;">
-                <a href="{{ config('app.url') }}" class="btn">Open Xonixs HR</a>
-                <a href="{{ config('app.url') }}/reports" class="btn">View Reports</a>
+                <a href="{{ route('dashboard') }}" class="btn">Open Xonixs HR</a>
+                <a href="{{ route('leaves.index') }}" class="btn">View Reports</a>
             </div>
         </div>
 
         <div class="footer">
             <p>This is your weekly digest from Xonixs HR System</p>
-            <p><a href="{{ config('app.url') }}/email-preferences" style="color: #667eea;">Manage Email Preferences</a></p>
+            <p><a href="{{ route('email-preferences.show') }}" style="color: #667eea;">Manage Email Preferences</a></p>
         </div>
     </div>
 </body>

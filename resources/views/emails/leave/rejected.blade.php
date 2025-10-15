@@ -49,8 +49,8 @@
 @endif
 
 <div style="text-align: center; margin: 30px 0;">
-    <a href="{{ url('/leave-requests/' . $leaveRequest->id) }}" class="btn">View Leave Details</a>
-    <a href="{{ url('/leave-requests/create') }}" class="btn btn-success">Submit New Request</a>
+    <a href="{{ route('leaves.show', $leaveRequest->id) }}" class="btn">View Leave Details</a>
+    <a href="{{ route('leaves.create') }}" class="btn btn-success">Submit New Request</a>
 </div>
 
 <p>If you have any questions about this decision, please contact your manager or HR department.</p>

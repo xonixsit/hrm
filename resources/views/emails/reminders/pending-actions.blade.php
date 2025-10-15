@@ -188,9 +188,9 @@
             @endforeach
 
             <div class="action-buttons">
-                <a href="{{ config('app.url') }}/dashboard" class="btn">Review All Items</a>
+                <a href="{{ route('dashboard') }}" class="btn">Review All Items</a>
                 @if($count > 1)
-                    <a href="{{ config('app.url') }}/bulk-actions" class="btn btn-secondary">Bulk Actions</a>
+                    <a href="{{ route('leaves.index') }}" class="btn btn-secondary">Manage Items</a>
                 @endif
             </div>
 
@@ -201,7 +201,7 @@
 
         <div class="footer">
             <p>This reminder was sent because you have pending items requiring attention.</p>
-            <p><a href="{{ config('app.url') }}/email-preferences" style="color: #ff6b6b;">Manage Reminder Settings</a></p>
+            <p><a href="{{ route('email-preferences.show') }}" style="color: #ff6b6b;">Manage Reminder Settings</a></p>
         </div>
     </div>
 </body>
