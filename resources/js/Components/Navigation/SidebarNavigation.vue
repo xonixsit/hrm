@@ -425,6 +425,14 @@ const navigationItems = computed(() => {
     route: 'dashboard',
   });
 
+  // My Profile - available to all authenticated users
+  items.push({
+    id: 'my-profile',
+    label: 'My Profile',
+    icon: 'user',
+    route: 'employees.my-profile',
+  });
+
   if (roles.includes('Admin') || roles.includes('Manager')) {
     items.push({
       id: 'employees',

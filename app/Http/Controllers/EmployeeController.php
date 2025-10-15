@@ -283,6 +283,20 @@ class EmployeeController extends Controller
         ]);
     }
 
+    public function myProfile()
+    {
+        $user = auth()->user();
+        
+        // Check if user has an employee record
+        if (!$user->employee) {
+            return redirect()->route('profile.edit')
+                ->with('error', 'No employee profile found. Please contact HR to set up your employee profile.');
+        }
+        
+        // Redirect to the employee show page for their own profile
+        return redirect()->route('employees.show', $user->employee);
+    }
+
     public function edit(Employee $employee)
     {
         $departments = Department::all();

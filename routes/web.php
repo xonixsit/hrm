@@ -45,6 +45,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/animation-demo', function () {
         return Inertia::render('AnimationDemo');
     })->name('animation.demo');
+    Route::get('my-profile', [EmployeeController::class, 'myProfile'])->name('employees.my-profile');
     Route::resource('employees', EmployeeController::class);
     Route::get('employees-trash', [EmployeeController::class, 'trash'])->name('employees.trash');
     Route::post('employees/{employee}/reset-password', [EmployeeController::class, 'resetPassword'])->name('employees.reset-password');
