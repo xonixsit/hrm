@@ -297,7 +297,7 @@ Route::middleware('auth')->group(function () {
     Route::get('my-assessments', [CompetencyAssessmentController::class, 'myAssessments'])->name('competency-assessments.my-assessments');
     
     // Debug route for my assessments
-    Route::get('debug-my-assessments-page', function(Request $request) {
+    Route::get('debug-my-assessments-page', function(\Illuminate\Http\Request $request) {
         $user = Auth::user();
         $employee = \App\Models\Employee::where('user_id', $user->id)->first();
         

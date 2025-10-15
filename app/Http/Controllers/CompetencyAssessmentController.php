@@ -1137,7 +1137,39 @@ class CompetencyAssessmentController extends Controller
     public function myAssessments(Request $request): Response
     {
         $user = Auth::user();
+        
+        // Check if user is authenticated
+        if (!$user) {
+            \Log::error('MyAssessments: No authenticated user found');
+            return redirect()->route('login');
+        }
+        
+        // Debug: Log all request parameters
+        \Log::info('MyAssessments: Request parameters', [
+            'all_params' => $request->all(),
+            'query_params' => $request->query(),
+            'url' => $request->fullUrl()
+        ]);
+        
         $employee = Employee::where('user_id', $user->id)->first();
+        
+        // Check if user has employee record
+        if (!$employee) {
+            \Log::warning('MyAssessments: No employee record found for user', [
+                'user_id' => $user->id,
+                'user_email' => $user->email
+            ]);
+            
+            return Inertia::render('CompetencyAssessments/MyAssessments', [
+                'assessments' => new \Illuminate\Pagination\LengthAwarePaginator([], 0, 15),
+                'stats' => ['total' => 0, 'pending' => 0, 'completed' => 0],
+                'employees' => [],
+                'assessmentCycles' => [],
+                'statusOptions' => ['draft', 'submitted', 'approved', 'rejected'],
+                'filters' => $request->only(['status', 'assessment_cycle_id']),
+                'error' => 'No employee record found for your account. Please contact HR.'
+            ]);
+        }
         
         $query = CompetencyAssessment::with(['employee.user', 'competency', 'assessor', 'assessmentCycle'])
             ->where(function ($q) use ($user, $employee) {
@@ -1153,14 +1185,22 @@ class CompetencyAssessmentController extends Controller
                 }
             });
 
-        // Apply filters
+        // Apply filters with debugging
         if ($request->filled('status')) {
+            \Log::info('MyAssessments: Applying status filter', ['status' => $request->status]);
             $query->where('status', $request->status);
         }
 
         if ($request->filled('assessment_cycle_id')) {
+            \Log::info('MyAssessments: Applying assessment_cycle_id filter', ['assessment_cycle_id' => $request->assessment_cycle_id]);
             $query->where('assessment_cycle_id', $request->assessment_cycle_id);
         }
+        
+        // Log the final query before execution
+        \Log::info('MyAssessments: Final query', [
+            'sql' => $query->toSql(),
+            'bindings' => $query->getBindings()
+        ]);
 
         // Note: employee_id filter is not applied in myAssessments 
         // because users should see their own assessments regardless of filter
@@ -1168,16 +1208,34 @@ class CompetencyAssessmentController extends Controller
 
         $assessments = $query->orderBy('created_at', 'desc')->paginate(15);
 
-        // Debug logging
+        // Enhanced debug logging
         \Log::info('MyAssessments Debug', [
             'user_id' => $user->id,
             'user_name' => $user->name,
+            'user_email' => $user->email,
             'employee_id' => $employee?->id,
+            'employee_exists' => $employee !== null,
+            'query_sql' => $query->toSql(),
+            'query_bindings' => $query->getBindings(),
             'total_assessments' => $assessments->total(),
             'assessments_on_page' => $assessments->count(),
             'first_assessment_id' => $assessments->count() > 0 ? $assessments->first()->id : null,
-            'request_filters' => $request->only(['status', 'assessment_cycle_id'])
+            'request_filters' => $request->only(['status', 'assessment_cycle_id']),
+            'request_all' => $request->all()
         ]);
+        
+        // Additional debugging - check what assessments exist for this user
+        if ($employee) {
+            $directAssessments = CompetencyAssessment::where('assessor_id', $user->id)->count();
+            $selfAssessments = CompetencyAssessment::where('employee_id', $employee->id)
+                ->where('assessment_type', 'self')->count();
+            
+            \Log::info('MyAssessments Additional Debug', [
+                'direct_assessments_count' => $directAssessments,
+                'self_assessments_count' => $selfAssessments,
+                'all_employee_assessments' => CompetencyAssessment::where('employee_id', $employee->id)->count()
+            ]);
+        }
 
         // Get statistics
         $statsQuery = CompetencyAssessment::where(function ($q) use ($user, $employee) {
@@ -1195,6 +1253,14 @@ class CompetencyAssessmentController extends Controller
             'pending' => (clone $statsQuery)->where('status', 'draft')->count(),
             'completed' => (clone $statsQuery)->whereIn('status', ['submitted', 'approved'])->count(),
         ];
+
+        // Final debug log before rendering
+        \Log::info('MyAssessments: Rendering view', [
+            'assessments_total' => $assessments->total(),
+            'assessments_count' => $assessments->count(),
+            'stats' => $stats,
+            'filters_passed' => $request->only(['status', 'assessment_cycle_id'])
+        ]);
 
         return Inertia::render('CompetencyAssessments/MyAssessments', [
             'assessments' => $assessments,

@@ -291,8 +291,8 @@ const headerActions = computed(() => [
 ]);
 
 const filters = ref({
-  status: props.filters?.status || '',
-  assessment_cycle_id: props.filters?.assessment_cycle_id || ''
+  status: (props.filters && typeof props.filters === 'object' && !Array.isArray(props.filters)) ? (props.filters.status || '') : '',
+  assessment_cycle_id: (props.filters && typeof props.filters === 'object' && !Array.isArray(props.filters)) ? (props.filters.assessment_cycle_id || '') : ''
 });
 
 const applyFilters = () => {
