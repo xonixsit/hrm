@@ -1,5 +1,5 @@
 <template>
-    <AppLayout title="Email Preferences">
+    <AuthenticatedLayout title="Email Preferences">
         <template #header>
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
                 📧 Email Preferences
@@ -246,13 +246,13 @@
                 </div>
             </div>
         </div>
-    </AppLayout>
+    </AuthenticatedLayout>
 </template>
 
 <script setup>
 import { ref } from 'vue'
 import { useForm } from '@inertiajs/vue3'
-import AppLayout from '@/Layouts/AppLayout.vue'
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 
 const props = defineProps({
     preferences: Object
