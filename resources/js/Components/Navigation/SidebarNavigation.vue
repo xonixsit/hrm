@@ -433,7 +433,7 @@ const navigationItems = computed(() => {
     route: 'profile.edit',
   });
 
-  if (roles.includes('Admin') || roles.includes('Manager')) {
+  if (roles.includes('Admin') || roles.includes('Manager') || roles.includes('HR')) {
     items.push({
       id: 'employees',
       label: 'Employee Management',

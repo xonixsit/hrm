@@ -18,6 +18,9 @@ class EmployeeController extends Controller
 
     public function index(Request $request)
     {
+        // Check if user can view any employees
+        $this->authorize('viewAny', Employee::class);
+        
         $query = Employee::with('department', 'user');
 
         // Search functionality
@@ -119,6 +122,9 @@ class EmployeeController extends Controller
 
     public function create()
     {
+        // Check if user can create employees
+        $this->authorize('create', Employee::class);
+        
         $departments = Department::all();
         $managers = User::whereHas('roles', function ($query) {
             $query->whereIn('name', ['Admin', 'Manager', 'HR']);
@@ -132,6 +138,9 @@ class EmployeeController extends Controller
 
     public function store(Request $request)
     {
+        // Check if user can create employees
+        $this->authorize('create', Employee::class);
+        
         $validated = $request->validate([
             // User Information
             'name' => 'required|string|max:255',
@@ -299,6 +308,9 @@ class EmployeeController extends Controller
 
     public function edit(Employee $employee)
     {
+        // Check if user can update this employee
+        $this->authorize('update', $employee);
+        
         $departments = Department::all();
         $managers = User::whereHas('roles', function ($query) {
             $query->whereIn('name', ['Admin', 'Manager', 'HR']);
@@ -317,6 +329,9 @@ class EmployeeController extends Controller
 
     public function update(Request $request, Employee $employee)
     {
+        // Check if user can update this employee
+        $this->authorize('update', $employee);
+        
         // Check permissions based on user role
         $user = auth()->user();
         $canEditPersonalInfo = $user->hasAnyRole(['Admin', 'HR']) || $user->id === $employee->user_id;
@@ -384,7 +399,7 @@ class EmployeeController extends Controller
 
     public function resetPassword(Request $request, Employee $employee)
     {
-        // Check if user has admin role
+        // Check if user can reset passwords (Admin only)
         if (!auth()->user()->hasRole('Admin')) {
             abort(403, 'Only administrators can reset employee passwords.');
         }
@@ -465,10 +480,8 @@ class EmployeeController extends Controller
 
     public function destroy(Employee $employee)
     {
-        // Check if user has admin role
-        if (!auth()->user()->hasRole('Admin')) {
-            abort(403, 'Only administrators can delete employees.');
-        }
+        // Check if user can delete this employee
+        $this->authorize('delete', $employee);
 
         // Soft delete the employee (this will hide them from all normal queries)
         $employee->delete();

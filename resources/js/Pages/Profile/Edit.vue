@@ -1,6 +1,5 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import DeleteUserForm from './Partials/DeleteUserForm.vue';
 import UpdatePasswordForm from './Partials/UpdatePasswordForm.vue';
 import UpdateProfileInformationForm from './Partials/UpdateProfileInformationForm.vue';
 import UpdateEmployeeProfileForm from './Partials/UpdateEmployeeProfileForm.vue';
@@ -298,21 +297,7 @@ const calculateYearsOfService = () => {
                             </div>
                         </div>
 
-                        <!-- Account Danger Zone -->
-                        <div class="bg-white shadow-sm rounded-lg border border-red-200">
-                            <div class="px-6 py-4 border-b border-red-200 bg-red-50">
-                                <div class="flex items-center">
-                                    <svg class="h-5 w-5 text-red-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                                    </svg>
-                                    <h3 class="text-lg font-medium text-red-900">Danger Zone</h3>
-                                </div>
-                                <p class="text-sm text-red-700 mt-1">Irreversible and destructive actions</p>
-                            </div>
-                            <div class="p-6">
-                                <DeleteUserForm />
-                            </div>
-                        </div>
+
                     </div>
                 </div>
 

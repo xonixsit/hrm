@@ -27,7 +27,7 @@ export const navigationStructure = {
       id: 'people',
       label: 'People Management',
       icon: 'users',
-      roles: ['Admin', 'Manager'],
+      roles: ['Admin', 'Manager', 'HR'],
       order: 2,
       children: [
         {
@@ -35,7 +35,7 @@ export const navigationStructure = {
           label: 'Employees',
           icon: 'user',
           route: 'employees.index',
-          roles: ['Admin', 'Manager']
+          roles: ['Admin', 'Manager', 'HR']
         },
         {
           id: 'departments',

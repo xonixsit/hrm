@@ -24,6 +24,11 @@ class ProfileController extends Controller
         // Load relationships if employee exists
         if ($employee) {
             $employee->load('department', 'manager');
+            
+            // Ensure date_of_birth is in the correct format for HTML date input
+            if ($employee->date_of_birth) {
+                $employee->date_of_birth_formatted = $employee->date_of_birth->format('Y-m-d');
+            }
         }
         
         return Inertia::render('Profile/Edit', [
@@ -104,27 +109,11 @@ class ProfileController extends Controller
             'education' => $validated['education'],
         ]);
 
+        // Refresh the employee data to ensure we have the latest information
+        $employee->refresh();
+        
         return Redirect::route('profile.edit')->with('success', 'Profile updated successfully.');
     }
 
-    /**
-     * Delete the user's account.
-     */
-    public function destroy(Request $request): RedirectResponse
-    {
-        $request->validate([
-            'password' => ['required', 'current_password'],
-        ]);
 
-        $user = $request->user();
-
-        Auth::logout();
-
-        $user->delete();
-
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-
-        return Redirect::to('/');
-    }
 }

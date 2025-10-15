@@ -36,7 +36,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::patch('/profile/employee', [ProfileController::class, 'updateEmployee'])->name('profile.update-employee');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
     // Form Layout Demo
     Route::get('/form-layout-demo', function () {
         return Inertia::render('FormLayoutDemo');
@@ -47,13 +47,20 @@ Route::middleware('auth')->group(function () {
         return Inertia::render('AnimationDemo');
     })->name('animation.demo');
     Route::get('my-profile', [EmployeeController::class, 'myProfile'])->name('employees.my-profile');
-    Route::resource('employees', EmployeeController::class);
-    Route::get('employees-trash', [EmployeeController::class, 'trash'])->name('employees.trash');
-    Route::post('employees/{employee}/reset-password', [EmployeeController::class, 'resetPassword'])->name('employees.reset-password');
-    Route::post('employees/{employee}/mark-as-exit', [EmployeeController::class, 'markAsExit'])->name('employees.mark-as-exit');
-    Route::post('employees/{employee}/reactivate', [EmployeeController::class, 'reactivate'])->name('employees.reactivate');
-    Route::post('employees/{id}/restore', [EmployeeController::class, 'restore'])->name('employees.restore');
-    Route::delete('employees/{id}/force-delete', [EmployeeController::class, 'forceDelete'])->name('employees.force-delete');
+    
+    // Employee Management Routes - Restricted to Admin, HR, and Manager roles
+    Route::middleware(['role:Admin|HR|Manager'])->group(function () {
+        Route::resource('employees', EmployeeController::class)->except(['show']);
+        Route::get('employees-trash', [EmployeeController::class, 'trash'])->name('employees.trash');
+        Route::post('employees/{employee}/reset-password', [EmployeeController::class, 'resetPassword'])->name('employees.reset-password');
+        Route::post('employees/{employee}/mark-as-exit', [EmployeeController::class, 'markAsExit'])->name('employees.mark-as-exit');
+        Route::post('employees/{employee}/reactivate', [EmployeeController::class, 'reactivate'])->name('employees.reactivate');
+        Route::post('employees/{id}/restore', [EmployeeController::class, 'restore'])->name('employees.restore');
+        Route::delete('employees/{id}/force-delete', [EmployeeController::class, 'forceDelete'])->name('employees.force-delete');
+    });
+    
+    // Employee Show Route - Uses policy-based authorization (allows viewing colleagues in same department)
+    Route::get('employees/{employee}', [EmployeeController::class, 'show'])->name('employees.show');
     Route::resource('departments', DepartmentController::class);
     Route::resource('projects', ProjectController::class);
     Route::resource('tasks', TaskController::class);

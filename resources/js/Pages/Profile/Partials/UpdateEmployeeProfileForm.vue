@@ -327,7 +327,7 @@
 
 <script setup>
 import { useForm } from '@inertiajs/vue3';
-import { ref, watch } from 'vue';
+import { ref, watch, onMounted } from 'vue';
 
 const props = defineProps({
   employee: {
@@ -342,10 +342,42 @@ const props = defineProps({
 
 const sameAsCurrent = ref(false);
 
+// Helper function to format date for HTML input
+const formatDateForInput = (date) => {
+  if (!date) return '';
+  
+  // If it's already a string in YYYY-MM-DD format, return as is
+  if (typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    return date;
+  }
+  
+  // If it's a date object or string, convert to YYYY-MM-DD format
+  try {
+    const dateObj = new Date(date);
+    if (isNaN(dateObj.getTime())) return '';
+    
+    const year = dateObj.getFullYear();
+    const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+    const day = String(dateObj.getDate()).padStart(2, '0');
+    
+    const formatted = `${year}-${month}-${day}`;
+    
+    // Debug logging in development
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Date formatting:', { original: date, formatted });
+    }
+    
+    return formatted;
+  } catch (error) {
+    console.warn('Error formatting date:', error);
+    return '';
+  }
+};
+
 // Initialize form with employee data
 const form = useForm({
   name: props.user.name,
-  date_of_birth: props.employee.date_of_birth || '',
+  date_of_birth: props.employee.date_of_birth_formatted || formatDateForInput(props.employee.date_of_birth),
   gender: props.employee.gender || '',
   phone: props.employee.phone || '',
   personal_email: props.employee.personal_email || '',
@@ -374,12 +406,47 @@ watch(() => form.current_address, (newValue) => {
   }
 });
 
+// Watch for changes in employee data and update form
+watch(() => props.employee, (newEmployee) => {
+  if (newEmployee) {
+    form.date_of_birth = newEmployee.date_of_birth_formatted || formatDateForInput(newEmployee.date_of_birth);
+    form.gender = newEmployee.gender || '';
+    form.phone = newEmployee.phone || '';
+    form.personal_email = newEmployee.personal_email || '';
+    form.nationality = newEmployee.nationality || '';
+    form.work_location = newEmployee.work_location || '';
+    form.current_address = newEmployee.current_address || '';
+    form.permanent_address = newEmployee.permanent_address || '';
+    form.emergency_contact_name = newEmployee.emergency_contact_name || '';
+    form.emergency_contact_relationship = newEmployee.emergency_contact_relationship || '';
+    form.emergency_contact_phone = newEmployee.emergency_contact_phone || '';
+    form.emergency_contact_email = newEmployee.emergency_contact_email || '';
+    form.skills = newEmployee.skills || '';
+    form.education = newEmployee.education || '';
+  }
+}, { deep: true });
+
+// Watch for changes in user data and update form
+watch(() => props.user, (newUser) => {
+  if (newUser) {
+    form.name = newUser.name;
+  }
+}, { deep: true });
+
 const updateProfile = () => {
   form.patch(route('profile.update-employee'), {
     preserveScroll: true,
     onSuccess: () => {
       // Success message is handled by the form's recentlySuccessful property
+      // The page will reload with fresh data, so the watchers will handle the update
     },
   });
 };
+
+// Ensure proper initialization on component mount
+onMounted(() => {
+  if (props.employee.date_of_birth) {
+    form.date_of_birth = props.employee.date_of_birth_formatted || formatDateForInput(props.employee.date_of_birth);
+  }
+});
 </script>
