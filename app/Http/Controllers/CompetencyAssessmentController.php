@@ -463,6 +463,13 @@ class CompetencyAssessmentController extends Controller
                              ->where('assessment_type', 'self');
                     });
                 }
+                
+                // CONSISTENCY FIX: Also include assessments where the employee's user matches current user
+                // This ensures both pages show the same assessments
+                $q->orWhereHas('employee.user', function ($userQuery) use ($user) {
+                    $userQuery->where('email', $user->email)
+                              ->orWhere('name', $user->name);
+                });
             });
         }
 
@@ -1240,6 +1247,12 @@ class CompetencyAssessmentController extends Controller
                              ->where('assessment_type', 'self');
                     });
                 }
+                
+                // CONSISTENCY FIX: Also include assessments where the employee's user matches current user
+                $q->orWhereHas('employee.user', function ($userQuery) use ($user) {
+                    $userQuery->where('email', $user->email)
+                              ->orWhere('name', $user->name);
+                });
             });
         }
 
