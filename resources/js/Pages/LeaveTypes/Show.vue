@@ -1,364 +1,301 @@
 <template>
   <AuthenticatedLayout>
-    <template #header>
-      <div class="flex items-center justify-between">
-        <div class="flex items-center space-x-4">
-          <button
-            @click="$inertia.visit(route('leave-types.index'))"
-            class="text-gray-500 hover:text-gray-700"
-          >
-            <ArrowLeftIcon class="w-5 h-5" />
-          </button>
-          <div>
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-              {{ leaveType.name }}
-            </h2>
-            <p class="text-sm text-gray-600 mt-1">
-              Leave policy details and usage statistics
-            </p>
-          </div>
-        </div>
-        <div class="flex items-center space-x-3">
-          <span
-            :class="{
-              'bg-green-100 text-green-800': leaveType.is_active,
-              'bg-red-100 text-red-800': !leaveType.is_active
-            }"
-            class="inline-flex px-3 py-1 text-sm font-semibold rounded-full"
-          >
-            {{ leaveType.is_active ? 'Active' : 'Inactive' }}
-          </span>
-          <button
-            v-if="canEdit"
-            @click="$inertia.visit(route('leave-types.edit', leaveType.id))"
-            class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"
-          >
-            <PencilIcon class="w-4 h-4 mr-2" />
-            Edit Policy
-          </button>
-        </div>
+    <PageLayout
+      :title="leaveType.name"
+      subtitle="Leave policy details and usage statistics"
+      :breadcrumbs="breadcrumbs"
+      :actions="headerActions"
+    >
+
+      <!-- Policy Status Badge -->
+      <div class="mb-6">
+        <span
+          :class="{
+            'bg-success-100 text-success-800 border-success-200': leaveType.is_active,
+            'bg-neutral-100 text-neutral-800 border-neutral-200': !leaveType.is_active
+          }"
+          class="inline-flex items-center px-3 py-1 text-sm font-medium rounded-full border"
+        >
+          <div :class="{
+            'bg-success-400': leaveType.is_active,
+            'bg-neutral-400': !leaveType.is_active
+          }" class="w-2 h-2 rounded-full mr-2"></div>
+          {{ leaveType.is_active ? 'Active Policy' : 'Inactive Policy' }}
+        </span>
       </div>
-    </template>
 
-    <div class="py-12">
-      <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
-        <!-- Overview Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-            <div class="p-6">
-              <div class="flex items-center">
-                <div class="flex-shrink-0">
-                  <CalendarDaysIcon class="h-8 w-8 text-blue-500" />
-                </div>
-                <div class="ml-4">
-                  <p class="text-sm font-medium text-gray-500">Annual Quota</p>
-                  <p class="text-2xl font-semibold text-gray-900">{{ leaveType.quota }} days</p>
-                </div>
+      <!-- Overview Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <SimpleInfoCard
+          title="Annual Quota"
+          :value="`${leaveType.quota} days`"
+          icon="calendar-days"
+          color="primary"
+        />
+        <SimpleInfoCard
+          title="Total Requests"
+          :value="totalRequests"
+          icon="document-text"
+          color="info"
+        />
+        <SimpleInfoCard
+          title="Approved"
+          :value="approvedRequests"
+          icon="check-circle"
+          color="success"
+        />
+        <SimpleInfoCard
+          title="Pending"
+          :value="pendingRequests"
+          icon="clock"
+          color="warning"
+        />
+      </div>
+
+      <!-- Policy Details and Usage -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Policy Configuration -->
+        <ContentCard title="Policy Configuration" subtitle="Leave type settings and restrictions">
+          <ContentSection title="Basic Information">
+            <div class="space-y-4">
+              <div class="flex justify-between items-center py-2 border-b border-neutral-100">
+                <span class="text-sm font-medium text-neutral-600">Leave Type Name</span>
+                <span class="text-sm font-semibold text-neutral-900">{{ leaveType.name }}</span>
+              </div>
+              <div class="flex justify-between items-center py-2 border-b border-neutral-100">
+                <span class="text-sm font-medium text-neutral-600">Annual Quota</span>
+                <span class="text-sm font-semibold text-neutral-900">{{ leaveType.quota }} days</span>
+              </div>
+              <div v-if="leaveType.description" class="py-2">
+                <span class="text-sm font-medium text-neutral-600 block mb-2">Description</span>
+                <p class="text-sm text-neutral-900 bg-neutral-50 rounded-lg p-3">{{ leaveType.description }}</p>
               </div>
             </div>
-          </div>
+          </ContentSection>
 
-          <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-            <div class="p-6">
-              <div class="flex items-center">
-                <div class="flex-shrink-0">
-                  <DocumentTextIcon class="h-8 w-8 text-green-500" />
-                </div>
-                <div class="ml-4">
-                  <p class="text-sm font-medium text-gray-500">Total Requests</p>
-                  <p class="text-2xl font-semibold text-gray-900">{{ totalRequests }}</p>
-                </div>
+          <ContentSection title="Policy Settings">
+            <div class="space-y-4">
+              <div class="flex items-center justify-between py-2">
+                <span class="text-sm font-medium text-neutral-600">Requires Approval</span>
+                <span class="inline-flex items-center">
+                  <CheckIcon v-if="leaveType.requires_approval" class="w-4 h-4 text-success-500 mr-2" />
+                  <XMarkIcon v-else class="w-4 h-4 text-neutral-400 mr-2" />
+                  <span class="text-sm font-medium" :class="leaveType.requires_approval ? 'text-success-700' : 'text-neutral-600'">
+                    {{ leaveType.requires_approval ? 'Yes' : 'No' }}
+                  </span>
+                </span>
+              </div>
+              <div class="flex items-center justify-between py-2">
+                <span class="text-sm font-medium text-neutral-600">Carry Forward</span>
+                <span class="inline-flex items-center">
+                  <CheckIcon v-if="leaveType.carry_forward" class="w-4 h-4 text-success-500 mr-2" />
+                  <XMarkIcon v-else class="w-4 h-4 text-neutral-400 mr-2" />
+                  <span class="text-sm font-medium" :class="leaveType.carry_forward ? 'text-success-700' : 'text-neutral-600'">
+                    {{ leaveType.carry_forward ? 'Allowed' : 'Not Allowed' }}
+                  </span>
+                </span>
+              </div>
+              <div class="flex items-center justify-between py-2">
+                <span class="text-sm font-medium text-neutral-600">Status</span>
+                <span class="inline-flex items-center">
+                  <CheckIcon v-if="leaveType.is_active" class="w-4 h-4 text-success-500 mr-2" />
+                  <XMarkIcon v-else class="w-4 h-4 text-neutral-400 mr-2" />
+                  <span class="text-sm font-medium" :class="leaveType.is_active ? 'text-success-700' : 'text-neutral-600'">
+                    {{ leaveType.is_active ? 'Active' : 'Inactive' }}
+                  </span>
+                </span>
               </div>
             </div>
-          </div>
+          </ContentSection>
 
-          <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-            <div class="p-6">
-              <div class="flex items-center">
-                <div class="flex-shrink-0">
-                  <CheckCircleIcon class="h-8 w-8 text-purple-500" />
-                </div>
-                <div class="ml-4">
-                  <p class="text-sm font-medium text-gray-500">Approved</p>
-                  <p class="text-2xl font-semibold text-gray-900">{{ approvedRequests }}</p>
-                </div>
+          <ContentSection title="Restrictions & Limits">
+            <div class="space-y-4">
+              <div class="flex justify-between items-center py-2 border-b border-neutral-100">
+                <span class="text-sm font-medium text-neutral-600">Max Consecutive Days</span>
+                <span class="text-sm font-semibold text-neutral-900">
+                  {{ leaveType.max_consecutive_days || 'No limit' }}
+                </span>
+              </div>
+              <div class="flex justify-between items-center py-2 border-b border-neutral-100">
+                <span class="text-sm font-medium text-neutral-600">Minimum Notice</span>
+                <span class="text-sm font-semibold text-neutral-900">
+                  {{ leaveType.min_notice_days ? `${leaveType.min_notice_days} days` : 'No requirement' }}
+                </span>
               </div>
             </div>
-          </div>
+          </ContentSection>
+        </ContentCard>
 
-          <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-            <div class="p-6">
-              <div class="flex items-center">
-                <div class="flex-shrink-0">
-                  <ClockIcon class="h-8 w-8 text-orange-500" />
+        <!-- Usage Statistics -->
+        <ContentCard title="Usage Statistics" subtitle="Request analytics and trends">
+          <ContentSection title="Request Status Breakdown">
+            <div class="space-y-4">
+              <div class="flex items-center justify-between py-2">
+                <div class="flex items-center">
+                  <div class="w-3 h-3 bg-success-500 rounded-full mr-3"></div>
+                  <span class="text-sm font-medium text-neutral-600">Approved</span>
                 </div>
-                <div class="ml-4">
-                  <p class="text-sm font-medium text-gray-500">Pending</p>
-                  <p class="text-2xl font-semibold text-gray-900">{{ pendingRequests }}</p>
+                <span class="text-sm font-semibold text-neutral-900">{{ approvedRequests }}</span>
+              </div>
+              <div class="flex items-center justify-between py-2">
+                <div class="flex items-center">
+                  <div class="w-3 h-3 bg-warning-500 rounded-full mr-3"></div>
+                  <span class="text-sm font-medium text-neutral-600">Pending</span>
                 </div>
+                <span class="text-sm font-semibold text-neutral-900">{{ pendingRequests }}</span>
+              </div>
+              <div class="flex items-center justify-between py-2">
+                <div class="flex items-center">
+                  <div class="w-3 h-3 bg-error-500 rounded-full mr-3"></div>
+                  <span class="text-sm font-medium text-neutral-600">Rejected</span>
+                </div>
+                <span class="text-sm font-semibold text-neutral-900">{{ rejectedRequests }}</span>
               </div>
             </div>
-          </div>
-        </div>
+          </ContentSection>
 
-        <!-- Policy Details and Usage -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <!-- Policy Configuration -->
-          <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-            <div class="p-6">
-              <h3 class="text-lg font-medium text-gray-900 mb-6">Policy Configuration</h3>
-              
-              <div class="space-y-6">
-                <!-- Basic Information -->
-                <div>
-                  <h4 class="text-sm font-medium text-gray-700 mb-3">Basic Information</h4>
-                  <div class="space-y-3">
-                    <div class="flex justify-between">
-                      <span class="text-sm text-gray-600">Leave Type Name:</span>
-                      <span class="text-sm font-medium text-gray-900">{{ leaveType.name }}</span>
-                    </div>
-                    <div class="flex justify-between">
-                      <span class="text-sm text-gray-600">Annual Quota:</span>
-                      <span class="text-sm font-medium text-gray-900">{{ leaveType.quota }} days</span>
-                    </div>
-                    <div v-if="leaveType.description" class="border-t pt-3">
-                      <span class="text-sm text-gray-600">Description:</span>
-                      <p class="text-sm text-gray-900 mt-1">{{ leaveType.description }}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Policy Settings -->
-                <div class="border-t pt-6">
-                  <h4 class="text-sm font-medium text-gray-700 mb-3">Policy Settings</h4>
-                  <div class="space-y-3">
-                    <div class="flex items-center justify-between">
-                      <span class="text-sm text-gray-600">Requires Approval:</span>
-                      <span class="inline-flex items-center">
-                        <CheckIcon v-if="leaveType.requires_approval" class="w-4 h-4 text-green-500 mr-1" />
-                        <XMarkIcon v-else class="w-4 h-4 text-red-500 mr-1" />
-                        <span class="text-sm font-medium" :class="leaveType.requires_approval ? 'text-green-700' : 'text-red-700'">
-                          {{ leaveType.requires_approval ? 'Yes' : 'No' }}
-                        </span>
-                      </span>
-                    </div>
-                    <div class="flex items-center justify-between">
-                      <span class="text-sm text-gray-600">Carry Forward:</span>
-                      <span class="inline-flex items-center">
-                        <CheckIcon v-if="leaveType.carry_forward" class="w-4 h-4 text-green-500 mr-1" />
-                        <XMarkIcon v-else class="w-4 h-4 text-red-500 mr-1" />
-                        <span class="text-sm font-medium" :class="leaveType.carry_forward ? 'text-green-700' : 'text-red-700'">
-                          {{ leaveType.carry_forward ? 'Allowed' : 'Not Allowed' }}
-                        </span>
-                      </span>
-                    </div>
-                    <div class="flex items-center justify-between">
-                      <span class="text-sm text-gray-600">Status:</span>
-                      <span class="inline-flex items-center">
-                        <CheckIcon v-if="leaveType.is_active" class="w-4 h-4 text-green-500 mr-1" />
-                        <XMarkIcon v-else class="w-4 h-4 text-red-500 mr-1" />
-                        <span class="text-sm font-medium" :class="leaveType.is_active ? 'text-green-700' : 'text-red-700'">
-                          {{ leaveType.is_active ? 'Active' : 'Inactive' }}
-                        </span>
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Restrictions -->
-                <div class="border-t pt-6">
-                  <h4 class="text-sm font-medium text-gray-700 mb-3">Restrictions</h4>
-                  <div class="space-y-3">
-                    <div class="flex justify-between">
-                      <span class="text-sm text-gray-600">Max Consecutive Days:</span>
-                      <span class="text-sm font-medium text-gray-900">
-                        {{ leaveType.max_consecutive_days || 'No limit' }}
-                      </span>
-                    </div>
-                    <div class="flex justify-between">
-                      <span class="text-sm text-gray-600">Minimum Notice:</span>
-                      <span class="text-sm font-medium text-gray-900">
-                        {{ leaveType.min_notice_days ? `${leaveType.min_notice_days} days` : 'No requirement' }}
-                      </span>
-                    </div>
-                  </div>
-                </div>
+          <ContentSection title="Usage Trends">
+            <div class="space-y-4">
+              <div class="flex justify-between items-center py-2 border-b border-neutral-100">
+                <span class="text-sm font-medium text-neutral-600">This Month</span>
+                <span class="text-sm font-semibold text-neutral-900">{{ thisMonthRequests }} requests</span>
+              </div>
+              <div class="flex justify-between items-center py-2 border-b border-neutral-100">
+                <span class="text-sm font-medium text-neutral-600">Last Month</span>
+                <span class="text-sm font-semibold text-neutral-900">{{ lastMonthRequests }} requests</span>
+              </div>
+              <div class="flex justify-between items-center py-2 border-b border-neutral-100">
+                <span class="text-sm font-medium text-neutral-600">Average per Month</span>
+                <span class="text-sm font-semibold text-neutral-900">{{ averageMonthlyRequests }} requests</span>
               </div>
             </div>
-          </div>
+          </ContentSection>
 
-          <!-- Usage Statistics -->
-          <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-            <div class="p-6">
-              <h3 class="text-lg font-medium text-gray-900 mb-6">Usage Statistics</h3>
-              
-              <!-- Request Status Breakdown -->
-              <div class="mb-6">
-                <h4 class="text-sm font-medium text-gray-700 mb-3">Request Status Breakdown</h4>
-                <div class="space-y-3">
-                  <div class="flex items-center justify-between">
-                    <div class="flex items-center">
-                      <div class="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
-                      <span class="text-sm text-gray-600">Approved</span>
-                    </div>
-                    <span class="text-sm font-medium text-gray-900">{{ approvedRequests }}</span>
+          <ContentSection v-if="topUsers.length > 0" title="Most Active Users">
+            <div class="space-y-3">
+              <div
+                v-for="(user, index) in topUsers.slice(0, 5)"
+                :key="user.id"
+                class="flex items-center justify-between py-2"
+              >
+                <div class="flex items-center">
+                  <div class="w-6 h-6 bg-primary-100 rounded-full flex items-center justify-center mr-3">
+                    <span class="text-xs font-medium text-primary-700">{{ index + 1 }}</span>
                   </div>
-                  <div class="flex items-center justify-between">
-                    <div class="flex items-center">
-                      <div class="w-3 h-3 bg-yellow-500 rounded-full mr-2"></div>
-                      <span class="text-sm text-gray-600">Pending</span>
-                    </div>
-                    <span class="text-sm font-medium text-gray-900">{{ pendingRequests }}</span>
-                  </div>
-                  <div class="flex items-center justify-between">
-                    <div class="flex items-center">
-                      <div class="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
-                      <span class="text-sm text-gray-600">Rejected</span>
-                    </div>
-                    <span class="text-sm font-medium text-gray-900">{{ rejectedRequests }}</span>
-                  </div>
+                  <span class="text-sm font-medium text-neutral-900">{{ user.name }}</span>
                 </div>
+                <span class="text-sm font-semibold text-neutral-600">{{ user.requests_count }} requests</span>
               </div>
+            </div>
+          </ContentSection>
+        </ContentCard>
+      </div>
 
-              <!-- Usage Trends -->
-              <div class="border-t pt-6">
-                <h4 class="text-sm font-medium text-gray-700 mb-3">Usage Trends</h4>
-                <div class="space-y-3">
-                  <div class="flex justify-between">
-                    <span class="text-sm text-gray-600">This Month:</span>
-                    <span class="text-sm font-medium text-gray-900">{{ thisMonthRequests }} requests</span>
-                  </div>
-                  <div class="flex justify-between">
-                    <span class="text-sm text-gray-600">Last Month:</span>
-                    <span class="text-sm font-medium text-gray-900">{{ lastMonthRequests }} requests</span>
-                  </div>
-                  <div class="flex justify-between">
-                    <span class="text-sm text-gray-600">Average per Month:</span>
-                    <span class="text-sm font-medium text-gray-900">{{ averageMonthlyRequests }} requests</span>
-                  </div>
-                </div>
-              </div>
+      <!-- Recent Leave Requests -->
+      <ContentCard v-if="recentLeaves.length > 0" title="Recent Leave Requests" subtitle="Latest requests for this leave type">
+        <template #actions>
+          <button
+            @click="$inertia.visit(route('leaves.index', { type: leaveType.name }))"
+            class="text-sm text-primary-600 hover:text-primary-700 font-medium transition-colors duration-150"
+          >
+            View All →
+          </button>
+        </template>
 
-              <!-- Top Users -->
-              <div v-if="topUsers.length > 0" class="border-t pt-6">
-                <h4 class="text-sm font-medium text-gray-700 mb-3">Most Active Users</h4>
-                <div class="space-y-2">
-                  <div
-                    v-for="user in topUsers.slice(0, 5)"
-                    :key="user.id"
-                    class="flex justify-between items-center"
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-neutral-200">
+            <thead class="bg-neutral-50">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                  Employee
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                  Dates
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                  Days
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                  Status
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                  Requested
+                </th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-neutral-200">
+              <tr v-for="leave in recentLeaves" :key="leave.id" class="hover:bg-neutral-50 transition-colors duration-150">
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="flex items-center">
+                    <div class="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center mr-3">
+                      <span class="text-xs font-medium text-primary-700">
+                        {{ getInitials(leave.employee?.user?.name || 'U') }}
+                      </span>
+                    </div>
+                    <div class="text-sm font-medium text-neutral-900">
+                      {{ leave.employee?.user?.name || 'Unknown' }}
+                    </div>
+                  </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="text-sm text-neutral-900">
+                    {{ formatDate(leave.from_date) }} - {{ formatDate(leave.to_date) }}
+                  </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="text-sm font-medium text-neutral-900">
+                    {{ calculateDays(leave.from_date, leave.to_date) }}
+                  </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <span
+                    :class="{
+                      'bg-success-100 text-success-800': leave.status === 'approved',
+                      'bg-warning-100 text-warning-800': leave.status === 'pending',
+                      'bg-error-100 text-error-800': leave.status === 'rejected'
+                    }"
+                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
                   >
-                    <span class="text-sm text-gray-600">{{ user.name }}</span>
-                    <span class="text-sm font-medium text-gray-900">{{ user.requests_count }} requests</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+                    {{ leave.status }}
+                  </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-neutral-500">
+                  {{ formatDate(leave.created_at) }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
+      </ContentCard>
 
-        <!-- Recent Leave Requests -->
-        <div v-if="recentLeaves.length > 0" class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-          <div class="p-6">
-            <div class="flex items-center justify-between mb-6">
-              <h3 class="text-lg font-medium text-gray-900">Recent Leave Requests</h3>
-              <button
-                @click="$inertia.visit(route('leaves.index', { type: leaveType.name }))"
-                class="text-sm text-indigo-600 hover:text-indigo-500"
-              >
-                View All →
-              </button>
-            </div>
-            
-            <div class="overflow-x-auto">
-              <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                  <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Employee
-                    </th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Dates
-                    </th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Days
-                    </th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Status
-                    </th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Requested
-                    </th>
-                  </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                  <tr v-for="leave in recentLeaves" :key="leave.id" class="hover:bg-gray-50">
-                    <td class="px-6 py-4 whitespace-nowrap">
-                      <div class="text-sm font-medium text-gray-900">
-                        {{ leave.employee?.user?.name || 'Unknown' }}
-                      </div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                      <div class="text-sm text-gray-900">
-                        {{ formatDate(leave.from_date) }} - {{ formatDate(leave.to_date) }}
-                      </div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                      <div class="text-sm text-gray-900">
-                        {{ calculateDays(leave.from_date, leave.to_date) }}
-                      </div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                      <span
-                        :class="{
-                          'bg-green-100 text-green-800': leave.status === 'approved',
-                          'bg-yellow-100 text-yellow-800': leave.status === 'pending',
-                          'bg-red-100 text-red-800': leave.status === 'rejected'
-                        }"
-                        class="inline-flex px-2 py-1 text-xs font-semibold rounded-full"
-                      >
-                        {{ leave.status }}
-                      </span>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {{ formatDate(leave.created_at) }}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+      <!-- Actions -->
+      <ContentCard v-if="canEdit || canDelete" title="Policy Actions" subtitle="Manage this leave policy">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-4">
+            <button
+              v-if="canEdit"
+              @click="$inertia.visit(route('leave-types.edit', leaveType.id))"
+              class="inline-flex items-center px-4 py-2 bg-primary-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-150"
+            >
+              <PencilIcon class="w-4 h-4 mr-2" />
+              Edit Policy
+            </button>
+            <button
+              v-if="canDelete && totalRequests === 0"
+              @click="deleteLeaveType"
+              class="inline-flex items-center px-4 py-2 bg-error-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-error-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-error-500 transition-colors duration-150"
+            >
+              <TrashIcon class="w-4 h-4 mr-2" />
+              Delete Policy
+            </button>
+          </div>
+          <div v-if="canDelete && totalRequests > 0" class="text-sm text-neutral-500 bg-neutral-100 px-3 py-2 rounded-lg">
+            <InformationCircleIcon class="w-4 h-4 inline mr-1" />
+            Cannot delete: {{ totalRequests }} leave requests exist for this type
           </div>
         </div>
-
-        <!-- Actions -->
-        <div v-if="canEdit || canDelete" class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-          <div class="p-6">
-            <h3 class="text-lg font-medium text-gray-900 mb-4">Actions</h3>
-            <div class="flex items-center space-x-4">
-              <button
-                v-if="canEdit"
-                @click="$inertia.visit(route('leave-types.edit', leaveType.id))"
-                class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"
-              >
-                <PencilIcon class="w-4 h-4 mr-2" />
-                Edit Policy
-              </button>
-              <button
-                v-if="canDelete && totalRequests === 0"
-                @click="deleteLeaveType"
-                class="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-700 focus:bg-red-700 active:bg-red-900 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition ease-in-out duration-150"
-              >
-                <TrashIcon class="w-4 h-4 mr-2" />
-                Delete Policy
-              </button>
-              <div v-else-if="canDelete" class="text-sm text-gray-500">
-                Cannot delete: {{ totalRequests }} leave requests exist for this type
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+      </ContentCard>
+    </PageLayout>
   </AuthenticatedLayout>
 </template>
 
@@ -366,22 +303,47 @@
 import { computed } from 'vue'
 import { router } from '@inertiajs/vue3'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
+import PageLayout from '@/Components/Layout/PageLayout.vue'
+import ContentCard from '@/Components/Layout/ContentCard.vue'
+import ContentSection from '@/Components/Layout/ContentSection.vue'
+import SimpleInfoCard from '@/Components/UI/SimpleInfoCard.vue'
 import {
   ArrowLeftIcon,
   PencilIcon,
   TrashIcon,
-  CalendarDaysIcon,
-  DocumentTextIcon,
-  CheckCircleIcon,
-  ClockIcon,
   CheckIcon,
-  XMarkIcon
+  XMarkIcon,
+  InformationCircleIcon
 } from '@heroicons/vue/24/outline'
 
 const props = defineProps({
   leaveType: Object,
   canEdit: Boolean,
   canDelete: Boolean
+})
+
+// Breadcrumbs for consistent navigation
+const breadcrumbs = computed(() => [
+  { label: 'Dashboard', href: route('dashboard') },
+  { label: 'Leave Policies', href: route('leave-types.index') },
+  { label: props.leaveType.name, current: true }
+])
+
+// Header actions
+const headerActions = computed(() => {
+  const actions = []
+  
+  if (props.canEdit) {
+    actions.push({
+      id: 'edit-policy',
+      label: 'Edit Policy',
+      icon: 'pencil',
+      variant: 'primary',
+      handler: () => router.visit(route('leave-types.edit', props.leaveType.id))
+    })
+  }
+  
+  return actions
 })
 
 // Computed statistics
@@ -472,6 +434,14 @@ const calculateDays = (fromDate, toDate) => {
   const diffTime = Math.abs(to - from)
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1
   return `${diffDays} day${diffDays !== 1 ? 's' : ''}`
+}
+
+const getInitials = (name) => {
+  return name
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase())
+    .join('')
+    .substring(0, 2)
 }
 
 const deleteLeaveType = () => {
