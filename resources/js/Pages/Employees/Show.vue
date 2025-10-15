@@ -616,6 +616,7 @@
   import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
   import PageLayout from '@/Components/Layout/PageLayout.vue'
   import InfoCard from '@/Components/Layout/InfoCard.vue'
+  import { useAuth } from '@/composables/useAuth.js'
 
   import {
     PencilIcon,
@@ -641,6 +642,9 @@
       required: true
     }
   })
+
+  // Composables
+  const { user, hasAnyRole } = useAuth()
 
   // RBAC Permissions (from server-side)
   const canViewPersonalInfo = computed(() => props.permissions.canViewPersonalInfo)
@@ -682,11 +686,31 @@
     return new Date().toISOString().split('T')[0]
   })
 
-  const breadcrumbs = computed(() => [
-    { label: 'Dashboard', href: route('dashboard') },
-    { label: 'Employees', href: route('employees.index') },
-    { label: props.employee.user.name, current: true }
-  ])
+  const breadcrumbs = computed(() => {
+    const isOwnProfile = user.value?.id === props.employee.user_id;
+    const canViewEmployeeList = hasAnyRole(['Admin', 'HR', 'Manager']);
+    
+    if (isOwnProfile) {
+      // For user's own profile, show simpler breadcrumb
+      return [
+        { label: 'Dashboard', href: route('dashboard') },
+        { label: 'My Profile', current: true }
+      ];
+    } else if (canViewEmployeeList) {
+      // For admin/manager viewing other employees
+      return [
+        { label: 'Dashboard', href: route('dashboard') },
+        { label: 'Employees', href: route('employees.index') },
+        { label: props.employee.user.name, current: true }
+      ];
+    } else {
+      // For regular users viewing colleagues
+      return [
+        { label: 'Dashboard', href: route('dashboard') },
+        { label: props.employee.user.name, current: true }
+      ];
+    }
+  })
 
   const headerActions = computed(() => {
     const actions = [];
