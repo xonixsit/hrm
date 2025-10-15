@@ -94,21 +94,99 @@ const breadcrumbs = computed(() => [
             subtitle="Manage your personal information and account settings"
             :breadcrumbs="breadcrumbs"
         >
-            <!-- Profile Overview -->
-            <div v-if="hasEmployeeProfile" class="bg-neutral-50 rounded-lg p-4 mb-6">
-                <div class="flex items-center space-x-4">
-                    <div class="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center">
-                        <span class="text-lg font-semibold text-primary-700">
-                            {{ getInitials(user.name) }}
-                        </span>
+            <!-- Employment Summary Header -->
+            <div v-if="hasEmployeeProfile" class="bg-white border border-neutral-200 rounded-lg shadow-sm mb-6">
+                <!-- Header Section -->
+                <div class="bg-gradient-to-r from-primary-50 to-primary-100 px-6 py-4 border-b border-neutral-200 rounded-t-lg">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center">
+                                <span class="text-lg font-semibold text-primary-700">
+                                    {{ getInitials(user.name) }}
+                                </span>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-semibold text-neutral-900">{{ user.name }}</h3>
+                                <p class="text-sm text-neutral-600">{{ employee.job_title || 'Employee' }}</p>
+                                <div class="flex items-center space-x-2 mt-1">
+                                    <span class="text-xs text-neutral-500">Employee ID:</span>
+                                    <span class="text-xs font-mono bg-neutral-200 px-2 py-0.5 rounded">{{ employee.employee_code || 'N/A' }}</span>
+                                    <span class="text-xs bg-primary-100 text-primary-700 px-2 py-0.5 rounded">{{ employee.department?.name || 'No Department' }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <a 
+                                :href="route('email-preferences.show')" 
+                                class="inline-flex items-center px-4 py-2 bg-white border border-neutral-300 rounded-md shadow-sm text-sm font-medium text-neutral-700 hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-200"
+                            >
+                                <EnvelopeIcon class="w-4 h-4 mr-2" />
+                                Email Preferences
+                            </a>
+                        </div>
                     </div>
-                    <div>
-                        <h3 class="text-lg font-semibold text-neutral-900">{{ user.name }}</h3>
-                        <p class="text-sm text-neutral-600">{{ employee.job_title || 'Employee' }}</p>
-                        <div class="flex items-center space-x-2 mt-1">
-                            <span class="text-xs text-neutral-500">Employee ID:</span>
-                            <span class="text-xs font-mono bg-neutral-200 px-2 py-0.5 rounded">{{ employee.employee_code || 'N/A' }}</span>
-                            <span class="text-xs bg-primary-100 text-primary-700 px-2 py-0.5 rounded">{{ employee.department?.name || 'No Department' }}</span>
+                </div>
+                
+                <!-- Employment Summary Content -->
+                <div class="p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                        <div class="bg-neutral-50 rounded-lg p-4">
+                            <div class="flex items-center space-x-3">
+                                <CalendarIcon class="h-8 w-8 text-primary-600" />
+                                <div>
+                                    <p class="text-sm font-medium text-neutral-600">Time with Company</p>
+                                    <p class="text-lg font-semibold text-neutral-900">{{ calculateYearsOfService() }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-neutral-50 rounded-lg p-4">
+                            <div class="flex items-center space-x-3">
+                                <BuildingOfficeIcon class="h-8 w-8 text-success-600" />
+                                <div>
+                                    <p class="text-sm font-medium text-neutral-600">Department</p>
+                                    <p class="text-sm font-semibold text-neutral-900">{{ employee.department?.name || 'N/A' }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-neutral-50 rounded-lg p-4">
+                            <div class="flex items-center space-x-3">
+                                <PhoneIcon class="h-8 w-8 text-info-600" />
+                                <div>
+                                    <p class="text-sm font-medium text-neutral-600">Contact</p>
+                                    <p class="text-sm font-semibold text-neutral-900">{{ employee.phone || 'Not provided' }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-neutral-50 rounded-lg p-4">
+                            <div class="flex items-center space-x-3">
+                                <EnvelopeIcon class="h-8 w-8 text-warning-600" />
+                                <div>
+                                    <p class="text-sm font-medium text-neutral-600">Email</p>
+                                    <p class="text-sm font-semibold text-neutral-900 truncate">{{ user.email }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <dt class="text-sm font-medium text-neutral-500">Job Title</dt>
+                            <dd class="text-sm font-medium text-neutral-900 mt-1">{{ employee.job_title || 'Not specified' }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-medium text-neutral-500">Manager</dt>
+                            <dd class="text-sm font-medium text-neutral-900 mt-1">{{ employee.manager?.name || 'Not assigned' }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-medium text-neutral-500">Join Date</dt>
+                            <dd class="text-sm font-medium text-neutral-900 mt-1">{{ formatDate(employee.join_date) }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-medium text-neutral-500">Employment Type</dt>
+                            <dd class="text-sm font-medium text-neutral-900 mt-1">{{ formatEmploymentType(employee.employment_type) }}</dd>
                         </div>
                     </div>
                 </div>
@@ -151,75 +229,7 @@ const breadcrumbs = computed(() => [
                 </FormSection>
             </FormLayout>
 
-            <!-- Employment Summary -->
-            <FormLayout 
-                v-if="hasEmployeeProfile"
-                title="Employment Summary" 
-                description="Your current employment information"
-                variant="card"
-                class="mt-6"
-            >
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <div class="bg-neutral-50 rounded-lg p-4">
-                        <div class="flex items-center space-x-3">
-                            <CalendarIcon class="h-8 w-8 text-primary-600" />
-                            <div>
-                                <p class="text-sm font-medium text-neutral-600">Time with Company</p>
-                                <p class="text-lg font-semibold text-neutral-900">{{ calculateYearsOfService() }}</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="bg-neutral-50 rounded-lg p-4">
-                        <div class="flex items-center space-x-3">
-                            <BuildingOfficeIcon class="h-8 w-8 text-success-600" />
-                            <div>
-                                <p class="text-sm font-medium text-neutral-600">Department</p>
-                                <p class="text-sm font-semibold text-neutral-900">{{ employee.department?.name || 'N/A' }}</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="bg-neutral-50 rounded-lg p-4">
-                        <div class="flex items-center space-x-3">
-                            <PhoneIcon class="h-8 w-8 text-info-600" />
-                            <div>
-                                <p class="text-sm font-medium text-neutral-600">Contact</p>
-                                <p class="text-sm font-semibold text-neutral-900">{{ employee.phone || 'Not provided' }}</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="bg-neutral-50 rounded-lg p-4">
-                        <div class="flex items-center space-x-3">
-                            <EnvelopeIcon class="h-8 w-8 text-warning-600" />
-                            <div>
-                                <p class="text-sm font-medium text-neutral-600">Email</p>
-                                <p class="text-sm font-semibold text-neutral-900 truncate">{{ user.email }}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
-                <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <dt class="text-sm font-medium text-neutral-500">Job Title</dt>
-                        <dd class="text-sm font-medium text-neutral-900 mt-1">{{ employee.job_title || 'Not specified' }}</dd>
-                    </div>
-                    <div>
-                        <dt class="text-sm font-medium text-neutral-500">Manager</dt>
-                        <dd class="text-sm font-medium text-neutral-900 mt-1">{{ employee.manager?.name || 'Not assigned' }}</dd>
-                    </div>
-                    <div>
-                        <dt class="text-sm font-medium text-neutral-500">Join Date</dt>
-                        <dd class="text-sm font-medium text-neutral-900 mt-1">{{ formatDate(employee.join_date) }}</dd>
-                    </div>
-                    <div>
-                        <dt class="text-sm font-medium text-neutral-500">Employment Type</dt>
-                        <dd class="text-sm font-medium text-neutral-900 mt-1">{{ formatEmploymentType(employee.employment_type) }}</dd>
-                    </div>
-                </div>
-            </FormLayout>
 
             <!-- No Employee Profile Message -->
             <div v-if="!hasEmployeeProfile" class="bg-warning-50 border border-warning-200 rounded-lg p-6">
