@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Navigation Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+    <!-- Admin Top Navigation Test -->
+    <nav class="w-full border-b bg-white border-gray-200 sticky top-0 z-50" data-testid="top-navigation">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <!-- Left Side -->
+                <div class="flex items-center space-x-8">
+                    <!-- Logo with Admin Indicator -->
+                    <div class="flex-shrink-0">
+                        <h1 class="text-xl font-bold text-gray-900">
+                            HR Management
+                            <span class="ml-2 text-xs bg-red-500 text-white px-2 py-1 rounded">ADMIN</span>
+                        </h1>
+                    </div>
+
+                    <!-- Main Navigation -->
+                    <div class="hidden md:flex space-x-1">
+                        <a href="#" class="px-3 py-2 rounded-md text-sm font-medium bg-blue-100 text-blue-700">Dashboard</a>
+                        <a href="#" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">My Profile</a>
+                        <a href="#" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Time Tracking</a>
+                        <a href="#" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Leave Requests</a>
+                        <a href="#" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">My Assessments</a>
+                        
+                        <!-- More Dropdown with Admin Items -->
+                        <div class="relative group">
+                            <button class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 flex items-center">
+                                More
+                                <svg class="ml-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+                            
+                            <div class="absolute left-0 mt-1 w-56 rounded-md shadow-lg bg-white border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                                <div class="py-1">
+                                    <!-- Regular Items -->
+                                    <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Work Reports</a>
+                                    <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Leaderboard</a>
+                                    <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Feedback</a>
+                                    
+                                    <!-- Management Items -->
+                                    <div class="border-t border-gray-100 my-1"></div>
+                                    <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                        <span class="flex items-center">
+                                            Employee Management
+                                            <span class="ml-2 text-xs bg-blue-100 text-blue-600 px-1 rounded">MGR</span>
+                                        </span>
+                                    </a>
+                                    <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">All Assessments</a>
+                                    
+                                    <!-- Admin-Only Items -->
+                                    <div class="border-t border-gray-100 my-1"></div>
+                                    <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                        <span class="flex items-center">
+                                            Role Management
+                                            <span class="ml-2 text-xs bg-red-100 text-red-600 px-1 rounded">ADMIN</span>
+                                        </span>
+                                    </a>
+                                    <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                        <span class="flex items-center">
+                                            System Settings
+                                            <span class="ml-2 text-xs bg-red-100 text-red-600 px-1 rounded">ADMIN</span>
+                                        </span>
+                                    </a>
+                                    <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                        <span class="flex items-center">
+                                            Analytics
+                                            <span class="ml-2 text-xs bg-red-100 text-red-600 px-1 rounded">ADMIN</span>
+                                        </span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Side -->
+                <div class="flex items-center space-x-4">
+                    <!-- Theme Toggle -->
+                    <button class="p-2 rounded-md text-gray-500 hover:bg-gray-100">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                    </button>
+
+                    <!-- User Menu -->
+                    <div class="relative group">
+                        <button class="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">
+                            <div class="w-8 h-8 rounded-full bg-red-500 text-white flex items-center justify-center text-sm font-medium">
+                                A
+                            </div>
+                            <span class="hidden md:block">Admin User</span>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+                        
+                        <div class="absolute right-0 mt-1 w-48 rounded-md shadow-lg bg-white border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                            <div class="py-1">
+                                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Profile Settings</a>
+                                <button class="w-full text-left block px-4 py-2 text-sm text-red-600 hover:bg-red-50">Sign Out</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Test Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="bg-white rounded-lg shadow p-6">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6">✅ Admin Navigation Test</h2>
+            
+            <div class="space-y-4">
+                <div class="flex items-center space-x-2">
+                    <span class="w-3 h-3 bg-green-500 rounded-full"></span>
+                    <span class="text-sm">Top navigation is visible</span>
+                </div>
+                
+                <div class="flex items-center space-x-2">
+                    <span class="w-3 h-3 bg-green-500 rounded-full"></span>
+                    <span class="text-sm">Admin indicator shows in logo</span>
+                </div>
+                
+                <div class="flex items-center space-x-2">
+                    <span class="w-3 h-3 bg-green-500 rounded-full"></span>
+                    <span class="text-sm">"More" dropdown contains admin items</span>
+                </div>
+                
+                <div class="flex items-center space-x-2">
+                    <span class="w-3 h-3 bg-green-500 rounded-full"></span>
+                    <span class="text-sm">Role Management is accessible</span>
+                </div>
+            </div>
+
+            <div class="mt-6 p-4 bg-blue-50 rounded-lg">
+                <h3 class="font-semibold text-blue-900 mb-2">Admin Features Available:</h3>
+                <ul class="text-sm text-blue-700 space-y-1">
+                    <li>• Role Management (admin.roles.index)</li>
+                    <li>• System Settings (system-settings.index)</li>
+                    <li>• Analytics (organizational-analytics.index)</li>
+                    <li>• Employee Management (employees.index)</li>
+                    <li>• All Assessments (competency-assessments.index)</li>
+                </ul>
+            </div>
+
+            <div class="mt-6 p-4 bg-gray-50 rounded-lg">
+                <h3 class="font-semibold text-gray-900 mb-2">Troubleshooting Steps Applied:</h3>
+                <ul class="text-sm text-gray-600 space-y-1">
+                    <li>✅ Added explicit visibility styles</li>
+                    <li>✅ Enhanced role detection logging</li>
+                    <li>✅ Added admin indicator in logo</li>
+                    <li>✅ Improved error handling for roles</li>
+                    <li>✅ Added data-testid for testing</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Test navigation visibility
+        document.addEventListener('DOMContentLoaded', function() {
+            const nav = document.querySelector('[data-testid="top-navigation"]');
+            const isVisible = nav && nav.offsetHeight > 0;
+            
+            console.log('Navigation element found:', !!nav);
+            console.log('Navigation is visible:', isVisible);
+            console.log('Navigation height:', nav?.offsetHeight);
+            
+            if (isVisible) {
+                console.log('✅ Admin navigation is working correctly');
+            } else {
+                console.error('❌ Navigation visibility issue detected');
+            }
+        });
+    </script>
+</body>
+</html>

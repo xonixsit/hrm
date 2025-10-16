@@ -1,9 +1,11 @@
 <template>
-  <!-- Simple Top Navigation Bar -->
+  <!-- Simple Top Navigation Bar - Always Visible -->
   <nav :class="[
     'w-full border-b transition-colors duration-200 sticky top-0 z-50',
     isDark ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-200'
-  ]">
+  ]" 
+  style="display: block !important; visibility: visible !important;"
+  data-testid="top-navigation">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex justify-between h-16">
         <!-- Left Side -->
@@ -15,6 +17,10 @@
               isDark ? 'text-white' : 'text-gray-900'
             ]">
               HR Management
+              <!-- Admin indicator -->
+              <span v-if="userRoles?.includes('Admin')" class="ml-2 text-xs bg-red-500 text-white px-2 py-1 rounded">
+                ADMIN
+              </span>
             </h1>
           </div>
 
@@ -179,6 +185,8 @@ const { isDark, toggleTheme } = useTheme()
 // Debug logging to check user and roles
 console.log('QuickTopNav - User:', user.value)
 console.log('QuickTopNav - Roles:', userRoles.value)
+console.log('QuickTopNav - Is Admin:', userRoles.value?.includes('Admin'))
+console.log('QuickTopNav - More Nav Items:', moreNavItems.value)
 
 const showMore = ref(false)
 const showUserMenu = ref(false)
@@ -205,15 +213,24 @@ const mainNavItems = computed(() => [
 
 // Additional navigation items (in dropdown)
 const moreNavItems = computed(() => {
-  const roles = userRoles.value
+  const roles = userRoles.value || []
+  console.log('Computing moreNavItems with roles:', roles)
+  
   const items = [
     { route: 'work-reports.index', label: 'Work Reports' },
     { route: 'work-reports.leaderboard', label: 'Leaderboard' },
     { route: 'feedbacks.index', label: 'Feedback' }
   ]
 
+  // Ensure roles is an array and check for management roles
+  const rolesArray = Array.isArray(roles) ? roles : []
+  const isManagement = rolesArray.includes('Admin') || rolesArray.includes('Manager') || rolesArray.includes('HR')
+  const isAdmin = rolesArray.includes('Admin')
+  
+  console.log('Role checks:', { rolesArray, isManagement, isAdmin })
+
   // Add management items
-  if (roles.includes('Admin') || roles.includes('Manager') || roles.includes('HR')) {
+  if (isManagement) {
     items.push(
       { route: 'employees.index', label: 'Employee Management' },
       { route: 'competency-assessments.index', label: 'All Assessments' }
@@ -221,7 +238,7 @@ const moreNavItems = computed(() => {
   }
 
   // Add admin items
-  if (roles.includes('Admin')) {
+  if (isAdmin) {
     items.push(
       { route: 'admin.roles.index', label: 'Role Management' },
       { route: 'system-settings.index', label: 'System Settings' },
@@ -229,6 +246,7 @@ const moreNavItems = computed(() => {
     )
   }
 
+  console.log('Final moreNavItems:', items)
   return items
 })
 
