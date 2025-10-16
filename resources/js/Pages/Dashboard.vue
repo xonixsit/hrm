@@ -520,6 +520,15 @@
             </div>
           </div>
         </div>
+
+        <!-- Birthday Notifications for Managers -->
+        <div class="birthday-section">
+          <BirthdayNotifications 
+            :todays-birthdays="birthdayData.todaysBirthdays"
+            :upcoming-birthdays="birthdayData.upcomingBirthdays"
+            :stats="birthdayData.stats"
+          />
+        </div>
       </div>
 
       <!-- Employee Dashboard Layout -->
@@ -538,6 +547,15 @@
           @toggle-task="handleToggleTask"
           @view-task="handleViewTask"
         />
+
+        <!-- Birthday Notifications for Employees -->
+        <div class="birthday-section mt-6">
+          <BirthdayNotifications 
+            :todays-birthdays="birthdayData.todaysBirthdays"
+            :upcoming-birthdays="birthdayData.upcomingBirthdays"
+            :stats="birthdayData.stats"
+          />
+        </div>
       </div>
     </div></div>
 

@@ -15,58 +15,58 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
-import {
-  ClipboardDocumentListIcon,
-  CheckCircleIcon,
-  CalendarDaysIcon,
-  DocumentTextIcon,
-  UserGroupIcon,
-  ChartBarIcon
-} from '@heroicons/vue/24/outline'
+  import { computed } from 'vue'
+  import {
+    ClipboardDocumentListIcon,
+    CheckCircleIcon,
+    CalendarDaysIcon,
+    DocumentTextIcon,
+    UserGroupIcon,
+    ChartBarIcon
+  } from '@heroicons/vue/24/outline'
 
-const props = defineProps({
-  title: {
-    type: String,
-    required: true
-  },
-  value: {
-    type: [String, Number],
-    required: true
-  },
-  icon: {
-    type: String,
-    default: 'chart-bar'
-  },
-  color: {
-    type: String,
-    default: 'primary',
-    validator: (value) => ['primary', 'success', 'info', 'warning', 'error'].includes(value)
+  const props = defineProps({
+    title: {
+      type: String,
+      required: true
+    },
+    value: {
+      type: [String, Number],
+      required: true
+    },
+    icon: {
+      type: String,
+      default: 'chart-bar'
+    },
+    color: {
+      type: String,
+      default: 'primary',
+      validator: (value) => ['primary', 'success', 'info', 'warning', 'error'].includes(value)
+    }
+  })
+
+  const iconComponents = {
+    'clipboard-document-list': ClipboardDocumentListIcon,
+    'check-circle': CheckCircleIcon,
+    'calendar-days': CalendarDaysIcon,
+    'document-text': DocumentTextIcon,
+    'user-group': UserGroupIcon,
+    'chart-bar': ChartBarIcon
   }
-})
 
-const iconComponents = {
-  'clipboard-document-list': ClipboardDocumentListIcon,
-  'check-circle': CheckCircleIcon,
-  'calendar-days': CalendarDaysIcon,
-  'document-text': DocumentTextIcon,
-  'user-group': UserGroupIcon,
-  'chart-bar': ChartBarIcon
-}
+  const iconComponent = computed(() => {
+    return iconComponents[props.icon] || ChartBarIcon
+  })
 
-const iconComponent = computed(() => {
-  return iconComponents[props.icon] || ChartBarIcon
-})
+  const iconClasses = computed(() => {
+    const colorClasses = {
+      primary: 'h-8 w-8 text-primary-500',
+      success: 'h-8 w-8 text-success-500',
+      info: 'h-8 w-8 text-info-500',
+      warning: 'h-8 w-8 text-warning-500',
+      error: 'h-8 w-8 text-error-500'
+    }
 
-const iconClasses = computed(() => {
-  const colorClasses = {
-    primary: 'h-8 w-8 text-primary-500',
-    success: 'h-8 w-8 text-success-500',
-    info: 'h-8 w-8 text-info-500',
-    warning: 'h-8 w-8 text-warning-500',
-    error: 'h-8 w-8 text-error-500'
-  }
-  
-  return colorClasses[props.color] || colorClasses.primary
-})
+    return colorClasses[props.color] || colorClasses.primary
+  })
 </script>

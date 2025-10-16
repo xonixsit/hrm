@@ -103,6 +103,17 @@
                 </div>
             </div>
         </div>
+
+        <!-- No Birthdays Today Message -->
+        <div v-if="todaysBirthdays.length === 0 && upcomingBirthdays.length === 0 && stats && stats.this_month === 0" class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
+            <div class="flex items-center space-x-3">
+                <div class="text-2xl">🎂</div>
+                <div>
+                    <h3 class="text-lg font-semibold text-blue-800">No Birthdays This Month</h3>
+                    <p class="text-sm text-blue-600">No team birthdays to celebrate right now, but stay tuned!</p>
+                </div>
+            </div>
+        </div>
     </div>
 </template>
 
@@ -127,9 +138,12 @@ const props = defineProps({
 const showAllUpcoming = ref(false)
 
 const showNotifications = computed(() => {
+    // Always show the component if we have any birthday data or stats
     return props.todaysBirthdays.length > 0 || 
            props.upcomingBirthdays.length > 0 || 
-           (props.stats && (props.stats.today > 0 || props.stats.this_week > 0))
+           (props.stats && (props.stats.today > 0 || props.stats.this_week > 0 || props.stats.this_month > 0)) ||
+           // Show if we have the birthday data structure (even if empty)
+           (props.stats !== null)
 })
 
 const displayedUpcomingBirthdays = computed(() => {
