@@ -220,7 +220,7 @@
               'rounded-lg',
               {
                 'p-2.5 justify-center': isCollapsed,
-                'px-3 py-1.5': !isCollapsed,
+                'px-3 py-2': !isCollapsed,
                 // Active state
                 'bg-blue-50 text-blue-700': isActiveItem(item) && !isDark,
                 'bg-blue-900/20 text-blue-400': isActiveItem(item) && isDark,
@@ -236,89 +236,59 @@
           >
             <!-- Icon -->
             <div :class="[
-              'flex-shrink-0 w-6 h-6 flex items-center justify-center overflow-hidden',
+              'flex-shrink-0 w-6 h-6 flex items-center justify-center',
               { 'mr-3': !isCollapsed }
-            ]" style="min-width: 24px; max-width: 24px; min-height: 24px; max-height: 24px;">
+            ]">
               <!-- Home Icon -->
-              <svg v-if="item.icon === 'home'" class="w-5 h-5 max-w-5 max-h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 20px; height: 20px;">
+              <svg v-if="item.icon === 'home'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
               </svg>
+              <!-- User Icon -->
+              <svg v-else-if="item.icon === 'user'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
               <!-- Users Icon -->
-              <svg v-else-if="item.icon === 'users'" class="w-5 h-5 max-w-5 max-h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 20px; height: 20px;">
+              <svg v-else-if="item.icon === 'users'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
               </svg>
               <!-- Clock Icon -->
-              <svg v-else-if="item.icon === 'clock'" class="w-5 h-5 max-w-5 max-h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 20px; height: 20px;">
+              <svg v-else-if="item.icon === 'clock'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <!-- Calendar Icon -->
-              <svg v-else-if="item.icon === 'calendar'" class="w-5 h-5 max-w-5 max-h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 20px; height: 20px;">
+              <svg v-else-if="item.icon === 'calendar'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
-              <!-- Folder Icon -->
-              <svg v-else-if="item.icon === 'folder'" class="w-5 h-5 max-w-5 max-h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 20px; height: 20px;">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-              </svg>
-              <!-- Chat Icon -->
-              <svg v-else-if="item.icon === 'chat'" class="w-5 h-5 max-w-5 max-h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 20px; height: 20px;">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-              </svg>
-              <!-- Document Text Icon for Work Reports -->
-              <svg v-else-if="item.icon === 'document-text'" class="w-5 h-5 max-w-5 max-h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 20px; height: 20px;">
+              <!-- Clipboard Document List Icon -->
+              <svg v-else-if="item.icon === 'clipboard-document-list'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
               </svg>
-              
-              <!-- Trophy Icon for Leaderboard -->
-              <svg v-else-if="item.icon === 'trophy'" class="w-5 h-5 max-w-5 max-h-5" fill="currentColor" viewBox="0 0 24 24" style="width: 20px; height: 20px;">
+              <!-- Chat Icon -->
+              <svg v-else-if="item.icon === 'chat'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
+              <!-- Document Text Icon -->
+              <svg v-else-if="item.icon === 'document-text'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" />
+              </svg>
+              <!-- Trophy Icon -->
+              <svg v-else-if="item.icon === 'trophy'" class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M5.166 2.621v.858c-1.035.148-2.059.33-3.071.543a.75.75 0 0 0-.584.859 6.753 6.753 0 0 0 6.138 5.6 6.73 6.73 0 0 0 2.743 1.346A6.707 6.707 0 0 1 9.279 15H8.54c-1.036 0-1.875.84-1.875 1.875V19.5h-.75a2.25 2.25 0 0 0-2.25 2.25c0 .414.336.75.75.75h9.284a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-2.25-2.25h-.75v-2.625c0-1.036-.84-1.875-1.875-1.875h-.739a6.706 6.706 0 0 1-1.112-3.173 6.73 6.73 0 0 0 2.743-1.347 6.753 6.753 0 0 0 6.139-5.6.75.75 0 0 0-.585-.858 47.077 47.077 0 0 0-3.07-.543V2.62a.75.75 0 0 0-.658-.744 49.22 49.22 0 0 0-6.093-.377c-2.063 0-4.096.128-6.093.377a.75.75 0 0 0-.657.744Z" />
               </svg>
-              <!-- Check Circle Icon for Pending Approvals -->
-              <svg v-else-if="item.icon === 'check-circle'" class="w-5 h-5 max-w-5 max-h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 20px; height: 20px;">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <!-- Academic Cap Icon for Competencies -->
-              <svg v-else-if="item.icon === 'academic-cap'" class="w-5 h-5 max-w-5 max-h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 20px; height: 20px;">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z" />
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422A12.083 12.083 0 0112 21a12.083 12.083 0 01-6.16-10.422L12 14z" />
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.06 10.538A12.04 12.04 0 0112 3.5a12.04 12.04 0 018.94 7.038" />
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 10.538V14a9 9 0 01-9 8 9 9 0 01-9-8v-3.462" />
-              </svg>
-              <!-- Chart Pie Icon for Assessment Dashboard -->
-              <svg v-else-if="item.icon === 'chart-pie'" class="w-5 h-5 max-w-5 max-h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 20px; height: 20px;">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
-              </svg>
-              <!-- Chart Bar Icon for Reports -->
-              <svg v-else-if="item.icon === 'chart-bar'" class="w-5 h-5 max-w-5 max-h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 20px; height: 20px;">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-              <!-- Chart Bar Square Icon for Organizational Analytics -->
-              <svg v-else-if="item.icon === 'chart-bar-square'" class="w-5 h-5 max-w-5 max-h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 20px; height: 20px;">
+              <!-- Chart Bar Square Icon -->
+              <svg v-else-if="item.icon === 'chart-bar-square'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
               </svg>
-              <!-- Clipboard Document Check Icon for Assessments -->
-              <svg v-else-if="item.icon === 'clipboard-document-check'" class="w-5 h-5 max-w-5 max-h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 20px; height: 20px;">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 7l2 2 4-4" />
-              </svg>
               <!-- Default Icon -->
-              <svg v-else class="w-5 h-5 max-w-5 max-h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 20px; height: 20px;">
+              <svg v-else class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
             
             <!-- Label -->
-            <span 
-              v-if="!isCollapsed" 
-              class="font-medium truncate"
-            >
+            <span v-if="!isCollapsed" class="text-sm truncate">
               {{ item.label }}
             </span>
-
-            <!-- Active indicator -->
-            <div 
-              v-if="isActiveItem(item)" 
-              class="absolute right-0 top-1/2 transform -translate-y-1/2 w-1 h-6 bg-blue-600 rounded-l"
-            ></div>
           </button>
         </div>
       </div>
@@ -414,7 +384,7 @@ const isDesktop = ref(false);
 // State
 const sidebarRef = ref(null);
 const isCollapsed = ref(props.initiallyCollapsed);
-const expandedSections = ref(['competency-section']); // Default expand competency section
+// Removed expandedSections - using hover dropdowns instead of accordions
 
 // Simplified desktop detection - only renders on desktop (≥1024px)
 const checkDesktop = () => {
@@ -676,14 +646,10 @@ const handleLogout = () => {
   }
 };
 
-// Accordion methods
-const toggleAccordion = (sectionId) => {
-  const index = expandedSections.value.indexOf(sectionId);
-  if (index > -1) {
-    expandedSections.value.splice(index, 1);
-  } else {
-    expandedSections.value.push(sectionId);
-  }
+// Helper function to check if any child is active
+const hasActiveChild = (item) => {
+  if (!item.children) return false;
+  return item.children.some(child => isActiveItem(child));
 };
 
 
