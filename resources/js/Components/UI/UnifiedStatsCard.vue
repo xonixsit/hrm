@@ -28,7 +28,7 @@
   :tabindex="clickable ? '0' : undefined"
   @keydown.enter="handleClick"
   @keydown.space.prevent="handleClick"
->
+></div>
   <!-- Header Section -->
   <div class="flex items-center justify-between mb-4">
     <!-- Icon -->

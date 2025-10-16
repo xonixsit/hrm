@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, useSlots, onMounted } from 'vue';
 import NavigationErrorDisplay from '@/Components/NavigationErrorDisplay.vue';
-import SimpleTopNav from '@/Components/Navigation/SimpleTopNav.vue';
+import IntegratedTopNav from '@/Components/Navigation/IntegratedTopNav.vue';
 import NotificationContainer from '@/Components/Notifications/NotificationContainer.vue';
 import FloatingAttendanceWidget from '@/Components/Navigation/FloatingAttendanceWidget.vue';
 import SkipLinks from '@/Components/Accessibility/SkipLinks.vue';
@@ -79,43 +79,68 @@ const hasHeader = computed(() => !!slots.header);
             <p class="text-sm mt-1">Please refresh the page or contact support if the issue persists.</p>
         </div>
         
-        <!-- Simple Top Navigation -->
-        <SimpleTopNav />
+        <!-- Integrated Top Navigation -->
+        <IntegratedTopNav :current-route="currentRoute" />
 
-        <!-- Main Layout Container -->
+        <!-- Main Layout Container with Unified Background -->
         <div :class="[
-            'min-h-screen transition-colors duration-200',
-            isDark ? 'bg-gray-50' : 'bg-gray-50'
+            'min-h-screen transition-all duration-300',
+            // Unified background system with subtle gradients
+            isDark 
+                ? 'bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800' 
+                : 'bg-gradient-to-br from-gray-50 via-white to-blue-50/30'
         ]">
-            <!-- Page Header (if provided) -->
+            <!-- Page Header with Better Integration -->
             <header 
                 v-if="slots.header" 
                 :class="[
-                    'border-b transition-colors duration-200',
-                    isDark ? 'bg-white border-gray-200' : 'bg-white border-gray-200'
+                    'border-b transition-all duration-200 backdrop-blur-sm',
+                    isDark 
+                        ? 'bg-gray-800/50 border-gray-700/50 shadow-lg shadow-gray-900/20' 
+                        : 'bg-white/80 border-gray-200/60 shadow-lg shadow-gray-900/10'
                 ]"
                 role="banner"
                 aria-label="Page header"
             >
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                    <!-- Enhanced header with consistent styling -->
                     <div :class="[
-                        'text-2xl font-bold transition-colors duration-200',
-                        isDark ? 'text-gray-900' : 'text-gray-900'
+                        'flex items-center justify-between',
+                        isDark ? 'text-white' : 'text-gray-900'
                     ]">
-                        <slot name="header" />
+                        <div>
+                            <h1 :class="[
+                                'text-2xl font-bold transition-colors duration-200',
+                                isDark ? 'text-white' : 'text-gray-900'
+                            ]">
+                                <slot name="header" />
+                            </h1>
+                            <!-- Optional breadcrumb or subtitle area -->
+                            <div v-if="slots.subtitle" :class="[
+                                'mt-1 text-sm',
+                                isDark ? 'text-gray-300' : 'text-gray-600'
+                            ]">
+                                <slot name="subtitle" />
+                            </div>
+                        </div>
+                        
+                        <!-- Header actions area -->
+                        <div v-if="slots.headerActions" class="flex items-center space-x-3">
+                            <slot name="headerActions" />
+                        </div>
                     </div>
                 </div>
             </header>
             
-            <!-- Main Content Area -->
+            <!-- Main Content Area with Unified Spacing System -->
             <main 
                 id="main-content"
-                class="flex-1"
+                class="relative"
                 role="main"
                 aria-label="Main content"
                 tabindex="-1"
             >
-                <!-- Content Container with Proper Spacing -->
+                <!-- Content Container with Consistent Design System -->
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                     <slot />
                 </div>

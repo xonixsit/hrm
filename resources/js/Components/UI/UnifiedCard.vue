@@ -32,7 +32,7 @@
   :tabindex="clickable ? '0' : undefined"
   @keydown.enter="clickable && $emit('click')"
   @keydown.space.prevent="clickable && $emit('click')"
->
+></div>
   <!-- Card Header -->
   <div v-if="$slots.header || title" class="flex items-center justify-between mb-6">
     <div class="flex items-center space-x-3">
