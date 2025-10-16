@@ -42,7 +42,7 @@
                   Status
                 </th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
-                  Actions
+                  Role Management
                 </th>
               </tr>
             </thead>
@@ -92,23 +92,34 @@
                   </span>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                  <div class="flex items-center space-x-2">
+                  <div class="flex flex-col space-y-2">
+                    <!-- Role Assignment Dropdown -->
                     <BaseSelect
                       :model-value="user.roles[0] || ''"
                       :options="roleOptions"
                       placeholder="Select role"
-                      class="w-32"
+                      class="w-full min-w-[140px]"
                       @update:model-value="(role) => assignRole(user.id, role)"
                     />
+                    
+                    <!-- Remove Role Button -->
                     <BaseButton
-                      v-if="user.roles.length > 0"
+                      v-if="user.roles.length > 0 && canRemoveRole(user)"
                       variant="outline"
                       size="sm"
                       @click="removeRole(user.id, user.roles[0])"
-                      class="text-red-600 hover:text-red-700 border-red-200 hover:border-red-300"
+                      class="text-red-600 hover:text-red-700 border-red-200 hover:border-red-300 w-full"
                     >
-                      Remove
+                      Remove {{ user.roles[0] }}
                     </BaseButton>
+                    
+                    <!-- Self-removal warning -->
+                    <div 
+                      v-else-if="user.roles.length > 0 && !canRemoveRole(user)"
+                      class="text-xs text-gray-500 italic"
+                    >
+                      {{ getSelfRemovalMessage(user) }}
+                    </div>
                   </div>
                 </td>
               </tr>
@@ -132,6 +143,7 @@ import BaseButton from '@/Components/Base/BaseButton.vue'
 const props = defineProps({
   users: Array,
   availableRoles: Array,
+  currentUserId: Number,
 })
 
 const breadcrumbs = [
@@ -211,8 +223,30 @@ function getRoleBadgeClass(role) {
   return classes[role] || 'bg-neutral-100 text-neutral-800'
 }
 
+function canRemoveRole(user) {
+  // Prevent admin from removing their own admin role
+  if (user.id === props.currentUserId && user.roles.includes('Admin')) {
+    return false
+  }
+  return true
+}
+
+function getSelfRemovalMessage(user) {
+  if (user.id === props.currentUserId && user.roles.includes('Admin')) {
+    return 'Cannot remove your own Admin role'
+  }
+  return ''
+}
+
 function assignRole(userId, role) {
   if (!role) return
+  
+  // Check if user is trying to remove their own admin role
+  const user = props.users.find(u => u.id === userId)
+  if (userId === props.currentUserId && user?.roles.includes('Admin') && role !== 'Admin') {
+    alert('You cannot remove your own Admin role.')
+    return
+  }
   
   router.post(route('admin.roles.assign', userId), {
     role: role
@@ -229,6 +263,12 @@ function assignRole(userId, role) {
 
 function removeRole(userId, role) {
   if (!role) return
+  
+  // Check if user is trying to remove their own admin role
+  if (userId === props.currentUserId && role === 'Admin') {
+    alert('You cannot remove your own Admin role.')
+    return
+  }
   
   if (confirm(`Are you sure you want to remove the ${role} role from this user?`)) {
     router.post(route('admin.roles.remove', userId), {

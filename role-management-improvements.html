@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Role Management UI Improvements</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+    <div class="max-w-7xl mx-auto py-6 px-4">
+        <div class="bg-white rounded-lg shadow p-6">
+            <h1 class="text-2xl font-bold text-gray-900 mb-6">Role Management UI Improvements</h1>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Before -->
+                <div class="space-y-4">
+                    <h2 class="text-xl font-semibold text-red-600">❌ Before (Issues)</h2>
+                    
+                    <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                        <h3 class="font-semibold text-red-800 mb-2">Horizontal Layout Problems</h3>
+                        <ul class="text-red-700 text-sm space-y-1">
+                            <li>• Dropdown and button side-by-side (cramped)</li>
+                            <li>• Limited space for role names</li>
+                            <li>• Poor mobile responsiveness</li>
+                            <li>• Generic "Remove" button text</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                        <h3 class="font-semibold text-red-800 mb-2">Security Issues</h3>
+                        <ul class="text-red-700 text-sm space-y-1">
+                            <li>• Admin could remove their own admin role</li>
+                            <li>• No frontend validation for self-removal</li>
+                            <li>• No visual indication of restrictions</li>
+                        </ul>
+                    </div>
+                    
+                    <!-- Mock old layout -->
+                    <div class="border rounded-lg p-4 bg-gray-50">
+                        <h4 class="text-sm font-medium mb-2">Old Actions Column:</h4>
+                        <div class="flex items-center space-x-2">
+                            <select class="text-xs border rounded px-2 py-1 w-24">
+                                <option>Admin</option>
+                            </select>
+                            <button class="text-xs bg-red-100 text-red-600 px-2 py-1 rounded border">
+                                Remove
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- After -->
+                <div class="space-y-4">
+                    <h2 class="text-xl font-semibold text-green-600">✅ After (Improved)</h2>
+                    
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                        <h3 class="font-semibold text-green-800 mb-2">Vertical Layout Benefits</h3>
+                        <ul class="text-green-700 text-sm space-y-1">
+                            <li>• Dropdown and button stacked vertically</li>
+                            <li>• More space for role selection</li>
+                            <li>• Better mobile experience</li>
+                            <li>• Specific "Remove [Role]" button text</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                        <h3 class="font-semibold text-green-800 mb-2">Enhanced Security</h3>
+                        <ul class="text-green-700 text-sm space-y-1">
+                            <li>• Admin cannot remove their own admin role</li>
+                            <li>• Frontend + backend validation</li>
+                            <li>• Clear warning messages</li>
+                            <li>• Button disabled with explanation</li>
+                        </ul>
+                    </div>
+                    
+                    <!-- Mock new layout -->
+                    <div class="border rounded-lg p-4 bg-gray-50">
+                        <h4 class="text-sm font-medium mb-2">New Role Management Column:</h4>
+                        <div class="flex flex-col space-y-2">
+                            <select class="text-xs border rounded px-2 py-1 w-full">
+                                <option>Admin</option>
+                            </select>
+                            <div class="text-xs text-gray-500 italic">
+                                Cannot remove your own Admin role
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Implementation Details -->
+            <div class="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
+                <h2 class="text-xl font-semibold text-blue-800 mb-4">Implementation Details</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h3 class="font-semibold text-blue-700 mb-2">Frontend Changes</h3>
+                        <ul class="text-blue-600 text-sm space-y-1">
+                            <li>• Added <code>currentUserId</code> prop</li>
+                            <li>• Implemented <code>canRemoveRole()</code> function</li>
+                            <li>• Added <code>getSelfRemovalMessage()</code></li>
+                            <li>• Changed layout from horizontal to vertical</li>
+                            <li>• Improved button text specificity</li>
+                            <li>• Added frontend validation alerts</li>
+                        </ul>
+                    </div>
+                    
+                    <div>
+                        <h3 class="font-semibold text-blue-700 mb-2">Backend Changes</h3>
+                        <ul class="text-blue-600 text-sm space-y-1">
+                            <li>• Added self-removal check in <code>assignRole()</code></li>
+                            <li>• Added self-removal check in <code>removeRole()</code></li>
+                            <li>• Pass <code>currentUserId</code> to frontend</li>
+                            <li>• Enhanced error messages</li>
+                            <li>• Maintained existing last-admin protection</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Experience -->
+            <div class="mt-6 bg-purple-50 border border-purple-200 rounded-lg p-6">
+                <h2 class="text-xl font-semibold text-purple-800 mb-4">User Experience Improvements</h2>
+                
+                <div class="space-y-4">
+                    <div class="flex items-start space-x-3">
+                        <div class="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center mt-0.5">
+                            <span class="text-purple-600 text-sm font-bold">1</span>
+                        </div>
+                        <div>
+                            <h4 class="font-medium text-purple-800">Better Visual Hierarchy</h4>
+                            <p class="text-purple-600 text-sm">Vertical layout makes it clear which action belongs to which control</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-start space-x-3">
+                        <div class="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center mt-0.5">
+                            <span class="text-purple-600 text-sm font-bold">2</span>
+                        </div>
+                        <div>
+                            <h4 class="font-medium text-purple-800">Clearer Feedback</h4>
+                            <p class="text-purple-600 text-sm">Specific button text and warning messages explain what's happening</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-start space-x-3">
+                        <div class="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center mt-0.5">
+                            <span class="text-purple-600 text-sm font-bold">3</span>
+                        </div>
+                        <div>
+                            <h4 class="font-medium text-purple-800">Enhanced Security</h4>
+                            <p class="text-purple-600 text-sm">Prevents accidental self-removal with clear explanations</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-start space-x-3">
+                        <div class="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center mt-0.5">
+                            <span class="text-purple-600 text-sm font-bold">4</span>
+                        </div>
+                        <div>
+                            <h4 class="font-medium text-purple-800">Mobile Friendly</h4>
+                            <p class="text-purple-600 text-sm">Vertical layout works better on smaller screens</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -35,6 +35,7 @@ class RoleController extends Controller
         return Inertia::render('Admin/Roles/Index', [
             'users' => $users,
             'availableRoles' => $roles,
+            'currentUserId' => auth()->id(),
         ]);
     }
 
@@ -48,6 +49,14 @@ class RoleController extends Controller
         ]);
 
         $role = $request->role;
+        $currentUser = auth()->user();
+        
+        // Prevent admin from removing their own admin role
+        if ($user->id === $currentUser->id && $user->hasRole('Admin') && $role !== 'Admin') {
+            return back()->withErrors([
+                'role' => 'You cannot remove your own Admin role.'
+            ]);
+        }
         
         // Prevent removing admin role from the last admin
         if ($user->hasRole('Admin') && $role !== 'Admin') {
@@ -75,6 +84,14 @@ class RoleController extends Controller
         ]);
 
         $role = $request->role;
+        $currentUser = auth()->user();
+        
+        // Prevent admin from removing their own admin role
+        if ($user->id === $currentUser->id && $role === 'Admin') {
+            return back()->withErrors([
+                'role' => 'You cannot remove your own Admin role.'
+            ]);
+        }
         
         // Prevent removing admin role from the last admin
         if ($role === 'Admin') {

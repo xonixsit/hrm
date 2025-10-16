@@ -68,29 +68,32 @@
           v-for="item in navigationItems" 
           :key="item.id"
         >
-          <!-- Accordion Section -->
-          <div v-if="item.type === 'accordion'" class="mb-1">
-            <!-- Accordion Header -->
+          <!-- Hover Dropdown Section -->
+          <div v-if="item.type === 'accordion'" class="relative group mb-1">
+            <!-- Dropdown Trigger -->
             <button
-              @click="toggleAccordion(item.id)"
+              @click="() => handleNavigate(item.children[0])"
               :class="[
-                'group w-full flex items-center justify-between text-left transition-all duration-200',
-                'rounded-lg',
+                'group w-full flex items-center text-left transition-all duration-200',
+                'rounded-lg relative',
                 {
                   'p-2.5': isCollapsed,
-                  'px-3 py-1.5': !isCollapsed,
+                  'px-3 py-2': !isCollapsed,
+                  // Active state
+                  'bg-blue-50 text-blue-700': hasActiveChild(item) && !isDark,
+                  'bg-blue-900/20 text-blue-400': hasActiveChild(item) && isDark,
                   // Hover state
-                  'hover:bg-gray-50': !isDark,
-                  'hover:bg-gray-800': isDark,
+                  'hover:bg-gray-50': !hasActiveChild(item) && !isDark,
+                  'hover:bg-gray-800': !hasActiveChild(item) && isDark,
                   // Text color
-                  'text-gray-700 font-medium': !isDark,
-                  'text-gray-300 font-medium': isDark
+                  'text-gray-700 font-medium': !hasActiveChild(item) && !isDark,
+                  'text-gray-300 font-medium': !hasActiveChild(item) && isDark
                 }
               ]"
               :title="isCollapsed ? item.label : ''"
             >
-              <div class="flex items-center">
-                <!-- Accordion Icon -->
+              <div class="flex items-center min-w-0 flex-1">
+                <!-- Icon -->
                 <div :class="[
                   'flex-shrink-0 w-6 h-6 flex items-center justify-center',
                   { 'mr-3': !isCollapsed }
@@ -104,23 +107,25 @@
                   <svg v-else-if="item.icon === 'check-circle'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
+                  <!-- Cog Icon -->
+                  <svg v-else-if="item.icon === 'cog-6-tooth'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.343 3.94c.09-.542.56-.94 1.11-.94h1.093c.55 0 1.02.398 1.11.94l.149.894c.07.424.384.764.78.93.398.164.855.142 1.205-.108l.737-.527a1.125 1.125 0 011.45.12l.773.774c.39.389.44 1.002.12 1.45l-.527.737c-.25.35-.272.806-.107 1.204.165.397.505.71.93.78l.893.15c.543.09.94.56.94 1.109v1.094c0 .55-.397 1.02-.94 1.11l-.893.149c-.425.07-.765.383-.93.78-.165.398-.143.854.107 1.204l.527.738c.32.447.269 1.06-.12 1.45l-.774.773a1.125 1.125 0 01-1.449.12l-.738-.527c-.35-.25-.806-.272-1.203-.107-.397.165-.71.505-.781.929l-.149.894c-.09.542-.56.94-1.11.94h-1.094c-.55 0-1.019-.398-1.11-.94l-.148-.894c-.071-.424-.384-.764-.781-.93-.398-.164-.854-.142-1.204.108l-.738.527c-.447.32-1.06.269-1.45-.12l-.773-.774a1.125 1.125 0 01-.12-1.45l.527-.737c.25-.35.273-.806.108-1.204-.165-.397-.505-.71-.93-.78l-.894-.15c-.542-.09-.94-.56-.94-1.109v-1.094c0-.55.398-1.02.94-1.11l.894-.149c.424-.07.765-.383.93-.78.165-.398.143-.854-.107-1.204l-.527-.738a1.125 1.125 0 01.12-1.45l.773-.773a1.125 1.125 0 011.45-.12l.737.527c.35.25.807.272 1.204.107.397-.165.71-.505.78-.929l.15-.894z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
                   <!-- Default Icon -->
                   <svg v-else class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
                 
-                <!-- Accordion Label -->
-                <span v-if="!isCollapsed" class="truncate">{{ item.label }}</span>
+                <!-- Label -->
+                <span v-if="!isCollapsed" class="truncate text-sm">{{ item.label }}</span>
               </div>
               
-              <!-- Expand/Collapse Arrow -->
+              <!-- Chevron Right Icon -->
               <svg 
                 v-if="!isCollapsed"
-                :class="[
-                  'w-4 h-4 transition-transform duration-200',
-                  { 'rotate-90': expandedSections.includes(item.id) }
-                ]" 
+                class="w-4 h-4 ml-2 flex-shrink-0 opacity-60 group-hover:opacity-100 transition-opacity" 
                 fill="none" 
                 stroke="currentColor" 
                 viewBox="0 0 24 24"
@@ -129,71 +134,80 @@
               </svg>
             </button>
             
-            <!-- Accordion Content -->
+            <!-- Hover Dropdown Menu -->
             <div 
-              v-if="!isCollapsed && expandedSections.includes(item.id)"
-              class="mt-1 ml-6 space-y-0.5"
+              v-if="!isCollapsed"
+              class="absolute left-full top-0 ml-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50"
             >
-              <button
-                v-for="child in item.children"
-                :key="child.id"
-                @click="() => handleNavigate(child)"
-                :class="[
-                  'group w-full flex items-center text-left transition-all duration-200',
-                  'rounded-md px-3 py-1.5 text-sm',
-                  {
-                    // Active state
-                    'bg-blue-50 text-blue-700': isActiveItem(child) && !isDark,
-                    'bg-blue-900/20 text-blue-400': isActiveItem(child) && isDark,
-                    // Hover state
-                    'hover:bg-gray-50': !isActiveItem(child) && !isDark,
-                    'hover:bg-gray-800': !isActiveItem(child) && isDark,
-                    // Text color
-                    'text-gray-600': !isActiveItem(child) && !isDark,
-                    'text-gray-400': !isActiveItem(child) && isDark
-                  }
-                ]"
-              >
-                <!-- Child Icon -->
-                <div class="flex-shrink-0 w-5 h-5 flex items-center justify-center mr-3">
-                  <!-- Chart Pie Icon -->
-                  <svg v-if="child.icon === 'chart-pie'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
-                  </svg>
-                  <!-- Clipboard Document Check Icon -->
-                  <svg v-else-if="child.icon === 'clipboard-document-check'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 7l2 2 4-4" />
-                  </svg>
-                  <!-- Clipboard Document List Icon -->
-                  <svg v-else-if="child.icon === 'clipboard-document-list'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                  </svg>
-                  <!-- Calendar Icon -->
-                  <svg v-else-if="child.icon === 'calendar'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                  <!-- Cog Icon -->
-                  <svg v-else-if="child.icon === 'cog-6-tooth'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.343 3.94c.09-.542.56-.94 1.11-.94h1.093c.55 0 1.02.398 1.11.94l.149.894c.07.424.384.764.78.93.398.164.855.142 1.205-.108l.737-.527a1.125 1.125 0 011.45.12l.773.774c.39.389.44 1.002.12 1.45l-.527.737c-.25.35-.272.806-.107 1.204.165.397.505.71.93.78l.893.15c.543.09.94.56.94 1.109v1.094c0 .55-.397 1.02-.94 1.11l-.893.149c-.425.07-.765.383-.93.78-.165.398-.143.854.107 1.204l.527.738c.32.447.269 1.06-.12 1.45l-.774.773a1.125 1.125 0 01-1.449.12l-.738-.527c-.35-.25-.806-.272-1.203-.107-.397.165-.71.505-.781.929l-.149.894c-.09.542-.56.94-1.11.94h-1.094c-.55 0-1.019-.398-1.11-.94l-.148-.894c-.071-.424-.384-.764-.781-.93-.398-.164-.854-.142-1.204.108l-.738.527c-.447.32-1.06.269-1.45-.12l-.773-.774a1.125 1.125 0 01-.12-1.45l.527-.737c.25-.35.273-.806.108-1.204-.165-.397-.505-.71-.93-.78l-.894-.15c-.542-.09-.94-.56-.94-1.109v-1.094c0-.55.398-1.02.94-1.11l.894-.149c.424-.07.765-.383.93-.78.165-.398.143-.854-.107-1.204l-.527-.738a1.125 1.125 0 01.12-1.45l.773-.773a1.125 1.125 0 011.45-.12l.737.527c.35.25.807.272 1.204.107.397-.165.71-.505.78-.929l.15-.894z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                  <!-- Chart Bar Icon -->
-                  <svg v-else-if="child.icon === 'chart-bar'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                  </svg>
-                  <!-- Clock Icon -->
-                  <svg v-else-if="child.icon === 'clock'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <!-- Default Icon -->
-                  <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                
-                <!-- Child Label -->
-                <span class="truncate">{{ child.label }}</span>
-              </button>
+              <div class="py-2">
+                <button
+                  v-for="child in item.children"
+                  :key="child.id"
+                  @click="() => handleNavigate(child)"
+                  :class="[
+                    'w-full flex items-center px-4 py-2 text-sm transition-colors duration-150',
+                    {
+                      // Active state
+                      'bg-blue-50 text-blue-700': isActiveItem(child) && !isDark,
+                      'bg-blue-900/20 text-blue-400': isActiveItem(child) && isDark,
+                      // Hover state
+                      'hover:bg-gray-50': !isActiveItem(child) && !isDark,
+                      'hover:bg-gray-700': !isActiveItem(child) && isDark,
+                      // Text color
+                      'text-gray-700': !isActiveItem(child) && !isDark,
+                      'text-gray-300': !isActiveItem(child) && isDark
+                    }
+                  ]"
+                >
+                  <!-- Child Icon -->
+                  <div class="flex-shrink-0 w-5 h-5 flex items-center justify-center mr-3">
+                    <!-- Chart Pie Icon -->
+                    <svg v-if="child.icon === 'chart-pie'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
+                    </svg>
+                    <!-- Clipboard Document Check Icon -->
+                    <svg v-else-if="child.icon === 'clipboard-document-check'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 7l2 2 4-4" />
+                    </svg>
+                    <!-- Clipboard Document List Icon -->
+                    <svg v-else-if="child.icon === 'clipboard-document-list'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                    </svg>
+                    <!-- Calendar Icon -->
+                    <svg v-else-if="child.icon === 'calendar'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <!-- Shield Check Icon -->
+                    <svg v-else-if="child.icon === 'shield-check'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
+                    <!-- Adjustments Horizontal Icon -->
+                    <svg v-else-if="child.icon === 'adjustments-horizontal'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4" />
+                    </svg>
+                    <!-- Cog Icon -->
+                    <svg v-else-if="child.icon === 'cog-6-tooth'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.343 3.94c.09-.542.56-.94 1.11-.94h1.093c.55 0 1.02.398 1.11.94l.149.894c.07.424.384.764.78.93.398.164.855.142 1.205-.108l.737-.527a1.125 1.125 0 011.45.12l.773.774c.39.389.44 1.002.12 1.45l-.527.737c-.25.35-.272.806-.107 1.204.165.397.505.71.93.78l.893.15c.543.09.94.56.94 1.109v1.094c0 .55-.397 1.02-.94 1.11l-.893.149c-.425.07-.765.383-.93.78-.165.398-.143.854.107 1.204l.527.738c.32.447.269 1.06-.12 1.45l-.774.773a1.125 1.125 0 01-1.449.12l-.738-.527c-.35-.25-.806-.272-1.203-.107-.397.165-.71.505-.781.929l-.149.894c-.09.542-.56.94-1.11.94h-1.094c-.55 0-1.019-.398-1.11-.94l-.148-.894c-.071-.424-.384-.764-.781-.93-.398-.164-.854-.142-1.204.108l-.738.527c-.447.32-1.06.269-1.45-.12l-.773-.774a1.125 1.125 0 01-.12-1.45l.527-.737c.25-.35.273-.806.108-1.204-.165-.397-.505-.71-.93-.78l-.894-.15c-.542-.09-.94-.56-.94-1.109v-1.094c0-.55.398-1.02.94-1.11l.894-.149c.424-.07.765-.383.93-.78.165-.398.143-.854-.107-1.204l-.527-.738a1.125 1.125 0 01.12-1.45l.773-.773a1.125 1.125 0 011.45-.12l.737.527c.35.25.807.272 1.204.107.397-.165.71-.505.78-.929l.15-.894z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <!-- Chart Bar Icon -->
+                    <svg v-else-if="child.icon === 'chart-bar'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                    <!-- Clock Icon -->
+                    <svg v-else-if="child.icon === 'clock'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <!-- Default Icon -->
+                    <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  
+                  <!-- Child Label -->
+                  <span class="truncate">{{ child.label }}</span>
+                </button>
+              </div>
             </div>
           </div>
           

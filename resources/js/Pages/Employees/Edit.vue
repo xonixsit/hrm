@@ -2,6 +2,26 @@
   <AuthenticatedLayout>
     <PageLayout :title="`Edit Employee: ${employee.user.name}`"
       subtitle="Update employee information and employment details" :breadcrumbs="breadcrumbs" :actions="headerActions">
+      <!-- Success Message -->
+      <div v-if="$page.props.flash?.success" class="mb-6 p-4 bg-green-50 border border-green-200 rounded-md">
+        <div class="flex items-center">
+          <svg class="w-5 h-5 text-green-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+          </svg>
+          <p class="text-sm text-green-800">{{ $page.props.flash.success }}</p>
+        </div>
+      </div>
+
+      <!-- Error Message -->
+      <div v-if="$page.props.flash?.error" class="mb-6 p-4 bg-red-50 border border-red-200 rounded-md">
+        <div class="flex items-center">
+          <svg class="w-5 h-5 text-red-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+          <p class="text-sm text-red-800">{{ $page.props.flash.error }}</p>
+        </div>
+      </div>
+
       <FormLayout title="Employee Information" description="Update the employee's information below"
         :actions="formActions" :errors="form.errors" :is-submitting="form.processing" variant="card"
         @submit="handleSubmit">
@@ -255,7 +275,7 @@
 
 <script setup>
   import { computed, onMounted } from 'vue'
-  import { useForm, router } from '@inertiajs/vue3'
+  import { useForm, router, usePage } from '@inertiajs/vue3'
   import { useAuth } from '@/composables/useAuth.js'
   import { useNotifications } from '@/composables/useNotifications.js'
   import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
@@ -301,6 +321,7 @@
 
   // Composables
   const { hasRole, hasAnyRole, user } = useAuth()
+  const { showNotification } = useNotifications()
 
   // RBAC Permissions
   const canEditPersonalInfo = computed(() => {
@@ -563,10 +584,19 @@
   const handleSubmit = () => {
     form.put(route('employees.update', props.employee.id), {
       onSuccess: () => {
-        // Success handled by Inertia redirect
+        // Success message will be shown via flash message and notification
+        console.log('Employee updated successfully')
       },
       onError: (errors) => {
         console.error('Form submission errors:', errors)
+        
+        // Show error notification
+        showNotification({
+          type: 'error',
+          title: 'Update Failed',
+          message: 'Please check the form for errors and try again.'
+        })
+        
         // Scroll to first error
         const firstErrorField = Object.keys(errors)[0]
         if (firstErrorField) {
@@ -595,11 +625,24 @@
           passwordForm.reset()
           passwordForm.clearErrors()
 
-          // Show success message (handled by backend flash message)
+          // Show success notification
+          showNotification({
+            type: 'success',
+            title: 'Password Reset',
+            message: `Password has been reset successfully for ${props.employee.user.name}`
+          })
+          
           console.log('Password reset successfully')
         },
         onError: (errors) => {
           console.error('Password reset errors:', errors)
+
+          // Show error notification
+          showNotification({
+            type: 'error',
+            title: 'Password Reset Failed',
+            message: 'Failed to reset password. Please check the form and try again.'
+          })
 
           // Scroll to first error in password form
           const firstErrorField = Object.keys(errors)[0]
@@ -624,9 +667,37 @@
           router.visit(route('employees.index'))
         },
         onError: () => {
-          alert('Failed to delete employee. Please try again.')
+          showNotification({
+            type: 'error',
+            title: 'Delete Failed',
+            message: 'Failed to delete employee. Please try again.'
+          })
         }
       })
     }
   }
+
+  // Handle flash messages from backend on component mount
+  onMounted(() => {
+    // Access flash messages from global page props
+    const page = usePage()
+    
+    // Check for success flash message
+    if (page.props.flash?.success) {
+      showNotification({
+        type: 'success',
+        title: 'Success',
+        message: page.props.flash.success
+      })
+    }
+    
+    // Check for error flash message
+    if (page.props.flash?.error) {
+      showNotification({
+        type: 'error',
+        title: 'Error',
+        message: page.props.flash.error
+      })
+    }
+  })
 </script>

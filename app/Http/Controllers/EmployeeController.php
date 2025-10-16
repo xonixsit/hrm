@@ -394,7 +394,7 @@ class EmployeeController extends Controller
         }
 
         $this->logAudit('Employee Updated', 'Updated employee: ' . $employee->employee_code);
-        return redirect()->route('employees.index')->with('success', 'Employee updated successfully.');
+        return back()->with('success', 'Employee updated successfully.');
     }
 
     public function resetPassword(Request $request, Employee $employee)
