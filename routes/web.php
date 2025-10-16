@@ -15,6 +15,7 @@ use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TimesheetController;
 use App\Http\Controllers\WorkReportController;
 use App\Http\Controllers\Admin\CompetencyController;
+use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\EmployeeCompetencyController;
 use App\Http\Controllers\CompetencyAssessmentController;
 use App\Http\Controllers\CompetencyDevelopmentPlanController;
@@ -398,13 +399,19 @@ Route::middleware('auth')->group(function () {
         return Inertia::render('Competency/AssessmentWorkflow');
     })->name('assessment-workflow');
 
-    // System Settings routes (Admin only)
-    Route::middleware(['auth'])->prefix('admin')->group(function () {
+    // Admin routes (Admin only)
+    Route::middleware(['auth', 'role:Admin'])->prefix('admin')->name('admin.')->group(function () {
+        // System Settings
         Route::get('system-settings', [App\Http\Controllers\Admin\SystemSettingsController::class, 'index'])->name('system-settings.index');
         Route::post('system-settings', [App\Http\Controllers\Admin\SystemSettingsController::class, 'update'])->name('system-settings.update');
         Route::post('system-settings/clear-cache', [App\Http\Controllers\Admin\SystemSettingsController::class, 'clearCache'])->name('system-settings.clear-cache');
         Route::post('system-settings/optimize', [App\Http\Controllers\Admin\SystemSettingsController::class, 'optimize'])->name('system-settings.optimize');
         Route::get('system-settings/health', [App\Http\Controllers\Admin\SystemSettingsController::class, 'health'])->name('system-settings.health');
+        
+        // Role Management
+        Route::get('roles', [RoleController::class, 'index'])->name('roles.index');
+        Route::post('roles/{user}/assign', [RoleController::class, 'assignRole'])->name('roles.assign');
+        Route::post('roles/{user}/remove', [RoleController::class, 'removeRole'])->name('roles.remove');
     });
     
 

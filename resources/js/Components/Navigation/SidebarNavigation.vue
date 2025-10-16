@@ -581,6 +581,30 @@ const navigationItems = computed(() => {
     });
   }
 
+  // Administration Section (for Admins only)
+  if (roles.includes('Admin')) {
+    items.push({
+      id: 'administration-section',
+      label: 'Administration',
+      icon: 'cog-6-tooth',
+      type: 'accordion',
+      children: [
+        {
+          id: 'role-management',
+          label: 'Role Management',
+          icon: 'shield-check',
+          route: 'admin.roles.index',
+        },
+        {
+          id: 'system-settings',
+          label: 'System Settings',
+          icon: 'adjustments-horizontal',
+          route: 'system-settings.index',
+        }
+      ]
+    });
+  }
+
   return items;
 });
 

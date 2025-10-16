@@ -12,6 +12,8 @@ use App\Models\Employee;
 use App\Policies\EmployeePolicy;
 use App\Models\Department;
 use App\Policies\DepartmentPolicy;
+use App\Policies\RolePolicy;
+use Spatie\Permission\Models\Role;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Gate;
 
@@ -28,6 +30,7 @@ class AuthServiceProvider extends ServiceProvider
         CompetencyAssessment::class => CompetencyAssessmentPolicy::class,
         Employee::class => EmployeePolicy::class,
         Department::class => DepartmentPolicy::class,
+        Role::class => RolePolicy::class,
     ];
 
     /**
