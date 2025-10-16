@@ -19,7 +19,7 @@ class BirthdayService
      */
     public function getTodaysBirthdays(): Collection
     {
-        $today = now();
+        $today = now()->startOfDay();
         
         return Employee::active()
             ->with(['user', 'department'])
@@ -36,10 +36,10 @@ class BirthdayService
      */
     public function getUpcomingBirthdays(int $daysAhead = 7): Collection
     {
-        $today = now();
+        $today = now()->startOfDay();
         $upcomingBirthdays = collect();
 
-        // Get employees with birthdays in the next X days
+        // Get employees with birthdays in the next X days (excluding today)
         for ($i = 1; $i <= $daysAhead; $i++) {
             $checkDate = $today->copy()->addDays($i);
             
@@ -57,17 +57,20 @@ class BirthdayService
                     $today->year,
                     $employee->date_of_birth->month,
                     $employee->date_of_birth->day
-                );
+                )->startOfDay();
 
                 // If birthday has passed this year, check next year
-                if ($birthdayThisYear->isPast()) {
+                if ($birthdayThisYear->lt($today)) {
                     $birthdayThisYear->addYear();
                 }
+
+                // Calculate days until birthday (whole days only)
+                $daysUntil = $today->diffInDays($birthdayThisYear, false);
 
                 $upcomingBirthdays->push([
                     'employee' => $employee,
                     'birthday_date' => $birthdayThisYear,
-                    'days_until' => $today->diffInDays($birthdayThisYear),
+                    'days_until' => $daysUntil,
                 ]);
             }
         }
@@ -199,9 +202,15 @@ class BirthdayService
      */
     public function getNextBirthday(): ?array
     {
+        // Get upcoming birthdays (excluding today)
         $upcomingBirthdays = $this->getUpcomingBirthdays(365);
         
-        return $upcomingBirthdays->first();
+        // Filter out any birthdays that are 0 days away (shouldn't happen with our logic, but just in case)
+        $nextBirthday = $upcomingBirthdays->filter(function ($birthday) {
+            return $birthday['days_until'] > 0;
+        })->first();
+        
+        return $nextBirthday;
     }
 
     /**
