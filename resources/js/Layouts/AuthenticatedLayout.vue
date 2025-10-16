@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, useSlots, onMounted } from 'vue';
 import NavigationErrorDisplay from '@/Components/NavigationErrorDisplay.vue';
-import QuickTopNav from '@/Components/Navigation/QuickTopNav.vue';
+import SimpleTopNav from '@/Components/Navigation/SimpleTopNav.vue';
 import NotificationContainer from '@/Components/Notifications/NotificationContainer.vue';
 import FloatingAttendanceWidget from '@/Components/Navigation/FloatingAttendanceWidget.vue';
 import SkipLinks from '@/Components/Accessibility/SkipLinks.vue';
@@ -79,8 +79,8 @@ const hasHeader = computed(() => !!slots.header);
             <p class="text-sm mt-1">Please refresh the page or contact support if the issue persists.</p>
         </div>
         
-        <!-- Quick Top Navigation -->
-        <QuickTopNav :current-route="currentRoute" />
+        <!-- Simple Top Navigation -->
+        <SimpleTopNav />
 
         <!-- Main Layout Container -->
         <div :class="[

@@ -182,15 +182,14 @@ const props = defineProps({
 const { user, roles: userRoles } = useAuth()
 const { isDark, toggleTheme } = useTheme()
 
-// Debug logging to check user and roles
-console.log('QuickTopNav - User:', user.value)
-console.log('QuickTopNav - Roles:', userRoles.value)
-console.log('QuickTopNav - Is Admin:', userRoles.value?.includes('Admin'))
-console.log('QuickTopNav - More Nav Items:', moreNavItems.value)
-
 const showMore = ref(false)
 const showUserMenu = ref(false)
 const showMobileMenu = ref(false)
+
+// Debug logging to check user and roles (moved after refs)
+console.log('QuickTopNav - User:', user.value)
+console.log('QuickTopNav - Roles:', userRoles.value)
+console.log('QuickTopNav - Is Admin:', userRoles.value?.includes('Admin'))
 
 const userInitials = computed(() => {
   if (!user.value?.name) return 'U'
@@ -213,41 +212,46 @@ const mainNavItems = computed(() => [
 
 // Additional navigation items (in dropdown)
 const moreNavItems = computed(() => {
-  const roles = userRoles.value || []
-  console.log('Computing moreNavItems with roles:', roles)
-  
-  const items = [
-    { route: 'work-reports.index', label: 'Work Reports' },
-    { route: 'work-reports.leaderboard', label: 'Leaderboard' },
-    { route: 'feedbacks.index', label: 'Feedback' }
-  ]
+  try {
+    const roles = userRoles.value || []
+    
+    const items = [
+      { route: 'work-reports.index', label: 'Work Reports' },
+      { route: 'work-reports.leaderboard', label: 'Leaderboard' },
+      { route: 'feedbacks.index', label: 'Feedback' }
+    ]
 
-  // Ensure roles is an array and check for management roles
-  const rolesArray = Array.isArray(roles) ? roles : []
-  const isManagement = rolesArray.includes('Admin') || rolesArray.includes('Manager') || rolesArray.includes('HR')
-  const isAdmin = rolesArray.includes('Admin')
-  
-  console.log('Role checks:', { rolesArray, isManagement, isAdmin })
+    // Ensure roles is an array and check for management roles
+    const rolesArray = Array.isArray(roles) ? roles : []
+    const isManagement = rolesArray.includes('Admin') || rolesArray.includes('Manager') || rolesArray.includes('HR')
+    const isAdmin = rolesArray.includes('Admin')
 
-  // Add management items
-  if (isManagement) {
-    items.push(
-      { route: 'employees.index', label: 'Employee Management' },
-      { route: 'competency-assessments.index', label: 'All Assessments' }
-    )
+    // Add management items
+    if (isManagement) {
+      items.push(
+        { route: 'employees.index', label: 'Employee Management' },
+        { route: 'competency-assessments.index', label: 'All Assessments' }
+      )
+    }
+
+    // Add admin items
+    if (isAdmin) {
+      items.push(
+        { route: 'admin.roles.index', label: 'Role Management' },
+        { route: 'system-settings.index', label: 'System Settings' },
+        { route: 'organizational-analytics.index', label: 'Analytics' }
+      )
+    }
+
+    return items
+  } catch (error) {
+    console.error('Error computing moreNavItems:', error)
+    return [
+      { route: 'work-reports.index', label: 'Work Reports' },
+      { route: 'work-reports.leaderboard', label: 'Leaderboard' },
+      { route: 'feedbacks.index', label: 'Feedback' }
+    ]
   }
-
-  // Add admin items
-  if (isAdmin) {
-    items.push(
-      { route: 'admin.roles.index', label: 'Role Management' },
-      { route: 'system-settings.index', label: 'System Settings' },
-      { route: 'organizational-analytics.index', label: 'Analytics' }
-    )
-  }
-
-  console.log('Final moreNavItems:', items)
-  return items
 })
 
 // All items for mobile menu
