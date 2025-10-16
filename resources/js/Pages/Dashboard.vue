@@ -58,417 +58,405 @@
           :status="(adminStats.pendingAssessments || 9) > 5 ? 'warning' : 'good'"
           :statusText="(adminStats.pendingAssessments || 9) > 5 ? 'Review' : 'On Track'" route="assessment-dashboard"
           :loading="loading" />
-        <div class="text-right">
-          <div class="text-2xl font-bold text-gray-900">{{ adminStats.pendingAssessments || 9 }}</div>
-          <div class="text-xs text-gray-500">Pending Assessments</div>
-        </div>
-      </div>
-      <div class="flex items-center justify-between">
-        <span class="text-sm text-gray-600">Review status</span>
-        <div class="flex items-center text-purple-600">
-          <AcademicCapIcon class="w-4 h-4 mr-1" />
-          <span class="text-sm font-medium">{{ adminStats.pendingAssessments > 5 ? 'Review' : 'On Track' }}</span>
-        </div>
-      </div>
-  
 
-    <!-- System Health -->
-    <UnifiedStatsCard value="98.5%" label="System Health" description="Uptime" :icon="CheckCircleIcon" variant="success"
-      status="excellent" statusText="Excellent" :clickable="false" :loading="loading" />
+        <!-- System Health -->
+        <UnifiedStatsCard value="98.5%" label="System Health" description="Uptime" :icon="CheckCircleIcon"
+          variant="success" status="excellent" statusText="Excellent" :clickable="false" :loading="loading" />
 
-    <!-- Main Dashboard Content Grid -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Main Dashboard Content Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-      <!-- Left Column: Action Required & Approvals -->
-      <div class="lg:col-span-2 space-y-6">
+          <!-- Left Column: Action Required & Approvals -->
+          <div class="lg:col-span-2 space-y-6">
 
-        <!-- Action Required Section -->
-        <UnifiedCard title="Action Required" description="Items needing your immediate attention"
-          :icon="ExclamationTriangleIcon" iconVariant="danger" variant="elevated">
-          <template #headerActions>
-            <div class="flex items-center space-x-2">
-              <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
-                {{ (adminStats.pendingLeaves || 19) + (adminStats.pendingAssessments || 9) }} pending
-              </span>
-              <button @click="handleRefresh"
-                class="p-2 text-gray-400 hover:text-gray-600 hover:bg-white rounded-lg transition-all">
-                <ArrowPathIcon class="w-4 h-4" />
-              </button>
-            </div>
-          </template>
-
-          <PendingApprovalsWidget :approvals="pendingApprovals" :loading="loading" @approve="handleApproval"
-            @reject="handleRejection" @view-all="() => router.visit(route('approvals.index'))" />
-        </UnifiedCard>
-
-        <!-- Competency Management Dashboard -->
-        <UnifiedCard title="Competency Management" description="Track and manage employee competencies"
-          :icon="AcademicCapIcon" iconVariant="primary" variant="elevated">
-          <template #headerActions>
-            <button @click="navigateTo('assessment-dashboard')"
-              class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/25">
-              View Details
-              <ChevronRightIcon class="w-4 h-4 ml-1" />
-            </button>
-          </template>
-
-          <div class="p-6">
-            <!-- Competency Metrics Grid -->
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-              <div class="text-center p-4 bg-green-50 rounded-xl border border-green-100">
-                <div class="text-2xl font-bold text-green-600">{{ adminStats.completedAssessmentsThisMonth || 0 }}</div>
-                <div class="text-xs text-gray-600 mt-1">Completed</div>
-              </div>
-              <div class="text-center p-4 bg-orange-50 rounded-xl border border-orange-100">
-                <div class="text-2xl font-bold text-orange-600">{{ adminStats.pendingAssessments || 9 }}</div>
-                <div class="text-xs text-gray-600 mt-1">Pending</div>
-              </div>
-              <div class="text-center p-4 bg-purple-50 rounded-xl border border-purple-100">
-                <div class="text-2xl font-bold text-purple-600">{{ adminStats.activeAssessmentCycles || 4 }}</div>
-                <div class="text-xs text-gray-600 mt-1">Active Cycles</div>
-              </div>
-              <div class="text-center p-4 bg-blue-50 rounded-xl border border-blue-100">
-                <div class="text-2xl font-bold text-blue-600">4.2</div>
-                <div class="text-xs text-gray-600 mt-1">Avg Rating</div>
-              </div>
-            </div>
-
-            <!-- Recent Activity -->
-            <div class="space-y-3">
-              <h3 class="text-sm font-medium text-gray-900 mb-3">Recent Competency Activity</h3>
-              <div class="space-y-2">
-                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div class="flex items-center space-x-3">
-                    <div class="w-2 h-2 bg-green-400 rounded-full"></div>
-                    <span class="text-sm text-gray-700">Q4 Performance Review cycle started</span>
-                  </div>
-                  <span class="text-xs text-gray-500">2 hours ago</span>
+            <!-- Action Required Section -->
+            <UnifiedCard title="Action Required" description="Items needing your immediate attention"
+              :icon="ExclamationTriangleIcon" iconVariant="danger" variant="elevated">
+              <template #headerActions>
+                <div class="flex items-center space-x-2">
+                  <span
+                    class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
+                    {{ (adminStats.pendingLeaves || 19) + (adminStats.pendingAssessments || 9) }} pending
+                  </span>
+                  <button @click="handleRefresh"
+                    class="p-2 text-gray-400 hover:text-gray-600 hover:bg-white rounded-lg transition-all">
+                    <ArrowPathIcon class="w-4 h-4" />
+                  </button>
                 </div>
-                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div class="flex items-center space-x-3">
-                    <div class="w-2 h-2 bg-blue-400 rounded-full"></div>
-                    <span class="text-sm text-gray-700">5 new assessments submitted</span>
+              </template>
+
+              <PendingApprovalsWidget :approvals="pendingApprovals" :loading="loading" @approve="handleApproval"
+                @reject="handleRejection" @view-all="() => router.visit(route('approvals.index'))" />
+            </UnifiedCard>
+
+            <!-- Competency Management Dashboard -->
+            <UnifiedCard title="Competency Management" description="Track and manage employee competencies"
+              :icon="AcademicCapIcon" iconVariant="primary" variant="elevated">
+              <template #headerActions>
+                <button @click="navigateTo('assessment-dashboard')"
+                  class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/25">
+                  View Details
+                  <ChevronRightIcon class="w-4 h-4 ml-1" />
+                </button>
+              </template>
+
+              <div class="p-6">
+                <!-- Competency Metrics Grid -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                  <div class="text-center p-4 bg-green-50 rounded-xl border border-green-100">
+                    <div class="text-2xl font-bold text-green-600">{{ adminStats.completedAssessmentsThisMonth || 0 }}
+                    </div>
+                    <div class="text-xs text-gray-600 mt-1">Completed</div>
                   </div>
-                  <span class="text-xs text-gray-500">4 hours ago</span>
+                  <div class="text-center p-4 bg-orange-50 rounded-xl border border-orange-100">
+                    <div class="text-2xl font-bold text-orange-600">{{ adminStats.pendingAssessments || 9 }}</div>
+                    <div class="text-xs text-gray-600 mt-1">Pending</div>
+                  </div>
+                  <div class="text-center p-4 bg-purple-50 rounded-xl border border-purple-100">
+                    <div class="text-2xl font-bold text-purple-600">{{ adminStats.activeAssessmentCycles || 4 }}</div>
+                    <div class="text-xs text-gray-600 mt-1">Active Cycles</div>
+                  </div>
+                  <div class="text-center p-4 bg-blue-50 rounded-xl border border-blue-100">
+                    <div class="text-2xl font-bold text-blue-600">4.2</div>
+                    <div class="text-xs text-gray-600 mt-1">Avg Rating</div>
+                  </div>
                 </div>
-                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div class="flex items-center space-x-3">
-                    <div class="w-2 h-2 bg-purple-400 rounded-full"></div>
-                    <span class="text-sm text-gray-700">Leadership competency updated</span>
+
+                <!-- Recent Activity -->
+                <div class="space-y-3">
+                  <h3 class="text-sm font-medium text-gray-900 mb-3">Recent Competency Activity</h3>
+                  <div class="space-y-2">
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <div class="flex items-center space-x-3">
+                        <div class="w-2 h-2 bg-green-400 rounded-full"></div>
+                        <span class="text-sm text-gray-700">Q4 Performance Review cycle started</span>
+                      </div>
+                      <span class="text-xs text-gray-500">2 hours ago</span>
+                    </div>
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <div class="flex items-center space-x-3">
+                        <div class="w-2 h-2 bg-blue-400 rounded-full"></div>
+                        <span class="text-sm text-gray-700">5 new assessments submitted</span>
+                      </div>
+                      <span class="text-xs text-gray-500">4 hours ago</span>
+                    </div>
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <div class="flex items-center space-x-3">
+                        <div class="w-2 h-2 bg-purple-400 rounded-full"></div>
+                        <span class="text-sm text-gray-700">Leadership competency updated</span>
+                      </div>
+                      <span class="text-xs text-gray-500">1 day ago</span>
+                    </div>
                   </div>
-                  <span class="text-xs text-gray-500">1 day ago</span>
                 </div>
               </div>
-            </div>
-          </div>
-        </UnifiedCard>
-      </div>
-
-      <!-- Right Column: Quick Actions & Insights -->
-      <div class="lg:col-span-1 space-y-6">
-
-        <!-- Quick Actions -->
-        <div class="bg-white rounded-2xl border border-gray-100 p-6">
-          <div class="flex items-center space-x-3 mb-6">
-            <div class="p-2 bg-blue-100 rounded-lg">
-              <PlusIcon class="w-5 h-5 text-blue-600" />
-            </div>
-            <div>
-              <h3 class="text-lg font-semibold text-gray-900">Quick Actions</h3>
-              <p class="text-sm text-gray-600">Common tasks</p>
-            </div>
+            </UnifiedCard>
           </div>
 
-          <div class="space-y-3">
-            <button @click="navigateTo('competencies.create')"
-              class="w-full flex items-center justify-between px-4 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all group">
-              <div class="flex items-center">
-                <AcademicCapIcon class="w-5 h-5 mr-3" />
-                <span class="font-medium">Add Competency</span>
-              </div>
-              <ChevronRightIcon class="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </button>
+          <!-- Right Column: Quick Actions & Insights -->
+          <div class="lg:col-span-1 space-y-6">
 
-            <button @click="navigateTo('employees.index')"
-              class="w-full flex items-center justify-between px-4 py-3 bg-gray-50 text-gray-700 rounded-xl hover:bg-gray-100 transition-all group">
-              <div class="flex items-center">
-                <UsersIcon class="w-5 h-5 mr-3" />
-                <span class="font-medium">Manage Employees</span>
+            <!-- Quick Actions -->
+            <div class="bg-white rounded-2xl border border-gray-100 p-6">
+              <div class="flex items-center space-x-3 mb-6">
+                <div class="p-2 bg-blue-100 rounded-lg">
+                  <PlusIcon class="w-5 h-5 text-blue-600" />
+                </div>
+                <div>
+                  <h3 class="text-lg font-semibold text-gray-900">Quick Actions</h3>
+                  <p class="text-sm text-gray-600">Common tasks</p>
+                </div>
               </div>
-              <ChevronRightIcon class="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </button>
 
-            <button @click="navigateTo('assessment-cycles.create')"
-              class="w-full flex items-center justify-between px-4 py-3 bg-gray-50 text-gray-700 rounded-xl hover:bg-gray-100 transition-all group">
-              <div class="flex items-center">
-                <PlusIcon class="w-5 h-5 mr-3" />
-                <span class="font-medium">New Assessment Cycle</span>
-              </div>
-              <ChevronRightIcon class="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </button>
+              <div class="space-y-3">
+                <button @click="navigateTo('competencies.create')"
+                  class="w-full flex items-center justify-between px-4 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all group">
+                  <div class="flex items-center">
+                    <AcademicCapIcon class="w-5 h-5 mr-3" />
+                    <span class="font-medium">Add Competency</span>
+                  </div>
+                  <ChevronRightIcon class="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </button>
 
-            <button @click="navigateTo('reports.index')"
-              class="w-full flex items-center justify-between px-4 py-3 bg-gray-50 text-gray-700 rounded-xl hover:bg-gray-100 transition-all group">
-              <div class="flex items-center">
-                <ChartBarIcon class="w-5 h-5 mr-3" />
-                <span class="font-medium">View Reports</span>
-              </div>
-              <ChevronRightIcon class="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </button>
+                <button @click="navigateTo('employees.index')"
+                  class="w-full flex items-center justify-between px-4 py-3 bg-gray-50 text-gray-700 rounded-xl hover:bg-gray-100 transition-all group">
+                  <div class="flex items-center">
+                    <UsersIcon class="w-5 h-5 mr-3" />
+                    <span class="font-medium">Manage Employees</span>
+                  </div>
+                  <ChevronRightIcon class="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </button>
 
-            <button @click="navigateTo('system-settings.index')"
-              class="w-full flex items-center justify-between px-4 py-3 bg-gray-50 text-gray-700 rounded-xl hover:bg-gray-100 transition-all group">
-              <div class="flex items-center">
-                <CogIcon class="w-5 h-5 mr-3" />
-                <span class="font-medium">System Settings</span>
+                <button @click="navigateTo('assessment-cycles.create')"
+                  class="w-full flex items-center justify-between px-4 py-3 bg-gray-50 text-gray-700 rounded-xl hover:bg-gray-100 transition-all group">
+                  <div class="flex items-center">
+                    <PlusIcon class="w-5 h-5 mr-3" />
+                    <span class="font-medium">New Assessment Cycle</span>
+                  </div>
+                  <ChevronRightIcon class="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </button>
+
+                <button @click="navigateTo('reports.index')"
+                  class="w-full flex items-center justify-between px-4 py-3 bg-gray-50 text-gray-700 rounded-xl hover:bg-gray-100 transition-all group">
+                  <div class="flex items-center">
+                    <ChartBarIcon class="w-5 h-5 mr-3" />
+                    <span class="font-medium">View Reports</span>
+                  </div>
+                  <ChevronRightIcon class="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </button>
+
+                <button @click="navigateTo('system-settings.index')"
+                  class="w-full flex items-center justify-between px-4 py-3 bg-gray-50 text-gray-700 rounded-xl hover:bg-gray-100 transition-all group">
+                  <div class="flex items-center">
+                    <CogIcon class="w-5 h-5 mr-3" />
+                    <span class="font-medium">System Settings</span>
+                  </div>
+                  <ChevronRightIcon class="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </button>
               </div>
-              <ChevronRightIcon class="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </button>
+            </div>
+
+            <!-- Birthday Notifications -->
+            <BirthdayNotifications :todays-birthdays="birthdayData.todaysBirthdays"
+              :upcoming-birthdays="birthdayData.upcomingBirthdays" :stats="birthdayData.stats" />
+
+            <!-- Performance Insights -->
+            <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl border border-green-100 p-6">
+              <div class="flex items-center space-x-3 mb-6">
+                <div class="p-2 bg-green-100 rounded-lg">
+                  <ChartBarIcon class="w-5 h-5 text-green-600" />
+                </div>
+                <div>
+                  <h3 class="text-lg font-semibold text-gray-900">Performance Insights</h3>
+                  <p class="text-sm text-gray-600">Key metrics</p>
+                </div>
+              </div>
+
+              <div class="space-y-4">
+                <div class="flex items-center justify-between p-3 bg-white rounded-xl">
+                  <div class="flex items-center space-x-3">
+                    <div class="w-3 h-3 bg-green-400 rounded-full"></div>
+                    <span class="text-sm font-medium text-gray-700">Top Performing</span>
+                  </div>
+                  <span class="text-sm font-semibold text-green-600">Communication</span>
+                </div>
+
+                <div class="flex items-center justify-between p-3 bg-white rounded-xl">
+                  <div class="flex items-center space-x-3">
+                    <div class="w-3 h-3 bg-orange-400 rounded-full"></div>
+                    <span class="text-sm font-medium text-gray-700">Needs Attention</span>
+                  </div>
+                  <span class="text-sm font-semibold text-orange-600">Technical Skills</span>
+                </div>
+
+                <div class="flex items-center justify-between p-3 bg-white rounded-xl">
+                  <div class="flex items-center space-x-3">
+                    <div class="w-3 h-3 bg-blue-400 rounded-full"></div>
+                    <span class="text-sm font-medium text-gray-700">Average Rating</span>
+                  </div>
+                  <span class="text-sm font-semibold text-blue-600">4.2/5.0</span>
+                </div>
+
+                <div class="pt-4 border-t border-green-200">
+                  <button @click="navigateTo('competency-analytics.reports')"
+                    class="w-full flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors">
+                    <span class="font-medium">View Detailed Analytics</span>
+                    <ChevronRightIcon class="w-4 h-4 ml-2" />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- System Status -->
+            <div class="bg-white rounded-2xl border border-gray-100 p-6">
+              <div class="flex items-center space-x-3 mb-4">
+                <div class="p-2 bg-green-100 rounded-lg">
+                  <CheckCircleIcon class="w-5 h-5 text-green-600" />
+                </div>
+                <div>
+                  <h3 class="text-lg font-semibold text-gray-900">System Status</h3>
+                  <p class="text-sm text-gray-600">All systems operational</p>
+                </div>
+              </div>
+
+              <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                  <span class="text-sm text-gray-600">Database</span>
+                  <div class="flex items-center">
+                    <div class="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
+                    <span class="text-sm font-medium text-green-600">Healthy</span>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-sm text-gray-600">API Services</span>
+                  <div class="flex items-center">
+                    <div class="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
+                    <span class="text-sm font-medium text-green-600">Online</span>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-sm text-gray-600">Uptime</span>
+                  <span class="text-sm font-medium text-gray-900">98.5%</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-
-        <!-- Birthday Notifications -->
-        <BirthdayNotifications :todays-birthdays="birthdayData.todaysBirthdays"
-          :upcoming-birthdays="birthdayData.upcomingBirthdays" :stats="birthdayData.stats" />
-
-        <!-- Performance Insights -->
-        <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl border border-green-100 p-6">
-          <div class="flex items-center space-x-3 mb-6">
-            <div class="p-2 bg-green-100 rounded-lg">
-              <ChartBarIcon class="w-5 h-5 text-green-600" />
-            </div>
-            <div>
-              <h3 class="text-lg font-semibold text-gray-900">Performance Insights</h3>
-              <p class="text-sm text-gray-600">Key metrics</p>
-            </div>
-          </div>
-
-          <div class="space-y-4">
-            <div class="flex items-center justify-between p-3 bg-white rounded-xl">
-              <div class="flex items-center space-x-3">
-                <div class="w-3 h-3 bg-green-400 rounded-full"></div>
-                <span class="text-sm font-medium text-gray-700">Top Performing</span>
-              </div>
-              <span class="text-sm font-semibold text-green-600">Communication</span>
-            </div>
-
-            <div class="flex items-center justify-between p-3 bg-white rounded-xl">
-              <div class="flex items-center space-x-3">
-                <div class="w-3 h-3 bg-orange-400 rounded-full"></div>
-                <span class="text-sm font-medium text-gray-700">Needs Attention</span>
-              </div>
-              <span class="text-sm font-semibold text-orange-600">Technical Skills</span>
-            </div>
-
-            <div class="flex items-center justify-between p-3 bg-white rounded-xl">
-              <div class="flex items-center space-x-3">
-                <div class="w-3 h-3 bg-blue-400 rounded-full"></div>
-                <span class="text-sm font-medium text-gray-700">Average Rating</span>
-              </div>
-              <span class="text-sm font-semibold text-blue-600">4.2/5.0</span>
-            </div>
-
-            <div class="pt-4 border-t border-green-200">
-              <button @click="navigateTo('competency-analytics.reports')"
-                class="w-full flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors">
-                <span class="font-medium">View Detailed Analytics</span>
-                <ChevronRightIcon class="w-4 h-4 ml-2" />
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- System Status -->
-        <div class="bg-white rounded-2xl border border-gray-100 p-6">
-          <div class="flex items-center space-x-3 mb-4">
-            <div class="p-2 bg-green-100 rounded-lg">
-              <CheckCircleIcon class="w-5 h-5 text-green-600" />
-            </div>
-            <div>
-              <h3 class="text-lg font-semibold text-gray-900">System Status</h3>
-              <p class="text-sm text-gray-600">All systems operational</p>
-            </div>
-          </div>
-
-          <div class="space-y-3">
-            <div class="flex items-center justify-between">
-              <span class="text-sm text-gray-600">Database</span>
-              <div class="flex items-center">
-                <div class="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
-                <span class="text-sm font-medium text-green-600">Healthy</span>
-              </div>
-            </div>
-            <div class="flex items-center justify-between">
-              <span class="text-sm text-gray-600">API Services</span>
-              <div class="flex items-center">
-                <div class="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
-                <span class="text-sm font-medium text-green-600">Online</span>
-              </div>
-            </div>
-            <div class="flex items-center justify-between">
-              <span class="text-sm text-gray-600">Uptime</span>
-              <span class="text-sm font-medium text-gray-900">98.5%</span>
-            </div>
-          </div>
-        </div>
-      </div>
       </div>
     </div>
-      <!-- Manager Dashboard Layout -->
-      <div v-else-if="isManager" class="manager-layout">
-        <!-- Team Overview -->
-        <div class="team-overview-section">
-          <h2 class="section-title">Team Overview</h2>
-          <div class="stats-grid-primary">
-            <StatsCard :value="managerStats.teamSize" label="Team Members" icon="users" variant="primary"
-              :trend="managerStats.teamTrend" :loading="loading" size="large" :clickable="true"
-              route="employees.index" />
-            <StatsCard :value="managerStats.pendingLeaves" label="Pending Team Leaves" icon="calendar" variant="warning"
-              :loading="loading" size="large" :urgent="managerStats.pendingLeaves > 5" :clickable="true"
-              route="leaves.index" />
-            <StatsCard :value="managerStats.activeProjects" label="Active Projects" icon="folder" variant="success"
-              :trend="managerStats.projectTrend" :loading="loading" size="large" :clickable="true"
-              route="projects.index" />
-            <StatsCard :value="managerStats.teamPerformance" label="Team Performance" icon="chart-bar" variant="info"
-              suffix="%" :loading="loading" size="large" :clickable="true" route="reports.index" />
-          </div>
+    <!-- Manager Dashboard Layout -->
+    <div v-else-if="isManager" class="manager-layout">
+      <!-- Team Overview -->
+      <div class="team-overview-section">
+        <h2 class="section-title">Team Overview</h2>
+        <div class="stats-grid-primary">
+          <StatsCard :value="managerStats.teamSize" label="Team Members" icon="users" variant="primary"
+            :trend="managerStats.teamTrend" :loading="loading" size="large" :clickable="true" route="employees.index" />
+          <StatsCard :value="managerStats.pendingLeaves" label="Pending Team Leaves" icon="calendar" variant="warning"
+            :loading="loading" size="large" :urgent="managerStats.pendingLeaves > 5" :clickable="true"
+            route="leaves.index" />
+          <StatsCard :value="managerStats.activeProjects" label="Active Projects" icon="folder" variant="success"
+            :trend="managerStats.projectTrend" :loading="loading" size="large" :clickable="true"
+            route="projects.index" />
+          <StatsCard :value="managerStats.teamPerformance" label="Team Performance" icon="chart-bar" variant="info"
+            suffix="%" :loading="loading" size="large" :clickable="true" route="reports.index" />
         </div>
+      </div>
 
-        <!-- Team Management -->
-        <div class="team-management-section">
-          <h2 class="section-title">Team Management</h2>
-          <div class="content-grid-main">
-            <!-- Team Members - Direct Reports -->
-            <div class="team-members-card priority-high">
-              <TeamMembersWidget :members="teamMembers" :loading="loading" @view-member="handleViewMember"
-                @send-message="handleSendMessage" />
-            </div>
+      <!-- Team Management -->
+      <div class="team-management-section">
+        <h2 class="section-title">Team Management</h2>
+        <div class="content-grid-main">
+          <!-- Team Members - Direct Reports -->
+          <div class="team-members-card priority-high">
+            <TeamMembersWidget :members="teamMembers" :loading="loading" @view-member="handleViewMember"
+              @send-message="handleSendMessage" />
+          </div>
 
-            <!-- Team Competency Overview -->
-            <div class="team-competency-card priority-high">
-              <CompetencyDashboardWidget title="Team Competencies" :metrics="{
+          <!-- Team Competency Overview -->
+          <div class="team-competency-card priority-high">
+            <CompetencyDashboardWidget title="Team Competencies" :metrics="{
                   completedAssessments: managerStats.teamCompletedAssessments || 0,
                   pendingAssessments: managerStats.teamPendingAssessments || 0,
                   activeCycles: 0,
                   averageRating: null
                 }" :loading="loading" @view-details="() => $inertia.visit(route('competency-assessments.index'))" />
-            </div>
           </div>
-        </div>
-
-        <!-- Team Performance -->
-        <div class="team-performance-section">
-          <h2 class="section-title">Performance Insights</h2>
-          <div class="content-grid-secondary">
-            <!-- Team Performance Metrics -->
-            <div class="team-performance-card priority-medium">
-              <TeamPerformanceWidget :performance="teamPerformance" :loading="loading" />
-            </div>
-
-            <!-- Team Activities -->
-            <div class="team-activities-card priority-medium">
-              <TeamActivitiesWidget :activities="teamActivities" :loading="loading" />
-            </div>
-          </div>
-        </div>
-
-        <!-- Birthday Notifications for Managers -->
-        <div class="birthday-section">
-          <BirthdayNotifications :todays-birthdays="birthdayData.todaysBirthdays"
-            :upcoming-birthdays="birthdayData.upcomingBirthdays" :stats="birthdayData.stats" />
         </div>
       </div>
 
-      <!-- Employee Dashboard Layout -->
-      <div v-else class="employee-layout">
-        <EmployeeDashboard :stats="employeeStats" :personal-activities="personalActivities"
-          :todays-schedule="todaysSchedule" :my-tasks="myTasks" :recent-feedback="recentFeedback"
-          :clocked-in="clockedIn" :current-attendance="currentAttendance" :loading="loading"
-          @clock-in-out="handleClockInOut" @action="handleAction" @toggle-task="handleToggleTask"
-          @view-task="handleViewTask" />
+      <!-- Team Performance -->
+      <div class="team-performance-section">
+        <h2 class="section-title">Performance Insights</h2>
+        <div class="content-grid-secondary">
+          <!-- Team Performance Metrics -->
+          <div class="team-performance-card priority-medium">
+            <TeamPerformanceWidget :performance="teamPerformance" :loading="loading" />
+          </div>
 
-        <!-- Birthday Notifications for Employees -->
-        <div class="birthday-section mt-6">
-          <BirthdayNotifications :todays-birthdays="birthdayData.todaysBirthdays"
-            :upcoming-birthdays="birthdayData.upcomingBirthdays" :stats="birthdayData.stats" />
+          <!-- Team Activities -->
+          <div class="team-activities-card priority-medium">
+            <TeamActivitiesWidget :activities="teamActivities" :loading="loading" />
+          </div>
         </div>
       </div>
 
-      <!-- Rejection Modal -->
-      <div v-if="showRejectionModal" class="fixed inset-0 z-50 overflow-y-auto">
-        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-          <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" @click="cancelRejection"></div>
+      <!-- Birthday Notifications for Managers -->
+      <div class="birthday-section">
+        <BirthdayNotifications :todays-birthdays="birthdayData.todaysBirthdays"
+          :upcoming-birthdays="birthdayData.upcomingBirthdays" :stats="birthdayData.stats" />
+      </div>
+    </div>
 
-          <div
-            class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-              <div class="sm:flex sm:items-start">
-                <div
-                  class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
-                  <ExclamationTriangleIcon class="h-6 w-6 text-red-600" />
-                </div>
-                <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left flex-1">
-                  <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
-                    Reject {{ rejectionItem?.title || 'Request' }}
-                  </h3>
-                  <div class="space-y-4">
-                    <div>
-                      <p class="text-sm text-gray-600 mb-2">
-                        <strong>Requester:</strong> {{ rejectionItem?.requester }}
-                      </p>
-                      <p class="text-sm text-gray-600 mb-4">
-                        <strong>Request:</strong> {{ rejectionItem?.description }}
-                      </p>
-                    </div>
-                    <div>
-                      <label for="rejection-reason" class="block text-sm font-medium text-gray-700 mb-2">
-                        Reason for rejection <span class="text-red-500">*</span>
-                      </label>
-                      <textarea id="rejection-reason" v-model="rejectionReason" rows="4"
-                        class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-red-500 focus:border-red-500"
-                        placeholder="Please provide a clear reason for rejecting this request..." required></textarea>
-                      <p class="text-xs text-gray-500 mt-1">
-                        This reason will be sent to the employee and recorded in the system.
-                      </p>
-                    </div>
+    <!-- Employee Dashboard Layout -->
+    <div v-else class="employee-layout">
+      <EmployeeDashboard :stats="employeeStats" :personal-activities="personalActivities"
+        :todays-schedule="todaysSchedule" :my-tasks="myTasks" :recent-feedback="recentFeedback" :clocked-in="clockedIn"
+        :current-attendance="currentAttendance" :loading="loading" @clock-in-out="handleClockInOut"
+        @action="handleAction" @toggle-task="handleToggleTask" @view-task="handleViewTask" />
+
+      <!-- Birthday Notifications for Employees -->
+      <div class="birthday-section mt-6">
+        <BirthdayNotifications :todays-birthdays="birthdayData.todaysBirthdays"
+          :upcoming-birthdays="birthdayData.upcomingBirthdays" :stats="birthdayData.stats" />
+      </div>
+    </div>
+
+    <!-- Rejection Modal -->
+    <div v-if="showRejectionModal" class="fixed inset-0 z-50 overflow-y-auto">
+      <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" @click="cancelRejection"></div>
+
+        <div
+          class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+          <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+            <div class="sm:flex sm:items-start">
+              <div
+                class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                <ExclamationTriangleIcon class="h-6 w-6 text-red-600" />
+              </div>
+              <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left flex-1">
+                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
+                  Reject {{ rejectionItem?.title || 'Request' }}
+                </h3>
+                <div class="space-y-4">
+                  <div>
+                    <p class="text-sm text-gray-600 mb-2">
+                      <strong>Requester:</strong> {{ rejectionItem?.requester }}
+                    </p>
+                    <p class="text-sm text-gray-600 mb-4">
+                      <strong>Request:</strong> {{ rejectionItem?.description }}
+                    </p>
+                  </div>
+                  <div>
+                    <label for="rejection-reason" class="block text-sm font-medium text-gray-700 mb-2">
+                      Reason for rejection <span class="text-red-500">*</span>
+                    </label>
+                    <textarea id="rejection-reason" v-model="rejectionReason" rows="4"
+                      class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-red-500 focus:border-red-500"
+                      placeholder="Please provide a clear reason for rejecting this request..." required></textarea>
+                    <p class="text-xs text-gray-500 mt-1">
+                      This reason will be sent to the employee and recorded in the system.
+                    </p>
                   </div>
                 </div>
               </div>
             </div>
-            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-              <button @click="confirmRejection" :disabled="!rejectionReason.trim()"
-                class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed">
-                Reject Request
-              </button>
-              <button @click="cancelRejection"
-                class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
-                Cancel
-              </button>
-            </div>
           </div>
-        </div>
-      </div>
-      <!-- Approval Modal -->
-      <ApprovalModal :show="showApprovalModal" :approval="selectedApproval" :action="approvalAction"
-        @close="closeApprovalModal" @submit="handleApprovalSubmit" />
-
-      <!-- Floating Notifications -->
-      <div v-if="notifications.length > 0" class="notification-overlay">
-        <div class="notification-center">
-          <div v-for="notification in notifications" :key="notification.id"
-            :class="getNotificationClasses(notification.type)" class="notification-card">
-            <div class="notification-icon">
-              <component :is="getNotificationIcon(notification.type)" class="w-5 h-5" />
-            </div>
-            <div class="notification-text">
-              <p class="notification-message">{{ notification.message }}</p>
-            </div>
-            <button @click="removeNotification(notification.id)" class="notification-close">
-              <XMarkIcon class="w-4 h-4" />
+          <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+            <button @click="confirmRejection" :disabled="!rejectionReason.trim()"
+              class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed">
+              Reject Request
+            </button>
+            <button @click="cancelRejection"
+              class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+              Cancel
             </button>
           </div>
         </div>
       </div>
+    </div>
+    <!-- Approval Modal -->
+    <ApprovalModal :show="showApprovalModal" :approval="selectedApproval" :action="approvalAction"
+      @close="closeApprovalModal" @submit="handleApprovalSubmit" />
+
+    <!-- Floating Notifications -->
+    <div v-if="notifications.length > 0" class="notification-overlay">
+      <div class="notification-center">
+        <div v-for="notification in notifications" :key="notification.id"
+          :class="getNotificationClasses(notification.type)" class="notification-card">
+          <div class="notification-icon">
+            <component :is="getNotificationIcon(notification.type)" class="w-5 h-5" />
+          </div>
+          <div class="notification-text">
+            <p class="notification-message">{{ notification.message }}</p>
+          </div>
+          <button @click="removeNotification(notification.id)" class="notification-close">
+            <XMarkIcon class="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+    </div>
   </AuthenticatedLayout>
 </template>
 
