@@ -69,7 +69,7 @@
           :key="item.id"
         >
           <!-- Hover Dropdown Section -->
-          <div v-if="item.type === 'accordion'" class="relative group mb-1">
+          <div v-if="item.type === 'accordion'" class="relative group mb-1" style="overflow: visible;">
             <!-- Dropdown Trigger -->
             <button
               @click="() => handleNavigate(item.children[0])"
