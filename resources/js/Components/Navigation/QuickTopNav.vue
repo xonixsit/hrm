@@ -176,6 +176,10 @@ const props = defineProps({
 const { user, roles: userRoles } = useAuth()
 const { isDark, toggleTheme } = useTheme()
 
+// Debug logging to check user and roles
+console.log('QuickTopNav - User:', user.value)
+console.log('QuickTopNav - Roles:', userRoles.value)
+
 const showMore = ref(false)
 const showUserMenu = ref(false)
 const showMobileMenu = ref(false)
@@ -183,6 +187,11 @@ const showMobileMenu = ref(false)
 const userInitials = computed(() => {
   if (!user.value?.name) return 'U'
   return user.value.name.split(' ').map(n => n[0]).join('').toUpperCase()
+})
+
+// Ensure roles is always an array
+const safeUserRoles = computed(() => {
+  return Array.isArray(userRoles.value) ? userRoles.value : []
 })
 
 // Main navigation items (always visible)
