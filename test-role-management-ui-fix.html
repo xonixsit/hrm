@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Role Management UI Fix - Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for role management table */
+        .role-management-table th:nth-child(1) {
+            width: 25%;
+            min-width: 200px;
+        }
+        .role-management-table th:nth-child(2) {
+            width: 15%;
+            min-width: 120px;
+        }
+        .role-management-table th:nth-child(3) {
+            width: 20%;
+            min-width: 150px;
+        }
+        .role-management-table th:nth-child(4) {
+            width: 10%;
+            min-width: 80px;
+        }
+        .role-management-table th:nth-child(5) {
+            width: 30%;
+            min-width: 200px;
+        }
+        
+        .role-badge {
+            font-weight: 500;
+            letter-spacing: 0.025em;
+        }
+        
+        @media (max-width: 768px) {
+            .role-management-table th:nth-child(3),
+            .role-management-table td:nth-child(3) {
+                display: none;
+            }
+        }
+        
+        @media (max-width: 640px) {
+            .role-management-table th:nth-child(4),
+            .role-management-table td:nth-child(4) {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body class="bg-neutral-50 p-8">
+    <div class="max-w-7xl mx-auto">
+        <!-- Page Header -->
+        <div class="mb-8">
+            <h1 class="text-2xl sm:text-3xl font-bold text-neutral-900 leading-tight mb-2">Role Management</h1>
+            <p class="text-base text-neutral-600 leading-relaxed">Assign and manage user roles in the system</p>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow-sm border border-neutral-200 p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-red-100 rounded-md flex items-center justify-center">
+                            <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-neutral-500 truncate">Admin</dt>
+                            <dd class="text-lg font-medium text-neutral-900">2</dd>
+                            <dd class="text-sm text-neutral-500">users with this role</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow-sm border border-neutral-200 p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-blue-100 rounded-md flex items-center justify-center">
+                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-neutral-500 truncate">HR</dt>
+                            <dd class="text-lg font-medium text-neutral-900">5</dd>
+                            <dd class="text-sm text-neutral-500">users with this role</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow-sm border border-neutral-200 p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-green-100 rounded-md flex items-center justify-center">
+                            <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V8a2 2 0 012-2V6"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-neutral-500 truncate">Manager</dt>
+                            <dd class="text-lg font-medium text-neutral-900">12</dd>
+                            <dd class="text-sm text-neutral-500">users with this role</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow-sm border border-neutral-200 p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-yellow-100 rounded-md flex items-center justify-center">
+                            <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-neutral-500 truncate">Employee</dt>
+                            <dd class="text-lg font-medium text-neutral-900">259</dd>
+                            <dd class="text-sm text-neutral-500">users with this role</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Users Table -->
+        <div class="bg-white rounded-lg shadow-sm border border-neutral-200">
+            <div class="px-6 py-4 border-b border-neutral-200">
+                <h3 class="text-lg font-semibold text-neutral-900">User Role Assignments</h3>
+                <p class="text-sm text-neutral-600 mt-1">Manage roles for all employees in the system</p>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-neutral-200 role-management-table">
+                    <thead class="bg-neutral-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Employee</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Current Role</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Job Title</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider w-48">Role Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-neutral-200">
+                        <!-- Sample Row 1: Admin User (Cannot remove own role) -->
+                        <tr class="hover:bg-neutral-50 transition-colors duration-150">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                        <span class="text-sm font-semibold text-primary-700">JD</span>
+                                    </div>
+                                    <div class="ml-4 min-w-0">
+                                        <div class="text-sm font-medium text-neutral-900 truncate">John Doe</div>
+                                        <div class="text-sm text-neutral-500 truncate">john.doe@company.com</div>
+                                        <div class="text-xs text-neutral-400">ID: EMP001</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium role-badge bg-red-100 text-red-800">Admin</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-neutral-900">
+                                <span class="truncate">System Administrator</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">active</span>
+                            </td>
+                            <td class="px-6 py-4 text-sm font-medium">
+                                <div class="flex flex-col space-y-3 w-44">
+                                    <!-- Role Assignment Section -->
+                                    <div class="space-y-2">
+                                        <label class="block text-xs font-medium text-neutral-700">Assign Role</label>
+                                        <select class="w-full px-3 py-2 border border-neutral-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 min-h-[36px]">
+                                            <option value="">Select role</option>
+                                            <option value="Admin" selected>Admin</option>
+                                            <option value="HR">HR</option>
+                                            <option value="Manager">Manager</option>
+                                            <option value="Employee">Employee</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <!-- Remove Role Section -->
+                                    <div class="space-y-2">
+                                        <label class="block text-xs font-medium text-neutral-700">Remove Role</label>
+                                        <div class="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md p-2 text-center font-medium">
+                                            Cannot remove your own Admin role
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Sample Row 2: User without Role -->
+                        <tr class="hover:bg-neutral-50 transition-colors duration-150">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                        <span class="text-sm font-semibold text-primary-700">JS</span>
+                                    </div>
+                                    <div class="ml-4 min-w-0">
+                                        <div class="text-sm font-medium text-neutral-900 truncate">Jane Smith</div>
+                                        <div class="text-sm text-neutral-500 truncate">jane.smith@company.com</div>
+                                        <div class="text-xs text-neutral-400">ID: EMP002</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium role-badge bg-neutral-100 text-neutral-800">No Role</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-neutral-900">
+                                <span class="truncate">Marketing Specialist</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">active</span>
+                            </td>
+                            <td class="px-6 py-4 text-sm font-medium">
+                                <div class="flex flex-col space-y-3 w-44">
+                                    <!-- Role Assignment Section -->
+                                    <div class="space-y-2">
+                                        <label class="block text-xs font-medium text-neutral-700">Assign Role</label>
+                                        <select class="w-full px-3 py-2 border border-neutral-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 min-h-[36px]">
+                                            <option value="">Select role</option>
+                                            <option value="Admin">Admin</option>
+                                            <option value="HR">HR</option>
+                                            <option value="Manager">Manager</option>
+                                            <option value="Employee">Employee</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <!-- Remove Role Section -->
+                                    <div class="space-y-2">
+                                        <label class="block text-xs font-medium text-neutral-700">Remove Role</label>
+                                        <div class="text-xs text-neutral-500 bg-neutral-50 border border-neutral-200 rounded-md p-2 text-center">
+                                            No role assigned
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Sample Row 3: User with Removable Role -->
+                        <tr class="hover:bg-neutral-50 transition-colors duration-150">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                        <span class="text-sm font-semibold text-primary-700">MB</span>
+                                    </div>
+                                    <div class="ml-4 min-w-0">
+                                        <div class="text-sm font-medium text-neutral-900 truncate">Mike Brown</div>
+                                        <div class="text-sm text-neutral-500 truncate">mike.brown@company.com</div>
+                                        <div class="text-xs text-neutral-400">ID: EMP003</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium role-badge bg-green-100 text-green-800">Manager</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-neutral-900">
+                                <span class="truncate">Department Manager</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">active</span>
+                            </td>
+                            <td class="px-6 py-4 text-sm font-medium">
+                                <div class="flex flex-col space-y-3 w-44">
+                                    <!-- Role Assignment Section -->
+                                    <div class="space-y-2">
+                                        <label class="block text-xs font-medium text-neutral-700">Assign Role</label>
+                                        <select class="w-full px-3 py-2 border border-neutral-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 min-h-[36px]">
+                                            <option value="">Select role</option>
+                                            <option value="Admin">Admin</option>
+                                            <option value="HR">HR</option>
+                                            <option value="Manager" selected>Manager</option>
+                                            <option value="Employee">Employee</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <!-- Remove Role Section -->
+                                    <div class="space-y-2">
+                                        <label class="block text-xs font-medium text-neutral-700">Remove Role</label>
+                                        <button class="text-red-600 hover:text-red-700 border border-red-200 hover:border-red-300 hover:bg-red-50 w-full justify-center inline-flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors duration-150 min-h-[36px]">
+                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                            </svg>
+                                            Remove Manager
+                                        </button>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Sample Row 4: HR User -->
+                        <tr class="hover:bg-neutral-50 transition-colors duration-150">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                        <span class="text-sm font-semibold text-primary-700">SJ</span>
+                                    </div>
+                                    <div class="ml-4 min-w-0">
+                                        <div class="text-sm font-medium text-neutral-900 truncate">Sarah Johnson</div>
+                                        <div class="text-sm text-neutral-500 truncate">sarah.johnson@company.com</div>
+                                        <div class="text-xs text-neutral-400">ID: EMP004</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium role-badge bg-blue-100 text-blue-800">HR</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-neutral-900">
+                                <span class="truncate">HR Manager</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">active</span>
+                            </td>
+                            <td class="px-6 py-4 text-sm font-medium">
+                                <div class="flex flex-col space-y-3 w-44">
+                                    <!-- Role Assignment Section -->
+                                    <div class="space-y-2">
+                                        <label class="block text-xs font-medium text-neutral-700">Assign Role</label>
+                                        <select class="w-full px-3 py-2 border border-neutral-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 min-h-[36px]">
+                                            <option value="">Select role</option>
+                                            <option value="Admin">Admin</option>
+                                            <option value="HR" selected>HR</option>
+                                            <option value="Manager">Manager</option>
+                                            <option value="Employee">Employee</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <!-- Remove Role Section -->
+                                    <div class="space-y-2">
+                                        <label class="block text-xs font-medium text-neutral-700">Remove Role</label>
+                                        <button class="text-red-600 hover:text-red-700 border border-red-200 hover:border-red-300 hover:bg-red-50 w-full justify-center inline-flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors duration-150 min-h-[36px]">
+                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                            </svg>
+                                            Remove HR
+                                        </button>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Add some interactivity for testing
+        document.querySelectorAll('select').forEach(select => {
+            select.addEventListener('change', function() {
+                console.log('Role changed to:', this.value);
+            });
+        });
+
+        document.querySelectorAll('button').forEach(button => {
+            button.addEventListener('click', function() {
+                if (this.textContent.includes('Remove')) {
+                    console.log('Remove button clicked:', this.textContent);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

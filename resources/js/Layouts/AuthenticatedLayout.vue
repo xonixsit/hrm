@@ -3,7 +3,7 @@ import { ref, computed, useSlots, onMounted } from 'vue';
 import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
 import NavigationErrorDisplay from '@/Components/NavigationErrorDisplay.vue';
-import NavigationController from '@/Components/Navigation/NavigationController.vue';
+import QuickTopNav from '@/Components/Navigation/QuickTopNav.vue';
 import NotificationContainer from '@/Components/Notifications/NotificationContainer.vue';
 import FloatingAttendanceWidget from '@/Components/Navigation/FloatingAttendanceWidget.vue';
 import SkipLinks from '@/Components/Accessibility/SkipLinks.vue';
@@ -249,17 +249,8 @@ const contentOverlayClasses = computed(() => {
             <p class="text-sm mt-1">Please refresh the page or contact support if the issue persists.</p>
         </div>
         
-        <!-- Unified Navigation Controller -->
-        <NavigationController
-            :current-route="currentRoute"
-            :initially-collapsed="sidebarCollapsed"
-            @navigate="handleNavigationEvent"
-            @collapse-change="handleSidebarCollapseChange"
-            @navigation-type-change="handleNavigationTypeChange"
-            @navigation-transition="handleNavigationTransition"
-            @state-change="handleNavigationStateChange"
-            @mobile-drawer-toggle="handleMobileDrawerToggle"
-        />
+        <!-- Quick Top Navigation -->
+        <QuickTopNav :current-route="currentRoute" />
 
         <!-- Main Layout with Dynamic Classes -->
         <div :class="layoutClasses">
@@ -278,9 +269,9 @@ const contentOverlayClasses = computed(() => {
                     }
                 ]"
                 :style="{
-                    marginLeft: currentNavigationType === 'desktop' ? (sidebarCollapsed ? '64px' : '256px') : '0',
-                    transition: 'margin-left 300ms cubic-bezier(0.4, 0, 0.2, 1)',
+                    marginLeft: '0',
                     minHeight: '100vh',
+                    paddingTop: '0',
                     ...cssCustomProperties
                 }"
                 data-layout-type="authenticated-content"

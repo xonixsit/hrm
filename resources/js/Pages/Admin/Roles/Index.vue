@@ -26,7 +26,7 @@
         </div>
 
         <div class="overflow-x-auto">
-          <table class="min-w-full divide-y divide-neutral-200">
+          <table class="min-w-full divide-y divide-neutral-200 role-management-table">
             <thead class="bg-neutral-50">
               <tr>
                 <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
@@ -41,23 +41,23 @@
                 <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
                   Status
                 </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider w-48">
                   Role Actions
                 </th>
               </tr>
             </thead>
             <tbody class="bg-white divide-y divide-neutral-200">
-              <tr v-for="user in users" :key="user.id" class="hover:bg-neutral-50">
+              <tr v-for="user in users" :key="user.id" class="hover:bg-neutral-50 transition-colors duration-150">
                 <td class="px-6 py-4 whitespace-nowrap">
                   <div class="flex items-center">
-                    <div class="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
+                    <div class="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0">
                       <span class="text-sm font-semibold text-primary-700">
                         {{ getInitials(user.name) }}
                       </span>
                     </div>
-                    <div class="ml-4">
-                      <div class="text-sm font-medium text-neutral-900">{{ user.name }}</div>
-                      <div class="text-sm text-neutral-500">{{ user.email }}</div>
+                    <div class="ml-4 min-w-0">
+                      <div class="text-sm font-medium text-neutral-900 truncate">{{ user.name }}</div>
+                      <div class="text-sm text-neutral-500 truncate">{{ user.email }}</div>
                       <div class="text-xs text-neutral-400">ID: {{ user.employee_code }}</div>
                     </div>
                   </div>
@@ -66,7 +66,7 @@
                   <div class="flex flex-wrap gap-1">
                     <span 
                       v-if="user.roles.length === 0"
-                      class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-neutral-100 text-neutral-800"
+                      class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-neutral-100 text-neutral-800 role-badge"
                     >
                       No Role
                     </span>
@@ -74,14 +74,14 @@
                       v-for="role in user.roles" 
                       :key="role"
                       :class="getRoleBadgeClass(role)"
-                      class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                      class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium role-badge"
                     >
                       {{ role }}
                     </span>
                   </div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-neutral-900">
-                  {{ user.job_title }}
+                  <span class="truncate">{{ user.job_title || 'Not specified' }}</span>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
                   <span 
@@ -91,10 +91,10 @@
                     {{ user.status }}
                   </span>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                  <div class="flex flex-col space-y-3 min-w-[160px]">
-                    <!-- Role Assignment Dropdown -->
-                    <div class="space-y-1">
+                <td class="px-6 py-4 text-sm font-medium">
+                  <div class="flex flex-col space-y-3 w-44">
+                    <!-- Role Assignment Section -->
+                    <div class="space-y-2">
                       <label class="block text-xs font-medium text-neutral-700">
                         Assign Role
                       </label>
@@ -102,24 +102,27 @@
                         :model-value="user.roles[0] || ''"
                         :options="roleOptions"
                         placeholder="Select role"
+                        size="sm"
                         class="w-full"
                         @update:model-value="(role) => assignRole(user.id, role)"
                       />
                     </div>
                     
-                    <!-- Remove Role Button -->
-                    <div v-if="user.roles.length > 0" class="space-y-1">
+                    <!-- Remove Role Section -->
+                    <div class="space-y-2">
                       <label class="block text-xs font-medium text-neutral-700">
                         Remove Role
                       </label>
+                      
+                      <!-- Remove Button (when user has role and can remove) -->
                       <BaseButton
-                        v-if="canRemoveRole(user)"
+                        v-if="user.roles.length > 0 && canRemoveRole(user)"
                         variant="outline"
                         size="sm"
                         @click="removeRole(user.id, user.roles[0])"
-                        class="text-red-600 hover:text-red-700 border-red-200 hover:border-red-300 w-full justify-center"
+                        class="text-red-600 hover:text-red-700 border-red-200 hover:border-red-300 hover:bg-red-50 w-full justify-center transition-colors duration-150"
                       >
-                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                         </svg>
                         Remove {{ user.roles[0] }}
@@ -127,16 +130,17 @@
                       
                       <!-- Self-removal warning -->
                       <div 
-                        v-else
-                        class="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-md p-2 text-center"
+                        v-else-if="user.roles.length > 0 && !canRemoveRole(user)"
+                        class="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md p-2 text-center font-medium"
                       >
                         {{ getSelfRemovalMessage(user) }}
                       </div>
-                    </div>
-                    
-                    <!-- No Role State -->
-                    <div v-else class="space-y-1">
-                      <div class="text-xs text-neutral-500 bg-neutral-50 border border-neutral-200 rounded-md p-2 text-center">
+                      
+                      <!-- No Role State -->
+                      <div 
+                        v-else
+                        class="text-xs text-neutral-500 bg-neutral-50 border border-neutral-200 rounded-md p-2 text-center"
+                      >
                         No role assigned
                       </div>
                     </div>
@@ -268,6 +272,11 @@ function assignRole(userId, role) {
     return
   }
   
+  // Don't make request if role is already assigned
+  if (user?.roles.includes(role)) {
+    return
+  }
+  
   router.post(route('admin.roles.assign', userId), {
     role: role
   }, {
@@ -277,6 +286,12 @@ function assignRole(userId, role) {
     },
     onError: (errors) => {
       console.error('Error assigning role:', errors)
+      // Show user-friendly error message
+      if (errors.message) {
+        alert(errors.message)
+      } else {
+        alert('Failed to assign role. Please try again.')
+      }
     }
   })
 }
@@ -290,7 +305,10 @@ function removeRole(userId, role) {
     return
   }
   
-  if (confirm(`Are you sure you want to remove the ${role} role from this user?`)) {
+  const user = props.users.find(u => u.id === userId)
+  const userName = user?.name || 'this user'
+  
+  if (confirm(`Are you sure you want to remove the ${role} role from ${userName}?`)) {
     router.post(route('admin.roles.remove', userId), {
       role: role
     }, {
@@ -300,8 +318,91 @@ function removeRole(userId, role) {
       },
       onError: (errors) => {
         console.error('Error removing role:', errors)
+        // Show user-friendly error message
+        if (errors.message) {
+          alert(errors.message)
+        } else {
+          alert('Failed to remove role. Please try again.')
+        }
       }
     })
   }
 }
 </script>
+
+<style scoped>
+/* Custom styles for role management table */
+.role-management-table {
+  /* Ensure consistent column widths */
+}
+
+.role-management-table th:nth-child(1) {
+  width: 25%;
+  min-width: 200px;
+}
+
+.role-management-table th:nth-child(2) {
+  width: 15%;
+  min-width: 120px;
+}
+
+.role-management-table th:nth-child(3) {
+  width: 20%;
+  min-width: 150px;
+}
+
+.role-management-table th:nth-child(4) {
+  width: 10%;
+  min-width: 80px;
+}
+
+.role-management-table th:nth-child(5) {
+  width: 30%;
+  min-width: 200px;
+}
+
+/* Improve hover effects */
+.role-management-table tbody tr:hover {
+  background-color: rgb(249 250 251);
+}
+
+/* Better spacing for role actions column */
+.role-actions-column {
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+/* Ensure consistent button heights */
+.role-management-table .base-select-wrapper,
+.role-management-table button {
+  min-height: 36px;
+}
+
+/* Improve visual hierarchy */
+.role-badge {
+  font-weight: 500;
+  letter-spacing: 0.025em;
+}
+
+/* Better focus states */
+.role-management-table button:focus,
+.role-management-table .base-select-wrapper button:focus {
+  outline: 2px solid rgb(59 130 246);
+  outline-offset: 2px;
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+  .role-management-table th:nth-child(3),
+  .role-management-table td:nth-child(3) {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .role-management-table th:nth-child(4),
+  .role-management-table td:nth-child(4) {
+    display: none;
+  }
+}
+</style>
