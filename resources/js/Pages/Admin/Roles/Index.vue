@@ -42,7 +42,7 @@
                   Status
                 </th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
-                  Role Management
+                  Role Actions
                 </th>
               </tr>
             </thead>
@@ -92,33 +92,53 @@
                   </span>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                  <div class="flex flex-col space-y-2">
+                  <div class="flex flex-col space-y-3 min-w-[160px]">
                     <!-- Role Assignment Dropdown -->
-                    <BaseSelect
-                      :model-value="user.roles[0] || ''"
-                      :options="roleOptions"
-                      placeholder="Select role"
-                      class="w-full min-w-[140px]"
-                      @update:model-value="(role) => assignRole(user.id, role)"
-                    />
+                    <div class="space-y-1">
+                      <label class="block text-xs font-medium text-neutral-700">
+                        Assign Role
+                      </label>
+                      <BaseSelect
+                        :model-value="user.roles[0] || ''"
+                        :options="roleOptions"
+                        placeholder="Select role"
+                        class="w-full"
+                        @update:model-value="(role) => assignRole(user.id, role)"
+                      />
+                    </div>
                     
                     <!-- Remove Role Button -->
-                    <BaseButton
-                      v-if="user.roles.length > 0 && canRemoveRole(user)"
-                      variant="outline"
-                      size="sm"
-                      @click="removeRole(user.id, user.roles[0])"
-                      class="text-red-600 hover:text-red-700 border-red-200 hover:border-red-300 w-full"
-                    >
-                      Remove {{ user.roles[0] }}
-                    </BaseButton>
+                    <div v-if="user.roles.length > 0" class="space-y-1">
+                      <label class="block text-xs font-medium text-neutral-700">
+                        Remove Role
+                      </label>
+                      <BaseButton
+                        v-if="canRemoveRole(user)"
+                        variant="outline"
+                        size="sm"
+                        @click="removeRole(user.id, user.roles[0])"
+                        class="text-red-600 hover:text-red-700 border-red-200 hover:border-red-300 w-full justify-center"
+                      >
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                        </svg>
+                        Remove {{ user.roles[0] }}
+                      </BaseButton>
+                      
+                      <!-- Self-removal warning -->
+                      <div 
+                        v-else
+                        class="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-md p-2 text-center"
+                      >
+                        {{ getSelfRemovalMessage(user) }}
+                      </div>
+                    </div>
                     
-                    <!-- Self-removal warning -->
-                    <div 
-                      v-else-if="user.roles.length > 0 && !canRemoveRole(user)"
-                      class="text-xs text-gray-500 italic"
-                    >
-                      {{ getSelfRemovalMessage(user) }}
+                    <!-- No Role State -->
+                    <div v-else class="space-y-1">
+                      <div class="text-xs text-neutral-500 bg-neutral-50 border border-neutral-200 rounded-md p-2 text-center">
+                        No role assigned
+                      </div>
                     </div>
                   </div>
                 </td>
@@ -147,9 +167,9 @@ const props = defineProps({
 })
 
 const breadcrumbs = [
-  { name: 'Dashboard', href: route('dashboard') },
-  { name: 'Administration', href: '#' },
-  { name: 'Role Management', href: route('admin.roles.index') },
+  { label: 'Dashboard', href: route('dashboard'), icon: 'home' },
+  { label: 'Administration', href: '#' },
+  { label: 'Role Management', href: route('admin.roles.index'), current: true },
 ]
 
 const roleOptions = computed(() => {

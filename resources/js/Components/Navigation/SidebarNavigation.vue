@@ -3,7 +3,7 @@
   <nav
     ref="sidebarRef"
     :class="[
-      'sidebar-navigation flex flex-col h-screen fixed left-0 top-0 z-40 transition-all duration-300 ease-out',
+      'sidebar-navigation flex flex-col h-screen fixed left-0 top-0 z-40 transition-all duration-300 ease-out overflow-visible',
       isDark ? 'bg-gray-900 border-r border-gray-800' : 'bg-white border-r border-gray-200',
       {
         'w-64': !isCollapsed,
@@ -62,8 +62,8 @@
     </div>
 
     <!-- Navigation Menu -->
-    <div class="flex-1 overflow-y-auto py-3 scrollbar-hide">
-      <div :class="['space-y-0.5', { 'px-3': !isCollapsed, 'px-2': isCollapsed }]">
+    <div class="flex-1 overflow-y-auto overflow-x-visible py-3 scrollbar-hide">
+      <div :class="['space-y-0.5 overflow-visible', { 'px-3': !isCollapsed, 'px-2': isCollapsed }]">
         <div 
           v-for="item in navigationItems" 
           :key="item.id"
@@ -137,7 +137,7 @@
             <!-- Hover Dropdown Menu -->
             <div 
               v-if="!isCollapsed"
-              class="absolute left-full top-0 ml-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50"
+              class="absolute left-full top-0 ml-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-[9999]"
             >
               <div class="py-2">
                 <button

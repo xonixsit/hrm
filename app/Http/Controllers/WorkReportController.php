@@ -415,10 +415,26 @@ class WorkReportController extends Controller
             $dateTo = null;
         }
         
-        // Get all employees with their performance data
-        $employees = Employee::with('user')
-            ->whereHas('user')
-            ->get()
+        // Get employees based on user role
+        $employeesQuery = Employee::with(['user', 'department'])
+            ->whereHas('user');
+            
+        // Role-based filtering: Only Admin can see all employees
+        if (!$user->hasRole('Admin')) {
+            // For non-admin users, exclude Admin, HR, and Manager roles from leaderboard
+            $employeesQuery->whereHas('user', function ($query) {
+                $query->whereDoesntHave('roles', function ($roleQuery) {
+                    $roleQuery->whereIn('name', ['Admin', 'HR', 'Manager']);
+                });
+            });
+        }
+        
+        // Department filtering (only for Admin users)
+        if ($user->hasRole('Admin') && $request->filled('department_id')) {
+            $employeesQuery->where('department_id', $request->department_id);
+        }
+        
+        $employees = $employeesQuery->get()
             ->map(function ($employee) use ($dateFrom, $dateTo) {
                 $query = WorkReport::where('employee_id', $employee->id);
                 
@@ -454,6 +470,8 @@ class WorkReportController extends Controller
                     'name' => $employee->user->name,
                     'employee_code' => $employee->employee_code,
                     'position' => $employee->position ?? 'Employee',
+                    'department' => $employee->department ? $employee->department->name : 'No Department',
+                    'department_id' => $employee->department_id,
                     'total_calls' => (int) $totalCalls,
                     'successful_calls' => (int) $successfulCalls,
                     'success_rate' => $successRate,
@@ -547,12 +565,25 @@ class WorkReportController extends Controller
         // Get employee performance list
         $employees = $this->getEmployeePerformanceList($request, $user);
         
+        // Get departments for admin users
+        $departments = [];
+        if ($user->hasRole('Admin')) {
+            $departments = \App\Models\Department::select('id', 'name')
+                ->orderBy('name')
+                ->get()
+                ->toArray();
+        }
+        
         return Inertia::render('WorkReports/Leaderboard', [
             'employees' => $employees,
+            'departments' => $departments,
             'filters' => [
                 'date_from' => $request->date_from,
                 'date_to' => $request->date_to,
-            ]
+                'department_id' => $request->department_id,
+            ],
+            'user_role' => $user->roles->pluck('name')->first() ?? 'Employee',
+            'can_view_all_departments' => $user->hasRole('Admin')
         ]);
     }
 }

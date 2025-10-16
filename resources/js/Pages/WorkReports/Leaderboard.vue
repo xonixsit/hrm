@@ -62,6 +62,34 @@
             </details>
           </div>
 
+          <!-- Department Filter (Admin Only) -->
+          <div v-if="can_view_all_departments" class="border-t border-gray-200 pt-6 space-y-3">
+            <h3 class="text-sm font-semibold text-gray-900 flex items-center gap-2">
+              🏢 Filter by Department
+            </h3>
+            
+            <div class="flex flex-wrap items-center gap-3">
+              <select
+                v-model="localFilters.department_id"
+                @change="handleDepartmentChange"
+                class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+              >
+                <option value="">All Departments</option>
+                <option 
+                  v-for="department in departments" 
+                  :key="department.id" 
+                  :value="department.id"
+                >
+                  {{ department.name }}
+                </option>
+              </select>
+              
+              <div v-if="localFilters.department_id" class="text-sm text-gray-600">
+                Showing {{ filteredEmployeeCount }} employees
+              </div>
+            </div>
+          </div>
+
           <!-- Secondary: Ranking Method -->
           <div class="border-t border-gray-200 pt-6 space-y-3">
             <h3 class="text-sm font-semibold text-gray-900 flex items-center gap-2">
@@ -197,6 +225,7 @@
                 <tr>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rank</th>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employee</th>
+                  <th v-if="can_view_all_departments" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Calls</th>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Success Rate</th>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Performance Score</th>
@@ -261,9 +290,21 @@ const props = defineProps({
     type: Array,
     default: () => []
   },
+  departments: {
+    type: Array,
+    default: () => []
+  },
   filters: {
     type: Object,
     default: () => ({})
+  },
+  user_role: {
+    type: String,
+    default: 'Employee'
+  },
+  can_view_all_departments: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -271,6 +312,7 @@ const props = defineProps({
 const localFilters = ref({
   date_from: props.filters.date_from || '',
   date_to: props.filters.date_to || '',
+  department_id: props.filters.department_id || '',
 })
 
 const leaderboardType = ref('score') // 'calls', 'success', 'score'
@@ -337,6 +379,10 @@ const topPerformers = computed(() => {
   return rankedEmployees.value.slice(0, 3)
 })
 
+const filteredEmployeeCount = computed(() => {
+  return props.employees.length
+})
+
 // Methods
 const getMetricValue = (employee) => {
   if (!employee) return ''
@@ -401,6 +447,10 @@ const handleDateFromChange = () => {
 
 const handleDateToChange = () => {
   activePeriod.value = null
+  applyFilters()
+}
+
+const handleDepartmentChange = () => {
   applyFilters()
 }
 
