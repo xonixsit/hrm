@@ -22,19 +22,15 @@
       : 'hover:bg-white/90 hover:border-gray-300/60'),
     
     // Padding system
-    size === 'small' ? 'p-4' : 'p-6',
+    size === 'small' ? 'p-3' : 'p-4',
     
     // Additional classes
     className
-  ]"
-  @click="clickable && $emit('click')"
-  :role="clickable ? 'button' : undefined"
-  :tabindex="clickable ? '0' : undefined"
-  @keydown.enter="clickable && $emit('click')"
-  @keydown.space.prevent="clickable && $emit('click')"
-></div>
+  ]" @click="clickable && $emit('click')" :role="clickable ? 'button' : undefined"
+    :tabindex="clickable ? '0' : undefined" @keydown.enter="clickable && $emit('click')"
+    @keydown.space.prevent="clickable && $emit('click')"></div>
   <!-- Card Header -->
-  <div v-if="$slots.header || title" class="flex items-center justify-between mb-6">
+  <div v-if="$slots.header || title" class="flex items-center justify-between mb-4">
     <div class="flex items-center space-x-3">
       <!-- Icon -->
       <div v-if="icon || $slots.icon" :class="[
@@ -64,7 +60,7 @@
           <component v-if="icon" :is="icon" :class="size === 'small' ? 'w-4 h-4' : 'w-5 h-5'" />
         </slot>
       </div>
-      
+
       <!-- Title and Description -->
       <div>
         <h3 v-if="title" :class="[
@@ -84,7 +80,7 @@
         <slot name="header" />
       </div>
     </div>
-    
+
     <!-- Header Actions -->
     <div v-if="$slots.headerActions" class="flex items-center space-x-2">
       <slot name="headerActions" />
@@ -152,61 +148,61 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
-import { useTheme } from '@/composables/useTheme.js'
+  import { computed } from 'vue'
+  import { useTheme } from '@/composables/useTheme.js'
 
-const props = defineProps({
-  title: {
-    type: String,
-    default: null
-  },
-  description: {
-    type: String,
-    default: null
-  },
-  icon: {
-    type: [String, Object],
-    default: null
-  },
-  iconVariant: {
-    type: String,
-    default: null,
-    validator: (value) => ['primary', 'success', 'warning', 'danger', 'info'].includes(value)
-  },
-  variant: {
-    type: String,
-    default: 'default',
-    validator: (value) => ['default', 'elevated'].includes(value)
-  },
-  size: {
-    type: String,
-    default: 'default',
-    validator: (value) => ['small', 'default'].includes(value)
-  },
-  clickable: {
-    type: Boolean,
-    default: false
-  },
-  loading: {
-    type: Boolean,
-    default: false
-  },
-  status: {
-    type: String,
-    default: null,
-    validator: (value) => ['success', 'warning', 'error', 'info'].includes(value)
-  },
-  statusText: {
-    type: String,
-    default: null
-  },
-  className: {
-    type: String,
-    default: ''
-  }
-})
+  const props = defineProps({
+    title: {
+      type: String,
+      default: null
+    },
+    description: {
+      type: String,
+      default: null
+    },
+    icon: {
+      type: [String, Object],
+      default: null
+    },
+    iconVariant: {
+      type: String,
+      default: null,
+      validator: (value) => ['primary', 'success', 'warning', 'danger', 'info'].includes(value)
+    },
+    variant: {
+      type: String,
+      default: 'default',
+      validator: (value) => ['default', 'elevated'].includes(value)
+    },
+    size: {
+      type: String,
+      default: 'default',
+      validator: (value) => ['small', 'default'].includes(value)
+    },
+    clickable: {
+      type: Boolean,
+      default: false
+    },
+    loading: {
+      type: Boolean,
+      default: false
+    },
+    status: {
+      type: String,
+      default: null,
+      validator: (value) => ['success', 'warning', 'error', 'info'].includes(value)
+    },
+    statusText: {
+      type: String,
+      default: null
+    },
+    className: {
+      type: String,
+      default: ''
+    }
+  })
 
-const emit = defineEmits(['click'])
+  const emit = defineEmits(['click'])
 
-const { isDark } = useTheme()
+  const { isDark } = useTheme()
 </script>

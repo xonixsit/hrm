@@ -39,7 +39,7 @@
     <div v-if="isAdmin" class="space-y-6">
 
       <!-- Key Metrics Overview -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <UnifiedStatsCard :value="adminStats.totalEmployees || 274" label="Total Employees"
           description="Active workforce" :icon="UsersIcon" variant="primary" :trend="5.2" route="employees.index"
           :loading="loading" />
@@ -61,10 +61,10 @@
       </div>
 
       <!-- Main Content Grid -->
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
         <!-- Left Column: Action Required & Approvals -->
-        <div class="lg:col-span-2 space-y-6">
+        <div class="lg:col-span-2 space-y-4">
 
           <!-- Action Required Section -->
           <UnifiedCard title="Action Required" description="Items needing your immediate attention"
@@ -148,7 +148,7 @@
         </div>
 
         <!-- Right Column: Quick Actions & Insights -->
-        <div class="lg:col-span-1 space-y-6">
+        <div class="lg:col-span-1 space-y-4">
 
           <!-- Quick Actions -->
           <UnifiedCard title="Quick Actions" description="Common tasks" :icon="PlusIcon" iconVariant="primary">

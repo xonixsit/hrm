@@ -21,7 +21,7 @@
       : 'hover:bg-white/90 hover:border-gray-300/60',
     
     // Padding
-    'p-6'
+    'p-4'
   ]"
   @click="handleClick"
   :role="clickable ? 'button' : undefined"

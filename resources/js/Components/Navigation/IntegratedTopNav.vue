@@ -382,6 +382,12 @@ const showMore = ref(false)
 const showUserMenu = ref(false)
 const showMobileMenu = ref(false)
 
+// Debug logging
+console.log('IntegratedTopNav - User:', user.value)
+console.log('IntegratedTopNav - Roles:', userRoles.value)
+console.log('IntegratedTopNav - Is Admin:', userRoles.value?.includes('Admin'))
+console.log('IntegratedTopNav - Component Loaded Successfully')
+
 const userInitials = computed(() => {
   if (!user.value?.name) return 'U'
   return user.value.name.split(' ').map(n => n[0]).join('').toUpperCase()
