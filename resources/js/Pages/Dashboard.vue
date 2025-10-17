@@ -189,11 +189,11 @@
                 <ChevronRightIcon class="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </button>
 
-              <button @click="navigateTo('system-settings.index')"
+              <button @click="navigateTo('admin.roles.index')"
                 class="w-full flex items-center justify-between px-4 py-3 bg-gray-50 text-gray-700 rounded-xl hover:bg-gray-100 transition-all group">
                 <div class="flex items-center">
                   <CogIcon class="w-5 h-5 mr-3" />
-                  <span class="font-medium">System Settings</span>
+                  <span class="font-medium">Role Management</span>
                 </div>
                 <ChevronRightIcon class="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </button>
@@ -303,7 +303,7 @@
           :upcoming-birthdays="birthdayData.upcomingBirthdays" :stats="birthdayData.stats" />
       </div>
     </div>
-
+    p
     <!-- Rejection Modal -->
     <div v-if="showRejectionModal" class="fixed inset-0 z-50 overflow-y-auto">
       <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
@@ -529,7 +529,7 @@
           id: 'settings',
           label: 'System Settings',
           icon: 'CogIcon',
-          handler: () => navigateTo('system-settings.index')
+          handler: () => navigateTo('admin.roles.index')
         },
         {
           id: 'reports',
