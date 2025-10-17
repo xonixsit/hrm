@@ -390,7 +390,6 @@ const userInitials = computed(() => {
 // Main navigation items
 const mainNavItems = computed(() => [
   { route: 'dashboard', label: 'Dashboard' },
-  { route: 'profile.edit', label: 'My Profile' },
   { route: 'attendances.index', label: 'Time Tracking' },
   { route: 'leaves.index', label: 'Leave Requests' },
   { route: 'competency-assessments.my-assessments', label: 'My Assessments' }
