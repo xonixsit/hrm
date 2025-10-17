@@ -12,7 +12,7 @@
     
     <!-- Main Navigation Container -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex justify-between h-16">
+      <div class="flex justify-between h-20">
         <!-- Left Side - Logo & Navigation -->
         <div class="flex items-center space-x-8">
           <!-- Enhanced Logo with Better Visual Weight -->
@@ -25,19 +25,21 @@
             ]">
               <!-- Logo Icon -->
               <div :class="[
-                'w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold',
+                'w-10 h-10 rounded-lg flex items-center justify-center',
                 isDark ? 'bg-blue-600 text-white' : 'bg-gradient-to-br from-blue-500 to-blue-600 text-white'
               ]">
-                HR
+                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                </svg>
               </div>
               
               <!-- Logo Text -->
               <div>
                 <h1 :class="[
-                  'text-lg font-bold leading-tight',
+                  'text-xl font-bold leading-tight',
                   isDark ? 'text-white' : 'text-gray-900'
                 ]">
-                  HR Management
+                  eTaxPlanner
                 </h1>
                 <!-- Admin Badge with Better Integration -->
                 <span v-if="Array.isArray(userRoles) && userRoles.includes('Admin')" :class="[
@@ -255,7 +257,7 @@
                       : 'text-gray-700 hover:text-gray-900 hover:bg-white/60')
               ]">
               <div :class="[
-                'w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold',
+                'w-9 h-9 rounded-lg flex items-center justify-center text-sm font-bold',
                 isDark ? 'bg-blue-600 text-white' : 'bg-blue-500 text-white'
               ]">
                 {{ userInitials }}
