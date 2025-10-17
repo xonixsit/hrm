@@ -42,15 +42,6 @@
                 HR Management Solution
               </div>
             </div>
-            <!-- Admin Badge -->
-            <span v-if="Array.isArray(userRoles) && userRoles.includes('Admin')" :class="[
-              'text-xs px-2 py-0.5 rounded-full font-medium',
-              isDark 
-                ? 'bg-red-500/20 text-red-300 border border-red-500/30' 
-                : 'bg-red-50 text-red-600 border border-red-200'
-            ]">
-              ADMIN
-            </span>
           </div>
 
           <!-- Enhanced Main Navigation -->

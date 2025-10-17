@@ -152,7 +152,7 @@
 
 
 
-    <!-- Competency Overview Section -->
+    <!-- Overview Section -->
     <div class="competency-overview-section" v-if="stats.myPendingAssessments !== undefined">
       <div class="competency-stats-grid">
         <div class="competency-stat-card">
@@ -175,23 +175,23 @@
           </div>
         </div>
         
-        <div class="competency-stat-card" v-if="stats.myAverageRating">
+        <div class="competency-stat-card">
           <div class="stat-icon">
-            <StarIcon class="w-6 h-6 text-success-600" />
+            <ChartBarIcon class="w-6 h-6 text-info-600" />
           </div>
           <div class="stat-content">
-            <div class="stat-value">{{ stats.myAverageRating }}/5</div>
-            <div class="stat-label">Average Rating</div>
+            <div class="stat-value">{{ stats.myWorkReports || 0 }}</div>
+            <div class="stat-label">Work Reports</div>
           </div>
         </div>
         
-        <div class="competency-stat-card" v-else>
+        <div class="competency-stat-card">
           <div class="stat-icon">
-            <StarIcon class="w-6 h-6 text-neutral-400" />
+            <DocumentTextIcon class="w-6 h-6 text-success-600" />
           </div>
           <div class="stat-content">
-            <div class="stat-value">-</div>
-            <div class="stat-label">Average Rating</div>
+            <div class="stat-value">{{ stats.myApprovedReports || 0 }}</div>
+            <div class="stat-label">Approved Reports</div>
           </div>
         </div>
       </div>
@@ -336,7 +336,9 @@ import {
   StarIcon,
   PauseIcon,
   PlayIcon,
-  BoltIcon
+  BoltIcon,
+  ChartBarIcon,
+  DocumentTextIcon
 } from '@heroicons/vue/24/outline';
 
 const props = defineProps({

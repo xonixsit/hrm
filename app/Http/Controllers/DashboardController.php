@@ -174,6 +174,17 @@ class DashboardController extends Controller
                     ->whereNotNull('rating')
                     ->avg('rating');
 
+                // Employee work report metrics
+                $myWorkReports = DB::table('work_reports')
+                    ->where('employee_id', $employeeId)
+                    ->whereMonth('created_at', now()->month)
+                    ->count();
+                $myApprovedReports = DB::table('work_reports')
+                    ->where('employee_id', $employeeId)
+                    ->where('status', 'approved')
+                    ->whereMonth('updated_at', now()->month)
+                    ->count();
+
                 $data['employeeStats'] = [
                     'pendingLeaves' => $myPendingLeaves,
                     'approvedLeaves' => $myApprovedLeaves,
@@ -183,6 +194,8 @@ class DashboardController extends Controller
                     'myPendingAssessments' => $myPendingAssessments,
                     'myCompletedAssessments' => $myCompletedAssessments,
                     'myAverageRating' => $myAverageRating ? round($myAverageRating, 1) : null,
+                    'myWorkReports' => $myWorkReports,
+                    'myApprovedReports' => $myApprovedReports,
                     'tasksCompleted' => 0, // TODO: Implement task counting
                     'leaveBalance' => 25, // TODO: Calculate actual leave balance
                     'upcomingDeadlines' => 0, // TODO: Implement deadline counting
