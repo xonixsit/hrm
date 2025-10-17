@@ -55,9 +55,8 @@
           :statusText="adminStats.pendingAssessments > 5 ? 'Review' : 'On Track'" route="assessment-dashboard"
           :loading="loading" />
 
-        <UnifiedStatsCard :value="adminStats.totalWorkReports || 0" label="Work Reports" description="This month"
-          :icon="ChartBarIcon" variant="info" :trend="adminStats.workReportTrend" route="work-reports.index"
-          :loading="loading" />
+        <UnifiedStatsCard value="98.5%" label="System Health" description="Uptime" :icon="CheckCircleIcon"
+          variant="success" status="excellent" statusText="Excellent" :clickable="false" :loading="loading" />
       </div>""
 
       <!-- Main Content Grid -->
@@ -112,8 +111,8 @@
                 <div class="text-xs text-gray-600 mt-1">Active Cycles</div>
               </div>
               <div class="text-center p-4 bg-blue-50 rounded-xl border border-blue-100">
-                <div class="text-2xl font-bold text-blue-600">{{ adminStats.totalWorkReports || 0 }}</div>
-                <div class="text-xs text-gray-600 mt-1">Work Reports</div>
+                <div class="text-2xl font-bold text-blue-600">4.2</div>
+                <div class="text-xs text-gray-600 mt-1">Avg Rating</div>
               </div>
             </div>
 
@@ -204,52 +203,30 @@
           <BirthdayNotifications :todays-birthdays="birthdayData.todaysBirthdays"
             :upcoming-birthdays="birthdayData.upcomingBirthdays" :stats="birthdayData.stats" />
 
-          <!-- Work Reports Overview -->
-          <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl border border-blue-100 p-6">
-            <div class="flex items-center space-x-3 mb-6">
-              <div class="p-2 bg-blue-100 rounded-lg">
-                <ChartBarIcon class="w-5 h-5 text-blue-600" />
+          <!-- System Status -->
+          <UnifiedCard title="System Status" description="All systems operational" :icon="CheckCircleIcon"
+            iconVariant="success">
+            <div class="space-y-3">
+              <div class="flex items-center justify-between">
+                <span class="text-sm text-gray-600">Database</span>
+                <div class="flex items-center">
+                  <div class="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
+                  <span class="text-sm font-medium text-green-600">Healthy</span>
+                </div>
               </div>
-              <div>
-                <h3 class="text-lg font-semibold text-gray-900">Work Reports</h3>
-                <p class="text-sm text-gray-600">Monthly overview</p>
+              <div class="flex items-center justify-between">
+                <span class="text-sm text-gray-600">API Services</span>
+                <div class="flex items-center">
+                  <div class="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
+                  <span class="text-sm font-medium text-green-600">Online</span>
+                </div>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-sm text-gray-600">Uptime</span>
+                <span class="text-sm font-medium text-gray-900">98.5%</span>
               </div>
             </div>
-
-            <div class="space-y-4">
-              <div class="flex items-center justify-between p-3 bg-white rounded-xl">
-                <div class="flex items-center space-x-3">
-                  <div class="w-3 h-3 bg-green-400 rounded-full"></div>
-                  <span class="text-sm font-medium text-gray-700">Approved Reports</span>
-                </div>
-                <span class="text-sm font-semibold text-green-600">{{ adminStats.approvedWorkReports || 0 }}</span>
-              </div>
-
-              <div class="flex items-center justify-between p-3 bg-white rounded-xl">
-                <div class="flex items-center space-x-3">
-                  <div class="w-3 h-3 bg-orange-400 rounded-full"></div>
-                  <span class="text-sm font-medium text-gray-700">Pending Review</span>
-                </div>
-                <span class="text-sm font-semibold text-orange-600">{{ adminStats.pendingWorkReports || 0 }}</span>
-              </div>
-
-              <div class="flex items-center justify-between p-3 bg-white rounded-xl">
-                <div class="flex items-center space-x-3">
-                  <div class="w-3 h-3 bg-blue-400 rounded-full"></div>
-                  <span class="text-sm font-medium text-gray-700">Total This Month</span>
-                </div>
-                <span class="text-sm font-semibold text-blue-600">{{ adminStats.totalWorkReports || 0 }}</span>
-              </div>
-
-              <div class="pt-4 border-t border-blue-200">
-                <button @click="navigateTo('work-reports.index')"
-                  class="w-full flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors">
-                  <span class="font-medium">View All Reports</span>
-                  <ChevronRightIcon class="w-4 h-4 ml-2" />
-                </button>
-              </div>
-            </div>
-          </div>
+          </UnifiedCard>
 
           <!-- System Status -->
           <UnifiedCard title="System Status" description="All systems operational" :icon="CheckCircleIcon"
