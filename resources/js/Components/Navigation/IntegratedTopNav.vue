@@ -24,15 +24,7 @@
               <!-- Logo -->
               <div class="flex items-center space-x-3">
                 <div class="flex items-center space-x-2">
-                  <!-- Building Icon -->
-                  <div class="relative">
-                    <div class="w-8 h-10 bg-blue-500 rounded-sm flex flex-col justify-center items-center">
-                      <div class="w-6 h-1 bg-white mb-0.5 rounded-sm"></div>
-                      <div class="w-6 h-1 bg-white mb-0.5 rounded-sm"></div>
-                      <div class="w-6 h-1 bg-white mb-0.5 rounded-sm"></div>
-                      <div class="w-6 h-1 bg-white rounded-sm"></div>
-                    </div>
-                  </div>
+                  
                   <!-- Person Circle -->
                   <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center -ml-2">
                     <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
