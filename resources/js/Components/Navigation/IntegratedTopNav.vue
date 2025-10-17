@@ -426,7 +426,7 @@ const moreNavItems = computed(() => {
     if (isAdmin) {
       items.push(
         { route: 'admin.roles.index', label: 'Role Management', category: 'admin' },
-        { route: 'system-settings.index', label: 'System Settings', category: 'admin' },
+        { route: 'admin.system-settings.index', label: 'System Settings', category: 'admin' },
         { route: 'organizational-analytics.index', label: 'Analytics', category: 'admin' }
       )
     }

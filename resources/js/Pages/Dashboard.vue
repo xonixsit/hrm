@@ -3,7 +3,7 @@
     <template #header>
       {{ pageTitle }}
     </template>
-Test
+
     <template #subtitle>
       {{ pageSubtitle }}
     </template>
@@ -303,7 +303,7 @@ Test
           :upcoming-birthdays="birthdayData.upcomingBirthdays" :stats="birthdayData.stats" />
       </div>
     </div>
-    p
+
     <!-- Rejection Modal -->
     <div v-if="showRejectionModal" class="fixed inset-0 z-50 overflow-y-auto">
       <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
@@ -486,7 +486,11 @@ Test
 
   // Computed properties
   const isAdmin = computed(() => {
-    return Array.isArray(userRoles.value) && userRoles.value.includes('Admin');
+    const result = Array.isArray(userRoles.value) && userRoles.value.includes('Admin');
+    console.log('Dashboard - User:', user.value);
+    console.log('Dashboard - Roles:', userRoles.value);
+    console.log('Dashboard - Is Admin:', result);
+    return result;
   });
 
   const isManager = computed(() => {
