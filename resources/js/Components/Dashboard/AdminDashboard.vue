@@ -1,50 +1,48 @@
 <template>
-  <div class="admin-dashboard" data-debug="admin-dashboard-component">
-    <!-- DEBUG: AdminDashboard component rendered -->
+  <div class="admin-dashboard space-y-4">
     <!-- System Stats Overview -->
-    <div class="stats-grid">
-      <StatsCard
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <UnifiedStatsCard
         :value="stats.totalEmployees"
         label="Total Employees"
+        description="Active workforce"
         :icon="UsersIcon"
-        icon-color="primary"
-        variant="featured"
+        variant="primary"
         :trend="stats.employeeTrend"
         :loading="loading"
-        :clickable="true"
         route="employees.index"
       />
       
-      <StatsCard
+      <UnifiedStatsCard
         :value="stats.totalDepartments"
         label="Departments"
+        description="Organization units"
         :icon="BuildingOfficeIcon"
-        icon-color="secondary"
+        variant="info"
         :trend="stats.departmentTrend"
         :loading="loading"
-        :clickable="true"
         route="departments.index"
       />
       
-      <StatsCard
+      <UnifiedStatsCard
         :value="stats.pendingLeaves"
         label="Pending Leaves"
+        description="Requires attention"
         :icon="CalendarDaysIcon"
-        icon-color="warning"
+        variant="warning"
         :trend="stats.leaveTrend"
         :loading="loading"
-        :clickable="true"
         route="leaves.index"
       />
       
-      <StatsCard
+      <UnifiedStatsCard
         :value="stats.activeProjects"
         label="Active Projects"
+        description="In progress"
         :icon="FolderOpenIcon"
-        icon-color="success"
+        variant="success"
         :trend="stats.projectTrend"
         :loading="loading"
-        :clickable="true"
         route="projects.index"
       />
     </div>
@@ -320,7 +318,7 @@ import { computed, ref, onMounted, nextTick } from 'vue';
 import { useAuth } from '@/composables/useAuth.js';
 import ContentCard from '@/Components/Layout/ContentCard.vue';
 import DashboardWidget from './DashboardWidget.vue';
-import StatsCard from './StatsCard.vue';
+import UnifiedStatsCard from '@/Components/UI/UnifiedStatsCard.vue';
 import ActivityTimeline from './ActivityTimeline.vue';
 import QuickActions from './QuickActions.vue';
 import ApprovalModal from './ApprovalModal.vue';

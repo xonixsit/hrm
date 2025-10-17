@@ -40,7 +40,7 @@
                   HR Management
                 </h1>
                 <!-- Admin Badge with Better Integration -->
-                <span v-if="userRoles?.includes('Admin')" :class="[
+                <span v-if="Array.isArray(userRoles) && userRoles.includes('Admin')" :class="[
                   'text-xs px-2 py-0.5 rounded-full font-medium',
                   isDark 
                     ? 'bg-red-500/20 text-red-300 border border-red-500/30' 
