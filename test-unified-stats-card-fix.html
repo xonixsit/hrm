@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unified Stats Card - Fixed Design</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/heroicons@2.0.18/24/outline/index.js" type="module"></script>
+    <style>
+        /* Custom animations */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        @keyframes ping {
+            75%, 100% { transform: scale(2); opacity: 0; }
+        }
+        .animate-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        .animate-ping { animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite; }
+    </style>
+</head>
+<body class="bg-gray-50 p-8">
+    <div class="max-w-7xl mx-auto">
+        <h1 class="text-3xl font-bold text-gray-900 mb-8">Fixed Unified Stats Cards</h1>
+        
+        <!-- Stats Cards Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            
+            <!-- Total Employees Card -->
+            <div class="group relative transition-all duration-300 cursor-pointer bg-white backdrop-blur-sm border border-gray-200/60 shadow-sm hover:shadow-md hover:scale-[1.01] hover:border-opacity-80 hover:bg-gray-50/50 hover:border-gray-300/60 rounded-xl p-6">
+                <!-- Header Section -->
+                <div class="flex items-start justify-between mb-4">
+                    <!-- Icon -->
+                    <div class="flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-200 flex-shrink-0 bg-blue-500 text-white">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                        </svg>
+                    </div>
+                    
+                    <!-- Trend Indicator -->
+                    <div class="flex items-center space-x-1">
+                        <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                        </svg>
+                        <span class="text-sm font-medium text-green-600">+5.2%</span>
+                    </div>
+                </div>
+
+                <!-- Value Section -->
+                <div class="mb-2">
+                    <div class="text-3xl font-bold transition-colors duration-200 mb-1 text-gray-900">274</div>
+                    <div class="text-sm font-medium transition-colors duration-200 text-gray-600">Total Employees</div>
+                </div>
+
+                <!-- Description -->
+                <div class="text-sm transition-colors duration-200 text-gray-500">Active workforce</div>
+            </div>
+
+            <!-- Pending Approvals Card -->
+            <div class="group relative transition-all duration-300 cursor-pointer bg-white backdrop-blur-sm border border-gray-200/60 shadow-sm hover:shadow-md hover:scale-[1.01] hover:border-opacity-80 hover:bg-gray-50/50 hover:border-gray-300/60 rounded-xl p-6">
+                <!-- Header Section -->
+                <div class="flex items-start justify-between mb-4">
+                    <!-- Icon -->
+                    <div class="flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-200 flex-shrink-0 bg-orange-500 text-white">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                        </svg>
+                    </div>
+                    
+                    <!-- Status Badge -->
+                    <div class="flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700">
+                        <div class="w-1.5 h-1.5 rounded-full bg-orange-500"></div>
+                        <span>Normal</span>
+                    </div>
+                </div>
+
+                <!-- Value Section -->
+                <div class="mb-2">
+                    <div class="text-3xl font-bold transition-colors duration-200 mb-1 text-gray-900">19</div>
+                    <div class="text-sm font-medium transition-colors duration-200 text-gray-600">Pending Approvals</div>
+                </div>
+
+                <!-- Description -->
+                <div class="text-sm transition-colors duration-200 text-gray-500">Requires attention</div>
+            </div>
+
+            <!-- Pending Assessments Card -->
+            <div class="group relative transition-all duration-300 cursor-pointer bg-white backdrop-blur-sm border border-gray-200/60 shadow-sm hover:shadow-md hover:scale-[1.01] hover:border-opacity-80 hover:bg-gray-50/50 hover:border-gray-300/60 rounded-xl p-6">
+                <!-- Header Section -->
+                <div class="flex items-start justify-between mb-4">
+                    <!-- Icon -->
+                    <div class="flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-200 flex-shrink-0 bg-purple-500 text-white">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+                        </svg>
+                    </div>
+                    
+                    <!-- Status Badge -->
+                    <div class="flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                        <div class="w-1.5 h-1.5 rounded-full bg-blue-500"></div>
+                        <span>On Track</span>
+                    </div>
+                </div>
+
+                <!-- Value Section -->
+                <div class="mb-2">
+                    <div class="text-3xl font-bold transition-colors duration-200 mb-1 text-gray-900">9</div>
+                    <div class="text-sm font-medium transition-colors duration-200 text-gray-600">Pending Assessments</div>
+                </div>
+
+                <!-- Description -->
+                <div class="text-sm transition-colors duration-200 text-gray-500">Review status</div>
+            </div>
+
+            <!-- System Health Card -->
+            <div class="group relative transition-all duration-300 bg-white backdrop-blur-sm border border-gray-200/60 shadow-sm rounded-xl p-6">
+                <!-- Header Section -->
+                <div class="flex items-start justify-between mb-4">
+                    <!-- Icon -->
+                    <div class="flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-200 flex-shrink-0 bg-green-500 text-white">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    
+                    <!-- Status Badge -->
+                    <div class="flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                        <div class="w-1.5 h-1.5 rounded-full bg-green-500"></div>
+                        <span>Excellent</span>
+                    </div>
+                </div>
+
+                <!-- Value Section -->
+                <div class="mb-2">
+                    <div class="text-3xl font-bold transition-colors duration-200 mb-1 text-gray-900">98.5%</div>
+                    <div class="text-sm font-medium transition-colors duration-200 text-gray-600">System Health</div>
+                </div>
+
+                <!-- Description -->
+                <div class="text-sm transition-colors duration-200 text-gray-500">Uptime</div>
+            </div>
+
+        </div>
+
+        <!-- Comparison Section -->
+        <div class="mt-12">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6">Design Improvements</h2>
+            <div class="bg-white rounded-xl p-6 border border-gray-200">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-3">✅ Fixed Issues</h3>
+                        <ul class="space-y-2 text-sm text-gray-600">
+                            <li>• Fixed broken template structure</li>
+                            <li>• Improved layout consistency</li>
+                            <li>• Better spacing and alignment</li>
+                            <li>• Cleaner icon positioning</li>
+                            <li>• Consistent card sizing</li>
+                            <li>• Proper hover effects</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-3">🎨 Design Features</h3>
+                        <ul class="space-y-2 text-sm text-gray-600">
+                            <li>• Clean, modern card design</li>
+                            <li>• Consistent color scheme</li>
+                            <li>• Proper visual hierarchy</li>
+                            <li>• Responsive grid layout</li>
+                            <li>• Subtle animations</li>
+                            <li>• Accessible interactions</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
