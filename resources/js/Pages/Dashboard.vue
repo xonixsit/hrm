@@ -66,13 +66,13 @@
         <div class="lg:col-span-2 space-y-4">
 
           <!-- Action Required Section -->
-          <UnifiedCard title="Action Required" description="Items needing your immediate attention"
+          <UnifiedCard v-if="pendingApprovals.length > 0" title="Action Required" description="Items needing your immediate attention"
             :icon="ExclamationTriangleIcon" iconVariant="danger" variant="elevated">
             <template #headerActions>
               <div class="flex items-center space-x-2">
                 <span
                   class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
-                  {{ (adminStats.pendingLeaves || 0) + (adminStats.pendingAssessments || 0) }} pending
+                  {{ pendingApprovals.length }} pending
                 </span>
                 <button @click="handleRefresh"
                   class="p-2 text-gray-400 hover:text-gray-600 hover:bg-white rounded-lg transition-all">
@@ -227,31 +227,7 @@
               </div>
             </div>
           </UnifiedCard>
-
-          <!-- System Status -->
-          <UnifiedCard title="System Status" description="All systems operational" :icon="CheckCircleIcon"
-            iconVariant="success">
-            <div class="space-y-3">
-              <div class="flex items-center justify-between">
-                <span class="text-sm text-gray-600">Database</span>
-                <div class="flex items-center">
-                  <div class="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
-                  <span class="text-sm font-medium text-green-600">Healthy</span>
-                </div>
-              </div>
-              <div class="flex items-center justify-between">
-                <span class="text-sm text-gray-600">API Services</span>
-                <div class="flex items-center">
-                  <div class="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
-                  <span class="text-sm font-medium text-green-600">Online</span>
-                </div>
-              </div>
-              <div class="flex items-center justify-between">
-                <span class="text-sm text-gray-600">Uptime</span>
-                <span class="text-sm font-medium text-gray-900">98.5%</span>
-              </div>
-            </div>
-          </UnifiedCard>
+          <span class="text-sm font-medium text-gray-900">98.5%</span>
         </div>
       </div>
     </div>
