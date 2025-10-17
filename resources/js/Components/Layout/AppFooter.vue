@@ -10,7 +10,7 @@
         <!-- Left side - Logo -->
         <div class="flex items-center space-x-2">
           <div class="flex items-center space-x-1">
-           
+
             <!-- Person Circle -->
             <div class="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center -ml-1">
               <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
@@ -63,10 +63,10 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
-import { useTheme } from '@/composables/useTheme.js'
+  import { computed } from 'vue'
+  import { useTheme } from '@/composables/useTheme.js'
 
-const { isDark } = useTheme()
+  const { isDark } = useTheme()
 
-const currentYear = computed(() => new Date().getFullYear())
+  const currentYear = computed(() => new Date().getFullYear())
 </script>

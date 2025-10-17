@@ -81,6 +81,11 @@ class DashboardController extends Controller
                 ->whereMonth('updated_at', now()->month)
                 ->count();
 
+            // Work Report metrics
+            $totalWorkReports = DB::table('work_reports')->whereMonth('created_at', now()->month)->count();
+            $pendingWorkReports = DB::table('work_reports')->where('status', 'pending')->count();
+            $approvedWorkReports = DB::table('work_reports')->where('status', 'approved')->whereMonth('updated_at', now()->month)->count();
+
             $data['adminStats'] = [
                 'totalEmployees' => $totalEmployees,
                 'pendingLeaves' => $pendingLeaves,
@@ -89,11 +94,15 @@ class DashboardController extends Controller
                 'pendingAssessments' => $pendingAssessments,
                 'activeAssessmentCycles' => $activeAssessmentCycles,
                 'completedAssessmentsThisMonth' => $completedAssessmentsThisMonth,
+                'totalWorkReports' => $totalWorkReports,
+                'pendingWorkReports' => $pendingWorkReports,
+                'approvedWorkReports' => $approvedWorkReports,
                 'employeeTrend' => $this->calculateEmployeeTrend(),
                 'leaveTrend' => $this->calculateLeaveTrend(),
                 'departmentTrend' => $this->calculateDepartmentTrend(),
                 'projectTrend' => $this->calculateProjectTrend(),
                 'assessmentTrend' => $this->calculateAssessmentTrend(),
+                'workReportTrend' => $this->calculateWorkReportTrend(),
             ];
 
             $data['systemActivities'] = $this->getSystemActivities();
@@ -240,6 +249,15 @@ class DashboardController extends Controller
     {
         $currentMonth = CompetencyAssessment::where('status', 'approved')->whereMonth('updated_at', now()->month)->count();
         $lastMonth = CompetencyAssessment::where('status', 'approved')->whereMonth('updated_at', now()->subMonth()->month)->count();
+        
+        if ($lastMonth == 0) return 0;
+        return round((($currentMonth - $lastMonth) / $lastMonth) * 100, 1);
+    }
+
+    private function calculateWorkReportTrend()
+    {
+        $currentMonth = DB::table('work_reports')->whereMonth('created_at', now()->month)->count();
+        $lastMonth = DB::table('work_reports')->whereMonth('created_at', now()->subMonth()->month)->count();
         
         if ($lastMonth == 0) return 0;
         return round((($currentMonth - $lastMonth) / $lastMonth) * 100, 1);

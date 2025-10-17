@@ -40,25 +40,25 @@
 
       <!-- Key Metrics Overview -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <UnifiedStatsCard :value="adminStats.totalEmployees || 274" label="Total Employees"
-          description="Active workforce" :icon="UsersIcon" variant="primary" :trend="5.2" route="employees.index"
+        <UnifiedStatsCard :value="adminStats.totalEmployees" label="Total Employees" description="Active workforce"
+          :icon="UsersIcon" variant="primary" :trend="adminStats.employeeTrend" route="employees.index"
           :loading="loading" />
 
-        <UnifiedStatsCard :value="adminStats.pendingLeaves || 19" label="Pending Approvals"
-          description="Requires attention" :icon="ExclamationTriangleIcon" variant="warning"
-          :status="(adminStats.pendingLeaves || 19) > 10 ? 'critical' : 'warning'"
-          :statusText="(adminStats.pendingLeaves || 19) > 10 ? 'High' : 'Normal'" route="approvals.index"
-          :urgent="(adminStats.pendingLeaves || 19) > 15" :loading="loading" />
+        <UnifiedStatsCard :value="adminStats.pendingLeaves" label="Pending Approvals" description="Requires attention"
+          :icon="ExclamationTriangleIcon" variant="warning"
+          :status="adminStats.pendingLeaves > 10 ? 'critical' : 'warning'"
+          :statusText="adminStats.pendingLeaves > 10 ? 'High' : 'Normal'" route="approvals.index"
+          :urgent="adminStats.pendingLeaves > 15" :loading="loading" />
 
-        <UnifiedStatsCard :value="adminStats.pendingAssessments || 9" label="Pending Assessments"
-          description="Review status" :icon="AcademicCapIcon" variant="info"
-          :status="(adminStats.pendingAssessments || 9) > 5 ? 'warning' : 'good'"
-          :statusText="(adminStats.pendingAssessments || 9) > 5 ? 'Review' : 'On Track'" route="assessment-dashboard"
+        <UnifiedStatsCard :value="adminStats.pendingAssessments" label="Pending Assessments" description="Review status"
+          :icon="AcademicCapIcon" variant="info" :status="adminStats.pendingAssessments > 5 ? 'warning' : 'good'"
+          :statusText="adminStats.pendingAssessments > 5 ? 'Review' : 'On Track'" route="assessment-dashboard"
           :loading="loading" />
 
-        <UnifiedStatsCard value="98.5%" label="System Health" description="Uptime" :icon="CheckCircleIcon"
-          variant="success" status="excellent" statusText="Excellent" :clickable="false" :loading="loading" />
-      </div>
+        <UnifiedStatsCard :value="adminStats.totalWorkReports || 0" label="Work Reports" description="This month"
+          :icon="ChartBarIcon" variant="info" :trend="adminStats.workReportTrend" route="work-reports.index"
+          :loading="loading" />
+      </div>""
 
       <!-- Main Content Grid -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -73,7 +73,7 @@
               <div class="flex items-center space-x-2">
                 <span
                   class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
-                  {{ (adminStats.pendingLeaves || 19) + (adminStats.pendingAssessments || 9) }} pending
+                  {{ (adminStats.pendingLeaves || 0) + (adminStats.pendingAssessments || 0) }} pending
                 </span>
                 <button @click="handleRefresh"
                   class="p-2 text-gray-400 hover:text-gray-600 hover:bg-white rounded-lg transition-all">
@@ -104,16 +104,16 @@
                 <div class="text-xs text-gray-600 mt-1">Completed</div>
               </div>
               <div class="text-center p-4 bg-orange-50 rounded-xl border border-orange-100">
-                <div class="text-2xl font-bold text-orange-600">{{ adminStats.pendingAssessments || 9 }}</div>
+                <div class="text-2xl font-bold text-orange-600">{{ adminStats.pendingAssessments || 0 }}</div>
                 <div class="text-xs text-gray-600 mt-1">Pending</div>
               </div>
               <div class="text-center p-4 bg-purple-50 rounded-xl border border-purple-100">
-                <div class="text-2xl font-bold text-purple-600">{{ adminStats.activeAssessmentCycles || 4 }}</div>
+                <div class="text-2xl font-bold text-purple-600">{{ adminStats.activeAssessmentCycles || 0 }}</div>
                 <div class="text-xs text-gray-600 mt-1">Active Cycles</div>
               </div>
               <div class="text-center p-4 bg-blue-50 rounded-xl border border-blue-100">
-                <div class="text-2xl font-bold text-blue-600">4.2</div>
-                <div class="text-xs text-gray-600 mt-1">Avg Rating</div>
+                <div class="text-2xl font-bold text-blue-600">{{ adminStats.totalWorkReports || 0 }}</div>
+                <div class="text-xs text-gray-600 mt-1">Work Reports</div>
               </div>
             </div>
 
@@ -204,15 +204,15 @@
           <BirthdayNotifications :todays-birthdays="birthdayData.todaysBirthdays"
             :upcoming-birthdays="birthdayData.upcomingBirthdays" :stats="birthdayData.stats" />
 
-          <!-- Performance Insights -->
-          <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl border border-green-100 p-6">
+          <!-- Work Reports Overview -->
+          <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl border border-blue-100 p-6">
             <div class="flex items-center space-x-3 mb-6">
-              <div class="p-2 bg-green-100 rounded-lg">
-                <ChartBarIcon class="w-5 h-5 text-green-600" />
+              <div class="p-2 bg-blue-100 rounded-lg">
+                <ChartBarIcon class="w-5 h-5 text-blue-600" />
               </div>
               <div>
-                <h3 class="text-lg font-semibold text-gray-900">Performance Insights</h3>
-                <p class="text-sm text-gray-600">Key metrics</p>
+                <h3 class="text-lg font-semibold text-gray-900">Work Reports</h3>
+                <p class="text-sm text-gray-600">Monthly overview</p>
               </div>
             </div>
 
@@ -220,31 +220,31 @@
               <div class="flex items-center justify-between p-3 bg-white rounded-xl">
                 <div class="flex items-center space-x-3">
                   <div class="w-3 h-3 bg-green-400 rounded-full"></div>
-                  <span class="text-sm font-medium text-gray-700">Top Performing</span>
+                  <span class="text-sm font-medium text-gray-700">Approved Reports</span>
                 </div>
-                <span class="text-sm font-semibold text-green-600">Communication</span>
+                <span class="text-sm font-semibold text-green-600">{{ adminStats.approvedWorkReports || 0 }}</span>
               </div>
 
               <div class="flex items-center justify-between p-3 bg-white rounded-xl">
                 <div class="flex items-center space-x-3">
                   <div class="w-3 h-3 bg-orange-400 rounded-full"></div>
-                  <span class="text-sm font-medium text-gray-700">Needs Attention</span>
+                  <span class="text-sm font-medium text-gray-700">Pending Review</span>
                 </div>
-                <span class="text-sm font-semibold text-orange-600">Technical Skills</span>
+                <span class="text-sm font-semibold text-orange-600">{{ adminStats.pendingWorkReports || 0 }}</span>
               </div>
 
               <div class="flex items-center justify-between p-3 bg-white rounded-xl">
                 <div class="flex items-center space-x-3">
                   <div class="w-3 h-3 bg-blue-400 rounded-full"></div>
-                  <span class="text-sm font-medium text-gray-700">Average Rating</span>
+                  <span class="text-sm font-medium text-gray-700">Total This Month</span>
                 </div>
-                <span class="text-sm font-semibold text-blue-600">4.2/5.0</span>
+                <span class="text-sm font-semibold text-blue-600">{{ adminStats.totalWorkReports || 0 }}</span>
               </div>
 
-              <div class="pt-4 border-t border-green-200">
-                <button @click="navigateTo('competency-analytics.reports')"
-                  class="w-full flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors">
-                  <span class="font-medium">View Detailed Analytics</span>
+              <div class="pt-4 border-t border-blue-200">
+                <button @click="navigateTo('work-reports.index')"
+                  class="w-full flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors">
+                  <span class="font-medium">View All Reports</span>
                   <ChevronRightIcon class="w-4 h-4 ml-2" />
                 </button>
               </div>
