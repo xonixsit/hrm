@@ -41,7 +41,7 @@
       <!-- Key Metrics Overview -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <UnifiedStatsCard :value="adminStats.totalEmployees || 274" label="Total Employees"
-          description="Active workforce" :icon="UsersIcon" variant="primary" :trend="5.2" route="employees.index"
+          description="Active workforce222" :icon="UsersIcon" variant="primary" :trend="5.2" route="employees.index"
           :loading="loading" />
 
         <UnifiedStatsCard :value="adminStats.pendingLeaves || 19" label="Pending Approvals"
