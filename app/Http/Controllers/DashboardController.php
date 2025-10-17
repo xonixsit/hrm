@@ -80,6 +80,11 @@ class DashboardController extends Controller
             $completedAssessmentsThisMonth = CompetencyAssessment::where('status', 'approved')
                 ->whereMonth('updated_at', now()->month)
                 ->count();
+            
+            // Calculate average rating across all approved assessments
+            $averageRating = CompetencyAssessment::where('status', 'approved')
+                ->whereNotNull('rating')
+                ->avg('rating');
 
             $data['adminStats'] = [
                 'totalEmployees' => $totalEmployees,
@@ -89,6 +94,7 @@ class DashboardController extends Controller
                 'pendingAssessments' => $pendingAssessments,
                 'activeAssessmentCycles' => $activeAssessmentCycles,
                 'completedAssessmentsThisMonth' => $completedAssessmentsThisMonth,
+                'averageRating' => $averageRating ? round($averageRating, 1) : null,
                 'employeeTrend' => $this->calculateEmployeeTrend(),
                 'leaveTrend' => $this->calculateLeaveTrend(),
                 'departmentTrend' => $this->calculateDepartmentTrend(),

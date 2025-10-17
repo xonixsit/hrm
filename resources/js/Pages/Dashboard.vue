@@ -57,7 +57,7 @@
 
         <UnifiedStatsCard value="98.5%" label="System Health" description="Uptime" :icon="CheckCircleIcon"
           variant="success" status="excellent" statusText="Excellent" :clickable="false" :loading="loading" />
-      </div>""
+      </div>
 
       <!-- Main Content Grid -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -111,7 +111,7 @@
                 <div class="text-xs text-gray-600 mt-1">Active Cycles</div>
               </div>
               <div class="text-center p-4 bg-blue-50 rounded-xl border border-blue-100">
-                <div class="text-2xl font-bold text-blue-600">4.2</div>
+                <div class="text-2xl font-bold text-blue-600">{{ adminStats.averageRating || '-' }}</div>
                 <div class="text-xs text-gray-600 mt-1">Avg Rating</div>
               </div>
             </div>
