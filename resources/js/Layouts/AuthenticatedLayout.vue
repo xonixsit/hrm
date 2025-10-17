@@ -6,6 +6,7 @@
     import FloatingAttendanceWidget from '@/Components/Navigation/FloatingAttendanceWidget.vue';
     import SkipLinks from '@/Components/Accessibility/SkipLinks.vue';
     import LiveRegion from '@/Components/Accessibility/LiveRegion.vue';
+    import AppFooter from '@/Components/Layout/AppFooter.vue';
     import { useAuth } from '@/composables/useAuth';
     import { useTheme } from '@/composables/useTheme.js';
     import { useReminder } from '@/composables/useReminder';
@@ -41,7 +42,7 @@
 
 <template>
     <div :class="[
-    'min-h-screen transition-all duration-300',
+    'min-h-screen transition-all duration-300 flex flex-col',
     // Unified background system with subtle gradients
     isDark 
       ? 'bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800' 
@@ -117,7 +118,7 @@
             </header>
 
             <!-- Main Content Area with Unified Spacing System -->
-            <main id="main-content" class="relative" role="main" aria-label="Main content" tabindex="-1">
+            <main id="main-content" class="relative flex-1" role="main" aria-label="Main content" tabindex="-1">
                 <!-- Content Container with Consistent Design System -->
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                     <!-- Content wrapper with unified styling -->
@@ -140,6 +141,9 @@
                 </div>
             </main>
         </div>
+
+        <!-- App Footer -->
+        <AppFooter />
     </div>
 </template>
 
