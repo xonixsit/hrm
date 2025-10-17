@@ -23,17 +23,8 @@
                 ? 'bg-gray-800/50 border border-gray-700/50' 
                 : 'bg-white/80 border border-gray-200/50 shadow-sm'
             ]">
-              <!-- Logo Icon -->
-              <ETaxPlannerLogo className="h-10 w-auto" />
-              
-              <!-- Logo Text -->
-              <div class="hidden lg:block">
-                <h1 :class="[
-                  'text-xl font-bold leading-tight',
-                  isDark ? 'text-white' : 'text-gray-900'
-                ]">
-                  eTaxPlanner
-                </h1>
+              <!-- Logo -->
+              <ApplicationLogo class="h-12 w-auto" />
                 <!-- Admin Badge with Better Integration -->
                 <span v-if="Array.isArray(userRoles) && userRoles.includes('Admin')" :class="[
                   'text-xs px-2 py-0.5 rounded-full font-medium',
@@ -317,7 +308,6 @@
           </div>
         </div>
       </div>
-    </div>
 
     <!-- Mobile Menu -->
     <div class="md:hidden px-4 pb-3">
@@ -364,7 +354,7 @@ import { ref, computed } from 'vue'
 import { router } from '@inertiajs/vue3'
 import { useAuth } from '@/composables/useAuth.js'
 import { useTheme } from '@/composables/useTheme.js'
-import ETaxPlannerLogo from '@/Components/UI/ETaxPlannerLogo.vue'
+import ApplicationLogo from '@/Components/ApplicationLogo.vue'
 
 const props = defineProps({
   currentRoute: {

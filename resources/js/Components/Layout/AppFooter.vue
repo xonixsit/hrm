@@ -7,9 +7,9 @@
   ]">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
       <div class="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-        <!-- Left side - Logo and company info -->
-        <div class="flex items-center space-x-3">
-          <ETaxPlannerLogo className="h-8 w-auto" />
+        <!-- Left side - Logo -->
+        <div class="flex items-center">
+          <ApplicationLogo class="h-8 w-auto" />
         </div>
 
         <!-- Center - Links -->
@@ -49,7 +49,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useTheme } from '@/composables/useTheme.js'
-import ETaxPlannerLogo from '@/Components/UI/ETaxPlannerLogo.vue'
+import ApplicationLogo from '@/Components/ApplicationLogo.vue'
 
 const { isDark } = useTheme()
 
