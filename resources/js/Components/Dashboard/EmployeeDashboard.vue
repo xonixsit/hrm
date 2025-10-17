@@ -190,8 +190,8 @@
             <DocumentTextIcon class="w-6 h-6 text-success-600" />
           </div>
           <div class="stat-content">
-            <div class="stat-value">{{ stats.myApprovedReports || 0 }}</div>
-            <div class="stat-label">Approved Reports</div>
+            <div class="stat-value">{{ stats.mySuccessfulCalls || 0 }}</div>
+            <div class="stat-label">Successful Calls</div>
           </div>
         </div>
       </div>

@@ -170,11 +170,12 @@ class DashboardController extends Controller
                     ->where('employee_id', $employeeId)
                     ->whereMonth('created_at', now()->month)
                     ->count();
-                $myApprovedReports = DB::table('work_reports')
+                
+                // Calculate successful calls from work reports this month
+                $mySuccessfulCalls = DB::table('work_reports')
                     ->where('employee_id', $employeeId)
-                    ->where('status', 'approved')
-                    ->whereMonth('updated_at', now()->month)
-                    ->count();
+                    ->whereMonth('created_at', now()->month)
+                    ->sum('successful_calls');
 
                 $data['employeeStats'] = [
                     'pendingLeaves' => $myPendingLeaves,
@@ -186,7 +187,7 @@ class DashboardController extends Controller
                     'myCompletedAssessments' => $myCompletedAssessments,
                     'myAverageRating' => $myAverageRating ? round($myAverageRating, 1) : null,
                     'myWorkReports' => $myWorkReports,
-                    'myApprovedReports' => $myApprovedReports,
+                    'mySuccessfulCalls' => $mySuccessfulCalls,
                     'tasksCompleted' => 0, // TODO: Implement task counting
                     'leaveBalance' => 25, // TODO: Calculate actual leave balance
                     'upcomingDeadlines' => 0, // TODO: Implement deadline counting
