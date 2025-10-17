@@ -41,7 +41,7 @@
       <!-- Key Metrics Overview -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <UnifiedStatsCard :value="adminStats.totalEmployees || 274" label="Total Employees"
-          description="Active workforce222" :icon="UsersIcon" variant="primary" :trend="5.2" route="employees.index"
+          description="Active workforce" :icon="UsersIcon" variant="primary" :trend="5.2" route="employees.index"
           :loading="loading" />
 
         <UnifiedStatsCard :value="adminStats.pendingLeaves || 19" label="Pending Approvals"
@@ -373,7 +373,7 @@
   import UnifiedStatsCard from '@/Components/UI/UnifiedStatsCard.vue';
 
   // Dashboard Components
-  import AdminDashboard from '@/Components/Dashboard/AdminDashboard.vue';
+
   import ManagerDashboard from '@/Components/Dashboard/ManagerDashboard.vue';
   import EmployeeDashboard from '@/Components/Dashboard/EmployeeDashboard.vue';
   import ApprovalModal from '@/Components/Dashboard/ApprovalModal.vue';
