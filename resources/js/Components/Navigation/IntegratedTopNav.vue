@@ -53,55 +53,55 @@
           </div>
 
           <!-- Enhanced Main Navigation -->
-          <div class="hidden md:flex space-x-1">
+          <div class="hidden lg:flex space-x-1">
             <a
               v-for="item in mainNavItems"
               :key="item.route"
               :href="route(item.route)"
               :class="[
-                'px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 flex items-center space-x-2',
+                'px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center space-x-1.5 whitespace-nowrap',
                 isActive(item.route)
                   ? (isDark 
-                      ? 'bg-blue-600/20 text-blue-300 border border-blue-500/30 shadow-sm' 
-                      : 'bg-blue-50 text-blue-700 border border-blue-200/50 shadow-sm')
+                      ? 'bg-blue-600/20 text-blue-300' 
+                      : 'bg-blue-50 text-blue-700')
                   : (isDark 
-                      ? 'text-gray-300 hover:text-white hover:bg-gray-700/50 hover:border hover:border-gray-600' 
-                      : 'text-gray-700 hover:text-gray-900 hover:bg-white/60 hover:border hover:border-gray-200 hover:shadow-sm')
+                      ? 'text-gray-300 hover:text-white hover:bg-gray-700/50' 
+                      : 'text-gray-700 hover:text-gray-900 hover:bg-white/60')
               ]"
             >
-              <!-- Add icons for better visual hierarchy -->
               <svg v-if="item.route === 'dashboard'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5a2 2 0 012-2h4a2 2 0 012 2v6H8V5z" />
-              </svg>
-              <svg v-else-if="item.route === 'profile.edit'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
               <svg v-else-if="item.route === 'attendances.index'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
+              <svg v-else-if="item.route === 'leaves.index'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
               <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
-              <span>{{ item.label }}</span>
+              <span class="hidden xl:inline">{{ item.label }}</span>
             </a>
 
             <!-- Enhanced More Menu -->
-            <div class="relative" @mouseenter="showMore = true" @mouseleave="showMore = false">
-              <button :class="[
-                'px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 flex items-center space-x-2',
-                showMore
-                  ? (isDark 
-                      ? 'bg-gray-700/50 text-white border border-gray-600' 
-                      : 'bg-white/60 text-gray-900 border border-gray-200 shadow-sm')
-                  : (isDark 
-                      ? 'text-gray-300 hover:text-white hover:bg-gray-700/50 hover:border hover:border-gray-600' 
-                      : 'text-gray-700 hover:text-gray-900 hover:bg-white/60 hover:border hover:border-gray-200 hover:shadow-sm')
-              ]">
+            <div class="relative">
+              <button 
+                @click="showMore = !showMore"
+                :class="[
+                  'px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center space-x-1.5',
+                  showMore
+                    ? (isDark 
+                        ? 'bg-gray-700/50 text-white' 
+                        : 'bg-white/60 text-gray-900')
+                    : (isDark 
+                        ? 'text-gray-300 hover:text-white hover:bg-gray-700/50' 
+                        : 'text-gray-700 hover:text-gray-900 hover:bg-white/60')
+                ]">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
-                <span>More</span>
+                <span class="hidden xl:inline">More</span>
                 <svg :class="['w-4 h-4 transition-transform duration-200', { 'rotate-180': showMore }]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                 </svg>
@@ -241,25 +241,27 @@
           </button>
 
           <!-- Enhanced User Menu -->
-          <div class="relative" @mouseenter="showUserMenu = true" @mouseleave="showUserMenu = false">
-            <button :class="[
-              'flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200',
-              showUserMenu
-                ? (isDark 
-                    ? 'bg-gray-700/50 text-white border border-gray-600' 
-                    : 'bg-white/60 text-gray-900 border border-gray-200 shadow-sm')
-                : (isDark 
-                    ? 'text-gray-300 hover:text-white hover:bg-gray-700/50 hover:border hover:border-gray-600' 
-                    : 'text-gray-700 hover:text-gray-900 hover:bg-white/60 hover:border hover:border-gray-200 hover:shadow-sm')
-            ]">
+          <div class="relative">
+            <button 
+              @click="showUserMenu = !showUserMenu"
+              :class="[
+                'flex items-center space-x-2 px-2 py-2 rounded-lg text-sm font-medium transition-all duration-200',
+                showUserMenu
+                  ? (isDark 
+                      ? 'bg-gray-700/50 text-white' 
+                      : 'bg-white/60 text-gray-900')
+                  : (isDark 
+                      ? 'text-gray-300 hover:text-white hover:bg-gray-700/50' 
+                      : 'text-gray-700 hover:text-gray-900 hover:bg-white/60')
+              ]">
               <div :class="[
-                'w-9 h-9 rounded-lg flex items-center justify-center text-sm font-bold shadow-sm',
-                isDark ? 'bg-gradient-to-br from-blue-600 to-blue-700 text-white' : 'bg-gradient-to-br from-blue-500 to-blue-600 text-white'
+                'w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold',
+                isDark ? 'bg-blue-600 text-white' : 'bg-blue-500 text-white'
               ]">
                 {{ userInitials }}
               </div>
-              <div class="hidden md:block text-left">
-                <div class="font-medium">{{ user?.name }}</div>
+              <div class="hidden lg:block text-left">
+                <div class="font-medium text-sm">{{ user?.name }}</div>
                 <div :class="[
                   'text-xs',
                   isDark ? 'text-gray-400' : 'text-gray-500'
