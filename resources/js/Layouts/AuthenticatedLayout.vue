@@ -60,8 +60,8 @@
         <!-- Notification Container -->
         <NotificationContainer />
 
-        <!-- Floating Attendance Widget -->
-        <FloatingAttendanceWidget />
+        <!-- Floating Attendance Widget (hidden for admins) -->
+        <FloatingAttendanceWidget v-if="!hasRole('Admin')" />
 
         <!-- Error handling for missing authentication data -->
         <div v-if="hasAuthError" :class="[
