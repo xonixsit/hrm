@@ -199,21 +199,47 @@ class DashboardController extends Controller
                     ->whereMonth('created_at', now()->month)
                     ->sum('successful_calls');
 
+                // Journey & Growth metrics
+                $journeyMetrics = $this->getEmployeeJourneyMetrics($employeeId);
+                $growthMetrics = $this->getEmployeeGrowthMetrics($employeeId);
+                $achievementMetrics = $this->getEmployeeAchievements($employeeId);
+
                 $data['employeeStats'] = [
-                    'pendingLeaves' => $myPendingLeaves,
-                    'approvedLeaves' => $myApprovedLeaves,
-                    'totalLeaves' => $myTotalLeaves,
+                    // Core Performance
                     'attendanceRate' => $this->calculateAttendanceRate($employeeId),
                     'hoursToday' => $currentAttendance['todays_summary']['total_hours'] ?? '0h 0m',
+                    'myWorkReports' => $myWorkReports,
+                    'mySuccessfulCalls' => $mySuccessfulCalls,
+                    
+                    // Leave Management
+                    'pendingLeaves' => $myPendingLeaves,
+                    'approvedLeaves' => $myApprovedLeaves,
+                    'leaveBalance' => $this->calculateLeaveBalance($employeeId),
+                    
+                    // Growth & Development
                     'myPendingAssessments' => $myPendingAssessments,
                     'myCompletedAssessments' => $myCompletedAssessments,
                     'myAverageRating' => $myAverageRating ? round($myAverageRating, 1) : null,
-                    'myWorkReports' => $myWorkReports,
-                    'mySuccessfulCalls' => $mySuccessfulCalls,
-                    'tasksCompleted' => 0, // TODO: Implement task counting
-                    'leaveBalance' => 25, // TODO: Calculate actual leave balance
-                    'upcomingDeadlines' => 0, // TODO: Implement deadline counting
-                    'taskTrend' => 0,
+                    'skillsGrowth' => $growthMetrics['skillsGrowth'],
+                    'competencyProgress' => $growthMetrics['competencyProgress'],
+                    
+                    // Journey Milestones
+                    'daysWithCompany' => $journeyMetrics['daysWithCompany'],
+                    'monthsWithCompany' => $journeyMetrics['monthsWithCompany'],
+                    'yearsOfService' => $journeyMetrics['yearsOfService'],
+                    'totalWorkHours' => $journeyMetrics['totalWorkHours'],
+                    'projectsContributed' => $journeyMetrics['projectsContributed'],
+                    
+                    // Achievements & Recognition
+                    'totalAchievements' => $achievementMetrics['totalAchievements'],
+                    'recentAchievements' => $achievementMetrics['recentAchievements'],
+                    'performanceRank' => $achievementMetrics['performanceRank'],
+                    'consistencyScore' => $achievementMetrics['consistencyScore'],
+                    
+                    // Trends
+                    'attendanceTrend' => $journeyMetrics['attendanceTrend'],
+                    'performanceTrend' => $growthMetrics['performanceTrend'],
+                    'productivityTrend' => $journeyMetrics['productivityTrend'],
                 ];
 
                 // Current attendance status for ClockInOutWidget
@@ -450,17 +476,372 @@ class DashboardController extends Controller
         }
     }
 
-
-
-    private function calculateAttendanceRate($employeeId)
+    private function getEmployeeJourneyMetrics($employeeId)
     {
-        $totalDays = 30; // Last 30 days
-        $attendedDays = Attendance::where('employee_id', $employeeId)
-            ->where('created_at', '>=', now()->subDays(30))
-            ->count();
-        
-        return $totalDays > 0 ? round(($attendedDays / $totalDays) * 100, 1) : 0;
+        try {
+            $employee = Employee::find($employeeId);
+            if (!$employee || !$employee->join_date) {
+                return $this->getDefaultJourneyMetrics();
+            }
+
+            $joinDate = $employee->join_date;
+            $now = now();
+            
+            // Calculate service duration
+            $daysWithCompany = $joinDate->diffInDays($now);
+            $monthsWithCompany = $joinDate->diffInMonths($now);
+            $yearsOfService = $joinDate->diffInYears($now);
+            
+            // Total work hours
+            $totalWorkMinutes = DB::table('attendances')
+                ->where('employee_id', $employeeId)
+                ->sum('work_minutes');
+            $totalWorkHours = round($totalWorkMinutes / 60, 1);
+            
+            // Projects contributed to (from timesheets)
+            $projectsContributed = DB::table('timesheets')
+                ->where('employee_id', $employeeId)
+                ->distinct('project_id')
+                ->count();
+            
+            // Attendance trend (last 3 months vs previous 3 months)
+            $recentAttendance = DB::table('attendances')
+                ->where('employee_id', $employeeId)
+                ->where('date', '>=', now()->subMonths(3))
+                ->count();
+            $previousAttendance = DB::table('attendances')
+                ->where('employee_id', $employeeId)
+                ->whereBetween('date', [now()->subMonths(6), now()->subMonths(3)])
+                ->count();
+            
+            $attendanceTrend = $previousAttendance > 0 ? 
+                round((($recentAttendance - $previousAttendance) / $previousAttendance) * 100, 1) : 0;
+            
+            // Productivity trend (work reports)
+            $recentReports = DB::table('work_reports')
+                ->where('employee_id', $employeeId)
+                ->where('created_at', '>=', now()->subMonths(3))
+                ->count();
+            $previousReports = DB::table('work_reports')
+                ->where('employee_id', $employeeId)
+                ->whereBetween('created_at', [now()->subMonths(6), now()->subMonths(3)])
+                ->count();
+            
+            $productivityTrend = $previousReports > 0 ? 
+                round((($recentReports - $previousReports) / $previousReports) * 100, 1) : 0;
+
+            return [
+                'daysWithCompany' => $daysWithCompany,
+                'monthsWithCompany' => $monthsWithCompany,
+                'yearsOfService' => $yearsOfService,
+                'totalWorkHours' => $totalWorkHours,
+                'projectsContributed' => $projectsContributed,
+                'attendanceTrend' => $attendanceTrend,
+                'productivityTrend' => $productivityTrend,
+            ];
+        } catch (\Exception $e) {
+            return $this->getDefaultJourneyMetrics();
+        }
     }
+
+    private function getEmployeeGrowthMetrics($employeeId)
+    {
+        try {
+            // Skills growth (from assessments)
+            $totalAssessments = DB::table('competency_assessments')
+                ->where('employee_id', $employeeId)
+                ->where('status', 'approved')
+                ->count();
+            
+            $recentAssessments = DB::table('competency_assessments')
+                ->where('employee_id', $employeeId)
+                ->where('status', 'approved')
+                ->where('updated_at', '>=', now()->subMonths(6))
+                ->count();
+            
+            $skillsGrowth = $totalAssessments > 0 ? round(($recentAssessments / $totalAssessments) * 100, 1) : 0;
+            
+            // Competency progress (average rating improvement)
+            $firstHalfAvg = DB::table('competency_assessments')
+                ->where('employee_id', $employeeId)
+                ->where('status', 'approved')
+                ->where('updated_at', '<', now()->subMonths(6))
+                ->avg('rating');
+            
+            $recentAvg = DB::table('competency_assessments')
+                ->where('employee_id', $employeeId)
+                ->where('status', 'approved')
+                ->where('updated_at', '>=', now()->subMonths(6))
+                ->avg('rating');
+            
+            $competencyProgress = ($firstHalfAvg && $recentAvg) ? 
+                round((($recentAvg - $firstHalfAvg) / $firstHalfAvg) * 100, 1) : 0;
+            
+            // Performance trend
+            $performanceTrend = $competencyProgress;
+
+            return [
+                'skillsGrowth' => $skillsGrowth,
+                'competencyProgress' => $competencyProgress,
+                'performanceTrend' => $performanceTrend,
+            ];
+        } catch (\Exception $e) {
+            return ['skillsGrowth' => 0, 'competencyProgress' => 0, 'performanceTrend' => 0];
+        }
+    }
+
+    private function getEmployeeAchievements($employeeId)
+    {
+        try {
+            // Calculate achievements based on various metrics
+            $achievements = [];
+            
+            // Perfect attendance months
+            $perfectAttendanceMonths = $this->calculatePerfectAttendanceMonths($employeeId);
+            if ($perfectAttendanceMonths > 0) {
+                $achievements[] = "Perfect Attendance ({$perfectAttendanceMonths} months)";
+            }
+            
+            // High performance ratings
+            $excellentRatings = DB::table('competency_assessments')
+                ->where('employee_id', $employeeId)
+                ->where('status', 'approved')
+                ->where('rating', '>=', 4.5)
+                ->count();
+            
+            if ($excellentRatings > 0) {
+                $achievements[] = "Excellence in Performance ({$excellentRatings} assessments)";
+            }
+            
+            // Consistent work reporting
+            $consistentMonths = $this->calculateConsistentReportingMonths($employeeId);
+            if ($consistentMonths > 0) {
+                $achievements[] = "Consistent Reporting ({$consistentMonths} months)";
+            }
+            
+            // Performance rank among peers
+            $performanceRank = $this->calculatePerformanceRank($employeeId);
+            
+            // Consistency score
+            $consistencyScore = $this->calculateConsistencyScore($employeeId);
+            
+            return [
+                'totalAchievements' => count($achievements),
+                'recentAchievements' => array_slice($achievements, 0, 3),
+                'performanceRank' => $performanceRank,
+                'consistencyScore' => $consistencyScore,
+            ];
+        } catch (\Exception $e) {
+            return [
+                'totalAchievements' => 0,
+                'recentAchievements' => [],
+                'performanceRank' => 'N/A',
+                'consistencyScore' => 0,
+            ];
+        }
+    }
+
+    private function calculateLeaveBalance($employeeId)
+    {
+        try {
+            // Assuming 25 days annual leave allowance
+            $annualAllowance = 25;
+            $usedLeaves = DB::table('leaves')
+                ->where('employee_id', $employeeId)
+                ->where('status', 'approved')
+                ->whereYear('start_date', now()->year)
+                ->sum(DB::raw('DATEDIFF(end_date, start_date) + 1'));
+            
+            return max(0, $annualAllowance - $usedLeaves);
+        } catch (\Exception $e) {
+            return 25;
+        }
+    }
+
+    private function calculatePerfectAttendanceMonths($employeeId)
+    {
+        try {
+            $months = 0;
+            for ($i = 0; $i < 12; $i++) {
+                $month = now()->subMonths($i);
+                $workingDays = $month->daysInMonth - ($month->weekendsInMonth * 2);
+                $attendedDays = DB::table('attendances')
+                    ->where('employee_id', $employeeId)
+                    ->whereYear('date', $month->year)
+                    ->whereMonth('date', $month->month)
+                    ->count();
+                
+                if ($attendedDays >= $workingDays * 0.95) { // 95% threshold
+                    $months++;
+                }
+            }
+            return $months;
+        } catch (\Exception $e) {
+            return 0;
+        }
+    }
+
+    private function calculateConsistentReportingMonths($employeeId)
+    {
+        try {
+            $months = 0;
+            for ($i = 0; $i < 6; $i++) {
+                $month = now()->subMonths($i);
+                $reports = DB::table('work_reports')
+                    ->where('employee_id', $employeeId)
+                    ->whereYear('created_at', $month->year)
+                    ->whereMonth('created_at', $month->month)
+                    ->count();
+                
+                if ($reports >= 15) { // At least 15 reports per month
+                    $months++;
+                }
+            }
+            return $months;
+        } catch (\Exception $e) {
+            return 0;
+        }
+    }
+
+    private function calculatePerformanceRank($employeeId)
+    {
+        try {
+            $employeeAvg = DB::table('competency_assessments')
+                ->where('employee_id', $employeeId)
+                ->where('status', 'approved')
+                ->avg('rating');
+            
+            if (!$employeeAvg) return 'N/A';
+            
+            $betterPerformers = DB::table('competency_assessments')
+                ->select('employee_id')
+                ->where('status', 'approved')
+                ->groupBy('employee_id')
+                ->havingRaw('AVG(rating) > ?', [$employeeAvg])
+                ->count();
+            
+            $totalEmployees = DB::table('competency_assessments')
+                ->select('employee_id')
+                ->where('status', 'approved')
+                ->groupBy('employee_id')
+                ->count();
+            
+            $rank = $betterPerformers + 1;
+            $percentile = round((($totalEmployees - $rank + 1) / $totalEmployees) * 100);
+            
+            return "Top {$percentile}%";
+        } catch (\Exception $e) {
+            return 'N/A';
+        }
+    }
+
+    private function calculateConsistencyScore($employeeId)
+    {
+        try {
+            // Combine attendance, reporting, and performance consistency
+            $attendanceConsistency = $this->getAttendanceConsistency($employeeId);
+            $reportingConsistency = $this->getReportingConsistency($employeeId);
+            $performanceConsistency = $this->getPerformanceConsistency($employeeId);
+            
+            return round(($attendanceConsistency + $reportingConsistency + $performanceConsistency) / 3, 1);
+        } catch (\Exception $e) {
+            return 0;
+        }
+    }
+
+    private function getAttendanceConsistency($employeeId)
+    {
+        // Calculate standard deviation of monthly attendance rates
+        $monthlyRates = [];
+        for ($i = 0; $i < 6; $i++) {
+            $month = now()->subMonths($i);
+            $workingDays = $month->daysInMonth - ($month->weekendsInMonth * 2);
+            $attendedDays = DB::table('attendances')
+                ->where('employee_id', $employeeId)
+                ->whereYear('date', $month->year)
+                ->whereMonth('date', $month->month)
+                ->count();
+            
+            $monthlyRates[] = $workingDays > 0 ? ($attendedDays / $workingDays) * 100 : 0;
+        }
+        
+        if (empty($monthlyRates)) return 0;
+        
+        $mean = array_sum($monthlyRates) / count($monthlyRates);
+        $variance = array_sum(array_map(function($x) use ($mean) { return pow($x - $mean, 2); }, $monthlyRates)) / count($monthlyRates);
+        $stdDev = sqrt($variance);
+        
+        // Convert to consistency score (lower std dev = higher consistency)
+        return max(0, 100 - $stdDev);
+    }
+
+    private function getReportingConsistency($employeeId)
+    {
+        // Similar calculation for work reports
+        $monthlyReports = [];
+        for ($i = 0; $i < 6; $i++) {
+            $month = now()->subMonths($i);
+            $reports = DB::table('work_reports')
+                ->where('employee_id', $employeeId)
+                ->whereYear('created_at', $month->year)
+                ->whereMonth('created_at', $month->month)
+                ->count();
+            
+            $monthlyReports[] = $reports;
+        }
+        
+        if (empty($monthlyReports)) return 0;
+        
+        $mean = array_sum($monthlyReports) / count($monthlyReports);
+        $variance = array_sum(array_map(function($x) use ($mean) { return pow($x - $mean, 2); }, $monthlyReports)) / count($monthlyReports);
+        $stdDev = sqrt($variance);
+        
+        return max(0, 100 - ($stdDev * 5)); // Scale factor for reports
+    }
+
+    private function getPerformanceConsistency($employeeId)
+    {
+        // Calculate consistency in assessment ratings
+        $ratings = DB::table('competency_assessments')
+            ->where('employee_id', $employeeId)
+            ->where('status', 'approved')
+            ->where('updated_at', '>=', now()->subYear())
+            ->pluck('rating')
+            ->toArray();
+        
+        if (count($ratings) < 2) return 0;
+        
+        $mean = array_sum($ratings) / count($ratings);
+        $variance = array_sum(array_map(function($x) use ($mean) { return pow($x - $mean, 2); }, $ratings)) / count($ratings);
+        $stdDev = sqrt($variance);
+        
+        return max(0, 100 - ($stdDev * 20)); // Scale factor for ratings
+    }
+
+    private function getDefaultJourneyMetrics()
+    {
+        return [
+            'daysWithCompany' => 0,
+            'monthsWithCompany' => 0,
+            'yearsOfService' => 0,
+            'totalWorkHours' => 0,
+            'projectsContributed' => 0,
+            'attendanceTrend' => 0,
+            'productivityTrend' => 0,
+        ];
+    }
+
+
+
+    // private function calculateAttendanceRate($employeeId)
+    // {
+    //     $totalDays = 30; // Last 30 days
+    //     $attendedDays = Attendance::where('employee_id', $employeeId)
+    //         ->where('created_at', '>=', now()->subDays(30))
+    //         ->count();
+        
+    //     return $totalDays > 0 ? round(($attendedDays / $totalDays) * 100, 1) : 0;
+    // }
 
     private function getSystemActivities()
     {
