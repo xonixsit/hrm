@@ -13,13 +13,13 @@
           <ClockIcon class="w-4 h-4" />
           {{ clockButtonText }}
         </button>
-        <button v-if="isCurrentlyClockedIn && !currentAttendance.on_break" @click="handleTakeBreak" :disabled="loading"
-          class="break-button">
+        <button v-if="isCurrentlyClockedIn && !(currentAttendance && currentAttendance.on_break)"
+          @click="handleTakeBreak" :disabled="loading" class="break-button">
           <PauseIcon class="w-4 h-4" />
           Take Break
         </button>
-        <button v-if="isCurrentlyClockedIn && currentAttendance.on_break" @click="handleEndBreak" :disabled="loading"
-          class="end-break-button">
+        <button v-if="isCurrentlyClockedIn && (currentAttendance && currentAttendance.on_break)" @click="handleEndBreak"
+          :disabled="loading" class="end-break-button">
           <PlayIcon class="w-4 h-4" />
           End Break
         </button>
@@ -67,7 +67,7 @@
             <div class="duration-label">Work Time</div>
             <div class="duration-value">{{ realTimeWorkDuration }}</div>
           </div>
-          <div class="duration-item" v-if="currentAttendance.on_break">
+          <div class="duration-item" v-if="currentAttendance && currentAttendance.on_break">
             <div class="duration-label">Break Time</div>
             <div class="duration-value">{{ realTimeBreakDuration }}</div>
           </div>
@@ -695,7 +695,7 @@
     });
 
     // Add current ongoing break session if on break
-    if (props.currentAttendance.on_break) {
+    if (props.currentAttendance && props.currentAttendance.on_break) {
       let currentBreakStart = null;
 
       // Try to get current break start time from multiple sources
@@ -825,7 +825,7 @@
       case 'after-work':
         return `${baseClasses} text-success-700`;
       case 'during-work':
-        if (props.currentAttendance.on_break) {
+        if (props.currentAttendance && props.currentAttendance.on_break) {
           return `${baseClasses} text-warning-700`;
         }
         return `${baseClasses} text-primary-700`;
@@ -864,7 +864,7 @@
     }
 
     // Calculate break time - check multiple sources for break start time
-    if (props.currentAttendance.on_break) {
+    if (props.currentAttendance && props.currentAttendance.on_break) {
       let breakStart = null;
 
       // Try to get break start time from multiple sources
@@ -950,7 +950,7 @@
           detail: {
             clockedIn: true,
             onBreak: true,
-            clockInTime: props.currentAttendance.clock_in_time,
+            clockInTime: (props.currentAttendance && props.currentAttendance.clock_in_time) || null,
             breakStartTime: breakStartTime.value,
             timestamp: Date.now()
           }
@@ -972,7 +972,7 @@
           detail: {
             clockedIn: true,
             onBreak: false,
-            clockInTime: props.currentAttendance.clock_in_time,
+            clockInTime: (props.currentAttendance && props.currentAttendance.clock_in_time) || null,
             breakStartTime: null,
             timestamp: Date.now()
           }

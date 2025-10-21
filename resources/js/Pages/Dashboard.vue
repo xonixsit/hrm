@@ -648,8 +648,45 @@
     }
   };
 
-  const handleAction = (action) => {
-    navigateTo(action.route);
+  const handleAction = async (action) => {
+    if (action.route) {
+      // Handle route-based actions (like quick actions)
+      navigateTo(action.route);
+    } else if (action.type) {
+      // Handle break actions
+      try {
+        loading.value = true;
+        
+        if (action.type === 'take-break') {
+          await axios.post('/api/attendance/break-start', {}, {
+            headers: {
+              'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+            }
+          });
+        } else if (action.type === 'end-break') {
+          await axios.post('/api/attendance/break-end', {}, {
+            headers: {
+              'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+            }
+          });
+        }
+        
+        // Update attendance status after break action
+        await updateAttendanceStatus();
+      } catch (error) {
+        console.error('Break action failed:', error);
+        if (error.response?.status === 419) {
+          // CSRF token mismatch - refresh page
+          window.location.reload();
+        }
+      } finally {
+        loading.value = false;
+      }
+    }
   };
 
   const handleToggleTask = async (task) => {
