@@ -264,7 +264,8 @@ import {
   EyeIcon, 
   PencilIcon, 
   TrashIcon,
-  DocumentArrowDownIcon
+  DocumentArrowDownIcon,
+  DocumentArrowUpIcon
 } from '@heroicons/vue/24/outline'
 
 const props = defineProps({
@@ -385,6 +386,13 @@ const headerActions = [
     icon: UserPlusIcon,
     variant: 'primary',
     handler: () => router.visit(route('employees.create'))
+  },
+  {
+    id: 'import-employees',
+    label: 'Import Employees',
+    icon: DocumentArrowUpIcon,
+    variant: 'secondary',
+    handler: () => router.visit(route('employees.import'))
   },
   {
     id: 'view-trash',

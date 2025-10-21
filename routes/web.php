@@ -58,6 +58,11 @@ Route::middleware('auth')->group(function () {
         Route::post('employees/{employee}/reactivate', [EmployeeController::class, 'reactivate'])->name('employees.reactivate');
         Route::post('employees/{id}/restore', [EmployeeController::class, 'restore'])->name('employees.restore');
         Route::delete('employees/{id}/force-delete', [EmployeeController::class, 'forceDelete'])->name('employees.force-delete');
+        
+        // Employee Import Routes
+        Route::get('employees-import', [\App\Http\Controllers\EmployeeImportController::class, 'index'])->name('employees.import');
+        Route::post('employees-import', [\App\Http\Controllers\EmployeeImportController::class, 'store'])->name('employees.import.store');
+        Route::get('employees-template', [\App\Http\Controllers\EmployeeImportController::class, 'template'])->name('employees.template');
     });
     
     // Employee Show Route - Uses policy-based authorization (allows viewing colleagues in same department)
