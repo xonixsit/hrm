@@ -298,6 +298,13 @@
 
       <!-- Right Column -->
       <div class="right-column">
+        <!-- Birthday Notifications -->
+        <BirthdayNotifications 
+          :todays-birthdays="birthdayNotifications.todaysBirthdays"
+          :upcoming-birthdays="birthdayNotifications.upcomingBirthdays"
+          :stats="birthdayNotifications.stats"
+        />
+        
         <!-- Employee Quick Actions -->
         <QuickActions :actions="employeeQuickActions" title="Quick Actions" :max-visible="6"
           @action="handleQuickAction" />
@@ -311,6 +318,7 @@
   import { useAuth } from '@/composables/useAuth.js';
   import DashboardWidget from './DashboardWidget.vue';
   import QuickActions from './QuickActions.vue';
+  import BirthdayNotifications from './BirthdayNotifications.vue';
 
   // Import icons
   import {
