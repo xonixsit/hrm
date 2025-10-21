@@ -363,7 +363,7 @@ class EmployeeImportController extends Controller
             'salary' => $row['salary'] ?? null,
             'salary_currency' => 'USD',
             'contract_type' => $row['contract_type'] ?? 'Full-time',
-            'employment_type' => $row['contract_type'] ?? 'Full-time',
+            'employment_type' => $this->mapEmploymentType($row['contract_type'] ?? 'Full-time'),
             'status' => 'active'
         ]);
     }
@@ -390,7 +390,7 @@ class EmployeeImportController extends Controller
                 'join_date' => !empty($row['join_date']) ? $row['join_date'] : $employee->join_date,
                 'salary' => $row['salary'] ?? $employee->salary,
                 'contract_type' => $row['contract_type'] ?? $employee->contract_type,
-                'employment_type' => $row['contract_type'] ?? $employee->employment_type
+                'employment_type' => $this->mapEmploymentType($row['contract_type'] ?? $employee->employment_type)
             ]);
         }
     }
@@ -481,5 +481,20 @@ class EmployeeImportController extends Controller
         $writer->save($temp);
         
         return response()->download($temp, $filename)->deleteFileAfterSend(true);
+    }
+
+    private function mapEmploymentType($contractType)
+    {
+        $mapping = [
+            'Full-time' => 'full_time',
+            'Part-time' => 'part_time',
+            'Contract' => 'contract',
+            'Temporary' => 'contract',
+            'Permanent' => 'full_time',
+            'Intern' => 'intern',
+            'Consultant' => 'consultant'
+        ];
+
+        return $mapping[$contractType] ?? 'full_time';
     }
 }
