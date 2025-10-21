@@ -55,8 +55,11 @@
           :statusText="adminStats.pendingAssessments > 5 ? 'Review' : 'On Track'" route="assessment-dashboard"
           :loading="loading" />
 
-        <UnifiedStatsCard value="98.5%" label="System Health" description="Uptime" :icon="CheckCircleIcon"
-          variant="success" status="excellent" statusText="Excellent" :clickable="false" :loading="loading" />
+        <UnifiedStatsCard :value="adminStats.systemHealth + '%'" label="System Health" description="Uptime"
+          :icon="CheckCircleIcon" variant="success"
+          :status="adminStats.systemHealth > 95 ? 'excellent' : adminStats.systemHealth > 85 ? 'good' : 'warning'"
+          :statusText="adminStats.systemHealth > 95 ? 'Excellent' : adminStats.systemHealth > 85 ? 'Good' : 'Needs Attention'"
+          :clickable="false" :loading="loading" />
       </div>
 
       <!-- Main Content Grid -->
@@ -66,8 +69,9 @@
         <div class="lg:col-span-2 space-y-4">
 
           <!-- Action Required Section -->
-          <UnifiedCard v-if="pendingApprovals.length > 0" title="Action Required" description="Items needing your immediate attention"
-            :icon="ExclamationTriangleIcon" iconVariant="danger" variant="elevated">
+          <UnifiedCard v-if="pendingApprovals.length > 0" title="Action Required"
+            description="Items needing your immediate attention" :icon="ExclamationTriangleIcon" iconVariant="danger"
+            variant="elevated">
             <template #headerActions>
               <div class="flex items-center space-x-2">
                 <span
@@ -223,11 +227,10 @@
               </div>
               <div class="flex items-center justify-between">
                 <span class="text-sm text-gray-600">Uptime</span>
-                <span class="text-sm font-medium text-gray-900">98.5%</span>
+                <span class="text-sm font-medium text-gray-900">{{ adminStats.systemUptime }}%</span>
               </div>
             </div>
           </UnifiedCard>
-          <span class="text-sm font-medium text-gray-900">98.5%</span>
         </div>
       </div>
     </div>
