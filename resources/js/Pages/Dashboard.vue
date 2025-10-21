@@ -271,10 +271,24 @@
 
     <!-- Employee Dashboard Layout -->
     <div v-else class="employee-layout">
-      <EmployeeDashboard :stats="employeeStats" :personal-activities="personalActivities"
-        :my-tasks="myTasks" :recent-feedback="recentFeedback" :clocked-in="clockedIn"
-        :current-attendance="currentAttendance" :birthday-notifications="birthdayData" :loading="loading" @clock-in-out="handleClockInOut"
-        @action="handleAction" @toggle-task="handleToggleTask" @view-task="handleViewTask" />
+      <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <!-- Main Dashboard Content -->
+        <div class="lg:col-span-3">
+          <EmployeeDashboard :stats="employeeStats" :personal-activities="personalActivities"
+            :my-tasks="myTasks" :recent-feedback="recentFeedback" :clocked-in="clockedIn"
+            :current-attendance="currentAttendance" :loading="loading" @clock-in-out="handleClockInOut"
+            @action="handleAction" @toggle-task="handleToggleTask" @view-task="handleViewTask" />
+        </div>
+        
+        <!-- Right Sidebar -->
+        <div class="lg:col-span-1 space-y-4">
+          <!-- Birthday Notifications -->
+          <UnifiedCard title="Team Birthdays" description="Celebrate with your colleagues" :icon="CakeIcon" iconVariant="primary">
+            <BirthdayNotifications :todays-birthdays="birthdayData.todaysBirthdays"
+              :upcoming-birthdays="birthdayData.upcomingBirthdays" :stats="birthdayData.stats" />
+          </UnifiedCard>
+        </div>
+      </div>
     </div>
 
     <!-- Rejection Modal -->
@@ -383,6 +397,8 @@
     CogIcon,
     ArrowTrendingUpIcon
   } from '@heroicons/vue/24/outline';
+  
+  import { CakeIcon } from '@heroicons/vue/24/solid';
 
   // Props
   const props = defineProps({
@@ -639,10 +655,11 @@
     try {
       const response = await axios.get('/api/attendance/current');
       // Update currentAttendance prop with new data
-      if (currentAttendance.value) {
-        Object.assign(currentAttendance.value, response.data);
+      if (props.currentAttendance) {
+        Object.assign(props.currentAttendance, response.data);
       }
-      clockedIn.value = response.data.clocked_in;
+      // Update clockedIn status
+      props.clockedIn = response.data.clocked_in;
     } catch (error) {
       console.error('Failed to update attendance status:', error);
     }

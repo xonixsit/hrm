@@ -26,22 +26,7 @@
       </div>
     </div>
 
-    <!-- Birthday Notifications - Minimalistic -->
-    <div v-if="hasBirthdays" class="birthday-minimal-widget">
-      <div class="bg-gradient-to-r from-pink-50 to-purple-50 border border-pink-200 rounded-lg p-3 mb-4">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center space-x-2">
-            <span class="text-lg">🎉</span>
-            <div>
-              <span class="text-sm font-medium text-pink-800">
-                {{ birthdayMessage }}
-              </span>
-            </div>
-          </div>
-          <span class="text-xs text-pink-600">{{ birthdayCount }}</span>
-        </div>
-      </div>
-    </div>
+
 
     <!-- Enhanced Time Tracking Block -->
     <div class="time-tracking-section">
@@ -764,41 +749,7 @@
     }
   ]);
 
-  // Birthday notifications computed properties
-  const hasBirthdays = computed(() => {
-    const notifications = props.birthdayNotifications || {};
-    const todaysCount = (notifications.todaysBirthdays || []).length;
-    const upcomingCount = (notifications.upcomingBirthdays || []).length;
-    return todaysCount > 0 || upcomingCount > 0;
-  });
 
-  const birthdayMessage = computed(() => {
-    const notifications = props.birthdayNotifications || {};
-    const todaysCount = (notifications.todaysBirthdays || []).length;
-    const upcomingCount = (notifications.upcomingBirthdays || []).length;
-
-    if (todaysCount > 0) {
-      return todaysCount === 1 ? 'Birthday today!' : `${todaysCount} birthdays today!`;
-    }
-    if (upcomingCount > 0) {
-      return 'Upcoming birthdays';
-    }
-    return '';
-  });
-
-  const birthdayCount = computed(() => {
-    const notifications = props.birthdayNotifications || {};
-    const todaysCount = (notifications.todaysBirthdays || []).length;
-    const upcomingCount = (notifications.upcomingBirthdays || []).length;
-
-    if (todaysCount > 0) {
-      return `${todaysCount} today`;
-    }
-    if (upcomingCount > 0) {
-      return `${upcomingCount} upcoming`;
-    }
-    return '';
-  });
 
   // Methods for status styling
   const getStatusClasses = () => {
@@ -1168,10 +1119,7 @@
     @apply flex items-center justify-between p-6 bg-gradient-to-r from-primary-50 to-primary-100 rounded-lg border border-primary-200 mb-4;
   }
 
-  /* Birthday Minimal Widget */
-  .birthday-minimal-widget {
-    @apply mb-4;
-  }
+
 
   .motivation-content {
     @apply flex-1;
