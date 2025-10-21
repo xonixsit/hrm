@@ -206,7 +206,7 @@ class DashboardController extends Controller
 
                 $data['employeeStats'] = [
                     // Core Performance
-                    'attendanceRate' => $this->calculateAttendanceRate($employeeId),
+                    'attendanceRate' => $this->calculateEmployeeAttendanceRate($employeeId),
                     'hoursToday' => $currentAttendance['todays_summary']['total_hours'] ?? '0h 0m',
                     'myWorkReports' => $myWorkReports,
                     'mySuccessfulCalls' => $mySuccessfulCalls,
@@ -247,7 +247,6 @@ class DashboardController extends Controller
                 $data['clockedIn'] = $currentAttendance['clocked_in'] ?? false;
 
                 $data['personalActivities'] = $this->getPersonalActivities($employeeId);
-                $data['todaysSchedule'] = $this->getTodaysSchedule($employeeId);
                 $data['myTasks'] = $this->getMyTasks($employeeId);
                 $data['recentFeedback'] = $this->getRecentFeedback($user->id);
 
@@ -833,15 +832,26 @@ class DashboardController extends Controller
 
 
 
-    // private function calculateAttendanceRate($employeeId)
-    // {
-    //     $totalDays = 30; // Last 30 days
-    //     $attendedDays = Attendance::where('employee_id', $employeeId)
-    //         ->where('created_at', '>=', now()->subDays(30))
-    //         ->count();
-        
-    //     return $totalDays > 0 ? round(($attendedDays / $totalDays) * 100, 1) : 0;
-    // }
+    private function calculateEmployeeAttendanceRate($employeeId)
+    {
+        try {
+            $currentMonth = now()->format('Y-m');
+            $workingDaysInMonth = now()->daysInMonth - (now()->weekendsInMonth * 2); // Exclude weekends
+            
+            $attendedDays = DB::table('attendances')
+                ->where('employee_id', $employeeId)
+                ->whereRaw("DATE_FORMAT(date, '%Y-%m') = ?", [$currentMonth])
+                ->count();
+            
+            if ($workingDaysInMonth <= 0) {
+                return 0;
+            }
+            
+            return round(($attendedDays / $workingDaysInMonth) * 100, 1);
+        } catch (\Exception $e) {
+            return 0;
+        }
+    }
 
     private function getSystemActivities()
     {
@@ -1099,10 +1109,7 @@ class DashboardController extends Controller
         return [];
     }
 
-    private function getTodaysSchedule($employeeId)
-    {
-        return [];
-    }
+
 
     private function getMyTasks($employeeId)
     {

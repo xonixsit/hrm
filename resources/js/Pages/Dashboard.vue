@@ -277,8 +277,8 @@
     <!-- Employee Dashboard Layout -->
     <div v-else class="employee-layout">
       <EmployeeDashboard :stats="employeeStats" :personal-activities="personalActivities"
-        :todays-schedule="todaysSchedule" :my-tasks="myTasks" :recent-feedback="recentFeedback" :clocked-in="clockedIn"
-        :current-attendance="currentAttendance" :loading="loading" @clock-in-out="handleClockInOut"
+        :my-tasks="myTasks" :recent-feedback="recentFeedback" :clocked-in="clockedIn"
+        :current-attendance="currentAttendance" :birthday-notifications="birthdayData" :loading="loading" @clock-in-out="handleClockInOut"
         @action="handleAction" @toggle-task="handleToggleTask" @view-task="handleViewTask" />
 
       <div class="birthday-section mt-6">
@@ -372,7 +372,7 @@
   import TeamPerformanceWidget from '@/Components/Dashboard/TeamPerformanceWidget.vue';
   import TeamActivitiesWidget from '@/Components/Dashboard/TeamActivitiesWidget.vue';
   import TimeTrackingWidget from '@/Components/Dashboard/TimeTrackingWidget.vue';
-  import TodaysScheduleWidget from '@/Components/Dashboard/TodaysScheduleWidget.vue';
+
   import MyTasksWidget from '@/Components/Dashboard/MyTasksWidget.vue';
   import RecentFeedbackWidget from '@/Components/Dashboard/RecentFeedbackWidget.vue';
   import PersonalActivitiesWidget from '@/Components/Dashboard/PersonalActivitiesWidget.vue';
@@ -425,10 +425,6 @@
       default: () => []
     },
     personalActivities: {
-      type: Array,
-      default: () => []
-    },
-    todaysSchedule: {
       type: Array,
       default: () => []
     },
