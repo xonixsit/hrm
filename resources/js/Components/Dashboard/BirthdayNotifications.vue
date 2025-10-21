@@ -74,54 +74,7 @@
             </div>
         </div>
 
-        <!-- Birthday Statistics -->
-        <div v-if="stats" class="bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-lg p-4">
-            <div class="flex items-center space-x-3 mb-4">
-                <div class="text-2xl">📊</div>
-                <div>
-                    <h3 class="text-lg font-semibold text-yellow-800">Birthday Stats</h3>
-                    <p class="text-sm text-yellow-600">This month's celebrations</p>
-                </div>
-            </div>
-            
-            <div class="space-y-2">
-                <!-- Today Stripe -->
-                <div class="flex items-center justify-between bg-white rounded-lg p-3 border-l-4 border-pink-500">
-                    <div class="flex items-center space-x-3">
-                        <div class="text-2xl font-bold text-pink-600">{{ stats.today }}</div>
-                        <div class="text-sm font-medium text-gray-700">Today</div>
-                    </div>
-                    <div class="w-2 h-2 bg-pink-500 rounded-full"></div>
-                </div>
-                
-                <!-- This Week Stripe -->
-                <div class="flex items-center justify-between bg-white rounded-lg p-3 border-l-4 border-blue-500">
-                    <div class="flex items-center space-x-3">
-                        <div class="text-2xl font-bold text-blue-600">{{ stats.this_week }}</div>
-                        <div class="text-sm font-medium text-gray-700">This Week</div>
-                    </div>
-                    <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
-                </div>
-                
-                <!-- This Month Stripe -->
-                <div class="flex items-center justify-between bg-white rounded-lg p-3 border-l-4 border-purple-500">
-                    <div class="flex items-center space-x-3">
-                        <div class="text-2xl font-bold text-purple-600">{{ stats.this_month }}</div>
-                        <div class="text-sm font-medium text-gray-700">This Month</div>
-                    </div>
-                    <div class="w-2 h-2 bg-purple-500 rounded-full"></div>
-                </div>
-                
-                <!-- Next Up Stripe -->
-                <div v-if="stats.next_birthday" class="flex items-center justify-between bg-white rounded-lg p-3 border-l-4 border-gray-400">
-                    <div class="flex items-center space-x-3">
-                        <div class="text-sm font-medium text-gray-900">{{ stats.next_birthday.employee.user.name }}</div>
-                        <div class="text-sm text-gray-500">Next Up</div>
-                    </div>
-                    <div class="w-2 h-2 bg-gray-400 rounded-full"></div>
-                </div>
-            </div>
-        </div>
+
 
         <!-- No Birthdays Today Message -->
         <div v-if="todaysBirthdays.length === 0 && upcomingBirthdays.length === 0 && stats && stats.this_month === 0" class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
@@ -157,12 +110,8 @@ const props = defineProps({
 const showAllUpcoming = ref(false)
 
 const showNotifications = computed(() => {
-    // Always show the component if we have any birthday data or stats
-    return props.todaysBirthdays.length > 0 || 
-           props.upcomingBirthdays.length > 0 || 
-           (props.stats && (props.stats.today > 0 || props.stats.this_week > 0 || props.stats.this_month > 0)) ||
-           // Show if we have the birthday data structure (even if empty)
-           (props.stats !== null)
+    // Only show if there are today's birthdays or upcoming birthdays
+    return props.todaysBirthdays.length > 0 || props.upcomingBirthdays.length > 0
 })
 
 const displayedUpcomingBirthdays = computed(() => {

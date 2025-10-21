@@ -86,6 +86,11 @@ class DashboardController extends Controller
                 ->whereNotNull('rating')
                 ->avg('rating');
 
+            // Performance metrics
+            $attendanceRate = $this->calculateAttendanceRate();
+            $workReportsData = $this->getWorkReportsMetrics();
+            $performanceData = $this->getPerformanceMetrics();
+
             $data['adminStats'] = [
                 'totalEmployees' => $totalEmployees,
                 'pendingLeaves' => $pendingLeaves,
@@ -102,6 +107,15 @@ class DashboardController extends Controller
                 'assessmentTrend' => $this->calculateAssessmentTrend(),
                 'systemUptime' => $this->calculateSystemUptime(),
                 'systemHealth' => $this->calculateSystemHealthPercentage(),
+                // Performance metrics
+                'attendanceRate' => $attendanceRate['rate'],
+                'attendanceTrend' => $attendanceRate['trend'],
+                'workReportsCount' => $workReportsData['count'],
+                'workReportsTrend' => $workReportsData['trend'],
+                'successfulCalls' => $workReportsData['successfulCalls'],
+                'successfulCallsTrend' => $workReportsData['callsTrend'],
+                'avgPerformanceScore' => $performanceData['avgScore'],
+                'performanceTrend' => $performanceData['trend'],
             ];
 
             $data['systemActivities'] = $this->getSystemActivities();
@@ -319,6 +333,120 @@ class DashboardController extends Controller
             return $failedJobs < 10 ? 100 : max(0, 100 - ($failedJobs * 10));
         } catch (\Exception $e) {
             return 50; // Partial health if we can't check
+        }
+    }
+
+    private function calculateAttendanceRate()
+    {
+        try {
+            $currentMonth = now()->format('Y-m');
+            $totalWorkingDays = now()->daysInMonth;
+            
+            // Calculate average attendance rate across all employees
+            $attendanceData = DB::table('attendances')
+                ->whereRaw("DATE_FORMAT(date, '%Y-%m') = ?", [$currentMonth])
+                ->selectRaw('COUNT(*) as total_days, COUNT(DISTINCT employee_id) as unique_employees')
+                ->first();
+            
+            $rate = 0;
+            if ($attendanceData && $attendanceData->unique_employees > 0) {
+                $expectedDays = $attendanceData->unique_employees * $totalWorkingDays;
+                $rate = ($attendanceData->total_days / $expectedDays) * 100;
+            }
+            
+            // Calculate trend (compare with last month)
+            $lastMonth = now()->subMonth()->format('Y-m');
+            $lastMonthData = DB::table('attendances')
+                ->whereRaw("DATE_FORMAT(date, '%Y-%m') = ?", [$lastMonth])
+                ->selectRaw('COUNT(*) as total_days, COUNT(DISTINCT employee_id) as unique_employees')
+                ->first();
+            
+            $trend = 0;
+            if ($lastMonthData && $lastMonthData->unique_employees > 0) {
+                $lastRate = ($lastMonthData->total_days / ($lastMonthData->unique_employees * now()->subMonth()->daysInMonth)) * 100;
+                $trend = $rate - $lastRate;
+            }
+            
+            return [
+                'rate' => round($rate, 1),
+                'trend' => round($trend, 1)
+            ];
+        } catch (\Exception $e) {
+            return ['rate' => 0, 'trend' => 0];
+        }
+    }
+
+    private function getWorkReportsMetrics()
+    {
+        try {
+            $currentMonth = now()->format('Y-m');
+            
+            // Current month work reports
+            $currentData = DB::table('work_reports')
+                ->whereRaw("DATE_FORMAT(created_at, '%Y-%m') = ?", [$currentMonth])
+                ->selectRaw('COUNT(*) as count, SUM(successful_calls) as successful_calls')
+                ->first();
+            
+            // Last month for trend calculation
+            $lastMonth = now()->subMonth()->format('Y-m');
+            $lastData = DB::table('work_reports')
+                ->whereRaw("DATE_FORMAT(created_at, '%Y-%m') = ?", [$lastMonth])
+                ->selectRaw('COUNT(*) as count, SUM(successful_calls) as successful_calls')
+                ->first();
+            
+            $countTrend = 0;
+            $callsTrend = 0;
+            
+            if ($lastData && $lastData->count > 0) {
+                $countTrend = (($currentData->count - $lastData->count) / $lastData->count) * 100;
+            }
+            
+            if ($lastData && $lastData->successful_calls > 0) {
+                $callsTrend = (($currentData->successful_calls - $lastData->successful_calls) / $lastData->successful_calls) * 100;
+            }
+            
+            return [
+                'count' => $currentData->count ?? 0,
+                'trend' => round($countTrend, 1),
+                'successfulCalls' => $currentData->successful_calls ?? 0,
+                'callsTrend' => round($callsTrend, 1)
+            ];
+        } catch (\Exception $e) {
+            return ['count' => 0, 'trend' => 0, 'successfulCalls' => 0, 'callsTrend' => 0];
+        }
+    }
+
+    private function getPerformanceMetrics()
+    {
+        try {
+            // Calculate average performance based on competency assessments
+            $currentMonth = now()->format('Y-m');
+            
+            $currentScore = DB::table('competency_assessments')
+                ->where('status', 'approved')
+                ->whereRaw("DATE_FORMAT(updated_at, '%Y-%m') = ?", [$currentMonth])
+                ->avg('rating');
+            
+            $lastMonth = now()->subMonth()->format('Y-m');
+            $lastScore = DB::table('competency_assessments')
+                ->where('status', 'approved')
+                ->whereRaw("DATE_FORMAT(updated_at, '%Y-%m') = ?", [$lastMonth])
+                ->avg('rating');
+            
+            $trend = 0;
+            if ($lastScore > 0) {
+                $trend = (($currentScore - $lastScore) / $lastScore) * 100;
+            }
+            
+            // Convert rating to percentage (assuming 5-point scale)
+            $avgScore = $currentScore ? ($currentScore / 5) * 100 : 0;
+            
+            return [
+                'avgScore' => round($avgScore, 1),
+                'trend' => round($trend, 1)
+            ];
+        } catch (\Exception $e) {
+            return ['avgScore' => 0, 'trend' => 0];
         }
     }
 

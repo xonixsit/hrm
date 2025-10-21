@@ -62,6 +62,33 @@
           :clickable="false" :loading="loading" />
       </div>
 
+      <!-- Performance Metrics -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <UnifiedStatsCard :value="(adminStats.attendanceRate || 0) + '%'" label="Attendance Rate" description="This month"
+          :icon="ClockIcon" variant="info" :trend="adminStats.attendanceTrend || 0" 
+          :status="(adminStats.attendanceRate || 0) > 95 ? 'excellent' : (adminStats.attendanceRate || 0) > 85 ? 'good' : 'warning'"
+          :statusText="(adminStats.attendanceRate || 0) > 95 ? 'Excellent' : (adminStats.attendanceRate || 0) > 85 ? 'Good' : 'Needs Attention'"
+          route="attendance.reports" :loading="loading" />
+
+        <UnifiedStatsCard :value="adminStats.workReportsCount || 0" label="Work Reports" description="This month"
+          :icon="ChartBarIcon" variant="primary" :trend="adminStats.workReportsTrend || 0"
+          :status="(adminStats.workReportsCount || 0) > 50 ? 'excellent' : (adminStats.workReportsCount || 0) > 20 ? 'good' : 'warning'"
+          :statusText="(adminStats.workReportsCount || 0) > 50 ? 'High Activity' : (adminStats.workReportsCount || 0) > 20 ? 'Active' : 'Low Activity'"
+          route="work-reports.index" :loading="loading" />
+
+        <UnifiedStatsCard :value="adminStats.successfulCalls || 0" label="Successful Calls" description="This month"
+          :icon="ArrowTrendingUpIcon" variant="success" :trend="adminStats.successfulCallsTrend || 0"
+          :status="(adminStats.successfulCalls || 0) > 100 ? 'excellent' : (adminStats.successfulCalls || 0) > 50 ? 'good' : 'warning'"
+          :statusText="(adminStats.successfulCalls || 0) > 100 ? 'Excellent' : (adminStats.successfulCalls || 0) > 50 ? 'Good' : 'Needs Focus'"
+          route="work-reports.leaderboard" :loading="loading" />
+
+        <UnifiedStatsCard :value="(adminStats.avgPerformanceScore || 0) + '%'" label="Avg Performance" description="Team score"
+          :icon="AcademicCapIcon" variant="info" :trend="adminStats.performanceTrend || 0"
+          :status="(adminStats.avgPerformanceScore || 0) > 85 ? 'excellent' : (adminStats.avgPerformanceScore || 0) > 70 ? 'good' : 'warning'"
+          :statusText="(adminStats.avgPerformanceScore || 0) > 85 ? 'Excellent' : (adminStats.avgPerformanceScore || 0) > 70 ? 'Good' : 'Needs Improvement'"
+          route="performance.reports" :loading="loading" />
+      </div>
+
       <!-- Main Content Grid -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
@@ -587,12 +614,51 @@
   const handleClockInOut = async () => {
     loading.value = true;
     try {
-      await axios.post(route('attendance.clock-toggle'));
-      await handleRefresh();
+      // Get current status first
+      const statusResponse = await axios.get('/api/attendance/current');
+      const currentStatus = statusResponse.data;
+      
+      // Determine action based on current status
+      let endpoint;
+      if (!currentStatus.clocked_in) {
+        endpoint = '/api/attendance/clock-in';
+      } else {
+        endpoint = '/api/attendance/clock-out';
+      }
+      
+      const response = await axios.post(endpoint, {}, {
+        headers: {
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.data.success) {
+        // Update local state immediately without full refresh
+        await updateAttendanceStatus();
+      }
     } catch (error) {
       console.error('Clock in/out error:', error);
+      if (error.response?.status === 419) {
+        // CSRF token mismatch - refresh page
+        window.location.reload();
+      }
     } finally {
       loading.value = false;
+    }
+  };
+
+  const updateAttendanceStatus = async () => {
+    try {
+      const response = await axios.get('/api/attendance/current');
+      // Update currentAttendance prop with new data
+      if (currentAttendance.value) {
+        Object.assign(currentAttendance.value, response.data);
+      }
+      clockedIn.value = response.data.clocked_in;
+    } catch (error) {
+      console.error('Failed to update attendance status:', error);
     }
   };
 
