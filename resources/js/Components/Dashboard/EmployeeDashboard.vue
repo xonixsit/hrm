@@ -302,9 +302,7 @@
         <QuickActions :actions="employeeQuickActions" title="Quick Actions" :max-visible="6"
           @action="handleQuickAction" />
 
-        <!-- Birthday Notifications -->
-        <BirthdayNotifications :todays-birthdays="birthdayNotifications.todaysBirthdays"
-          :upcoming-birthdays="birthdayNotifications.upcomingBirthdays" :stats="birthdayNotifications.stats" />
+       
       </div>
     </div>
   </div>
