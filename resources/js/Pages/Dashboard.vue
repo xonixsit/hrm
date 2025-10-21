@@ -653,15 +653,12 @@
 
   const updateAttendanceStatus = async () => {
     try {
-      const response = await axios.get('/api/attendance/current');
-      // Update currentAttendance prop with new data
-      if (props.currentAttendance) {
-        Object.assign(props.currentAttendance, response.data);
-      }
-      // Update clockedIn status
-      props.clockedIn = response.data.clocked_in;
+      // Reload the page with updated attendance data
+      await router.reload({ only: ['currentAttendance', 'clockedIn'] });
     } catch (error) {
       console.error('Failed to update attendance status:', error);
+      // Fallback to full page reload
+      window.location.reload();
     }
   };
 
