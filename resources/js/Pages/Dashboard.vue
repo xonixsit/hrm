@@ -267,11 +267,6 @@
       <ManagerDashboard :stats="managerStats" :team-members="teamMembers" :team-performance="teamPerformance"
         :team-activities="teamActivities" :loading="loading" @view-member="handleViewMember"
         @send-message="handleSendMessage" />
-
-      <div class="birthday-section mt-6">
-        <BirthdayNotifications :todays-birthdays="birthdayData.todaysBirthdays"
-          :upcoming-birthdays="birthdayData.upcomingBirthdays" :stats="birthdayData.stats" />
-      </div>
     </div>
 
     <!-- Employee Dashboard Layout -->
@@ -280,11 +275,6 @@
         :my-tasks="myTasks" :recent-feedback="recentFeedback" :clocked-in="clockedIn"
         :current-attendance="currentAttendance" :birthday-notifications="birthdayData" :loading="loading" @clock-in-out="handleClockInOut"
         @action="handleAction" @toggle-task="handleToggleTask" @view-task="handleViewTask" />
-
-      <div class="birthday-section mt-6">
-        <BirthdayNotifications :todays-birthdays="birthdayData.todaysBirthdays"
-          :upcoming-birthdays="birthdayData.upcomingBirthdays" :stats="birthdayData.stats" />
-      </div>
     </div>
 
     <!-- Rejection Modal -->

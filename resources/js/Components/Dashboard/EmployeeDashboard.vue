@@ -26,12 +26,21 @@
       </div>
     </div>
 
-    <!-- Birthday Notifications Floating Widget -->
-    <div
-      v-if="birthdayNotifications && (birthdayNotifications.todaysBirthdays?.length > 0 || birthdayNotifications.upcomingBirthdays?.length > 0)"
-      class="birthday-floating-widget">
-      <BirthdayNotifications :todays-birthdays="birthdayNotifications.todaysBirthdays || []"
-        :upcoming-birthdays="birthdayNotifications.upcomingBirthdays || []" :stats="birthdayNotifications.stats" />
+    <!-- Birthday Notifications - Minimalistic -->
+    <div v-if="hasBirthdays" class="birthday-minimal-widget">
+      <div class="bg-gradient-to-r from-pink-50 to-purple-50 border border-pink-200 rounded-lg p-3 mb-4">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-2">
+            <span class="text-lg">🎉</span>
+            <div>
+              <span class="text-sm font-medium text-pink-800">
+                {{ birthdayMessage }}
+              </span>
+            </div>
+          </div>
+          <span class="text-xs text-pink-600">{{ birthdayCount }}</span>
+        </div>
+      </div>
     </div>
 
     <!-- Enhanced Time Tracking Block -->
@@ -317,7 +326,6 @@
   import { useAuth } from '@/composables/useAuth.js';
   import DashboardWidget from './DashboardWidget.vue';
   import QuickActions from './QuickActions.vue';
-  import BirthdayNotifications from './BirthdayNotifications.vue';
 
   // Import icons
   import {
@@ -345,7 +353,24 @@
         tasksCompleted: 0,
         leaveBalance: 0,
         upcomingDeadlines: 0,
-        taskTrend: 0
+        taskTrend: 0,
+        daysWithCompany: 0,
+        yearsOfService: 0,
+        monthsWithCompany: 0,
+        totalWorkHours: 0,
+        projectsContributed: 0,
+        performanceRank: 'N/A',
+        myAverageRating: 'N/A',
+        attendanceRate: 0,
+        myWorkReports: 0,
+        mySuccessfulCalls: 0,
+        consistencyScore: 0,
+        totalAchievements: 0,
+        recentAchievements: [],
+        performanceTrend: 0,
+        attendanceTrend: 0,
+        productivityTrend: 0,
+        competencyProgress: 0
       })
     },
     personalActivities: {
@@ -374,6 +399,8 @@
         clocked_in: false,
         on_break: false,
         clock_in_time: null,
+        break_sessions: [],
+        current_break_start: null,
         todays_summary: {
           total_hours: '0h 0m',
           break_time: '0h 0m',
@@ -390,7 +417,11 @@
     },
     birthdayNotifications: {
       type: Object,
-      default: null
+      default: () => ({
+        todaysBirthdays: [],
+        upcomingBirthdays: [],
+        stats: {}
+      })
     }
   });
 
@@ -733,6 +764,42 @@
     }
   ]);
 
+  // Birthday notifications computed properties
+  const hasBirthdays = computed(() => {
+    const notifications = props.birthdayNotifications || {};
+    const todaysCount = (notifications.todaysBirthdays || []).length;
+    const upcomingCount = (notifications.upcomingBirthdays || []).length;
+    return todaysCount > 0 || upcomingCount > 0;
+  });
+
+  const birthdayMessage = computed(() => {
+    const notifications = props.birthdayNotifications || {};
+    const todaysCount = (notifications.todaysBirthdays || []).length;
+    const upcomingCount = (notifications.upcomingBirthdays || []).length;
+
+    if (todaysCount > 0) {
+      return todaysCount === 1 ? 'Birthday today!' : `${todaysCount} birthdays today!`;
+    }
+    if (upcomingCount > 0) {
+      return 'Upcoming birthdays';
+    }
+    return '';
+  });
+
+  const birthdayCount = computed(() => {
+    const notifications = props.birthdayNotifications || {};
+    const todaysCount = (notifications.todaysBirthdays || []).length;
+    const upcomingCount = (notifications.upcomingBirthdays || []).length;
+
+    if (todaysCount > 0) {
+      return `${todaysCount} today`;
+    }
+    if (upcomingCount > 0) {
+      return `${upcomingCount} upcoming`;
+    }
+    return '';
+  });
+
   // Methods for status styling
   const getStatusClasses = () => {
     const baseClasses = 'text-xs font-medium px-2 py-1 rounded-full';
@@ -919,21 +986,49 @@
 
   // Helper methods for formatting
   const formatServiceTime = (years, months) => {
-    if (years > 0) {
-      return `${years} year${years > 1 ? 's' : ''} ${months % 12} month${months % 12 !== 1 ? 's' : ''}`;
+    const yearValue = Number(years) || 0;
+    const monthValue = Number(months) || 0;
+
+    if (yearValue > 0) {
+      return `${yearValue} year${yearValue > 1 ? 's' : ''}, ${monthValue} month${monthValue > 1 ? 's' : ''}`;
     }
-    return `${months} month${months !== 1 ? 's' : ''}`;
+    return `${monthValue} month${monthValue > 1 ? 's' : ''}`;
   };
 
   const formatTrend = (trend) => {
-    if (!trend || trend === 0) return '0%';
-    const sign = trend > 0 ? '+' : '';
-    return `${sign}${Math.round(trend)}%`;
+    const trendValue = Number(trend) || 0;
+    if (trendValue > 0) return `+${trendValue}%`;
+    if (trendValue < 0) return `${trendValue}%`;
+    return '0%';
   };
 
   const getTrendClass = (trend) => {
-    if (!trend || trend === 0) return 'neutral';
-    return trend > 0 ? 'positive' : 'negative';
+    const trendValue = Number(trend) || 0;
+    if (trendValue === 0) return 'neutral';
+    return trendValue > 0 ? 'positive' : 'negative';
+  };
+
+  const formatRelativeTime = (dateString) => {
+    if (!dateString) return 'Unknown';
+
+    try {
+      const date = new Date(dateString);
+      const now = new Date();
+      const diffMs = now - date;
+      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+      if (diffDays === 0) return 'Today';
+      if (diffDays === 1) return 'Yesterday';
+      if (diffDays < 7) return `${diffDays} days ago`;
+      if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
+      return `${Math.floor(diffDays / 30)} months ago`;
+    } catch (error) {
+      return 'Unknown';
+    }
+  };
+
+  const handleQuickAction = (action) => {
+    emit('action', action);
   };
 
   // const handleQuickAction = (action) => {
@@ -1073,9 +1168,9 @@
     @apply flex items-center justify-between p-6 bg-gradient-to-r from-primary-50 to-primary-100 rounded-lg border border-primary-200 mb-4;
   }
 
-  /* Birthday Floating Widget */
-  .birthday-floating-widget {
-    @apply mb-6;
+  /* Birthday Minimal Widget */
+  .birthday-minimal-widget {
+    @apply mb-4;
   }
 
   .motivation-content {
