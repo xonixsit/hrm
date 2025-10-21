@@ -16,14 +16,16 @@ class SendWelcomeEmail implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     protected $user;
+    protected $password;
 
-    public function __construct(User $user)
+    public function __construct(User $user, $password = null)
     {
         $this->user = $user;
+        $this->password = $password;
     }
 
     public function handle()
     {
-        Mail::to($this->user->email)->send(new WelcomeEmployee($this->user));
+        Mail::to($this->user->email)->send(new WelcomeEmployee($this->user, $this->password));
     }
 }

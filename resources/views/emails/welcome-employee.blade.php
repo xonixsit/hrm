@@ -67,8 +67,32 @@
         <div class="highlight">
             <strong>Your Account Details:</strong><br>
             Email: {{ $user->email }}<br>
+            @if($password)
+            Password: <code style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: monospace;">{{ $password }}</code><br>
+            @endif
             Account Created: {{ $user->created_at->format('F j, Y') }}
         </div>
+
+        @if($password)
+        <div style="background: #fef3c7; border: 1px solid #f59e0b; border-radius: 6px; padding: 15px; margin: 20px 0;">
+            <strong style="color: #92400e;">🔐 Important Security Information:</strong>
+            <ul style="margin: 10px 0; padding-left: 20px; color: #92400e;">
+                <li>Please change your password after your first login</li>
+                <li>Keep your login credentials secure and confidential</li>
+                <li>Do not share your password with anyone</li>
+            </ul>
+        </div>
+        @endif
+
+        @if($password)
+        <p><strong>Getting Started:</strong></p>
+        <ol style="padding-left: 20px;">
+            <li>Click the "Access Your Dashboard" button below</li>
+            <li>Log in using your email and the password provided above</li>
+            <li>You'll be prompted to change your password on first login</li>
+            <li>Complete your profile setup in the dashboard</li>
+        </ol>
+        @endif
 
         <p>Here's what you can expect next:</p>
         

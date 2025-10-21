@@ -62,6 +62,7 @@ Route::middleware('auth')->group(function () {
         // Employee Import Routes
         Route::get('employees-import', [\App\Http\Controllers\EmployeeImportController::class, 'index'])->name('employees.import');
         Route::post('employees-import', [\App\Http\Controllers\EmployeeImportController::class, 'store'])->name('employees.import.store');
+        Route::post('employees-import-preview', [\App\Http\Controllers\EmployeeImportController::class, 'preview'])->name('employees.import.preview');
         Route::get('employees-template', [\App\Http\Controllers\EmployeeImportController::class, 'template'])->name('employees.template');
     });
     

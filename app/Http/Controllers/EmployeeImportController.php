@@ -61,7 +61,17 @@ class EmployeeImportController extends Controller
                 '+1234567891',
                 '2024-02-01',
                 '85000',
-                'Full-time'
+                'Permanent'
+            ],
+            [
+                'Mike Johnson',
+                'mike.johnson@company.com',
+                'Sales Representative',
+                'Sales',
+                '+1234567892',
+                '2024-03-01',
+                '55000',
+                'Contract'
             ]
         ];
         
@@ -69,6 +79,28 @@ class EmployeeImportController extends Controller
             return $this->generateCsvTemplate($headers, $sampleData);
         } else {
             return $this->generateExcelTemplate($headers, $sampleData);
+        }
+    }
+
+    public function preview(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls,csv|max:10240'
+        ]);
+
+        try {
+            $file = $request->file('file');
+            $columns = $this->extractColumns($file);
+            
+            return response()->json([
+                'success' => true,
+                'columns' => $columns
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to read file: ' . $e->getMessage()
+            ], 500);
         }
     }
 
@@ -216,7 +248,7 @@ class EmployeeImportController extends Controller
                 'phone' => 'nullable|string|max:20',
                 'join_date' => 'nullable|date',
                 'salary' => 'nullable|numeric|min:0',
-                'contract_type' => 'nullable|string|in:Full-time,Part-time,Contract,Temporary'
+                'contract_type' => 'nullable|string|in:Full-time,Part-time,Contract,Temporary,Permanent'
             ]);
 
             if ($validator->fails()) {
@@ -264,9 +296,9 @@ class EmployeeImportController extends Controller
                         $user = $this->createUser($row);
                         $employee = $this->createEmployee($user, $row);
                         
-                        // Send welcome email if requested
+                        // Send welcome email with credentials if requested
                         if ($options['sendWelcomeEmails']) {
-                            SendWelcomeEmail::dispatch($user);
+                            SendWelcomeEmail::dispatch($user, $user->plain_password);
                         }
                         
                         $successful++;
@@ -298,12 +330,20 @@ class EmployeeImportController extends Controller
 
     private function createUser($row)
     {
-        return User::create([
+        $password = Str::random(12);
+        
+        $user = User::create([
             'name' => $row['name'],
             'email' => $row['email'],
-            'password' => Hash::make(Str::random(12)), // Generate random password
-            'email_verified_at' => now()
+            'password' => Hash::make($password),
+            'email_verified_at' => now(),
+            'password_reset_required' => true
         ]);
+        
+        // Store plain password temporarily for email
+        $user->plain_password = $password;
+        
+        return $user;
     }
 
     private function createEmployee($user, $row)
@@ -321,7 +361,9 @@ class EmployeeImportController extends Controller
             'phone' => $row['phone'] ?? null,
             'join_date' => !empty($row['join_date']) ? $row['join_date'] : now(),
             'salary' => $row['salary'] ?? null,
+            'salary_currency' => 'USD',
             'contract_type' => $row['contract_type'] ?? 'Full-time',
+            'employment_type' => $row['contract_type'] ?? 'Full-time',
             'status' => 'active'
         ]);
     }
@@ -347,7 +389,8 @@ class EmployeeImportController extends Controller
                 'phone' => $row['phone'] ?? $employee->phone,
                 'join_date' => !empty($row['join_date']) ? $row['join_date'] : $employee->join_date,
                 'salary' => $row['salary'] ?? $employee->salary,
-                'contract_type' => $row['contract_type'] ?? $employee->contract_type
+                'contract_type' => $row['contract_type'] ?? $employee->contract_type,
+                'employment_type' => $row['contract_type'] ?? $employee->employment_type
             ]);
         }
     }
@@ -382,6 +425,26 @@ class EmployeeImportController extends Controller
         return response($content)
             ->header('Content-Type', 'text/csv')
             ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
+    }
+
+    private function extractColumns($file)
+    {
+        $extension = $file->getClientOriginalExtension();
+        
+        if (in_array($extension, ['xlsx', 'xls'])) {
+            $spreadsheet = IOFactory::load($file->getPathname());
+            $worksheet = $spreadsheet->getActiveSheet();
+            $firstRow = $worksheet->rangeToArray('A1:Z1')[0];
+            return array_filter($firstRow, function($cell) {
+                return !empty(trim($cell));
+            });
+        } elseif ($extension === 'csv') {
+            $csv = Reader::createFromPath($file->getPathname(), 'r');
+            $csv->setHeaderOffset(0);
+            return $csv->getHeader();
+        }
+        
+        return [];
     }
 
     private function generateExcelTemplate($headers, $sampleData)

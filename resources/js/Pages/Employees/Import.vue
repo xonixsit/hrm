@@ -336,6 +336,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { router } from '@inertiajs/vue3'
+import axios from 'axios'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 import PageLayout from '@/Components/Layout/PageLayout.vue'
 import {
@@ -464,21 +465,33 @@ const handleFileSelect = async (e) => {
 }
 
 const detectColumns = async (file) => {
-  // In a real implementation, you would parse the file to detect columns
-  // For now, we'll simulate this with common column names
-  detectedColumns.value = [
-    'Name', 'Full Name', 'Employee Name',
-    'Email', 'Email Address', 'Work Email',
-    'Job Title', 'Position', 'Role',
-    'Department', 'Dept', 'Division',
-    'Phone', 'Phone Number', 'Mobile',
-    'Join Date', 'Start Date', 'Hire Date',
-    'Salary', 'Basic Salary', 'Annual Salary',
-    'Contract Type', 'Employment Type', 'Status'
-  ]
-  
-  // Auto-map common column names
-  autoMapColumns()
+  try {
+    const formData = new FormData()
+    formData.append('file', file)
+    
+    const response = await axios.post(route('employees.import.preview'), formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+    
+    detectedColumns.value = response.data.columns
+    autoMapColumns()
+  } catch (error) {
+    console.error('Failed to detect columns:', error)
+    // Fallback to common column names
+    detectedColumns.value = [
+      'Name', 'Full Name', 'Employee Name',
+      'Email', 'Email Address', 'Work Email',
+      'Job Title', 'Position', 'Role',
+      'Department', 'Dept', 'Division',
+      'Phone', 'Phone Number', 'Mobile',
+      'Join Date', 'Start Date', 'Hire Date',
+      'Salary', 'Basic Salary', 'Annual Salary',
+      'Contract Type', 'Employment Type', 'Status'
+    ]
+    autoMapColumns()
+  }
 }
 
 const autoMapColumns = () => {
@@ -542,59 +555,30 @@ const startImport = async () => {
   }
   
   try {
-    // In a real implementation, this would be an API call
-    await simulateImport()
+    const response = await axios.post(route('employees.import.store'), formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      },
+      onUploadProgress: (progressEvent) => {
+        const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total)
+        importStatus.value.progress = progress
+      }
+    })
+    
+    if (response.data.success) {
+      importResults.value = response.data.results
+      importStatus.value.active = false
+    } else {
+      throw new Error(response.data.message)
+    }
   } catch (error) {
     console.error('Import failed:', error)
-    alert('Import failed. Please try again.')
+    alert('Import failed: ' + (error.response?.data?.message || error.message))
     resetImport()
   }
 }
 
-const simulateImport = async () => {
-  // Simulate import process for demo
-  const totalRecords = Math.floor(Math.random() * 100) + 50
-  importStatus.value.total = totalRecords
-  
-  for (let i = 0; i < totalRecords; i++) {
-    if (importStatus.value.paused) {
-      // Wait for resume
-      await new Promise(resolve => {
-        const checkResume = () => {
-          if (!importStatus.value.paused) {
-            resolve()
-          } else {
-            setTimeout(checkResume, 100)
-          }
-        }
-        checkResume()
-      })
-    }
-    
-    // Simulate processing delay
-    await new Promise(resolve => setTimeout(resolve, 100))
-    
-    importStatus.value.processed = i + 1
-    importStatus.value.progress = Math.round(((i + 1) / totalRecords) * 100)
-    importStatus.value.currentRecord = `Employee ${i + 1}`
-    
-    // Simulate success/failure
-    if (Math.random() > 0.1) {
-      importStatus.value.successCount++
-    } else {
-      importStatus.value.errorCount++
-    }
-    
-    // Update estimated time
-    const remaining = totalRecords - (i + 1)
-    const avgTimePerRecord = 100 // ms
-    const estimatedMs = remaining * avgTimePerRecord
-    importStatus.value.estimatedTime = formatTime(estimatedMs)
-  }
-  
-  // Complete import
-  completeImport()
-}
+
 
 const formatTime = (ms) => {
   const seconds = Math.floor(ms / 1000)
@@ -617,20 +601,7 @@ const cancelImport = () => {
   }
 }
 
-const completeImport = () => {
-  importResults.value = {
-    successful: importStatus.value.successCount,
-    failed: importStatus.value.errorCount,
-    total: importStatus.value.total,
-    errors: importStatus.value.errorCount > 0 ? [
-      { row: 5, message: 'Invalid email format' },
-      { row: 12, message: 'Department not found' },
-      { row: 23, message: 'Missing required field: name' }
-    ] : []
-  }
-  
-  importStatus.value.active = false
-}
+
 
 const resetImport = () => {
   selectedFile.value = null
@@ -653,11 +624,7 @@ const resetImport = () => {
 }
 
 const downloadTemplate = (format) => {
-  // In a real implementation, this would download an actual template file
-  const link = document.createElement('a')
-  link.href = route('employees.template', { format })
-  link.download = `employee_template.${format}`
-  link.click()
+  window.open(route('employees.template', { format }), '_blank')
 }
 
 const downloadErrorReport = () => {
