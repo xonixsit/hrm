@@ -152,46 +152,145 @@
 
 
 
-    <!-- Overview Section -->
-    <div class="competency-overview-section" v-if="stats.myPendingAssessments !== undefined">
-      <div class="competency-stats-grid">
-        <div class="competency-stat-card">
-          <div class="stat-icon">
-            <CheckCircleIcon class="w-6 h-6 text-primary-600" />
+    <!-- Journey & Growth Overview -->
+    <div class="journey-overview-section">
+      <!-- Journey Milestones -->
+      <div class="journey-milestones">
+        <h3 class="section-title">Your Journey</h3>
+        <div class="milestone-grid">
+          <div class="milestone-card">
+            <div class="milestone-icon">
+              <CalendarDaysIcon class="w-6 h-6 text-blue-600" />
+            </div>
+            <div class="milestone-content">
+              <div class="milestone-value">{{ stats.daysWithCompany || 0 }}</div>
+              <div class="milestone-label">Days with Company</div>
+              <div class="milestone-sublabel">{{ formatServiceTime(stats.yearsOfService, stats.monthsWithCompany) }}</div>
+            </div>
           </div>
-          <div class="stat-content">
-            <div class="stat-value">{{ stats.myCompletedAssessments || 0 }}</div>
-            <div class="stat-label">Completed Assessments</div>
+          
+          <div class="milestone-card">
+            <div class="milestone-icon">
+              <ClockIcon class="w-6 h-6 text-green-600" />
+            </div>
+            <div class="milestone-content">
+              <div class="milestone-value">{{ stats.totalWorkHours || 0 }}h</div>
+              <div class="milestone-label">Total Work Hours</div>
+              <div class="milestone-sublabel">Lifetime contribution</div>
+            </div>
+          </div>
+          
+          <div class="milestone-card">
+            <div class="milestone-icon">
+              <ChartBarIcon class="w-6 h-6 text-purple-600" />
+            </div>
+            <div class="milestone-content">
+              <div class="milestone-value">{{ stats.projectsContributed || 0 }}</div>
+              <div class="milestone-label">Projects</div>
+              <div class="milestone-sublabel">Cross-functional work</div>
+            </div>
+          </div>
+          
+          <div class="milestone-card">
+            <div class="milestone-icon">
+              <StarIcon class="w-6 h-6 text-yellow-600" />
+            </div>
+            <div class="milestone-content">
+              <div class="milestone-value">{{ stats.performanceRank || 'N/A' }}</div>
+              <div class="milestone-label">Performance Rank</div>
+              <div class="milestone-sublabel">Among peers</div>
+            </div>
           </div>
         </div>
-        
-        <div class="competency-stat-card">
-          <div class="stat-icon">
-            <ClockIcon class="w-6 h-6 text-warning-600" />
+      </div>
+
+      <!-- Performance & Growth Stats -->
+      <div class="performance-stats">
+        <h3 class="section-title">Performance & Growth</h3>
+        <div class="stats-grid">
+          <div class="stat-card primary">
+            <div class="stat-header">
+              <CheckCircleIcon class="w-5 h-5" />
+              <span class="stat-trend" :class="getTrendClass(stats.performanceTrend)">
+                {{ formatTrend(stats.performanceTrend) }}
+              </span>
+            </div>
+            <div class="stat-value">{{ stats.myAverageRating || 'N/A' }}</div>
+            <div class="stat-label">Avg Rating</div>
           </div>
-          <div class="stat-content">
-            <div class="stat-value">{{ stats.myPendingAssessments || 0 }}</div>
-            <div class="stat-label">Pending Assessments</div>
+          
+          <div class="stat-card success">
+            <div class="stat-header">
+              <DocumentTextIcon class="w-5 h-5" />
+              <span class="stat-trend" :class="getTrendClass(stats.attendanceTrend)">
+                {{ formatTrend(stats.attendanceTrend) }}
+              </span>
+            </div>
+            <div class="stat-value">{{ Math.round(stats.attendanceRate || 0) }}%</div>
+            <div class="stat-label">Attendance Rate</div>
           </div>
-        </div>
-        
-        <div class="competency-stat-card">
-          <div class="stat-icon">
-            <ChartBarIcon class="w-6 h-6 text-info-600" />
-          </div>
-          <div class="stat-content">
+          
+          <div class="stat-card info">
+            <div class="stat-header">
+              <ChartBarIcon class="w-5 h-5" />
+              <span class="stat-trend" :class="getTrendClass(stats.productivityTrend)">
+                {{ formatTrend(stats.productivityTrend) }}
+              </span>
+            </div>
             <div class="stat-value">{{ stats.myWorkReports || 0 }}</div>
             <div class="stat-label">Work Reports</div>
           </div>
-        </div>
-        
-        <div class="competency-stat-card">
-          <div class="stat-icon">
-            <DocumentTextIcon class="w-6 h-6 text-success-600" />
-          </div>
-          <div class="stat-content">
+          
+          <div class="stat-card warning">
+            <div class="stat-header">
+              <BoltIcon class="w-5 h-5" />
+              <span class="consistency-score">{{ Math.round(stats.consistencyScore || 0) }}%</span>
+            </div>
             <div class="stat-value">{{ stats.mySuccessfulCalls || 0 }}</div>
             <div class="stat-label">Successful Calls</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Achievements & Recognition -->
+      <div class="achievements-section" v-if="stats.totalAchievements > 0">
+        <h3 class="section-title">Achievements & Recognition</h3>
+        <div class="achievements-grid">
+          <div class="achievement-summary">
+            <div class="achievement-count">{{ stats.totalAchievements }}</div>
+            <div class="achievement-label">Total Achievements</div>
+          </div>
+          <div class="recent-achievements">
+            <div v-for="achievement in stats.recentAchievements" :key="achievement" class="achievement-item">
+              <div class="achievement-badge">🏆</div>
+              <span class="achievement-text">{{ achievement }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Growth Progress -->
+      <div class="growth-progress">
+        <h3 class="section-title">Development Progress</h3>
+        <div class="progress-items">
+          <div class="progress-item">
+            <div class="progress-header">
+              <span class="progress-label">Skills Growth</span>
+              <span class="progress-value">{{ Math.round(stats.skillsGrowth || 0) }}%</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" :style="{ width: (stats.skillsGrowth || 0) + '%' }"></div>
+            </div>
+          </div>
+          
+          <div class="progress-item">
+            <div class="progress-header">
+              <span class="progress-label">Competency Progress</span>
+              <span class="progress-value">{{ formatTrend(stats.competencyProgress) }}</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" :style="{ width: Math.abs(stats.competencyProgress || 0) + '%' }"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -921,52 +1020,105 @@ const handleEndBreak = async () => {
   }
 };
 
-const handleQuickAction = (action) => {
-  emit('action', { type: 'quick-action', data: action });
-};
-
-const viewFullCalendar = () => {
-  emit('action', { type: 'view-calendar' });
-};
-
-const joinMeeting = (event) => {
-  if (event.meeting_link) {
-    window.open(event.meeting_link, '_blank');
+// Helper methods for formatting
+const formatServiceTime = (years, months) => {
+  if (years > 0) {
+    return `${years} year${years > 1 ? 's' : ''} ${months % 12} month${months % 12 !== 1 ? 's' : ''}`;
   }
+  return `${months} month${months !== 1 ? 's' : ''}`;
 };
 
-const formatTime = (time) => {
-  return new Date(`2000-01-01T${time}`).toLocaleTimeString('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true
-  });
+const formatTrend = (trend) => {
+  if (!trend || trend === 0) return '0%';
+  const sign = trend > 0 ? '+' : '';
+  return `${sign}${Math.round(trend)}%`;
 };
 
-const formatRelativeTime = (date) => {
-  const now = new Date();
-  const target = new Date(date);
-  const diffInMinutes = Math.floor((target - now) / (1000 * 60));
-  
-  if (diffInMinutes < 0) {
-    const pastMinutes = Math.abs(diffInMinutes);
-    if (pastMinutes < 60) return `${pastMinutes}m ago`;
-    
-    const pastHours = Math.floor(pastMinutes / 60);
-    if (pastHours < 24) return `${pastHours}h ago`;
-    
-    const pastDays = Math.floor(pastHours / 24);
-    return `${pastDays}d ago`;
-  }
-  
-  if (diffInMinutes < 60) return `in ${diffInMinutes}m`;
-  
-  const hours = Math.floor(diffInMinutes / 60);
-  if (hours < 24) return `in ${hours}h`;
-  
-  const days = Math.floor(hours / 24);
-  return `in ${days}d`;
+const getTrendClass = (trend) => {
+  if (!trend || trend === 0) return 'neutral';
+  return trend > 0 ? 'positive' : 'negative';
 };
+
+// const handleQuickAction = (action) => {
+//   emit('action', action);
+// };
+
+// const viewFullCalendar = () => {
+//   emit('action', { route: 'calendar.index' });
+// };
+
+// const joinMeeting = (event) => {
+//   if (event.meeting_link) {
+//     window.open(event.meeting_link, '_blank');
+//   }
+// };
+
+// const formatTime = (time) => {
+//   return new Date(time).toLocaleTimeString('en-US', {
+//     hour: 'numeric',
+//     minute: '2-digit',
+//     hour12: true
+//   });
+// };
+
+// const formatRelativeTime = (date) => {
+//   const now = new Date();
+//   const past = new Date(date);
+//   const diffMs = now - past;
+//   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  
+//   if (diffDays === 0) return 'Today';
+//   if (diffDays === 1) return 'Yesterday';
+//   if (diffDays < 7) return `${diffDays} days ago`;
+//   return past.toLocaleDateString();
+// };
+
+// const handleQuickAction = (action) => {
+//   emit('action', { type: 'quick-action', data: action });
+// };
+
+// const viewFullCalendar = () => {
+//   emit('action', { type: 'view-calendar' });
+// };
+
+// const joinMeeting = (event) => {
+//   if (event.meeting_link) {
+//     window.open(event.meeting_link, '_blank');
+//   }
+// };
+
+// const formatTime = (time) => {
+//   return new Date(`2000-01-01T${time}`).toLocaleTimeString('en-US', {
+//     hour: 'numeric',
+//     minute: '2-digit',
+//     hour12: true
+//   });
+// };
+
+// const formatRelativeTime = (date) => {
+//   const now = new Date();
+//   const target = new Date(date);
+//   const diffInMinutes = Math.floor((target - now) / (1000 * 60));
+  
+//   if (diffInMinutes < 0) {
+//     const pastMinutes = Math.abs(diffInMinutes);
+//     if (pastMinutes < 60) return `${pastMinutes}m ago`;
+    
+//     const pastHours = Math.floor(pastMinutes / 60);
+//     if (pastHours < 24) return `${pastHours}h ago`;
+    
+//     const pastDays = Math.floor(pastHours / 24);
+//     return `${pastDays}d ago`;
+//   }
+  
+//   if (diffInMinutes < 60) return `in ${diffInMinutes}m`;
+  
+//   const hours = Math.floor(diffInMinutes / 60);
+//   if (hours < 24) return `in ${hours}h`;
+  
+//   const days = Math.floor(hours / 24);
+//   return `in ${days}d`;
+// };
 
 onMounted(() => {
   updateTime();
@@ -1369,5 +1521,159 @@ onUnmounted(() => {
   .stat-value {
     @apply text-lg;
   }
+}
+</style>
+<style scoped>
+/* Journey & Growth Styles */
+.journey-overview-section {
+  @apply space-y-6 mb-8;
+}
+
+.section-title {
+  @apply text-lg font-semibold text-gray-900 mb-4;
+}
+
+/* Journey Milestones */
+.milestone-grid {
+  @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4;
+}
+
+.milestone-card {
+  @apply bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow;
+}
+
+.milestone-icon {
+  @apply mb-3;
+}
+
+.milestone-value {
+  @apply text-2xl font-bold text-gray-900;
+}
+
+.milestone-label {
+  @apply text-sm font-medium text-gray-700;
+}
+
+.milestone-sublabel {
+  @apply text-xs text-gray-500 mt-1;
+}
+
+/* Performance Stats */
+.stats-grid {
+  @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4;
+}
+
+.stat-card {
+  @apply bg-white rounded-lg border p-4 relative overflow-hidden;
+}
+
+.stat-card.primary {
+  @apply border-blue-200 bg-blue-50;
+}
+
+.stat-card.success {
+  @apply border-green-200 bg-green-50;
+}
+
+.stat-card.info {
+  @apply border-purple-200 bg-purple-50;
+}
+
+.stat-card.warning {
+  @apply border-yellow-200 bg-yellow-50;
+}
+
+.stat-header {
+  @apply flex items-center justify-between mb-2;
+}
+
+.stat-trend {
+  @apply text-xs font-medium px-2 py-1 rounded-full;
+}
+
+.stat-trend.positive {
+  @apply bg-green-100 text-green-700;
+}
+
+.stat-trend.negative {
+  @apply bg-red-100 text-red-700;
+}
+
+.stat-trend.neutral {
+  @apply bg-gray-100 text-gray-600;
+}
+
+.consistency-score {
+  @apply text-xs font-medium px-2 py-1 rounded-full bg-blue-100 text-blue-700;
+}
+
+.stat-value {
+  @apply text-2xl font-bold text-gray-900;
+}
+
+.stat-label {
+  @apply text-sm text-gray-600;
+}
+
+/* Achievements */
+.achievements-grid {
+  @apply grid grid-cols-1 md:grid-cols-3 gap-4;
+}
+
+.achievement-summary {
+  @apply bg-white rounded-lg border border-gray-200 p-4 text-center;
+}
+
+.achievement-count {
+  @apply text-3xl font-bold text-yellow-600;
+}
+
+.achievement-label {
+  @apply text-sm text-gray-600;
+}
+
+.recent-achievements {
+  @apply md:col-span-2 bg-white rounded-lg border border-gray-200 p-4;
+}
+
+.achievement-item {
+  @apply flex items-center space-x-3 py-2;
+}
+
+.achievement-badge {
+  @apply text-lg;
+}
+
+.achievement-text {
+  @apply text-sm text-gray-700;
+}
+
+/* Growth Progress */
+.progress-items {
+  @apply space-y-4;
+}
+
+.progress-item {
+  @apply bg-white rounded-lg border border-gray-200 p-4;
+}
+
+.progress-header {
+  @apply flex items-center justify-between mb-2;
+}
+
+.progress-label {
+  @apply text-sm font-medium text-gray-700;
+}
+
+.progress-value {
+  @apply text-sm font-semibold text-gray-900;
+}
+
+.progress-bar {
+  @apply w-full bg-gray-200 rounded-full h-2;
+}
+
+.progress-fill {
+  @apply bg-blue-600 h-2 rounded-full transition-all duration-300;
 }
 </style>
