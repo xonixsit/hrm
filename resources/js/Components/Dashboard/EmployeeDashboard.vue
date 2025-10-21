@@ -264,7 +264,7 @@
     <div class="dashboard-content">
       <!-- Left Column -->
       <div class="left-column">
-Test
+
 
         <!-- Recent Feedback -->
         <DashboardWidget title="Recent Feedback" :loading="loading" class="recent-feedback">

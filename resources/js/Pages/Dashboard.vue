@@ -281,13 +281,13 @@
         </div>
         
         <!-- Right Sidebar -->
-        <div class="lg:col-span-1 space-y-4">
+        <!-- <div class="lg:col-span-1 space-y-4"> -->
           <!-- Birthday Notifications -->
-          <UnifiedCard title="Team Birthdays" description="Celebrate with your colleagues" :icon="CakeIcon" iconVariant="primary">
+          <!-- <UnifiedCard title="Team Birthdays" description="Celebrate with your colleagues" :icon="CakeIcon" iconVariant="primary">
             <BirthdayNotifications :todays-birthdays="birthdayData.todaysBirthdays"
               :upcoming-birthdays="birthdayData.upcomingBirthdays" :stats="birthdayData.stats" />
-          </UnifiedCard>
-        </div>
+          </UnifiedCard> -->
+        <!-- </div> -->
       </div>
     </div>
 
