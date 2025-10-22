@@ -57,7 +57,7 @@
               class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
               required />
             <p class="mt-1 text-xs text-gray-500">
-              Must be after clock-in time. Can be set to any time up to now.
+              Must be after clock-in time. Defaults to attendance date but can be adjusted up to current time.
             </p>
           </div>
 
@@ -225,8 +225,29 @@
   }
 
   onMounted(() => {
-    // Set default clock out time to current time
-    // User can adjust as needed
-    clockOutTime.value = getCurrentDateTime()
+    // Set default clock out time based on attendance date
+    if (!props.attendance?.clock_in) {
+      clockOutTime.value = getCurrentDateTime()
+      return
+    }
+
+    try {
+      const clockInDate = new Date(props.attendance.clock_in)
+      const attendanceDate = new Date(props.attendance.date || clockInDate)
+      
+      // Set default time to same date as attendance, but at a reasonable hour (5 PM)
+      const defaultClockOut = new Date(attendanceDate)
+      defaultClockOut.setHours(17, 0, 0, 0) // 5:00 PM on the attendance date
+      
+      // If the default time would be in the future, use current time instead
+      const now = new Date()
+      if (defaultClockOut > now) {
+        clockOutTime.value = getCurrentDateTime()
+      } else {
+        clockOutTime.value = defaultClockOut.toISOString().slice(0, 16)
+      }
+    } catch (error) {
+      clockOutTime.value = getCurrentDateTime()
+    }
   })
 </script>
