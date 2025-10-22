@@ -806,6 +806,97 @@ class AttendanceController extends Controller
     }
 
     /**
+     * Manual clock out for forgotten clock outs
+     */
+    public function manualClockOut(Request $request)
+    {
+        $validated = $request->validate([
+            'attendance_id' => 'required|exists:attendances,id',
+            'clock_out_time' => 'required|date|after:clock_in_time',
+            'reason' => 'required|string|min:10|max:500'
+        ]);
+
+        $attendance = Attendance::findOrFail($validated['attendance_id']);
+        
+        // Check authorization - only HR/Admin can manually clock out others
+        if (!Auth::user()->hasRole(['Admin', 'HR']) && $attendance->employee_id !== Auth::user()->employee?->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized to perform this action.'
+            ], 403);
+        }
+
+        // Ensure attendance is not already clocked out
+        if ($attendance->clock_out) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Employee is already clocked out.'
+            ], 400);
+        }
+
+        // Validate clock out time is after clock in
+        $clockOutTime = \Carbon\Carbon::parse($validated['clock_out_time']);
+        if ($clockOutTime->lte($attendance->clock_in)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Clock out time must be after clock in time.'
+            ], 400);
+        }
+
+        // Validate clock out time is not in the future
+        if ($clockOutTime->gt(now())) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Clock out time cannot be in the future.'
+            ], 400);
+        }
+
+        // End any active break
+        if ($attendance->on_break) {
+            $attendance->endBreak();
+        }
+
+        // Calculate work minutes up to the manual clock out time
+        $workMinutes = $attendance->clock_in->diffInMinutes($clockOutTime);
+        $breakMinutes = $attendance->total_break_minutes ?? 0;
+        $actualWorkMinutes = max(0, $workMinutes - $breakMinutes);
+
+        // Update attendance record
+        $attendance->update([
+            'clock_out' => $clockOutTime,
+            'work_minutes' => $actualWorkMinutes,
+            'status' => 'clocked_out',
+            'notes' => ($attendance->notes ? $attendance->notes . "\n\n" : '') . 
+                      "Manual clock out by " . Auth::user()->name . " at " . now()->format('Y-m-d H:i:s') . 
+                      "\nReason: " . $validated['reason'],
+            'edited_by' => Auth::id()
+        ]);
+
+        // Synchronize with timesheet
+        $timesheetResult = $this->syncAttendanceToTimesheet($attendance);
+
+        $this->logAudit('Manual Clock Out', 
+            "Manual clock out for attendance ID: {$attendance->id}, Employee ID: {$attendance->employee_id}. Reason: {$validated['reason']}"
+        );
+
+        $message = 'Manual clock out completed successfully.';
+        if ($timesheetResult['created']) {
+            $message .= " Timesheet entry created automatically ({$timesheetResult['hours']} hours).";
+        } elseif ($timesheetResult['updated'] ?? false) {
+            $message .= " Existing timesheet updated ({$timesheetResult['hours']} hours).";
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => $message,
+            'attendance' => $attendance->fresh(),
+            'work_duration' => $attendance->work_duration,
+            'break_duration' => $attendance->break_duration,
+            'timesheet_sync' => $timesheetResult
+        ]);
+    }
+
+    /**
      * Get or create default project for timesheet sync (Tax Services)
      */
     private function getDefaultProjectForTimesheet()

@@ -20,13 +20,9 @@
         <div class="bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 p-6 text-center text-white relative">
           <div class="absolute inset-0 bg-gradient-to-r from-pink-400/20 via-purple-400/20 to-indigo-400/20"></div>
           <div class="relative z-10">
-            <!-- Xonobics Logo -->
-            <div class="flex justify-center mb-3">
-              <ApplicationLogo class="h-8 w-auto filter brightness-0 invert" />
-            </div>
             <div class="text-6xl mb-2 animate-bounce">🎉</div>
             <h2 class="text-2xl font-bold mb-1">Happy Birthday!</h2>
-            <p class="text-pink-100 text-sm">Wishing you a wonderful day from the Xonobics team</p>
+            <p class="text-pink-100 text-sm">Wishing you a wonderful day from the team</p>
           </div>
         </div>
 
@@ -79,6 +75,13 @@
             >
               Thank You! 🎉
             </button>
+          </div>
+        </div>
+
+        <!-- Footer with Xonobics Logo -->
+        <div class="bg-gray-50 px-6 py-4 text-center border-t border-gray-100">
+          <div class="flex justify-center">
+            <ApplicationLogo class="h-12 w-auto opacity-80" />
           </div>
         </div>
 
