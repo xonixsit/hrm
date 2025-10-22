@@ -341,6 +341,15 @@
         </div>
       </div>
     </div>
+
+    <!-- Birthday Popup -->
+    <BirthdayPopup
+      v-if="birthdayData?.currentUserBirthday"
+      :show="showBirthdayPopup"
+      :employee="birthdayData.currentUserBirthday"
+      @close="closeBirthdayPopup"
+      @send-wishes="sendBirthdayWishes"
+    />
   </AuthenticatedLayout>
 </template>
 
@@ -378,6 +387,7 @@
   import PersonalActivitiesWidget from '@/Components/Dashboard/PersonalActivitiesWidget.vue';
   import CompetencyDashboardWidget from '@/Components/Dashboard/CompetencyDashboardWidget.vue';
   import BirthdayNotifications from '@/Components/Dashboard/BirthdayNotifications.vue';
+  import BirthdayPopup from '@/Components/Dashboard/BirthdayPopup.vue';
 
   // Icons
   import {
@@ -464,6 +474,7 @@
   const showRejectionModal = ref(false);
   const rejectionItem = ref(null);
   const rejectionReason = ref('');
+  const showBirthdayPopup = ref(false);
 
   // Computed properties
   const isAdmin = computed(() => {
@@ -711,4 +722,42 @@
   const handleViewTask = (task) => {
     navigateTo('tasks.show', { task: task.id });
   };
+
+  // Birthday popup logic
+  const checkAndShowBirthdayPopup = () => {
+    if (props.birthdayData?.currentUserBirthday) {
+      // Show popup after a short delay to let the page load
+      setTimeout(() => {
+        showBirthdayPopup.value = true;
+      }, 1000);
+    }
+  };
+
+  const closeBirthdayPopup = () => {
+    showBirthdayPopup.value = false;
+  };
+
+  const sendBirthdayWishes = async (employee) => {
+    try {
+      await axios.post('/api/birthday/send-wishes', {
+        employee_id: employee.id
+      }, {
+        headers: {
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      console.log('Birthday wishes sent successfully!');
+    } catch (error) {
+      console.error('Failed to send birthday wishes:', error);
+    }
+  };
+
+  // Check for birthday popup on component mount
+  import { onMounted } from 'vue';
+  onMounted(() => {
+    checkAndShowBirthdayPopup();
+  });
 </script>

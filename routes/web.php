@@ -99,6 +99,11 @@ Route::middleware('auth')->group(function () {
         Route::post('break-end', [AttendanceController::class, 'endBreak']);
         Route::get('current', [AttendanceController::class, 'getCurrentStatus']);
     });
+
+    // Birthday API routes
+    Route::prefix('api/birthday')->group(function () {
+        Route::post('send-wishes', [App\Http\Controllers\BirthdayController::class, 'sendWishes']);
+    });
     Route::resource('leaves', LeaveController::class)->parameters(['leaves' => 'leave']);
     Route::post('leaves/{leave}/approve', [LeaveController::class, 'approve'])->name('leaves.approve');
     Route::post('leaves/{leave}/reject', [LeaveController::class, 'reject'])->name('leaves.reject');

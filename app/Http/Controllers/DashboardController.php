@@ -35,8 +35,16 @@ class DashboardController extends Controller
         $data = [];
 
         // Add birthday data for all users
+        $todaysBirthdays = $this->birthdayService->getTodaysBirthdays();
+        
+        // Check if current user has birthday today
+        $currentUserBirthday = null;
+        if ($user->employee) {
+            $currentUserBirthday = $todaysBirthdays->firstWhere('user_id', $user->id);
+        }
+        
         $data['birthdayData'] = [
-            'todaysBirthdays' => $this->birthdayService->getTodaysBirthdays()->map(function ($employee) {
+            'todaysBirthdays' => $todaysBirthdays->map(function ($employee) {
                 return [
                     'id' => $employee->id,
                     'user' => [
@@ -64,6 +72,16 @@ class DashboardController extends Controller
                 ];
             }),
             'stats' => $this->birthdayService->getBirthdayStats(),
+            'currentUserBirthday' => $currentUserBirthday ? [
+                'id' => $currentUserBirthday->id,
+                'user' => [
+                    'name' => $currentUserBirthday->user->name,
+                    'email' => $currentUserBirthday->user->email,
+                ],
+                'job_title' => $currentUserBirthday->job_title,
+                'department' => $currentUserBirthday->department ? $currentUserBirthday->department->name : null,
+                'age' => $currentUserBirthday->getAge(),
+            ] : null,
         ];
 
         if (in_array($role, ['Admin', 'HR'])) {
