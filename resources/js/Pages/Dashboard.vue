@@ -655,11 +655,10 @@
 
   const updateAttendanceStatus = async () => {
     try {
-      // Reload the page with updated attendance data
-      await router.reload({ only: ['currentAttendance', 'clockedIn'] });
+      // Force a full page reload to get fresh data from DashboardController
+      window.location.reload();
     } catch (error) {
       console.error('Failed to update attendance status:', error);
-      // Fallback to full page reload
       window.location.reload();
     }
   };
