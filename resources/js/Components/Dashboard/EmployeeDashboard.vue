@@ -260,51 +260,169 @@
       </div>
     </div>
 
-    <!-- Main Dashboard Content -->
-    <div class="dashboard-content">
-      <!-- Left Column -->
-      <div class="left-column">
-        <!-- Recent Feedback -->
-        <DashboardWidget title="Recent Feedback" :loading="loading" class="recent-feedback">
-          <div v-if="recentFeedback.length === 0" class="empty-state">
-            <ChatBubbleLeftIcon class="w-12 h-12 text-neutral-400 mx-auto mb-3" />
-            <p class="text-neutral-500 text-center">No recent feedback</p>
+    <!-- Enhanced Dashboard Content -->
+    <div class="enhanced-dashboard-content">
+      <!-- Main Content Grid -->
+      <div class="content-grid">
+
+        <!-- Recent Activity & Feedback Section -->
+        <div class="activity-section">
+          <div class="section-header">
+            <div class="header-content">
+              <ChatBubbleLeftIcon class="w-6 h-6 text-blue-600" />
+              <div>
+                <h3 class="section-title">Recent Activity</h3>
+                <p class="section-subtitle">Stay updated with your latest interactions</p>
+              </div>
+            </div>
+            <button class="view-all-btn">
+              <span>View All</span>
+              <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
           </div>
 
-          <div v-else class="feedback-list">
-            <div v-for="feedback in recentFeedback.slice(0, 3)" :key="feedback.id" class="feedback-item">
-              <div class="feedback-header">
-                <div class="feedback-from">
-                  <span class="feedback-author">{{ feedback.from.name }}</span>
-                  <span class="feedback-role">{{ feedback.from.role }}</span>
+          <!-- Activity Cards -->
+          <div class="activity-cards">
+            <!-- Feedback Card -->
+            <div class="activity-card feedback-card">
+              <div class="card-header">
+                <div class="card-icon feedback-icon">
+                  <StarIcon class="w-5 h-5" />
                 </div>
-                <div class="feedback-rating">
-                  <div class="rating-stars">
-                    <StarIcon v-for="star in 5" :key="star" :class="[
-                        'w-4 h-4',
-                        star <= feedback.rating ? 'text-warning-400 fill-current' : 'text-neutral-300'
-                      ]" />
+                <div class="card-info">
+                  <h4 class="card-title">Recent Feedback</h4>
+                  <p class="card-count">{{ recentFeedback.length }} new</p>
+                </div>
+              </div>
+
+              <div v-if="recentFeedback.length === 0" class="empty-content">
+                <div class="empty-icon">
+                  <ChatBubbleLeftIcon class="w-8 h-8" />
+                </div>
+                <p class="empty-text">No recent feedback</p>
+                <p class="empty-subtext">Your feedback will appear here</p>
+              </div>
+
+              <div v-else class="feedback-preview">
+                <div v-for="feedback in recentFeedback.slice(0, 2)" :key="feedback.id" class="feedback-item-compact">
+                  <div class="feedback-avatar">
+                    <div class="avatar-circle">
+                      {{ feedback.from.name.charAt(0).toUpperCase() }}
+                    </div>
+                  </div>
+                  <div class="feedback-content">
+                    <div class="feedback-meta">
+                      <span class="feedback-author">{{ feedback.from.name }}</span>
+                      <div class="rating-compact">
+                        <StarIcon v-for="star in feedback.rating" :key="star"
+                          class="w-3 h-3 text-yellow-400 fill-current" />
+                      </div>
+                    </div>
+                    <p class="feedback-text">{{ feedback.comment.substring(0, 60) }}...</p>
                   </div>
                 </div>
               </div>
-              <p class="feedback-comment">{{ feedback.comment }}</p>
-              <span class="feedback-date">{{ formatRelativeTime(feedback.created_at) }}</span>
+            </div>
+
+            <!-- Tasks/Goals Card -->
+            <div class="activity-card tasks-card">
+              <div class="card-header">
+                <div class="card-icon tasks-icon">
+                  <CheckCircleIcon class="w-5 h-5" />
+                </div>
+                <div class="card-info">
+                  <h4 class="card-title">Today's Goals</h4>
+                  <p class="card-count">3 of 5 completed</p>
+                </div>
+              </div>
+
+              <div class="goals-progress">
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: 60%"></div>
+                </div>
+                <div class="goals-list">
+                  <div class="goal-item completed">
+                    <CheckCircleIcon class="w-4 h-4 text-green-500" />
+                    <span>Complete morning standup</span>
+                  </div>
+                  <div class="goal-item completed">
+                    <CheckCircleIcon class="w-4 h-4 text-green-500" />
+                    <span>Review project documentation</span>
+                  </div>
+                  <div class="goal-item pending">
+                    <div class="w-4 h-4 border-2 border-gray-300 rounded-full"></div>
+                    <span>Submit weekly report</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-        </DashboardWidget>
-      </div>
+        </div>
 
-      <!-- Right Column -->
-      <div class="right-column">
-        <!-- Birthday Notifications -->
-        <BirthdayNotifications :todays-birthdays="birthdayNotifications.todaysBirthdays"
-          :upcoming-birthdays="birthdayNotifications.upcomingBirthdays" :stats="birthdayNotifications.stats" />
+        <!-- Quick Actions & Tools Section -->
+        <div class="actions-section">
+          <div class="section-header">
+            <div class="header-content">
+              <BoltIcon class="w-6 h-6 text-purple-600" />
+              <div>
+                <h3 class="section-title">Quick Actions</h3>
+                <p class="section-subtitle">Fast access to common tasks</p>
+              </div>
+            </div>
+          </div>
 
-        <!-- Employee Quick Actions -->
-        <QuickActions :actions="employeeQuickActions" title="Quick Actions" :max-visible="6"
-          @action="handleQuickAction" />
+          <!-- Enhanced Quick Actions Grid -->
+          <div class="quick-actions-grid">
+            <button v-for="action in employeeQuickActions" :key="action.id" @click="handleQuickAction(action)"
+              class="action-button" :class="action.variant">
+              <div class="action-icon">
+                <component :is="action.icon" class="w-6 h-6" />
+              </div>
+              <div class="action-content">
+                <h4 class="action-title">{{ action.label }}</h4>
+                <p class="action-description">{{ action.description }}</p>
+              </div>
+              <div class="action-arrow">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+            </button>
+          </div>
+
+          <!-- Additional Tools -->
+          <div class="tools-section">
+            <h4 class="tools-title">Helpful Tools</h4>
+            <div class="tools-grid">
+              <div class="tool-item">
+                <CalendarIcon class="w-5 h-5 text-blue-500" />
+                <span>Calendar</span>
+              </div>
+              <div class="tool-item">
+                <DocumentTextIcon class="w-5 h-5 text-green-500" />
+                <span>Documents</span>
+              </div>
+              <div class="tool-item">
+                <UsersIcon class="w-5 h-5 text-purple-500" />
+                <span>Team Directory</span>
+              </div>
+              <div class="tool-item">
+                <ChartBarIcon class="w-5 h-5 text-orange-500" />
+                <span>Reports</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Birthday Notifications (Enhanced) -->
+        <div class="birthday-section">
+          <BirthdayNotifications :todays-birthdays="birthdayNotifications.todaysBirthdays"
+            :upcoming-birthdays="birthdayNotifications.upcomingBirthdays" :stats="birthdayNotifications.stats" />
+        </div>
       </div>
-    </div>
+    </div>""
   </div>
 </template>
 
@@ -1631,5 +1749,229 @@
 
   .progress-fill {
     @apply bg-blue-600 h-2 rounded-full transition-all duration-300;
+  }
+
+  /* Enhanced Dashboard Content Styles */
+  .enhanced-dashboard-content {
+    @apply mt-8;
+  }
+
+  .content-grid {
+    @apply grid grid-cols-1 lg:grid-cols-3 gap-6;
+  }
+
+  .activity-section {
+    @apply lg:col-span-2 space-y-6;
+  }
+
+  .actions-section {
+    @apply space-y-6;
+  }
+
+  .birthday-section {
+    @apply lg:col-span-3;
+  }
+
+  /* Section Headers */
+  .section-header {
+    @apply flex items-center justify-between mb-4;
+  }
+
+  .header-content {
+    @apply flex items-center space-x-3;
+  }
+
+  .section-title {
+    @apply text-lg font-semibold text-gray-900;
+  }
+
+  .section-subtitle {
+    @apply text-sm text-gray-500;
+  }
+
+  .view-all-btn {
+    @apply flex items-center text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors;
+  }
+
+  /* Activity Cards */
+  .activity-cards {
+    @apply grid grid-cols-1 md:grid-cols-2 gap-4;
+  }
+
+  .activity-card {
+    @apply bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-all duration-200;
+  }
+
+  .card-header {
+    @apply flex items-center space-x-3 mb-4;
+  }
+
+  .card-icon {
+    @apply w-10 h-10 rounded-lg flex items-center justify-center;
+  }
+
+  .feedback-icon {
+    @apply bg-yellow-100 text-yellow-600;
+  }
+
+  .tasks-icon {
+    @apply bg-green-100 text-green-600;
+  }
+
+  .card-title {
+    @apply font-semibold text-gray-900;
+  }
+
+  .card-count {
+    @apply text-sm text-gray-500;
+  }
+
+  /* Empty States */
+  .empty-content {
+    @apply text-center py-8;
+  }
+
+  .empty-icon {
+    @apply w-12 h-12 mx-auto mb-3 text-gray-400;
+  }
+
+  .empty-text {
+    @apply text-gray-600 font-medium mb-1;
+  }
+
+  .empty-subtext {
+    @apply text-sm text-gray-500;
+  }
+
+  /* Feedback Preview */
+  .feedback-preview {
+    @apply space-y-3;
+  }
+
+  .feedback-item-compact {
+    @apply flex items-start space-x-3 p-3 bg-gray-50 rounded-lg;
+  }
+
+  .feedback-avatar {
+    @apply flex-shrink-0;
+  }
+
+  .avatar-circle {
+    @apply w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-medium;
+  }
+
+  .feedback-content {
+    @apply flex-1 min-w-0;
+  }
+
+  .feedback-meta {
+    @apply flex items-center justify-between mb-1;
+  }
+
+  .feedback-author {
+    @apply text-sm font-medium text-gray-900;
+  }
+
+  .rating-compact {
+    @apply flex space-x-0.5;
+  }
+
+  .feedback-text {
+    @apply text-sm text-gray-600 line-clamp-2;
+  }
+
+  /* Goals Progress */
+  .goals-progress {
+    @apply space-y-4;
+  }
+
+  .progress-bar {
+    @apply w-full bg-gray-200 rounded-full h-2;
+  }
+
+  .progress-fill {
+    @apply bg-green-500 h-2 rounded-full transition-all duration-300;
+  }
+
+  .goals-list {
+    @apply space-y-2;
+  }
+
+  .goal-item {
+    @apply flex items-center space-x-2 text-sm;
+  }
+
+  .goal-item.completed {
+    @apply text-gray-600;
+  }
+
+  .goal-item.pending {
+    @apply text-gray-900;
+  }
+
+  /* Quick Actions Grid */
+  .quick-actions-grid {
+    @apply space-y-3;
+  }
+
+  .action-button {
+    @apply w-full flex items-center space-x-4 p-4 bg-white border border-gray-200 rounded-xl hover:shadow-md hover:border-gray-300 transition-all duration-200 text-left;
+  }
+
+  .action-button.primary {
+    @apply border-blue-200 hover:border-blue-300 hover:bg-blue-50;
+  }
+
+  .action-button.secondary {
+    @apply border-gray-200 hover:border-gray-300 hover:bg-gray-50;
+  }
+
+  .action-button.success {
+    @apply border-green-200 hover:border-green-300 hover:bg-green-50;
+  }
+
+  .action-icon {
+    @apply w-12 h-12 rounded-lg flex items-center justify-center bg-gray-100 text-gray-600;
+  }
+
+  .action-button.primary .action-icon {
+    @apply bg-blue-100 text-blue-600;
+  }
+
+  .action-button.success .action-icon {
+    @apply bg-green-100 text-green-600;
+  }
+
+  .action-content {
+    @apply flex-1;
+  }
+
+  .action-title {
+    @apply font-semibold text-gray-900 mb-1;
+  }
+
+  .action-description {
+    @apply text-sm text-gray-500;
+  }
+
+  .action-arrow {
+    @apply text-gray-400;
+  }
+
+  /* Tools Section */
+  .tools-section {
+    @apply mt-6 p-4 bg-gray-50 rounded-xl;
+  }
+
+  .tools-title {
+    @apply font-medium text-gray-900 mb-3;
+  }
+
+  .tools-grid {
+    @apply grid grid-cols-2 gap-3;
+  }
+
+  .tool-item {
+    @apply flex items-center space-x-2 text-sm text-gray-600 hover:text-gray-900 cursor-pointer transition-colors;
   }
 </style>

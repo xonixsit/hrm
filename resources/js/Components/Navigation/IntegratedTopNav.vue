@@ -17,24 +17,9 @@
         <div class="flex items-center space-x-6">
           <!-- Logo -->
           <div class="flex items-center space-x-3">
-            <div class="flex items-center space-x-2">
+            <div class="flex items-center">
               <!-- Xonobics Logo -->
-              <img src="/images/xonobics_logo.png" alt="Xonobics" class="w-8 h-8 object-contain" />
-            </div>
-            <!-- Text -->
-            <div class="hidden sm:block">
-              <div :class="[
-                'text-lg font-bold leading-tight',
-                isDark ? 'text-white' : 'text-gray-900'
-              ]">
-                Xonobics
-              </div>
-              <div :class="[
-                'text-xs',
-                isDark ? 'text-gray-400' : 'text-gray-500'
-              ]">
-                HR Management System
-              </div>
+              <img src="/images/xonobics_logo.png" alt="Xonobics" class="w-10 h-10 object-contain" />
             </div>
           </div>
 

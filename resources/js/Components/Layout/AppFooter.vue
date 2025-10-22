@@ -8,19 +8,9 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
       <div class="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
         <!-- Left side - Logo -->
-        <div class="flex items-center space-x-2">
-          <div class="flex items-center space-x-1">
-            <!-- Xonobics Logo -->
-            <img src="/images/xonobics_logo.png" alt="Xonobics" class="w-6 h-6 object-contain" />
-          </div>
-          <div>
-            <div :class="[
-              'text-sm font-semibold',
-              isDark ? 'text-white' : 'text-gray-900'
-            ]">
-              Xonobics
-            </div>
-          </div>
+        <div class="flex items-center">
+          <!-- Xonobics Logo -->
+          <img src="/images/xonobics_logo.png" alt="Xonobics" class="w-8 h-8 object-contain" />
         </div>
 
         <!-- Center - Links -->
