@@ -57,7 +57,7 @@
               class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
               required />
             <p class="mt-1 text-xs text-gray-500">
-              Must be after clock-in time. For previous days, can be set to end of that day.
+              Must be after clock-in time. Can be set to any time up to now.
             </p>
           </div>
 
@@ -186,26 +186,8 @@
   }
 
   const getMaxDateTime = () => {
-    if (!props.attendance?.clock_in) return getCurrentDateTime()
-
-    try {
-      const clockInDate = new Date(props.attendance.clock_in)
-      const attendanceDate = new Date(clockInDate.getFullYear(), clockInDate.getMonth(), clockInDate.getDate())
-      const today = new Date()
-      const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate())
-
-      // If attendance is from today, max is current time
-      if (attendanceDate.getTime() === todayDate.getTime()) {
-        return getCurrentDateTime()
-      }
-
-      // If attendance is from previous day, max is end of that day (23:59)
-      const endOfAttendanceDay = new Date(attendanceDate)
-      endOfAttendanceDay.setHours(23, 59, 59, 999)
-      return endOfAttendanceDay.toISOString().slice(0, 16)
-    } catch (error) {
-      return getCurrentDateTime()
-    }
+    // Always allow clock out up to current time, regardless of attendance date
+    return getCurrentDateTime()
   }
 
   const handleBackdropClick = () => {
@@ -243,29 +225,8 @@
   }
 
   onMounted(() => {
-    // Set default clock out time based on attendance date
-    if (!props.attendance?.clock_in) {
-      clockOutTime.value = getCurrentDateTime()
-      return
-    }
-
-    try {
-      const clockInDate = new Date(props.attendance.clock_in)
-      const attendanceDate = new Date(clockInDate.getFullYear(), clockInDate.getMonth(), clockInDate.getDate())
-      const today = new Date()
-      const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate())
-
-      // If attendance is from today, default to current time
-      if (attendanceDate.getTime() === todayDate.getTime()) {
-        clockOutTime.value = getCurrentDateTime()
-      } else {
-        // If attendance is from previous day, default to end of that day
-        const endOfAttendanceDay = new Date(attendanceDate)
-        endOfAttendanceDay.setHours(17, 0, 0, 0) // Default to 5 PM
-        clockOutTime.value = endOfAttendanceDay.toISOString().slice(0, 16)
-      }
-    } catch (error) {
-      clockOutTime.value = getCurrentDateTime()
-    }
+    // Set default clock out time to current time
+    // User can adjust as needed
+    clockOutTime.value = getCurrentDateTime()
   })
 </script>
