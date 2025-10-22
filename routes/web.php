@@ -86,6 +86,7 @@ Route::middleware('auth')->group(function () {
     Route::post('attendances/clock-out', [AttendanceController::class, 'clockOut'])->name('attendances.clockOut');
     Route::get('attendances/{attendance}/export', [AttendanceController::class, 'export'])->name('attendances.export');
     Route::post('attendances/bulk-export', [AttendanceController::class, 'bulkExport'])->name('attendances.bulkExport');
+    Route::post('attendances/manual-clock-out', [AttendanceController::class, 'manualClockOut'])->name('attendances.manual-clock-out');
     
     Route::get('api/csrf-token', function () {
         return response()->json(['csrf_token' => csrf_token()]);

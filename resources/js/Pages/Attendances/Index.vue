@@ -276,6 +276,13 @@
                       >
                         Edit
                       </Link>
+                      <button
+                        v-if="canManualClockOut(attendance)"
+                        @click="openManualClockOut(attendance)"
+                        class="text-orange-600 hover:text-orange-900"
+                      >
+                        Clock Out
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -359,6 +366,14 @@
         </div>
       </div>
     </PageLayout>
+
+    <!-- Manual Clock Out Modal -->
+    <ManualClockOutModal
+      :show="showManualClockOutModal"
+      :attendance="selectedAttendance"
+      @close="closeManualClockOut"
+      @success="handleManualClockOutSuccess"
+    />
   </AuthenticatedLayout>
 </template>
 
@@ -368,6 +383,7 @@ import { Link, router } from '@inertiajs/vue3';
 import { debounce } from 'lodash';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import PageLayout from '@/Components/Layout/PageLayout.vue';
+import ManualClockOutModal from '@/Components/Attendance/ManualClockOutModal.vue';
 import { useAuth } from '@/composables/useAuth.js';
 import axios from 'axios';
 
@@ -400,6 +416,8 @@ const { hasAnyRole } = useAuth();
 // Refs
 const showFilters = ref(true);
 const loading = ref(false);
+const showManualClockOutModal = ref(false);
+const selectedAttendance = ref(null);
 const localFilters = ref({
   employee_id: props.queryParams.employee_id || '',
   status: props.queryParams.status || '',
@@ -579,6 +597,42 @@ const resetFilters = () => {
     search: ''
   };
   applyFilters();
+};
+
+// Manual Clock Out functions
+const canManualClockOut = (attendance) => {
+  // Show manual clock out button if:
+  // 1. User is Admin/HR OR it's their own attendance
+  // 2. Attendance is clocked in (not clocked out)
+  // 3. Clock out is missing
+  const isOwnAttendance = !isAdminOrHR.value && attendance.employee?.user?.id === props.auth?.user?.id;
+  const canAccess = isAdminOrHR.value || isOwnAttendance;
+  
+  return canAccess && 
+         (attendance.status === 'clocked_in' || attendance.status === 'on_break') && 
+         !attendance.clock_out;
+};
+
+const openManualClockOut = (attendance) => {
+  selectedAttendance.value = attendance;
+  showManualClockOutModal.value = true;
+};
+
+const closeManualClockOut = () => {
+  showManualClockOutModal.value = false;
+  selectedAttendance.value = null;
+};
+
+const handleManualClockOutSuccess = (response) => {
+  // Refresh the page to show updated data
+  router.reload({
+    preserveState: true,
+    preserveScroll: true,
+    onSuccess: () => {
+      // Show success message
+      alert(response.message || 'Manual clock out completed successfully');
+    }
+  });
 };
 </script>
 

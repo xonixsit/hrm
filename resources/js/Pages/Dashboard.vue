@@ -64,8 +64,8 @@
 
       <!-- Performance Metrics -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <UnifiedStatsCard :value="(adminStats.attendanceRate || 0) + '%'" label="Attendance Rate" description="This month"
-          :icon="ClockIcon" variant="info" :trend="adminStats.attendanceTrend || 0" 
+        <UnifiedStatsCard :value="(adminStats.attendanceRate || 0) + '%'" label="Attendance Rate"
+          description="This month" :icon="ClockIcon" variant="info" :trend="adminStats.attendanceTrend || 0"
           :status="(adminStats.attendanceRate || 0) > 95 ? 'excellent' : (adminStats.attendanceRate || 0) > 85 ? 'good' : 'warning'"
           :statusText="(adminStats.attendanceRate || 0) > 95 ? 'Excellent' : (adminStats.attendanceRate || 0) > 85 ? 'Good' : 'Needs Attention'"
           route="attendance.reports" :loading="loading" />
@@ -82,8 +82,8 @@
           :statusText="(adminStats.successfulCalls || 0) > 100 ? 'Excellent' : (adminStats.successfulCalls || 0) > 50 ? 'Good' : 'Needs Focus'"
           route="work-reports.leaderboard" :loading="loading" />
 
-        <UnifiedStatsCard :value="(adminStats.avgPerformanceScore || 0) + '%'" label="Avg Performance" description="Team score"
-          :icon="AcademicCapIcon" variant="info" :trend="adminStats.performanceTrend || 0"
+        <UnifiedStatsCard :value="(adminStats.avgPerformanceScore || 0) + '%'" label="Avg Performance"
+          description="Team score" :icon="AcademicCapIcon" variant="info" :trend="adminStats.performanceTrend || 0"
           :status="(adminStats.avgPerformanceScore || 0) > 85 ? 'excellent' : (adminStats.avgPerformanceScore || 0) > 70 ? 'good' : 'warning'"
           :statusText="(adminStats.avgPerformanceScore || 0) > 85 ? 'Excellent' : (adminStats.avgPerformanceScore || 0) > 70 ? 'Good' : 'Needs Improvement'"
           route="performance.reports" :loading="loading" />
@@ -274,15 +274,15 @@
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Main Dashboard Content -->
         <div class="lg:col-span-3">
-          <EmployeeDashboard :stats="employeeStats" :personal-activities="personalActivities"
-            :my-tasks="myTasks" :recent-feedback="recentFeedback" :clocked-in="clockedIn"
-            :current-attendance="currentAttendance" :birthday-notifications="birthdayData" :loading="loading" @clock-in-out="handleClockInOut"
+          <EmployeeDashboard :stats="employeeStats" :personal-activities="personalActivities" :my-tasks="myTasks"
+            :recent-feedback="recentFeedback" :clocked-in="clockedIn" :current-attendance="currentAttendance"
+            :birthday-notifications="birthdayData" :loading="loading" @clock-in-out="handleClockInOut"
             @action="handleAction" @toggle-task="handleToggleTask" @view-task="handleViewTask" />
         </div>
-        
+
         <!-- Right Sidebar -->
         <!-- <div class="lg:col-span-1 space-y-4">  -->
-          <!-- Additional widgets can be added here -->
+        <!-- Additional widgets can be added here -->
         <!-- </div> -->
       </div>
     </div>
@@ -343,12 +343,8 @@
     </div>
 
     <!-- Birthday Popup -->
-    <BirthdayPopup
-      v-if="birthdayData?.currentUserBirthday"
-      :show="showBirthdayPopup"
-      :employee="birthdayData.currentUserBirthday"
-      @close="closeBirthdayPopup"
-    />
+    <BirthdayPopup v-if="birthdayData?.currentUserBirthday" :show="showBirthdayPopup"
+      :employee="birthdayData.currentUserBirthday" @close="closeBirthdayPopup" />
   </AuthenticatedLayout>
 </template>
 
@@ -402,7 +398,7 @@
     CogIcon,
     ArrowTrendingUpIcon
   } from '@heroicons/vue/24/outline';
-  
+
   import { CakeIcon } from '@heroicons/vue/24/solid';
 
   // Props
@@ -625,7 +621,7 @@
       // Get current status first
       const statusResponse = await axios.get('/api/attendance/current');
       const currentStatus = statusResponse.data;
-      
+
       // Determine action based on current status
       let endpoint;
       if (!currentStatus.clocked_in) {
@@ -633,7 +629,7 @@
       } else {
         endpoint = '/api/attendance/clock-out';
       }
-      
+
       const response = await axios.post(endpoint, {}, {
         headers: {
           'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
@@ -641,7 +637,7 @@
           'Content-Type': 'application/json'
         }
       });
-      
+
       if (response.data.success) {
         // Update local state immediately without full refresh
         await updateAttendanceStatus();
@@ -676,7 +672,7 @@
       // Handle break actions
       try {
         loading.value = true;
-        
+
         if (action.type === 'take-break') {
           await axios.post('/api/attendance/break-start', {}, {
             headers: {
@@ -694,7 +690,7 @@
             }
           });
         }
-        
+
         // Update attendance status after break action
         await updateAttendanceStatus();
       } catch (error) {

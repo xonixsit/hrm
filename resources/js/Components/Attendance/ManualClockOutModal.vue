@@ -238,4 +238,3 @@ onMounted(() => {
   clockOutTime.value = getCurrentDateTime()
 })
 </script>
-</template>
