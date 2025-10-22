@@ -48,7 +48,7 @@ class TimesheetRejectedNotification extends Notification implements ShouldQueue
             ->line('Please review the feedback and resubmit your timesheet if necessary.')
             ->action('View Timesheet', route('timesheets.show', $this->timesheet->id))
             ->line('If you have any questions, please contact your manager.')
-            ->salutation(new HtmlString('Regards,<br>E-Tax Planner'));
+            ->salutation(new HtmlString('Regards,<br>Xonobics'));
     }
 
     /**

@@ -60,7 +60,7 @@ class LeaveApprovedNotification extends Notification implements ShouldQueue
             })
             ->action('View Leave Details', $leaveUrl)
             ->line('Enjoy your time off!')
-            ->salutation(new HtmlString('Regards,<br>E-Tax Planner'));
+            ->salutation(new HtmlString('Regards,<br>Xonobics'));
     }
 
     /**

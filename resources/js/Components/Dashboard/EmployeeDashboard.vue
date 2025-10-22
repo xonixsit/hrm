@@ -296,7 +296,7 @@
 
       <!-- Right Column -->
       <div class="right-column">
-        <!-- Birthday Notifications -->test
+        <!-- Birthday Notifications -->
         <BirthdayNotifications :todays-birthdays="birthdayNotifications.todaysBirthdays"
           :upcoming-birthdays="birthdayNotifications.upcomingBirthdays" :stats="birthdayNotifications.stats" />
 

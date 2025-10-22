@@ -26,7 +26,7 @@ try {
 // Import accessibility initialization
 import { initializeAccessibility } from '@/utils/accessibility.js';
 
-const appName = import.meta.env.VITE_APP_NAME || 'E-Tax Planner';
+const appName = import.meta.env.VITE_APP_NAME || 'Xonobics';
 
 // Enhanced error handling for Inertia responses
 const handleInertiaError = (error, context = 'unknown') => {

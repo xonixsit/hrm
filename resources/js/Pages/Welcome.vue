@@ -18,7 +18,7 @@ defineProps({
     },
 });
 
-const appName = 'E-Tax Planner';
+const appName = 'Xonobics';
 
 function handleImageError() {
     document.getElementById('screenshot-container')?.classList.add('!hidden');

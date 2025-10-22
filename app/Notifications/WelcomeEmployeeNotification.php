@@ -38,7 +38,7 @@ class WelcomeEmployeeNotification extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('Welcome to ' . config('app.name', 'E-Tax Planner'))
+            ->subject('Welcome to ' . config('app.name', 'Xonobics'))
             ->greeting('Hello ' . $notifiable->name . '!')
             // Add BCC to sender mailbox for delivery confirmation
             ->bcc(config('mail.from.address'), config('mail.from.name'))
@@ -54,6 +54,6 @@ class WelcomeEmployeeNotification extends Notification
             ->action('Login to Your Account', route('login'))
             ->line('If you have any questions, please contact your manager or the HR department.')
             ->line('We look forward to working with you!')
-            ->salutation(new HtmlString('Regards,<br>E-Tax Planner'));
+            ->salutation(new HtmlString('Regards,<br>Xonobics'));
     }
 }

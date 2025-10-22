@@ -56,6 +56,6 @@ class LeaveApplicationConfirmationNotification extends Notification implements S
             ->line('Reason: ' . ($this->leave->reason ?? 'No reason provided'))
             ->line('You will be notified once your leave request is reviewed.')
             ->action('View Leave Request', $leaveUrl)
-            ->salutation(new HtmlString('Regards,<br>E-Tax Planner'));
+            ->salutation(new HtmlString('Regards,<br>Xonobics'));
     }
 }

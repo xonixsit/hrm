@@ -57,6 +57,6 @@ class LeaveAppliedNotification extends Notification implements ShouldQueue
             ->line('Dates: ' . $this->leave->from_date->format('M d, Y') . ' to ' . $this->leave->to_date->format('M d, Y'))
             ->line('Reason: ' . ($this->leave->reason ?? 'No reason provided'))
             ->action('View Leave Request', $leaveUrl)
-            ->salutation(new HtmlString('Regards,<br>E-Tax Planner'));
+            ->salutation(new HtmlString('Regards,<br>Xonobics'));
     }
 }

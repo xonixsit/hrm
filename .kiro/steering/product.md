@@ -1,6 +1,6 @@
 # Product Overview
 
-E-Tax Planner is a comprehensive Human Resource Management (HRM) system built with Laravel and Vue.js. The application provides employee management, competency assessments, attendance tracking, leave management, and performance analytics.
+Xonobics is a comprehensive Human Resource Management (HRM) system built with Laravel and Vue.js. The application provides employee management, competency assessments, attendance tracking, leave management, and performance analytics.
 
 ## Core Features
 

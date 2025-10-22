@@ -38,9 +38,9 @@ try {
     
     echo "   Sending test email to: {$testEmail}\n";
     
-    Mail::raw('This is a test email from the E-Tax Planner system. If you receive this, your email configuration is working correctly!', function ($message) use ($testEmail) {
+    Mail::raw('This is a test email from the Xonobics system. If you receive this, your email configuration is working correctly!', function ($message) use ($testEmail) {
         $message->to($testEmail)
-                ->subject('Test Email - E-Tax Planner Configuration');
+                ->subject('Test Email - Xonobics Configuration');
     });
     
     echo "   ✓ Email sent successfully!\n";
