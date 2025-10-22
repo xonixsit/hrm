@@ -812,7 +812,7 @@ class AttendanceController extends Controller
     {
         $validated = $request->validate([
             'attendance_id' => 'required|exists:attendances,id',
-            'clock_out_time' => 'required|date|after:clock_in_time',
+            'clock_out_time' => 'required|date',
             'reason' => 'required|string|min:10|max:500'
         ]);
 
@@ -864,20 +864,20 @@ class AttendanceController extends Controller
         }
 
         // Calculate work minutes up to the manual clock out time
-        $workMinutes = $attendance->clock_in->diffInMinutes($clockOutTime);
-        $breakMinutes = $attendance->total_break_minutes ?? 0;
-        $actualWorkMinutes = max(0, $workMinutes - $breakMinutes);
+        $workMinutes = $attendance->calculateWorkMinutes();
 
         // Update attendance record
         $attendance->update([
             'clock_out' => $clockOutTime,
-            'work_minutes' => $actualWorkMinutes,
             'status' => 'clocked_out',
             'notes' => ($attendance->notes ? $attendance->notes . "\n\n" : '') . 
                       "Manual clock out by " . Auth::user()->name . " at " . now()->format('Y-m-d H:i:s') . 
                       "\nReason: " . $validated['reason'],
             'edited_by' => Auth::id()
         ]);
+
+        // Recalculate work minutes after setting clock_out
+        $attendance->update(['work_minutes' => $attendance->calculateWorkMinutes()]);
 
         // Synchronize with timesheet
         $timesheetResult = $this->syncAttendanceToTimesheet($attendance);
