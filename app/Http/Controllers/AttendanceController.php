@@ -134,6 +134,14 @@ class AttendanceController extends Controller
     public function clockIn(Request $request)
     {
         $employee = Auth::user()->employee;
+        
+        if (!$employee) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No employee record found for this user.'
+            ], 400);
+        }
+        
         $today = now()->format('Y-m-d');
         
         // Check if already clocked in today
@@ -193,6 +201,14 @@ class AttendanceController extends Controller
     public function clockOut(Request $request)
     {
         $employee = Auth::user()->employee;
+        
+        if (!$employee) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No employee record found for this user.'
+            ], 400);
+        }
+        
         $today = now()->format('Y-m-d');
         
         $attendance = Attendance::where('employee_id', $employee->id)
@@ -249,6 +265,14 @@ class AttendanceController extends Controller
     public function startBreak(Request $request)
     {
         $employee = Auth::user()->employee;
+        
+        if (!$employee) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No employee record found for this user.'
+            ], 400);
+        }
+        
         $today = now()->format('Y-m-d');
         
         $attendance = Attendance::where('employee_id', $employee->id)
@@ -286,6 +310,14 @@ class AttendanceController extends Controller
     public function endBreak(Request $request)
     {
         $employee = Auth::user()->employee;
+        
+        if (!$employee) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No employee record found for this user.'
+            ], 400);
+        }
+        
         $today = now()->format('Y-m-d');
         
         // Look for attendance record that is either on_break or clocked_in with on_break flag
@@ -324,6 +356,16 @@ class AttendanceController extends Controller
     public function getCurrentStatus(Request $request)
     {
         $employee = Auth::user()->employee;
+        
+        if (!$employee) {
+            return response()->json([
+                'clocked_in' => false,
+                'on_break' => false,
+                'clock_in_time' => null,
+                'error' => 'No employee record found for this user.'
+            ]);
+        }
+        
         $today = now()->format('Y-m-d');
         
         $attendance = Attendance::where('employee_id', $employee->id)
@@ -845,12 +887,12 @@ class AttendanceController extends Controller
 
         // Validate clock out time is not in the future (but allow end of previous days)
         $attendanceDate = \Carbon\Carbon::parse($attendance->date);
-        $maxAllowedTime = $attendanceDate->isToday() ? now() : $attendanceDate->endOfDay();
+        $maxAllowedTime = $attendanceDate->isToday() ? now() : $attendanceDate->copy()->endOfDay();
         
         if ($clockOutTime->gt($maxAllowedTime)) {
             $message = $attendanceDate->isToday() 
                 ? 'Clock out time cannot be in the future.'
-                : 'Clock out time cannot be later than end of the attendance day.';
+                : 'Clock out time cannot be later than end of the attendance day (' . $attendanceDate->format('Y-m-d') . ' 23:59).';
             
             return response()->json([
                 'success' => false,

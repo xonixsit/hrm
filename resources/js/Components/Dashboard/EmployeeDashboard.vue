@@ -432,7 +432,7 @@
             :upcoming-birthdays="birthdayNotifications.upcomingBirthdays" :stats="birthdayNotifications.stats" />
         </div>
       </div>
-    </div>""
+    </div>
   </div>
 </template>
 

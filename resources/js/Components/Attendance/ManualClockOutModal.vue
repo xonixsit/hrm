@@ -201,7 +201,7 @@
 
       // If attendance is from previous day, max is end of that day (23:59)
       const endOfAttendanceDay = new Date(attendanceDate)
-      endOfAttendanceDay.setHours(23, 59, 0, 0)
+      endOfAttendanceDay.setHours(23, 59, 59, 999)
       return endOfAttendanceDay.toISOString().slice(0, 16)
     } catch (error) {
       return getCurrentDateTime()
