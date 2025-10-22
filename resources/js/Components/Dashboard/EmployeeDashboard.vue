@@ -285,76 +285,86 @@
 
           <!-- Activity Cards -->
           <div class="activity-cards">
-            <!-- Feedback Card -->
-            <div class="activity-card feedback-card">
+            <!-- Communication Skills Card -->
+            <div class="activity-card communication-card">
               <div class="card-header">
-                <div class="card-icon feedback-icon">
-                  <StarIcon class="w-5 h-5" />
+                <div class="card-icon communication-icon">
+                  <ChatBubbleLeftIcon class="w-5 h-5" />
                 </div>
                 <div class="card-info">
-                  <h4 class="card-title">Recent Feedback</h4>
-                  <p class="card-count">{{ recentFeedback.length }} new</p>
+                  <h4 class="card-title">Communication Tips</h4>
+                  <p class="card-count">Daily insights</p>
                 </div>
               </div>
 
-              <div v-if="recentFeedback.length === 0" class="empty-content">
-                <div class="empty-icon">
-                  <ChatBubbleLeftIcon class="w-8 h-8" />
+              <div class="tips-content">
+                <div class="tip-item">
+                  <div class="tip-icon">
+                    <svg class="w-4 h-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                      <path
+                        d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
+                    </svg>
+                  </div>
+                  <span class="tip-text">Active listening builds trust with clients</span>
                 </div>
-                <p class="empty-text">No recent feedback</p>
-                <p class="empty-subtext">Your feedback will appear here</p>
-              </div>
-
-              <div v-else class="feedback-preview">
-                <div v-for="feedback in recentFeedback.slice(0, 2)" :key="feedback.id" class="feedback-item-compact">
-                  <div class="feedback-avatar">
-                    <div class="avatar-circle">
-                      {{ feedback.from.name.charAt(0).toUpperCase() }}
-                    </div>
+                <div class="tip-item">
+                  <div class="tip-icon">
+                    <svg class="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd"
+                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                        clip-rule="evenodd" />
+                    </svg>
                   </div>
-                  <div class="feedback-content">
-                    <div class="feedback-meta">
-                      <span class="feedback-author">{{ feedback.from.name }}</span>
-                      <div class="rating-compact">
-                        <StarIcon v-for="star in feedback.rating" :key="star"
-                          class="w-3 h-3 text-yellow-400 fill-current" />
-                      </div>
-                    </div>
-                    <p class="feedback-text">{{ feedback.comment.substring(0, 60) }}...</p>
+                  <span class="tip-text">Ask open-ended questions to understand needs</span>
+                </div>
+                <div class="tip-item">
+                  <div class="tip-icon">
+                    <svg class="w-4 h-4 text-purple-500" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd"
+                        d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"
+                        clip-rule="evenodd" />
+                    </svg>
                   </div>
+                  <span class="tip-text">Show empathy for client concerns</span>
                 </div>
               </div>
             </div>
 
-            <!-- Tasks/Goals Card -->
-            <div class="activity-card tasks-card">
+            <!-- Call Flow Card -->
+            <div class="activity-card callflow-card">
               <div class="card-header">
-                <div class="card-icon tasks-icon">
-                  <CheckCircleIcon class="w-5 h-5" />
+                <div class="card-icon callflow-icon">
+                  <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
+                  </svg>
                 </div>
                 <div class="card-info">
-                  <h4 class="card-title">Today's Goals</h4>
-                  <p class="card-count">3 of 5 completed</p>
+                  <h4 class="card-title">Call Process</h4>
+                  <p class="card-count">Best practices</p>
                 </div>
               </div>
 
-              <div class="goals-progress">
-                <div class="progress-bar">
-                  <div class="progress-fill" style="width: 60%"></div>
+              <div class="process-steps">
+                <div class="step-item">
+                  <div class="step-number">1</div>
+                  <span class="step-text">Warm greeting & introduction</span>
                 </div>
-                <div class="goals-list">
-                  <div class="goal-item completed">
-                    <CheckCircleIcon class="w-4 h-4 text-green-500" />
-                    <span>Complete morning standup</span>
-                  </div>
-                  <div class="goal-item completed">
-                    <CheckCircleIcon class="w-4 h-4 text-green-500" />
-                    <span>Review project documentation</span>
-                  </div>
-                  <div class="goal-item pending">
-                    <div class="w-4 h-4 border-2 border-gray-300 rounded-full"></div>
-                    <span>Submit weekly report</span>
-                  </div>
+                <div class="step-item">
+                  <div class="step-number">2</div>
+                  <span class="step-text">Identify client needs & pain points</span>
+                </div>
+                <div class="step-item">
+                  <div class="step-number">3</div>
+                  <span class="step-text">Present tailored tax solutions</span>
+                </div>
+                <div class="step-item">
+                  <div class="step-number">4</div>
+                  <span class="step-text">Handle objections professionally</span>
+                </div>
+                <div class="step-item">
+                  <div class="step-number">5</div>
+                  <span class="step-text">Close with clear next steps</span>
                 </div>
               </div>
             </div>
@@ -1810,11 +1820,11 @@
     @apply w-10 h-10 rounded-lg flex items-center justify-center;
   }
 
-  .feedback-icon {
-    @apply bg-yellow-100 text-yellow-600;
+  .communication-icon {
+    @apply bg-blue-100 text-blue-600;
   }
 
-  .tasks-icon {
+  .callflow-icon {
     @apply bg-green-100 text-green-600;
   }
 
@@ -1973,5 +1983,39 @@
 
   .tool-item {
     @apply flex items-center space-x-2 text-sm text-gray-600 hover:text-gray-900 cursor-pointer transition-colors;
+  }
+
+  /* Communication Tips Styles */
+  .tips-content {
+    @apply space-y-3;
+  }
+
+  .tip-item {
+    @apply flex items-center space-x-3 p-2 bg-gray-50 rounded-lg;
+  }
+
+  .tip-icon {
+    @apply flex-shrink-0;
+  }
+
+  .tip-text {
+    @apply text-sm text-gray-700;
+  }
+
+  /* Call Flow Styles */
+  .process-steps {
+    @apply space-y-2;
+  }
+
+  .step-item {
+    @apply flex items-center space-x-3 p-2 bg-gray-50 rounded-lg;
+  }
+
+  .step-number {
+    @apply w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0;
+  }
+
+  .step-text {
+    @apply text-sm text-gray-700;
   }
 </style>

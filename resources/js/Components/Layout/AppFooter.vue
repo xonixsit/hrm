@@ -10,7 +10,7 @@
         <!-- Left side - Logo -->
         <div class="flex items-center">
           <!-- Xonobics Logo -->
-          <img src="/images/xonobics_logo.png" alt="Xonobics" class="h-10 w-auto object-contain" />
+          <img src="/images/xonobics_logo.png" alt="Xonobics" class="h-6 w-auto object-contain" />
         </div>
 
         <!-- Center - Links -->
