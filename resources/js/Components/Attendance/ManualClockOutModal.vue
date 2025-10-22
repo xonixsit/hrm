@@ -225,26 +225,22 @@
   }
 
   onMounted(() => {
-    // Set default clock out time based on attendance date
-    if (!props.attendance?.clock_in) {
+    // Set default clock out time to the attendance date
+    if (!props.attendance?.date) {
       clockOutTime.value = getCurrentDateTime()
       return
     }
 
     try {
-      const clockInDate = new Date(props.attendance.clock_in)
-      const attendanceDate = new Date(props.attendance.date || clockInDate)
-      
-      // Set default time to same date as attendance, but at a reasonable hour (5 PM)
-      const defaultClockOut = new Date(attendanceDate)
-      defaultClockOut.setHours(17, 0, 0, 0) // 5:00 PM on the attendance date
+      // Use the attendance date field directly
+      const attendanceDate = new Date(props.attendance.date + 'T17:00:00') // 5 PM on attendance date
       
       // If the default time would be in the future, use current time instead
       const now = new Date()
-      if (defaultClockOut > now) {
+      if (attendanceDate > now) {
         clockOutTime.value = getCurrentDateTime()
       } else {
-        clockOutTime.value = defaultClockOut.toISOString().slice(0, 16)
+        clockOutTime.value = attendanceDate.toISOString().slice(0, 16)
       }
     } catch (error) {
       clockOutTime.value = getCurrentDateTime()
