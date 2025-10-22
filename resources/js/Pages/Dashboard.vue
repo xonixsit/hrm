@@ -348,7 +348,6 @@
       :show="showBirthdayPopup"
       :employee="birthdayData.currentUserBirthday"
       @close="closeBirthdayPopup"
-      @send-wishes="sendBirthdayWishes"
     />
   </AuthenticatedLayout>
 </template>
@@ -737,23 +736,7 @@
     showBirthdayPopup.value = false;
   };
 
-  const sendBirthdayWishes = async (employee) => {
-    try {
-      await axios.post('/api/birthday/send-wishes', {
-        employee_id: employee.id
-      }, {
-        headers: {
-          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      console.log('Birthday wishes sent successfully!');
-    } catch (error) {
-      console.error('Failed to send birthday wishes:', error);
-    }
-  };
+
 
   // Check for birthday popup on component mount
   import { onMounted } from 'vue';

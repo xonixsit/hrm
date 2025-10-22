@@ -100,9 +100,10 @@ Route::middleware('auth')->group(function () {
         Route::get('current', [AttendanceController::class, 'getCurrentStatus']);
     });
 
-    // Birthday API routes
+    // Birthday API routes (for future use)
     Route::prefix('api/birthday')->group(function () {
-        Route::post('send-wishes', [App\Http\Controllers\BirthdayController::class, 'sendWishes']);
+        Route::get('status', [App\Http\Controllers\BirthdayController::class, 'getCurrentUserBirthdayStatus']);
+        Route::get('stats', [App\Http\Controllers\BirthdayController::class, 'getBirthdayStats']);
     });
     Route::resource('leaves', LeaveController::class)->parameters(['leaves' => 'leave']);
     Route::post('leaves/{leave}/approve', [LeaveController::class, 'approve'])->name('leaves.approve');

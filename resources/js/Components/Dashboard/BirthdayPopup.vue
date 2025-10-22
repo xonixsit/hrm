@@ -20,9 +20,13 @@
         <div class="bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 p-6 text-center text-white relative">
           <div class="absolute inset-0 bg-gradient-to-r from-pink-400/20 via-purple-400/20 to-indigo-400/20"></div>
           <div class="relative z-10">
+            <!-- Xonobics Logo -->
+            <div class="flex justify-center mb-3">
+              <ApplicationLogo class="h-8 w-auto filter brightness-0 invert" />
+            </div>
             <div class="text-6xl mb-2 animate-bounce">🎉</div>
             <h2 class="text-2xl font-bold mb-1">Happy Birthday!</h2>
-            <p class="text-pink-100 text-sm">Wishing you a wonderful day</p>
+            <p class="text-pink-100 text-sm">Wishing you a wonderful day from the Xonobics team</p>
           </div>
         </div>
 
@@ -53,24 +57,27 @@
 
           <div class="text-gray-600 text-sm mb-6 leading-relaxed">
             Hope your special day is filled with happiness, laughter, and all your favorite things! 
-            Thank you for being such an amazing part of our team. 🌟
+            Thank you for being such an amazing part of our Xonobics family. 🌟
           </div>
 
-          <!-- Action Buttons -->
-          <div class="flex space-x-3">
-            <button
-              @click="sendWishes"
-              :disabled="wishSent"
-              class="flex-1 bg-gradient-to-r from-pink-500 to-purple-500 text-white px-4 py-2 rounded-lg font-medium hover:from-pink-600 hover:to-purple-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <span v-if="!wishSent">Send Birthday Wishes 💌</span>
-              <span v-else>Wishes Sent! ✨</span>
-            </button>
+          <!-- Birthday Message from Xonobics -->
+          <div class="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-4 mb-6 border border-blue-100">
+            <div class="flex items-center justify-center space-x-2 text-blue-700 mb-2">
+              <span class="text-lg">🎊</span>
+              <span class="font-semibold text-sm">From all of us at Xonobics</span>
+            </div>
+            <p class="text-xs text-blue-600 text-center">
+              May this new year of your life bring you joy, success, and wonderful memories!
+            </p>
+          </div>
+
+          <!-- Close Button -->
+          <div class="flex justify-center">
             <button
               @click="close"
-              class="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium transition-colors duration-200"
+              class="bg-gradient-to-r from-pink-500 to-purple-500 text-white px-8 py-3 rounded-lg font-medium hover:from-pink-600 hover:to-purple-600 transition-all duration-200 shadow-lg"
             >
-              Close
+              Thank You! 🎉
             </button>
           </div>
         </div>
@@ -87,6 +94,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, nextTick } from 'vue'
+import ApplicationLogo from '@/Components/ApplicationLogo.vue'
 
 const props = defineProps({
   show: {
@@ -99,10 +107,9 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['close', 'send-wishes'])
+const emit = defineEmits(['close'])
 
 const confettiCanvas = ref(null)
-const wishSent = ref(false)
 let confettiAnimation = null
 
 const getInitials = (name) => {
@@ -121,15 +128,7 @@ const close = () => {
   emit('close')
 }
 
-const sendWishes = () => {
-  wishSent.value = true
-  emit('send-wishes', props.employee)
-  
-  // Trigger extra confetti burst
-  if (confettiAnimation) {
-    confettiAnimation.burst()
-  }
-}
+
 
 // Confetti Animation Class
 class ConfettiAnimation {

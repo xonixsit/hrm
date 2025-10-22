@@ -18,59 +18,7 @@ class BirthdayController extends Controller
         $this->birthdayService = $birthdayService;
     }
 
-    /**
-     * Send birthday wishes (triggered from popup)
-     */
-    public function sendWishes(Request $request): JsonResponse
-    {
-        try {
-            $request->validate([
-                'employee_id' => 'required|exists:employees,id'
-            ]);
 
-            $employee = Employee::with('user')->findOrFail($request->employee_id);
-            
-            // Verify the employee has a birthday today
-            $todaysBirthdays = $this->birthdayService->getTodaysBirthdays();
-            $hasBirthdayToday = $todaysBirthdays->contains('id', $employee->id);
-            
-            if (!$hasBirthdayToday) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Employee does not have a birthday today'
-                ], 400);
-            }
-
-            // Log the birthday wish interaction
-            Log::info("Birthday wishes sent via popup", [
-                'employee_id' => $employee->id,
-                'employee_name' => $employee->user->name,
-                'sent_by' => Auth::user()->name,
-                'sent_by_id' => Auth::id(),
-            ]);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Birthday wishes sent successfully!',
-                'employee' => [
-                    'name' => $employee->user->name,
-                    'job_title' => $employee->job_title
-                ]
-            ]);
-
-        } catch (\Exception $e) {
-            Log::error("Failed to send birthday wishes", [
-                'error' => $e->getMessage(),
-                'employee_id' => $request->employee_id ?? null,
-                'user_id' => Auth::id()
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to send birthday wishes'
-            ], 500);
-        }
-    }
 
     /**
      * Get current user's birthday status
