@@ -843,11 +843,18 @@ class AttendanceController extends Controller
             ], 400);
         }
 
-        // Validate clock out time is not in the future
-        if ($clockOutTime->gt(now())) {
+        // Validate clock out time is not in the future (but allow end of previous days)
+        $attendanceDate = \Carbon\Carbon::parse($attendance->date);
+        $maxAllowedTime = $attendanceDate->isToday() ? now() : $attendanceDate->endOfDay();
+        
+        if ($clockOutTime->gt($maxAllowedTime)) {
+            $message = $attendanceDate->isToday() 
+                ? 'Clock out time cannot be in the future.'
+                : 'Clock out time cannot be later than end of the attendance day.';
+            
             return response()->json([
                 'success' => false,
-                'message' => 'Clock out time cannot be in the future.'
+                'message' => $message
             ], 400);
         }
 

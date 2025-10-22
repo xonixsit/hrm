@@ -411,7 +411,7 @@ const props = defineProps({
   }
 });
 
-const { hasAnyRole } = useAuth();
+const { hasAnyRole, user } = useAuth();
 
 // Refs
 const showFilters = ref(true);
@@ -605,12 +605,27 @@ const canManualClockOut = (attendance) => {
   // 1. User is Admin/HR OR it's their own attendance
   // 2. Attendance is clocked in (not clocked out)
   // 3. Clock out is missing
-  const isOwnAttendance = !isAdminOrHR.value && attendance.employee?.user?.id === props.auth?.user?.id;
+  const isOwnAttendance = attendance.employee?.user?.id === user.value?.id;
   const canAccess = isAdminOrHR.value || isOwnAttendance;
+  const hasNoClockOut = !attendance.clock_out || attendance.clock_out === null || attendance.clock_out === '-';
+  const isActiveStatus = attendance.status === 'clocked_in' || attendance.status === 'on_break';
   
-  return canAccess && 
-         (attendance.status === 'clocked_in' || attendance.status === 'on_break') && 
-         !attendance.clock_out;
+  // Debug logging
+  console.log('Manual clock out check:', {
+    attendanceId: attendance.id,
+    employeeUserId: attendance.employee?.user?.id,
+    currentUserId: user.value?.id,
+    isOwnAttendance,
+    isAdminOrHR: isAdminOrHR.value,
+    canAccess,
+    status: attendance.status,
+    clockOut: attendance.clock_out,
+    hasNoClockOut,
+    isActiveStatus,
+    finalResult: canAccess && isActiveStatus && hasNoClockOut
+  });
+  
+  return canAccess && isActiveStatus && hasNoClockOut;
 };
 
 const openManualClockOut = (attendance) => {
