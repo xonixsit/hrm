@@ -1,0 +1,1 @@
+import{_ as s}from"./_plugin-vue_export-helper-DlAUqK2U.js";import{c,o as e,a as t}from"./app-1K2o6keA.js";const a={},n={class:"logo-container"};function r(i,o){return e(),c("div",n,o[0]||(o[0]=[t("img",{src:"/images/xonobics_logo.png",alt:"Xonobics",class:"h-16 w-auto object-contain"},null,-1)]))}const d=s(a,[["render",r],["__scopeId","data-v-d69eabd3"]]);export{d as A};

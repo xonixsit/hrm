@@ -1,6 +1,6 @@
 <template>
     <div class="logo-container">
-        <img src="/images/xonobics_logo.png" alt="Xonobics" class="w-12 h-12 object-contain" />
+        <img src="/images/xonobics_logo.png" alt="Xonobics" class="h-16 w-auto object-contain" />
     </div>
 </template>
 

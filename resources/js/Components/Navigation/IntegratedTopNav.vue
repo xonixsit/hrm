@@ -19,7 +19,7 @@
           <div class="flex items-center space-x-3">
             <div class="flex items-center">
               <!-- Xonobics Logo -->
-              <img src="/images/xonobics_logo.png" alt="Xonobics" class="w-10 h-10 object-contain" />
+              <img src="/images/xonobics_logo.png" alt="Xonobics" class="h-12 w-auto object-contain" />
             </div>
           </div>
 
