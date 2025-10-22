@@ -169,7 +169,7 @@
   }
 
   const getMinDateTime = () => {
-    if (!props.attendance.clock_in) return ''
+    if (!props.attendance?.clock_in) return ''
 
     try {
       const clockIn = new Date(props.attendance.clock_in)
@@ -186,7 +186,7 @@
   }
 
   const getMaxDateTime = () => {
-    if (!props.attendance.clock_in) return getCurrentDateTime()
+    if (!props.attendance?.clock_in) return getCurrentDateTime()
 
     try {
       const clockInDate = new Date(props.attendance.clock_in)
@@ -244,7 +244,7 @@
 
   onMounted(() => {
     // Set default clock out time based on attendance date
-    if (!props.attendance.clock_in) {
+    if (!props.attendance?.clock_in) {
       clockOutTime.value = getCurrentDateTime()
       return
     }
