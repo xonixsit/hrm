@@ -273,21 +273,17 @@
     <div v-else class="employee-layout">
       <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
         <!-- Main Dashboard Content -->
-        <!-- <div class="lg:col-span-3"> -->
+        <div class="lg:col-span-3">
           <EmployeeDashboard :stats="employeeStats" :personal-activities="personalActivities"
             :my-tasks="myTasks" :recent-feedback="recentFeedback" :clocked-in="clockedIn"
             :current-attendance="currentAttendance" :loading="loading" @clock-in-out="handleClockInOut"
             @action="handleAction" @toggle-task="handleToggleTask" @view-task="handleViewTask" />
-        <!-- </div> -->
+        </div>
         
         <!-- Right Sidebar -->
-        <!-- <div class="lg:col-span-1 space-y-4"> -->
-          <!-- Birthday Notifications -->
-          <!-- <UnifiedCard title="Team Birthdays" description="Celebrate with your colleagues" :icon="CakeIcon" iconVariant="primary">
-            <BirthdayNotifications :todays-birthdays="birthdayData.todaysBirthdays"
-              :upcoming-birthdays="birthdayData.upcomingBirthdays" :stats="birthdayData.stats" />
-          </UnifiedCard> -->
-        <!-- </div> -->
+        <div class="lg:col-span-1 space-y-4"> 
+          <!-- Additional widgets can be added here -->
+        </div>
       </div>
     </div>
 
