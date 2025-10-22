@@ -2,7 +2,7 @@
 
 namespace App\Mail;
 
-use App\Models\LeaveRequest;
+use App\Models\Leave;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
@@ -15,7 +15,7 @@ class LeaveRequestSubmitted extends Mailable implements ShouldQueue
     use Queueable, SerializesModels;
 
     public function __construct(
-        public LeaveRequest $leaveRequest
+        public Leave $leaveRequest
     ) {}
 
     public function envelope(): Envelope
