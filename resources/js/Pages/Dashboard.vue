@@ -273,12 +273,12 @@
     <div v-else class="employee-layout">
       <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
         <!-- Main Dashboard Content -->
-        <div class="lg:col-span-3">
+        <!-- <div class="lg:col-span-3"> -->
           <EmployeeDashboard :stats="employeeStats" :personal-activities="personalActivities"
             :my-tasks="myTasks" :recent-feedback="recentFeedback" :clocked-in="clockedIn"
             :current-attendance="currentAttendance" :loading="loading" @clock-in-out="handleClockInOut"
             @action="handleAction" @toggle-task="handleToggleTask" @view-task="handleViewTask" />
-        </div>
+        <!-- </div> -->
         
         <!-- Right Sidebar -->
         <!-- <div class="lg:col-span-1 space-y-4"> -->
