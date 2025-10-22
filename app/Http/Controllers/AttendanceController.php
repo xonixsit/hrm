@@ -144,17 +144,46 @@ class AttendanceController extends Controller
         
         $today = now()->format('Y-m-d');
         
-        // Check if already clocked in today
+        // Check if already clocked in today - use database lock to prevent race conditions
         $existing = Attendance::where('employee_id', $employee->id)
             ->whereDate('date', $today)
+            ->lockForUpdate()
             ->first();
             
-        if ($existing && $existing->status !== 'clocked_out') {
+        if ($existing) {
+            // If record exists and is not clocked out, prevent new clock-in
+            if ($existing->status !== 'clocked_out') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Already clocked in today.',
+                    'attendance' => $existing
+                ], 400);
+            }
+            
+            // If clocked out, update the existing record instead of creating new one
+            $existing->update([
+                'clock_in' => now(),
+                'clock_out' => null,
+                'status' => 'clocked_in',
+                'on_break' => false,
+                'total_break_minutes' => 0,
+                'break_sessions' => [],
+                'work_minutes' => null,
+                'ip_address' => $request->ip(),
+                'location' => $request->input('location'),
+                'latitude' => $request->input('latitude'),
+                'longitude' => $request->input('longitude'),
+                'location_verified' => $request->input('latitude') && $request->input('longitude')
+            ]);
+            
+            $this->logAudit('Attendance Clock In', 'Re-clocked in for employee ID: ' . $employee->id);
+            
             return response()->json([
-                'success' => false,
-                'message' => 'Already clocked in today.',
-                'attendance' => $existing
-            ], 400);
+                'success' => true,
+                'message' => 'Clocked in successfully.',
+                'attendance' => $existing->fresh(),
+                'clock_in_time' => $existing->clock_in->toISOString()
+            ]);
         }
 
         // Validate location if provided
