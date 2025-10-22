@@ -147,10 +147,9 @@ class AttendanceController extends Controller
         // Check if already clocked in today
         $existing = Attendance::where('employee_id', $employee->id)
             ->whereDate('date', $today)
-            ->where('status', '!=', 'clocked_out')
             ->first();
             
-        if ($existing) {
+        if ($existing && $existing->status !== 'clocked_out') {
             return response()->json([
                 'success' => false,
                 'message' => 'Already clocked in today.',
