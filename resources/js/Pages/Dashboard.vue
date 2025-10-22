@@ -271,7 +271,7 @@
 
     <!-- Employee Dashboard Layout -->
     <div v-else class="employee-layout">
-      <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Main Dashboard Content -->
         <div class="lg:col-span-3">
           <EmployeeDashboard :stats="employeeStats" :personal-activities="personalActivities"
@@ -281,9 +281,9 @@
         </div>
         
         <!-- Right Sidebar -->
-        <div class="lg:col-span-1 space-y-4"> 
+        <!-- <div class="lg:col-span-1 space-y-4">  -->
           <!-- Additional widgets can be added here -->
-        </div>
+        <!-- </div> -->
       </div>
     </div>
 

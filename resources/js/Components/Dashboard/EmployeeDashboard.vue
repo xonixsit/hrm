@@ -264,8 +264,6 @@
     <div class="dashboard-content">
       <!-- Left Column -->
       <div class="left-column">
-
-
         <!-- Recent Feedback -->
         <DashboardWidget title="Recent Feedback" :loading="loading" class="recent-feedback">
           <div v-if="recentFeedback.length === 0" class="empty-state">
@@ -298,15 +296,13 @@
 
       <!-- Right Column -->
       <div class="right-column">
-        <!-- Birthday Notifications -->
+        <!-- Birthday Notifications -->test
         <BirthdayNotifications :todays-birthdays="birthdayNotifications.todaysBirthdays"
           :upcoming-birthdays="birthdayNotifications.upcomingBirthdays" :stats="birthdayNotifications.stats" />
 
         <!-- Employee Quick Actions -->
         <QuickActions :actions="employeeQuickActions" title="Quick Actions" :max-visible="6"
           @action="handleQuickAction" />
-
-
       </div>
     </div>
   </div>
@@ -1483,8 +1479,7 @@
       @apply text-lg;
     }
   }
-</style>
-<style scoped>
+
   /* Journey & Growth Styles */
   .journey-overview-section {
     @apply space-y-6 mb-8;
