@@ -198,10 +198,10 @@ class DashboardController extends Controller
                     ->whereIn('status', ['draft', 'submitted'])
                     ->count();
                 $myCompletedAssessments = CompetencyAssessment::where('employee_id', $employeeId)
-                    ->where('status', 'approved')
+                    ->where('status', 'submitted')
                     ->count();
                 $myAverageRating = CompetencyAssessment::where('employee_id', $employeeId)
-                    ->where('status', 'approved')
+                    ->where('status', 'submitted')
                     ->whereNotNull('rating')
                     ->avg('rating');
 
@@ -869,18 +869,28 @@ class DashboardController extends Controller
     {
         try {
             $currentMonth = now()->format('Y-m');
-            $workingDaysInMonth = now()->daysInMonth - (now()->weekendsInMonth * 2); // Exclude weekends
+            
+            // Calculate working days in current month (excluding weekends)
+            $startOfMonth = now()->startOfMonth();
+            $endOfMonth = now()->endOfMonth();
+            $workingDays = 0;
+            
+            for ($date = $startOfMonth->copy(); $date->lte($endOfMonth); $date->addDay()) {
+                if (!$date->isWeekend()) {
+                    $workingDays++;
+                }
+            }
             
             $attendedDays = DB::table('attendances')
                 ->where('employee_id', $employeeId)
                 ->whereRaw("DATE_FORMAT(date, '%Y-%m') = ?", [$currentMonth])
                 ->count();
             
-            if ($workingDaysInMonth <= 0) {
+            if ($workingDays <= 0) {
                 return 0;
             }
             
-            return round(($attendedDays / $workingDaysInMonth) * 100, 1);
+            return round(($attendedDays / $workingDays) * 100, 1);
         } catch (\Exception $e) {
             return 0;
         }
