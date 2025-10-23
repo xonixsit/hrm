@@ -231,7 +231,7 @@ export function useTheme() {
     const detected = detectSystemTheme();
     systemTheme.value = detected;
     saveThemePreference(detected, true);
-    applyTheme(detected);
+    cleanupAndApplyTheme(detected);
   };
 
   const toggleTheme = () => {

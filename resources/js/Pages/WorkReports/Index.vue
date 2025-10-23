@@ -7,7 +7,7 @@
       :actions="headerActions"
     >
       <!-- Performance Dashboard -->
-      <div class="space-y-6">
+      <div class="space-y-8">
         <!-- Filter Controls with Proper Information Architecture -->
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 space-y-6">
           
