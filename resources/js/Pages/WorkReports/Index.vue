@@ -222,7 +222,7 @@
         </div>
 
         <!-- Performance Overview Cards (Individual/Default View) -->
-        <div v-if="performanceStats && (performanceViewMode === 'individual' || !performanceViewMode)" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div v-if="performanceStats && (performanceViewMode === 'individual' || !performanceViewMode)" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-8">
           <!-- Total Calls Card -->
           <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div class="flex items-center justify-between">
