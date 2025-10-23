@@ -616,6 +616,15 @@ class AttendanceController extends Controller
             'notes' => 'nullable|string',
         ]);
 
+        // Convert datetime strings to proper timezone
+        if (isset($validated['clock_in'])) {
+            $validated['clock_in'] = \Carbon\Carbon::parse($validated['clock_in'])->setTimezone(config('app.timezone'));
+        }
+        
+        if (isset($validated['clock_out'])) {
+            $validated['clock_out'] = \Carbon\Carbon::parse($validated['clock_out'])->setTimezone(config('app.timezone'));
+        }
+
         $attendance->update($validated);
         $attendance->edited_by = Auth::id();
         $attendance->save();
