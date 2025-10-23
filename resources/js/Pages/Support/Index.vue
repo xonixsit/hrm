@@ -2,9 +2,28 @@
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center justify-between">
-                <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                    My Support Requests
-                </h2>
+                <div>
+                    <nav class="flex mb-2" aria-label="Breadcrumb">
+                        <ol class="inline-flex items-center space-x-1 md:space-x-3">
+                            <li class="inline-flex items-center">
+                                <Link :href="route('dashboard')" class="text-gray-500 hover:text-gray-700">
+                                    Dashboard
+                                </Link>
+                            </li>
+                            <li aria-current="page">
+                                <div class="flex items-center">
+                                    <svg class="w-4 h-4 text-gray-400 mx-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <span class="text-gray-700">Support</span>
+                                </div>
+                            </li>
+                        </ol>
+                    </nav>
+                    <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+                        {{ isAdmin ? 'All Support Requests' : 'My Support Requests' }}
+                    </h2>
+                </div>
                 <Link :href="route('support.create')" class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700">
                     New Request
                 </Link>
@@ -55,6 +74,12 @@
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                                                 </svg>
                                                 {{ categories[request.category] }}
+                                            </span>
+                                            <span v-if="isAdmin" class="flex items-center">
+                                                <svg class="mr-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                                </svg>
+                                                {{ request.user.name }}
                                             </span>
                                             <span class="flex items-center">
                                                 <svg class="mr-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -133,6 +158,7 @@ const props = defineProps({
     categories: Object,
     priorities: Object,
     statuses: Object,
+    isAdmin: Boolean,
 })
 
 const getStatusBadgeClass = (status) => {

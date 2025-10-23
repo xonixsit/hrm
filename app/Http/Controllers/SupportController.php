@@ -45,23 +45,28 @@ class SupportController extends Controller
 
     public function index()
     {
-        $supportRequests = SupportRequest::with('user')
-            ->where('user_id', auth()->id())
-            ->orderBy('created_at', 'desc')
-            ->paginate(10);
+        $query = SupportRequest::with('user')->orderBy('created_at', 'desc');
+        
+        // Admin can see all requests, regular users only their own
+        if (!auth()->user()->hasRole('Admin')) {
+            $query->where('user_id', auth()->id());
+        }
+        
+        $supportRequests = $query->paginate(10);
 
         return Inertia::render('Support/Index', [
             'supportRequests' => $supportRequests,
             'categories' => SupportRequest::getCategories(),
             'priorities' => SupportRequest::getPriorities(),
             'statuses' => SupportRequest::getStatuses(),
+            'isAdmin' => auth()->user()->hasRole('Admin'),
         ]);
     }
 
     public function show(SupportRequest $supportRequest)
     {
-        // Ensure user can only view their own support requests
-        if ($supportRequest->user_id !== auth()->id()) {
+        // Admin can view all requests, regular users only their own
+        if (!auth()->user()->hasRole('Admin') && $supportRequest->user_id !== auth()->id()) {
             abort(403);
         }
 
@@ -70,6 +75,7 @@ class SupportController extends Controller
             'categories' => SupportRequest::getCategories(),
             'priorities' => SupportRequest::getPriorities(),
             'statuses' => SupportRequest::getStatuses(),
+            'isAdmin' => auth()->user()->hasRole('Admin'),
         ]);
     }
 }
