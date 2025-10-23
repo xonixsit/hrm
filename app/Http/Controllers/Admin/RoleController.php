@@ -102,6 +102,13 @@ class RoleController extends Controller
                 ]);
             }
         }
+        
+        // Prevent removing Employee role if it's the only role (everyone should be an employee by default)
+        if ($role === 'Employee' && $user->roles->count() === 1) {
+            return back()->withErrors([
+                'role' => 'Cannot remove Employee role - it is the default role for all users.'
+            ]);
+        }
 
         $user->removeRole($role);
 

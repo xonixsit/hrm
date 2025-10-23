@@ -92,7 +92,7 @@
                   </span>
                 </td>
                 <td class="px-6 py-4 text-sm font-medium">
-                  <div class="flex flex-col space-y-3 w-44">
+                  <div class="w-44">
                     <!-- Role Assignment Section -->
                     <div class="space-y-2">
                       <label class="block text-xs font-medium text-neutral-700">
@@ -106,43 +106,6 @@
                         class="w-full"
                         @update:model-value="(role) => assignRole(user.id, role)"
                       />
-                    </div>
-                    
-                    <!-- Remove Role Section -->
-                    <div class="space-y-2">
-                      <label class="block text-xs font-medium text-neutral-700">
-                        Remove Role
-                      </label>
-                      
-                      <!-- Remove Button (when user has role and can remove) -->
-                      <BaseButton
-                        v-if="user.roles.length > 0 && canRemoveRole(user)"
-                        variant="outline"
-                        size="sm"
-                        @click="removeRole(user.id, user.roles[0])"
-                        class="text-red-600 hover:text-red-700 border-red-200 hover:border-red-300 hover:bg-red-50 w-full justify-center transition-colors duration-150"
-                      >
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                        </svg>
-                        Remove {{ user.roles[0] }}
-                      </BaseButton>
-                      
-                      <!-- Self-removal warning -->
-                      <div 
-                        v-else-if="user.roles.length > 0 && !canRemoveRole(user)"
-                        class="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md p-2 text-center font-medium"
-                      >
-                        {{ getSelfRemovalMessage(user) }}
-                      </div>
-                      
-                      <!-- No Role State -->
-                      <div 
-                        v-else
-                        class="text-xs text-neutral-500 bg-neutral-50 border border-neutral-200 rounded-md p-2 text-center"
-                      >
-                        No role assigned
-                      </div>
                     </div>
                   </div>
                 </td>
@@ -247,20 +210,7 @@ function getRoleBadgeClass(role) {
   return classes[role] || 'bg-neutral-100 text-neutral-800'
 }
 
-function canRemoveRole(user) {
-  // Prevent admin from removing their own admin role
-  if (user.id === props.currentUserId && user.roles.includes('Admin')) {
-    return false
-  }
-  return true
-}
 
-function getSelfRemovalMessage(user) {
-  if (user.id === props.currentUserId && user.roles.includes('Admin')) {
-    return 'Cannot remove your own Admin role'
-  }
-  return ''
-}
 
 function assignRole(userId, role) {
   if (!role) return
@@ -296,38 +246,7 @@ function assignRole(userId, role) {
   })
 }
 
-function removeRole(userId, role) {
-  if (!role) return
-  
-  // Check if user is trying to remove their own admin role
-  if (userId === props.currentUserId && role === 'Admin') {
-    alert('You cannot remove your own Admin role.')
-    return
-  }
-  
-  const user = props.users.find(u => u.id === userId)
-  const userName = user?.name || 'this user'
-  
-  if (confirm(`Are you sure you want to remove the ${role} role from ${userName}?`)) {
-    router.post(route('admin.roles.remove', userId), {
-      role: role
-    }, {
-      preserveScroll: true,
-      onSuccess: () => {
-        // Success message will be handled by the backend
-      },
-      onError: (errors) => {
-        console.error('Error removing role:', errors)
-        // Show user-friendly error message
-        if (errors.message) {
-          alert(errors.message)
-        } else {
-          alert('Failed to remove role. Please try again.')
-        }
-      }
-    })
-  }
-}
+
 </script>
 
 <style scoped>

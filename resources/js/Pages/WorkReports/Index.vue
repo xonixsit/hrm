@@ -158,7 +158,7 @@
 
 
         <!-- Employee Comparison View -->
-        <div v-if="performanceViewMode === 'comparison' && selectedEmployeesForComparison.length > 0" class="space-y-6">
+        <div v-if="performanceViewMode === 'comparison' && selectedEmployeesForComparison.length > 0" class="space-y-4">
           <!-- Employee Selection for Comparison -->
           <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <h3 class="text-lg font-semibold text-gray-900 mb-4">Select Employees to Compare</h3>
@@ -182,7 +182,7 @@
           </div>
 
           <!-- Comparison Charts -->
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <h3 class="text-lg font-semibold text-gray-900 mb-4">Calls Comparison</h3>
               <div class="space-y-4">
@@ -222,7 +222,7 @@
         </div>
 
         <!-- Performance Overview Cards (Individual/Default View) -->
-        <div v-if="performanceStats && (performanceViewMode === 'individual' || !performanceViewMode)" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div v-if="performanceStats && (performanceViewMode === 'individual' || !performanceViewMode)" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <!-- Total Calls Card -->
           <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div class="flex items-center justify-between">
@@ -299,7 +299,7 @@
         </div>
 
         <!-- Performance Charts -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <!-- Call Performance Chart -->
           <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div class="flex items-center justify-between mb-4">

@@ -223,7 +223,7 @@ export function useTheme() {
     currentTheme.value = theme;
     isSystemThemePreferred.value = false;
     saveThemePreference(theme, false);
-    applyTheme(theme);
+    cleanupAndApplyTheme(theme);
   };
 
   const useSystemTheme = () => {
@@ -418,50 +418,38 @@ export function useTheme() {
   // Enhanced theme system initialization with robust error recovery
   const initializeTheme = () => {
     try {
-      // FORCE LIGHT THEME ALWAYS - No exceptions
-      currentTheme.value = 'light';
-      systemTheme.value = 'light';
-      isSystemThemePreferred.value = false;
+      // Load saved theme preference
+      const preference = loadThemePreference();
       
-      // Clear any existing theme preferences to prevent conflicts
-      try {
-        localStorage.removeItem('theme-preference');
-      } catch (storageError) {
-        console.warn('Failed to clear theme preference:', storageError);
+      // Initialize system theme detection
+      systemTheme.value = detectSystemTheme();
+      
+      // Apply saved preferences or defaults
+      if (preference.useSystem) {
+        isSystemThemePreferred.value = true;
+        currentTheme.value = systemTheme.value;
+      } else {
+        isSystemThemePreferred.value = false;
+        currentTheme.value = preference.theme;
       }
       
-      // Force light theme application with aggressive cleanup
-      if (typeof document !== 'undefined') {
-        const root = document.documentElement;
-        
-        // Remove ALL possible theme classes
-        root.classList.remove('theme-light', 'theme-dark', 'dark', 'light');
-        
-        // Force light theme class
-        root.classList.add('theme-light');
-        
-        // Force light theme CSS custom properties
-        root.style.setProperty('--color-neutral-50', '#fafafa');
-        root.style.setProperty('--color-neutral-100', '#f5f5f5');
-        root.style.setProperty('--color-neutral-200', '#e5e5e5');
-        root.style.setProperty('--color-neutral-300', '#d4d4d4');
-        root.style.setProperty('--color-neutral-400', '#a3a3a3');
-        root.style.setProperty('--color-neutral-500', '#6b7280');
-        root.style.setProperty('--color-neutral-600', '#525252');
-        root.style.setProperty('--color-neutral-700', '#404040');
-        root.style.setProperty('--color-neutral-800', '#262626');
-        root.style.setProperty('--color-neutral-900', '#111827');
-        root.style.setProperty('--color-neutral-950', '#0a0a0a');
-      }
+      // Apply the theme to DOM
+      cleanupAndApplyTheme(activeTheme.value);
       
-      // Don't setup any listeners that could change the theme
-      return null;
+      // Setup system theme change listener
+      const cleanup = setupSystemThemeListener();
+      
+      return cleanup;
       
     } catch (error) {
       console.error('Theme initialization failed:', error);
       
       // Emergency fallback: force light theme directly on DOM
       try {
+        currentTheme.value = 'light';
+        systemTheme.value = 'light';
+        isSystemThemePreferred.value = false;
+        
         if (typeof document !== 'undefined') {
           document.documentElement.classList.add('theme-light');
           document.documentElement.classList.remove('theme-dark', 'dark');
