@@ -27,7 +27,7 @@
           ]">
             Support
           </Link>
-          <Link :href="route('privacy-policy')" :class="[
+          <Link :href="route('legal.privacy')" :class="[
             'text-sm hover:underline transition-colors',
             isDark ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'
           ]">

@@ -141,7 +141,7 @@
                 </div>
             </main>
         </div>
-Test2
+
         <!-- App Footer -->
         <AppFooter />
     </div>
