@@ -383,7 +383,8 @@ const moreNavItems = computed(() => {
     const items = [
       { route: 'work-reports.index', label: 'Work Reports', category: 'regular' },
       { route: 'work-reports.leaderboard', label: 'Leaderboard', category: 'regular' },
-      { route: 'feedbacks.index', label: 'Feedback', category: 'regular' }
+      { route: 'feedbacks.index', label: 'Feedback', category: 'regular' },
+      { route: 'support.index', label: 'Support', category: 'regular' }
     ]
 
     const isManagement = rolesArray.includes('Admin') || rolesArray.includes('Manager') || rolesArray.includes('HR')
@@ -410,7 +411,8 @@ const moreNavItems = computed(() => {
     return [
       { route: 'work-reports.index', label: 'Work Reports', category: 'regular' },
       { route: 'work-reports.leaderboard', label: 'Leaderboard', category: 'regular' },
-      { route: 'feedbacks.index', label: 'Feedback', category: 'regular' }
+      { route: 'feedbacks.index', label: 'Feedback', category: 'regular' },
+      { route: 'support.index', label: 'Support', category: 'regular' }
     ]
   }
 })
