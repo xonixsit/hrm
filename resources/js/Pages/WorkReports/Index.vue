@@ -299,7 +299,7 @@
         </div>
 
         <!-- Performance Charts -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-8">
           <!-- Call Performance Chart -->
           <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div class="flex items-center justify-between mb-4">
@@ -464,7 +464,7 @@
         </div>
 
         <!-- Recent Reports Table (Compact View) -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 mt-8">
           <div class="px-6 py-4 border-b border-gray-200">
             <div class="flex items-center justify-between">
               <h3 class="text-lg font-semibold text-gray-900">Recent Reports</h3>

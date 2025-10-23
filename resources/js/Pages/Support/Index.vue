@@ -60,14 +60,14 @@
                                             <option value="status">Status</option>
                                             <option value="category">Category</option>
                                         </select>
-                                        <button @click="sortOrder = sortOrder === 'asc' ? 'desc' : 'asc'"
+                                        <!-- <button @click="sortOrder = sortOrder === 'asc' ? 'desc' : 'asc'"
                                             class="p-1 text-gray-500 hover:text-gray-700">
                                             <svg class="w-4 h-4" :class="{ 'rotate-180': sortOrder === 'desc' }"
                                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                     d="M5 15l7-7 7 7"></path>
                                             </svg>
-                                        </button>
+                                        </button> -->
                                     </div>
                                 </div>
                             </div>
