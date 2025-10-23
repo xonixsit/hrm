@@ -232,15 +232,18 @@
     }
 
     try {
-      // Use the attendance date field directly
-      const attendanceDate = new Date(props.attendance.date + 'T17:00:00') // 5 PM on attendance date
+      // Get the attendance date and set a reasonable default time (5 PM)
+      const attendanceDate = props.attendance.date
+      const defaultTime = `${attendanceDate}T17:00` // 5 PM on attendance date
       
       // If the default time would be in the future, use current time instead
+      const defaultDateTime = new Date(defaultTime)
       const now = new Date()
-      if (attendanceDate > now) {
+      
+      if (defaultDateTime > now) {
         clockOutTime.value = getCurrentDateTime()
       } else {
-        clockOutTime.value = attendanceDate.toISOString().slice(0, 16)
+        clockOutTime.value = defaultTime
       }
     } catch (error) {
       clockOutTime.value = getCurrentDateTime()

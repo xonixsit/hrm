@@ -244,17 +244,12 @@ console.log('Attendance data received:', props.attendance);
 const formatDateTimeForInput = (dateTimeString) => {
   if (!dateTimeString) return '';
   
-  const date = new Date(dateTimeString);
-  if (isNaN(date.getTime())) return '';
+  // Parse the datetime string and format it for datetime-local input
+  // This preserves the original date/time without timezone conversion
+  const isoString = dateTimeString.includes('T') ? dateTimeString : dateTimeString + 'T00:00:00';
+  const dateOnly = isoString.substring(0, 16); // Get YYYY-MM-DDTHH:MM format
   
-  // Format as YYYY-MM-DDTHH:MM for datetime-local input
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  const hours = String(date.getHours()).padStart(2, '0');
-  const minutes = String(date.getMinutes()).padStart(2, '0');
-  
-  return `${year}-${month}-${day}T${hours}:${minutes}`;
+  return dateOnly;
 };
 
 const formatDate = (dateString) => {

@@ -616,13 +616,13 @@ class AttendanceController extends Controller
             'notes' => 'nullable|string',
         ]);
 
-        // Convert datetime strings to proper timezone
+        // Parse datetime strings as local time (no timezone conversion)
         if (isset($validated['clock_in'])) {
-            $validated['clock_in'] = \Carbon\Carbon::parse($validated['clock_in'])->setTimezone(config('app.timezone'));
+            $validated['clock_in'] = \Carbon\Carbon::createFromFormat('Y-m-d\TH:i', $validated['clock_in'], config('app.timezone'));
         }
         
         if (isset($validated['clock_out'])) {
-            $validated['clock_out'] = \Carbon\Carbon::parse($validated['clock_out'])->setTimezone(config('app.timezone'));
+            $validated['clock_out'] = \Carbon\Carbon::createFromFormat('Y-m-d\TH:i', $validated['clock_out'], config('app.timezone'));
         }
 
         $attendance->update($validated);
@@ -913,8 +913,8 @@ class AttendanceController extends Controller
             ], 400);
         }
 
-        // Validate clock out time is after clock in
-        $clockOutTime = \Carbon\Carbon::parse($validated['clock_out_time']);
+        // Parse clock out time as local time (no timezone conversion)
+        $clockOutTime = \Carbon\Carbon::createFromFormat('Y-m-d\TH:i', $validated['clock_out_time'], config('app.timezone'));
         if ($clockOutTime->lte($attendance->clock_in)) {
             return response()->json([
                 'success' => false,
