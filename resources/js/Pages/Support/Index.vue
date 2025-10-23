@@ -249,7 +249,7 @@
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>""
+                                    </div>
                                 </div>
                             </div>
 
@@ -307,7 +307,7 @@
                                 </div>
                             </div>
 
-                            <!-- Original Pagination -->""
+                            <!-- Original Pagination -->
                             <div v-if="supportRequests.links && supportRequests.links.length > 3"
                                 class="mt-6 flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6">
                                 <div class="flex flex-1 justify-between sm:hidden">
