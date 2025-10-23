@@ -489,6 +489,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/support/create', [App\Http\Controllers\SupportController::class, 'create'])->name('support.create');
     Route::post('/support', [App\Http\Controllers\SupportController::class, 'store'])->name('support.store');
     Route::get('/support/{supportRequest}', [App\Http\Controllers\SupportController::class, 'show'])->name('support.show');
+    Route::patch('/support/{supportRequest}/status', [App\Http\Controllers\SupportController::class, 'updateStatus'])->name('support.update-status');
     
     // Legal pages routes
     Route::get('/legal/disclaimer', function () {

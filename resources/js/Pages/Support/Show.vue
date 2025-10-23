@@ -159,7 +159,46 @@
                                                 <dd class="text-sm text-gray-900">{{
                                                     formatDate(supportRequest.resolved_at) }}</dd>
                                             </div>
+                                            <div v-if="isAdmin && supportRequest.admin_notes">
+                                                <dt class="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                                                    Admin Notes</dt>
+                                                <dd class="text-sm text-gray-900 whitespace-pre-wrap">{{ supportRequest.admin_notes }}</dd>
+                                            </div>
                                         </dl>
+                                    </div>
+
+                                    <!-- Admin Actions (Admin Only) -->
+                                    <div v-if="isAdmin" class="bg-orange-50 rounded-lg p-4 mb-6">
+                                        <h4 class="font-semibold text-orange-900 mb-3">Admin Actions</h4>
+                                        <form @submit.prevent="updateStatus" class="space-y-4">
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                                    Update Status
+                                                </label>
+                                                <select v-model="statusForm.status"
+                                                    class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
+                                                    <option v-for="(label, value) in statuses" :key="value" :value="value">
+                                                        {{ label }}
+                                                    </option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                                    Admin Notes (Optional)
+                                                </label>
+                                                <textarea v-model="statusForm.admin_notes"
+                                                    class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                                                    rows="3" placeholder="Add internal notes about this status change..."></textarea>
+                                            </div>
+                                            <button type="submit" :disabled="statusForm.processing"
+                                                class="w-full inline-flex justify-center items-center px-4 py-2 bg-orange-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-orange-700 disabled:opacity-50">
+                                                <svg v-if="statusForm.processing" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                </svg>
+                                                {{ statusForm.processing ? 'Updating...' : 'Update Status' }}
+                                            </button>
+                                        </form>
                                     </div>
 
                                     <!-- Contact Info -->
@@ -213,8 +252,8 @@
 </template>
 
 <script setup>
-    import { computed } from 'vue'
-    import { Link } from '@inertiajs/vue3'
+    import { computed, reactive } from 'vue'
+    import { Link, useForm } from '@inertiajs/vue3'
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
     import PageLayout from '@/Components/Layout/PageLayout.vue'
 
@@ -225,6 +264,21 @@
         statuses: Object,
         isAdmin: Boolean,
     })
+
+    // Status update form for admins
+    const statusForm = useForm({
+        status: props.supportRequest.status,
+        admin_notes: props.supportRequest.admin_notes || '',
+    })
+
+    const updateStatus = () => {
+        statusForm.patch(route('support.update-status', props.supportRequest.id), {
+            preserveScroll: true,
+            onSuccess: () => {
+                // Form will be reset automatically by Inertia
+            }
+        })
+    }
 
     const breadcrumbs = computed(() => [
         { label: 'Dashboard', href: route('dashboard') },

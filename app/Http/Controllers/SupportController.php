@@ -78,4 +78,25 @@ class SupportController extends Controller
             'isAdmin' => auth()->user()->hasRole('Admin'),
         ]);
     }
+
+    public function updateStatus(Request $request, SupportRequest $supportRequest)
+    {
+        // Only admins can update status
+        if (!auth()->user()->hasRole('Admin')) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'status' => 'required|string|in:' . implode(',', array_keys(SupportRequest::getStatuses())),
+            'admin_notes' => 'nullable|string|max:1000',
+        ]);
+
+        $supportRequest->update([
+            'status' => $validated['status'],
+            'admin_notes' => $validated['admin_notes'] ?? $supportRequest->admin_notes,
+            'resolved_at' => $validated['status'] === 'resolved' ? now() : null,
+        ]);
+
+        return redirect()->back()->with('success', 'Support request status updated successfully.');
+    }
 }

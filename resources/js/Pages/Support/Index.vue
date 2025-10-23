@@ -52,9 +52,9 @@
                                             supportRequests.data.length }} requests</span>
                                     </div>
                                     <div class="flex items-center space-x-2">
-                                        <label class="text-sm text-gray-700">Sort by:</label>
+                                        <label class="text-sm text-gray-700 whitespace-nowrap">Sort by:</label>
                                         <select v-model="sortBy"
-                                            class="px-2 py-1 border border-gray-300 rounded text-sm">
+                                            class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-[140px]">
                                             <option value="created_at">Date Created</option>
                                             <option value="priority">Priority</option>
                                             <option value="status">Status</option>
@@ -217,6 +217,15 @@
                                                                     d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                                                             </svg>
                                                             {{ request.user.name }}
+                                                        </span>
+                                                        <span v-if="isAdmin && request.admin_notes" class="flex items-center text-orange-600">
+                                                            <svg class="mr-1 h-3 w-3" fill="none" stroke="currentColor"
+                                                                viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                                    stroke-width="2"
+                                                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                            </svg>
+                                                            Admin Notes
                                                         </span>
                                                         <span class="flex items-center">
                                                             <svg class="mr-1 h-3 w-3" fill="none" stroke="currentColor"

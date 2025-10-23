@@ -19,6 +19,7 @@ class SupportRequest extends Model
         'status',
         'attachments',
         'resolved_at',
+        'admin_notes',
     ];
 
     protected $casts = [
