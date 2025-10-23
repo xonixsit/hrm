@@ -115,8 +115,9 @@ class Attendance extends Model
         }
 
         try {
-            $clockIn = \Carbon\Carbon::parse($this->clock_in);
-            $endTime = $this->clock_out ? \Carbon\Carbon::parse($this->clock_out) : now();
+            // Use the already cast datetime attributes to avoid timezone conversion
+            $clockIn = $this->clock_in;
+            $endTime = $this->clock_out ?: now();
             
             $totalMinutes = $clockIn->diffInMinutes($endTime);
             
@@ -125,8 +126,7 @@ class Attendance extends Model
             
             // Add current break if on break
             if ($this->on_break && $this->current_break_start) {
-                $breakStart = \Carbon\Carbon::parse($this->current_break_start);
-                $breakMinutes += $breakStart->diffInMinutes(now());
+                $breakMinutes += $this->current_break_start->diffInMinutes(now());
             }
 
             return max(0, $totalMinutes - $breakMinutes);
@@ -151,9 +151,9 @@ class Attendance extends Model
         }
         
         try {
-            // Simple calculation using Carbon
-            $clockIn = \Carbon\Carbon::parse($this->clock_in);
-            $clockOut = \Carbon\Carbon::parse($this->clock_out);
+            // Use the already cast datetime attributes to avoid timezone conversion
+            $clockIn = $this->clock_in;
+            $clockOut = $this->clock_out;
             
             // Check if clock_out is before clock_in (invalid data)
             if ($clockOut->lt($clockIn)) {
