@@ -267,7 +267,7 @@
 
         <!-- Recent Activity & Feedback Section -->
         <div class="activity-section">
-          <div class="section-header">
+          <!-- <div class="section-header">
             <div class="header-content">
               <ChatBubbleLeftIcon class="w-6 h-6 text-blue-600" />
               <div>
@@ -281,7 +281,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
               </svg>
             </button>
-          </div>
+          </div> -->
 
           <!-- Activity Cards -->
           <div class="activity-cards">
@@ -1614,7 +1614,7 @@
   }
 
   .section-title {
-    @apply text-lg font-semibold text-gray-900 mb-4;
+    @apply text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4;
   }
 
   /* Journey Milestones */
@@ -1746,7 +1746,7 @@
   }
 
   .progress-label {
-    @apply text-sm font-medium text-gray-700;
+    @apply text-sm font-medium text-gray-700 dark:text-gray-300;
   }
 
   .progress-value {
@@ -1792,7 +1792,7 @@
   }
 
   .section-title {
-    @apply text-lg font-semibold text-gray-900;
+    @apply text-lg font-semibold text-gray-900 dark:text-gray-100;
   }
 
   .section-subtitle {
