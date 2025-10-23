@@ -403,7 +403,7 @@
           </div>
 
           <!-- Additional Tools -->
-          <div class="tools-section">
+          <!-- <div class="tools-section">
             <h4 class="tools-title">Helpful Tools</h4>
             <div class="tools-grid">
               <div class="tool-item">
@@ -423,7 +423,7 @@
                 <span>Reports</span>
               </div>
             </div>
-          </div>
+          </div> -->
         </div>
 
         <!-- Birthday Notifications (Enhanced) -->
