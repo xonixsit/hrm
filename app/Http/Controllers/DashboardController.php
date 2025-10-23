@@ -567,12 +567,12 @@ class DashboardController extends Controller
             // Skills growth (from assessments)
             $totalAssessments = DB::table('competency_assessments')
                 ->where('employee_id', $employeeId)
-                ->where('status', 'approved')
+                ->where('status', 'submitted')
                 ->count();
             
             $recentAssessments = DB::table('competency_assessments')
                 ->where('employee_id', $employeeId)
-                ->where('status', 'approved')
+                ->where('status', 'submitted')
                 ->where('updated_at', '>=', now()->subMonths(6))
                 ->count();
             
@@ -581,18 +581,33 @@ class DashboardController extends Controller
             // Competency progress (average rating improvement)
             $firstHalfAvg = DB::table('competency_assessments')
                 ->where('employee_id', $employeeId)
-                ->where('status', 'approved')
+                ->where('status', 'submitted')
                 ->where('updated_at', '<', now()->subMonths(6))
                 ->avg('rating');
             
             $recentAvg = DB::table('competency_assessments')
                 ->where('employee_id', $employeeId)
-                ->where('status', 'approved')
+                ->where('status', 'submitted')
                 ->where('updated_at', '>=', now()->subMonths(6))
                 ->avg('rating');
             
-            $competencyProgress = ($firstHalfAvg && $recentAvg) ? 
-                round((($recentAvg - $firstHalfAvg) / $firstHalfAvg) * 100, 1) : 0;
+            // If we have both periods, calculate improvement
+            if ($firstHalfAvg && $recentAvg) {
+                $competencyProgress = round((($recentAvg - $firstHalfAvg) / $firstHalfAvg) * 100, 1);
+            } else {
+                // If we only have recent assessments, show progress based on completion rate
+                $totalPossibleAssessments = DB::table('competency_assessments')
+                    ->where('employee_id', $employeeId)
+                    ->count();
+                
+                $completedAssessments = DB::table('competency_assessments')
+                    ->where('employee_id', $employeeId)
+                    ->where('status', 'submitted')
+                    ->count();
+                
+                $competencyProgress = $totalPossibleAssessments > 0 ? 
+                    round(($completedAssessments / $totalPossibleAssessments) * 100, 1) : 0;
+            }
             
             // Performance trend
             $performanceTrend = $competencyProgress;
