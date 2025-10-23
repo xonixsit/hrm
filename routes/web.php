@@ -11,6 +11,7 @@ use App\Http\Controllers\LeaveTypeController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\SupportController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TimesheetController;
 use App\Http\Controllers\WorkReportController;
@@ -482,6 +483,12 @@ Route::middleware('auth')->group(function () {
     // Email Preferences routes
     Route::get('/email-preferences', [App\Http\Controllers\EmailPreferencesController::class, 'show'])->name('email-preferences.show');
     Route::put('/email-preferences', [App\Http\Controllers\EmailPreferencesController::class, 'update'])->name('email-preferences.update');
+    
+    // Support Request routes
+    Route::get('/support', [App\Http\Controllers\SupportController::class, 'index'])->name('support.index');
+    Route::get('/support/create', [App\Http\Controllers\SupportController::class, 'create'])->name('support.create');
+    Route::post('/support', [App\Http\Controllers\SupportController::class, 'store'])->name('support.store');
+    Route::get('/support/{supportRequest}', [App\Http\Controllers\SupportController::class, 'show'])->name('support.show');
 });
 
 require __DIR__.'/auth.php';

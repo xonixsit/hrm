@@ -565,6 +565,14 @@ const navigationItems = computed(() => {
     });
   }
 
+  // Support - available to all users
+  items.push({
+    id: 'support',
+    label: 'Support',
+    icon: 'question-mark-circle',
+    route: 'support.index',
+  });
+
   // Administration Section (for Admins only)
   if (roles.includes('Admin')) {
     items.push({

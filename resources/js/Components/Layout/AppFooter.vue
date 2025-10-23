@@ -15,24 +15,30 @@
 
         <!-- Center - Links -->
         <div class="flex items-center space-x-6">
-          <a :href="route('dashboard')" :class="[
+          <Link :href="route('dashboard')" :class="[
             'text-sm hover:underline transition-colors',
             isDark ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'
           ]">
             Dashboard
-          </a>
-          <a href="#" :class="[
+          </Link>
+          <Link :href="route('support.index')" :class="[
             'text-sm hover:underline transition-colors',
             isDark ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'
           ]">
             Support
-          </a>
-          <a href="#" :class="[
+          </Link>
+          <Link :href="route('privacy-policy')" :class="[
             'text-sm hover:underline transition-colors',
             isDark ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'
           ]">
-            Privacy
-          </a>
+            Privacy Policy
+          </Link>
+          <Link :href="route('disclaimer')" :class="[
+            'text-sm hover:underline transition-colors',
+            isDark ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'
+          ]">
+            Disclaimer
+          </Link>
         </div>
 
         <!-- Right side - Copyright -->
@@ -49,6 +55,7 @@
 
 <script setup>
   import { computed } from 'vue'
+  import { Link } from '@inertiajs/vue3'
   import { useTheme } from '@/composables/useTheme.js'
 
   const { isDark } = useTheme()
