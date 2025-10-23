@@ -18,6 +18,7 @@
               Refresh
             </button>
             <button
+              v-if="canCreateAssessments"
               @click="navigateToCreateAssessment"
               class="action-button secondary"
             >
@@ -238,6 +239,7 @@
             <div class="widget-content">
               <div class="quick-actions-grid">
                 <button
+                  v-if="canCreateAssessments"
                   @click="navigateToNewAssessment"
                   class="quick-action-item"
                 >
@@ -408,6 +410,16 @@ const props = defineProps({
 // Local state
 const loading = ref(false);
 const notifications = ref([]);
+
+// Get current user from Inertia page props
+const page = usePage();
+const user = computed(() => page.props.auth?.user);
+
+// Check if user can create assessments
+const canCreateAssessments = computed(() => {
+  const userRoles = user.value?.roles || [];
+  return userRoles.some(role => ['Manager', 'Admin', 'HR'].includes(role.name));
+});
 
 // Computed properties
 const formattedStats = computed(() => ({

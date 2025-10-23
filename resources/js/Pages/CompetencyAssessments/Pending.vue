@@ -181,6 +181,16 @@ const props = defineProps({
   filters: Object
 });
 
+// Get current user from Inertia page props
+const page = usePage();
+const user = computed(() => page.props.auth?.user);
+
+// Check if user can create assessments
+const canCreateAssessments = computed(() => {
+  const userRoles = user.value?.roles || [];
+  return userRoles.some(role => ['Manager', 'Admin', 'HR'].includes(role.name));
+});
+
 // Computed properties for PageLayout
 const breadcrumbs = computed(() => [
   { label: 'Dashboard', href: route('dashboard') },
@@ -188,20 +198,27 @@ const breadcrumbs = computed(() => [
   { label: 'Pending Assessments', href: null }
 ]);
 
-const headerActions = computed(() => [
-  {
-    label: 'Back to Dashboard',
-    href: route('assessment-dashboard'),
-    icon: ArrowLeftIcon,
-    variant: 'secondary'
-  },
-  {
-    label: 'New Assessment',
-    href: route('competency-assessments.create'),
-    icon: PlusIcon,
-    variant: 'primary'
+const headerActions = computed(() => {
+  const actions = [
+    {
+      label: 'Back to Dashboard',
+      href: route('assessment-dashboard'),
+      icon: ArrowLeftIcon,
+      variant: 'secondary'
+    }
+  ];
+  
+  if (canCreateAssessments.value) {
+    actions.push({
+      label: 'New Assessment',
+      href: route('competency-assessments.create'),
+      icon: PlusIcon,
+      variant: 'primary'
+    });
   }
-]);
+  
+  return actions;
+});
 
 const filters = ref({
   employee_id: props.filters?.employee_id || '',

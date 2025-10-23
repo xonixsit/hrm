@@ -211,7 +211,7 @@
 
 <script setup>
 import { ref, computed } from 'vue';
-import { router, Link } from '@inertiajs/vue3';
+import { router, Link, usePage } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import PageLayout from '@/Components/Layout/PageLayout.vue';
 import { PlusIcon, StarIcon } from '@heroicons/vue/24/outline';
@@ -240,6 +240,16 @@ const filters = ref({
 
 let searchTimeout = null;
 
+// Get current user from Inertia page props
+const page = usePage();
+const user = computed(() => page.props.auth?.user);
+
+// Check if user can create assessments
+const canCreateAssessments = computed(() => {
+  const userRoles = user.value?.roles || [];
+  return userRoles.some(role => ['Manager', 'Admin', 'HR'].includes(role.name));
+});
+
 // Computed properties for PageLayout
 const breadcrumbs = computed(() => [
   { label: 'Dashboard', href: route('dashboard') },
@@ -247,15 +257,21 @@ const breadcrumbs = computed(() => [
   { label: 'Assessments', current: true }
 ]);
 
-const headerActions = computed(() => [
-  {
-    id: 'new-assessment',
-    label: 'New Assessment',
-    icon: 'plus',
-    variant: 'primary',
-    href: route('competency-assessments.create')
+const headerActions = computed(() => {
+  const actions = [];
+  
+  if (canCreateAssessments.value) {
+    actions.push({
+      id: 'new-assessment',
+      label: 'New Assessment',
+      icon: 'plus',
+      variant: 'primary',
+      href: route('competency-assessments.create')
+    });
   }
-]);
+  
+  return actions;
+});
 
 const applyFilters = () => {
   router.get(route('competency-assessments.index'), filters.value, {
