@@ -57,8 +57,7 @@ class CompetencyAssessmentPolicy
      */
     public function create(User $user)
     {
-        return $user->hasAnyRole(['Manager', 'Admin', 'HR']) || 
-               ($user->hasRole('Employee') && $user->employee);
+        return $user->hasAnyRole(['Manager', 'Admin', 'HR']);
     }
 
     /**

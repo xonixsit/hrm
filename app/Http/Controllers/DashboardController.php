@@ -637,7 +637,7 @@ class DashboardController extends Controller
             // High performance ratings
             $excellentRatings = DB::table('competency_assessments')
                 ->where('employee_id', $employeeId)
-                ->where('status', 'approved')
+                ->where('status', 'submitted')
                 ->where('rating', '>=', 4.5)
                 ->count();
             
@@ -738,30 +738,48 @@ class DashboardController extends Controller
     private function calculatePerformanceRank($employeeId)
     {
         try {
+            // Get employee's average rating from submitted assessments
             $employeeAvg = DB::table('competency_assessments')
                 ->where('employee_id', $employeeId)
-                ->where('status', 'approved')
+                ->where('status', 'submitted')
+                ->whereNotNull('rating')
                 ->avg('rating');
             
             if (!$employeeAvg) return 'N/A';
             
+            // Count employees with better average ratings
             $betterPerformers = DB::table('competency_assessments')
                 ->select('employee_id')
-                ->where('status', 'approved')
+                ->where('status', 'submitted')
+                ->whereNotNull('rating')
                 ->groupBy('employee_id')
                 ->havingRaw('AVG(rating) > ?', [$employeeAvg])
                 ->count();
             
+            // Count total employees with ratings
             $totalEmployees = DB::table('competency_assessments')
-                ->select('employee_id')
-                ->where('status', 'approved')
-                ->groupBy('employee_id')
-                ->count();
+                ->where('status', 'submitted')
+                ->whereNotNull('rating')
+                ->distinct('employee_id')
+                ->count('employee_id');
+            
+            if ($totalEmployees <= 1) {
+                return 'N/A'; // Need at least 2 employees for meaningful ranking
+            }
             
             $rank = $betterPerformers + 1;
             $percentile = round((($totalEmployees - $rank + 1) / $totalEmployees) * 100);
             
-            return "Top {$percentile}%";
+            // Format the rank nicely
+            if ($percentile >= 90) {
+                return "Top 10%";
+            } elseif ($percentile >= 75) {
+                return "Top 25%";
+            } elseif ($percentile >= 50) {
+                return "Top 50%";
+            } else {
+                return "#{$rank} of {$totalEmployees}";
+            }
         } catch (\Exception $e) {
             return 'N/A';
         }
@@ -836,7 +854,8 @@ class DashboardController extends Controller
         // Calculate consistency in assessment ratings
         $ratings = DB::table('competency_assessments')
             ->where('employee_id', $employeeId)
-            ->where('status', 'approved')
+            ->where('status', 'submitted')
+            ->whereNotNull('rating')
             ->where('updated_at', '>=', now()->subYear())
             ->pluck('rating')
             ->toArray();
