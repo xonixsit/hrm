@@ -1,63 +1,59 @@
 <template>
     <AuthenticatedLayout>
-        <template #header>
-            <div class="flex items-center justify-between">
-                <div>
-                    <nav class="flex mb-2" aria-label="Breadcrumb">
-                        <ol class="inline-flex items-center space-x-1 md:space-x-3">
-                            <li class="inline-flex items-center">
-                                <Link :href="route('dashboard')" class="text-gray-500 hover:text-gray-700">
-                                    Dashboard
-                                </Link>
-                            </li>
-                            <li>
-                                <div class="flex items-center">
-                                    <svg class="w-4 h-4 text-gray-400 mx-1" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
-                                    </svg>
-                                    <Link :href="route('support.index')" class="text-gray-500 hover:text-gray-700">
-                                        Support
-                                    </Link>
-                                </div>
-                            </li>
-                            <li aria-current="page">
-                                <div class="flex items-center">
-                                    <svg class="w-4 h-4 text-gray-400 mx-1" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
-                                    </svg>
-                                    <span class="text-gray-700">#{{ supportRequest.id }}</span>
-                                </div>
-                            </li>
-                        </ol>
-                    </nav>
-                    <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                        Support Request #{{ supportRequest.id }}
-                    </h2>
-                    <p class="text-sm text-gray-600 mt-1">{{ supportRequest.subject }}</p>
-                </div>
-                <Link :href="route('support.index')" class="text-blue-600 hover:text-blue-800">
-                    ← Back to Requests
-                </Link>
-            </div>
-        </template>
+        <PageLayout
+            :title="`Support Request #${supportRequest.id}`"
+            :subtitle="supportRequest.subject"
+            :breadcrumbs="breadcrumbs"
+            :actions="headerActions"
+        >
 
         <div class="py-12">
             <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6 bg-white">
-                        <!-- Status Header -->
-                        <div class="border-b border-gray-200 pb-6 mb-6">
-                            <div class="flex items-center justify-between">
+                        <!-- Status Header with Visual Priority -->
+                        <div class="border-b border-gray-200 pb-6 mb-6" :class="getPriorityBorderClass(supportRequest.priority)">
+                            <div class="flex items-center justify-between mb-4">
                                 <div class="flex items-center space-x-4">
-                                    <span :class="getStatusBadgeClass(supportRequest.status)" class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium">
-                                        {{ statuses[supportRequest.status] }}
-                                    </span>
+                                    <div class="flex items-center space-x-2">
+                                        <div :class="getPriorityIndicatorClass(supportRequest.priority)" class="w-4 h-4 rounded-full"></div>
+                                        <span :class="getStatusBadgeClass(supportRequest.status)" class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium">
+                                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                <path v-if="supportRequest.status === 'open'" fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                                <path v-else-if="supportRequest.status === 'in_progress'" fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path>
+                                                <path v-else-if="supportRequest.status === 'resolved'" fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                            </svg>
+                                            {{ statuses[supportRequest.status] }}
+                                        </span>
+                                    </div>
                                     <span :class="getPriorityBadgeClass(supportRequest.priority)" class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium">
+                                        <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                            <path v-if="supportRequest.priority === 'urgent'" fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                            <path v-else fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"></path>
+                                        </svg>
                                         {{ priorities[supportRequest.priority] }} Priority
                                     </span>
                                 </div>
                                 <div class="text-sm text-gray-500">
                                     Submitted {{ formatDate(supportRequest.created_at) }}
+                                </div>
+                            </div>
+                            
+                            <!-- Progress Timeline -->
+                            <div class="flex items-center space-x-4 text-xs text-gray-500">
+                                <div class="flex items-center space-x-1">
+                                    <div class="w-2 h-2 bg-blue-400 rounded-full"></div>
+                                    <span>Created</span>
+                                </div>
+                                <div class="w-8 h-px bg-gray-300"></div>
+                                <div class="flex items-center space-x-1" :class="{ 'text-yellow-600': supportRequest.status === 'in_progress' || supportRequest.status === 'resolved' }">
+                                    <div class="w-2 h-2 rounded-full" :class="supportRequest.status === 'in_progress' || supportRequest.status === 'resolved' ? 'bg-yellow-400' : 'bg-gray-300'"></div>
+                                    <span>In Progress</span>
+                                </div>
+                                <div class="w-8 h-px bg-gray-300"></div>
+                                <div class="flex items-center space-x-1" :class="{ 'text-green-600': supportRequest.status === 'resolved' }">
+                                    <div class="w-2 h-2 rounded-full" :class="supportRequest.status === 'resolved' ? 'bg-green-400' : 'bg-gray-300'"></div>
+                                    <span>Resolved</span>
                                 </div>
                             </div>
                         </div>
@@ -169,12 +165,15 @@
                 </div>
             </div>
         </div>
+        </PageLayout>
     </AuthenticatedLayout>
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import { Link } from '@inertiajs/vue3'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
+import PageLayout from '@/Components/Layout/PageLayout.vue'
 
 const props = defineProps({
     supportRequest: Object,
@@ -183,6 +182,25 @@ const props = defineProps({
     statuses: Object,
     isAdmin: Boolean,
 })
+
+const breadcrumbs = computed(() => [
+    { label: 'Dashboard', href: route('dashboard') },
+    { label: 'Support', href: route('support.index') },
+    { label: `#${props.supportRequest.id}`, current: true }
+])
+
+const headerActions = computed(() => [
+    {
+        label: 'Back to Requests',
+        href: route('support.index'),
+        variant: 'secondary'
+    },
+    {
+        label: 'New Request',
+        href: route('support.create'),
+        variant: 'primary'
+    }
+])
 
 const getStatusBadgeClass = (status) => {
     const classes = {
@@ -202,6 +220,26 @@ const getPriorityBadgeClass = (priority) => {
         urgent: 'bg-red-100 text-red-800',
     }
     return classes[priority] || 'bg-gray-100 text-gray-800'
+}
+
+const getPriorityIndicatorClass = (priority) => {
+    const classes = {
+        low: 'bg-green-400',
+        medium: 'bg-yellow-400',
+        high: 'bg-orange-400',
+        urgent: 'bg-red-400',
+    }
+    return classes[priority] || 'bg-gray-400'
+}
+
+const getPriorityBorderClass = (priority) => {
+    const classes = {
+        urgent: 'border-l-4 border-l-red-400 bg-red-50/30',
+        high: 'border-l-4 border-l-orange-400 bg-orange-50/30',
+        medium: 'border-l-4 border-l-yellow-400 bg-yellow-50/30',
+        low: 'border-l-4 border-l-green-400 bg-green-50/30',
+    }
+    return classes[priority] || ''
 }
 
 const formatDate = (dateString) => {
