@@ -79,7 +79,6 @@
     </div>
 
     <!-- App Footer -->
-    <AppFooter />
   </div>
 </template>
 
