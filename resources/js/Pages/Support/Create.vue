@@ -31,7 +31,7 @@
                         </div>
 
                         <!-- Success Message -->
-                        <div v-if="$page.props.flash.success" class="mb-6 bg-green-50 border border-green-200 rounded-md p-4">
+                        <div v-if="$page.props.flash?.success" class="mb-6 bg-green-50 border border-green-200 rounded-md p-4">
                             <div class="flex">
                                 <div class="flex-shrink-0">
                                     <svg class="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
@@ -40,7 +40,7 @@
                                 </div>
                                 <div class="ml-3">
                                     <p class="text-sm font-medium text-green-800">
-                                        {{ $page.props.flash.success }}
+                                        {{ $page.props.flash?.success }}
                                     </p>
                                 </div>
                             </div>
