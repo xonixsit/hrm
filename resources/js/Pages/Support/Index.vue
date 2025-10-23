@@ -354,7 +354,7 @@
 </template>
 
 <script setup>
-    import { computed } from 'vue'
+    import { computed, ref } from 'vue'
     import { Link } from '@inertiajs/vue3'
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
     import PageLayout from '@/Components/Layout/PageLayout.vue'

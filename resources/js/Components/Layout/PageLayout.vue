@@ -78,16 +78,8 @@
       </main>
     </div>
 
-    <!-- Page Footer -->
-    <PageFooter
-      v-if="hasFooter"
-      :links="footerLinks"
-      :copyright="footerCopyright"
-    >
-      <template v-if="$slots.footer" #default>
-        <slot name="footer" />
-      </template>
-    </PageFooter>
+    <!-- App Footer -->
+    <AppFooter />
   </div>
 </template>
 
@@ -96,7 +88,7 @@ import { computed, ref, provide, onMounted, onUnmounted } from 'vue';
 import { useResponsive } from '@/composables/useResponsive';
 import PageHeader from './PageHeader.vue';
 import PageSidebar from './PageSidebar.vue';
-import PageFooter from './PageFooter.vue';
+import AppFooter from './AppFooter.vue';
 
 const props = defineProps({
   // Page content
