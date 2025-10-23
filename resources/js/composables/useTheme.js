@@ -139,10 +139,13 @@ export function useTheme() {
       const safeTheme = validateTheme(theme) ? theme : 'light';
       
       // Remove ALL theme classes first (cleanup any potential conflicts)
-      root.classList.remove('theme-light', 'theme-dark');
+      root.classList.remove('theme-light', 'theme-dark', 'dark', 'light');
       
-      // Add the correct theme class
+      // Add both the theme class and Tailwind's dark class for consistency
       root.classList.add(`theme-${safeTheme}`);
+      if (safeTheme === 'dark') {
+        root.classList.add('dark');
+      }
       
       // Update CSS custom properties
       updateThemeProperties(safeTheme);
@@ -161,7 +164,7 @@ export function useTheme() {
       // Fallback: try to apply light theme
       try {
         const root = document.documentElement;
-        root.classList.remove('theme-light', 'theme-dark');
+        root.classList.remove('theme-light', 'theme-dark', 'dark', 'light');
         root.classList.add('theme-light');
         updateThemeProperties('light');
       } catch (fallbackError) {
