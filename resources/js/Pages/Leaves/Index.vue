@@ -275,10 +275,12 @@
                         <div class="relative" :ref="el => setDropdownRef(el, leave.id)">
                           <button
                             @click="toggleDropdown(leave.id)"
-                            class="inline-flex items-center p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-lg transition-all duration-200"
+                            class="inline-flex items-center p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-all duration-200 border border-gray-300"
                             :title="'Actions'"
                           >
-                            <EllipsisVerticalIcon class="w-5 h-5" />
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                              <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"/>
+                            </svg>
                           </button>
                           
                           <!-- Unified Dropdown Menu -->

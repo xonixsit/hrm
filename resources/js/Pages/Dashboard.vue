@@ -95,35 +95,33 @@
         <!-- Left Column: Action Required & Approvals -->
         <div class="lg:col-span-2 space-y-4">
 
-          <!-- Action Required Section -->
-          <UnifiedCard v-if="pendingApprovals.length > 0" title="Pending Items Overview"
-            description="Items requiring attention" :icon="ExclamationTriangleIcon" iconVariant="info"
+          <!-- Pending Items Overview -->
+          <UnifiedCard v-if="pendingApprovals.length > 0" title="Pending Approvals Overview"
+            description="Items requiring your attention" :icon="ExclamationTriangleIcon" iconVariant="info"
             variant="elevated">
             <template #headerActions>
-              <div class="flex items-center space-x-2">
-                <span
-                  class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-                  {{ pendingApprovals.length }} items
-                </span>
-                <button @click="navigateTo('leaves.index')"
-                  class="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700">
-                  Manage Approvals
-                </button>
-              </div>
+              <button @click="navigateTo('leaves.index')"
+                class="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700">
+                Manage All Approvals
+              </button>
             </template>
 
-            <div class="space-y-3">
-              <div v-for="approval in pendingApprovals.slice(0, 5)" :key="approval.id" class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div>
-                  <h4 class="font-medium text-gray-900">{{ approval.title }}</h4>
-                  <p class="text-sm text-gray-600">{{ approval.description }}</p>
-                  <span class="text-xs text-gray-500">{{ approval.requester }}</span>
-                </div>
-                <span class="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full">Pending</span>
+            <div class="grid grid-cols-3 gap-4 text-center">
+              <div class="p-4 bg-yellow-50 rounded-lg">
+                <div class="text-2xl font-bold text-yellow-600">{{ pendingApprovals.filter(a => a.type ===
+                  'leave').length }}</div>
+                <div class="text-sm text-gray-600">Leave Requests</div>
               </div>
-              <button v-if="pendingApprovals.length > 5" @click="navigateTo('leaves.index')" class="w-full text-center py-2 text-blue-600 hover:text-blue-800 text-sm">
-                View All {{ pendingApprovals.length }} Items
-              </button>
+              <div class="p-4 bg-blue-50 rounded-lg">
+                <div class="text-2xl font-bold text-blue-600">{{ pendingApprovals.filter(a => a.type ===
+                  'timesheet').length }}</div>
+                <div class="text-sm text-gray-600">Timesheets</div>
+              </div>
+              <div class="p-4 bg-purple-50 rounded-lg">
+                <div class="text-2xl font-bold text-purple-600">{{ pendingApprovals.filter(a => a.type ===
+                  'competency-assessment').length }}</div>
+                <div class="text-sm text-gray-600">Assessments</div>
+              </div>
             </div>
           </UnifiedCard>
 
