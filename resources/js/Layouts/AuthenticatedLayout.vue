@@ -49,7 +49,7 @@
       : 'bg-gradient-to-br from-gray-50 via-white to-blue-50/30'
   ]">
         <!-- Skip Links for Accessibility -->
-        <SkipLinks />
+        <!-- <SkipLinks /> -->
 
         <!-- Live Regions for Screen Reader Announcements -->
         <LiveRegion />
