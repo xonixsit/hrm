@@ -287,17 +287,7 @@ class LeaveController extends Controller
 
     public function approve(Request $request, Leave $leave)
     {
-        try {
-            $this->authorize('approve', $leave);
-        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
-            if ($request->expectsJson() || $request->ajax()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'You are not authorized to approve this leave request.'
-                ], 403);
-            }
-            throw $e;
-        }
+        $this->authorize('approve', $leave);
 
         $leave->update([
             'status' => 'approved',
@@ -321,17 +311,7 @@ class LeaveController extends Controller
 
     public function reject(Request $request, Leave $leave)
     {
-        try {
-            $this->authorize('reject', $leave);
-        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
-            if ($request->expectsJson() || $request->ajax()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'You are not authorized to reject this leave request.'
-                ], 403);
-            }
-            throw $e;
-        }
+        $this->authorize('reject', $leave);
 
         $leave->update([
             'status' => 'rejected',
