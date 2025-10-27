@@ -9,7 +9,7 @@
     </template>
 
     <template #headerActions>
-      <div class="flex items-center text-gray-500 mr-6">
+      <!-- <div class="flex items-center text-gray-500 mr-6">
         <div class="flex items-center mr-6">
           <div class="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
           <span class="text-sm">System Online</span>
@@ -18,7 +18,7 @@
           <ClockIcon class="w-4 h-4 mr-2" />
           <span class="text-sm">{{ currentTime }}</span>
         </div>
-      </div>
+      </div> -->
 
       <div class="flex space-x-3">
         <button v-for="action in headerActions" :key="action.id" @click="action.handler" :disabled="action.disabled"
@@ -157,7 +157,7 @@
             </div>
 
             <!-- Recent Activity -->
-            <div class="space-y-3">
+            <!-- <div class="space-y-3">
               <h3 class="text-sm font-medium text-gray-900 mb-3">Recent Competency Activity</h3>
               <div class="space-y-2">
                 <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
@@ -182,7 +182,7 @@
                   <span class="text-xs text-gray-500">1 day ago</span>
                 </div>
               </div>
-            </div>
+            </div> -->
           </UnifiedCard>
         </div>
 
