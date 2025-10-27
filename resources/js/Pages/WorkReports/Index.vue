@@ -1254,16 +1254,19 @@ onMounted(() => {
 // Breadcrumbs are already defined above
 
 const headerActions = computed(() => {
-  if (!canCreate.value) return [];
-  return [
-    {
+  const actions = [];
+  
+  if (canCreate.value) {
+    actions.push({
       id: 'create',
       label: 'Submit New Report',
       variant: 'primary',
       icon: 'plus',
-      handler: () => router.visit('/work-reports/create')
-    }
-  ];
+      handler: () => router.visit(route('work-reports.create'))
+    });
+  }
+  
+  return actions;
 });
 
 const tableColumns = computed(() => {
