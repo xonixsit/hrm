@@ -3,14 +3,7 @@
   <div :class="[
     'group relative transition-all duration-300',
     // Base styling with consistent shadows and borders
-    isDark 
-      ? 'bg-gray-800/50 backdrop-blur-sm ' 
-      : 'bg-white/80 backdrop-blur-sm ',
-    
-    // Consistent shadow system
-    variant === 'elevated' 
-      ? (isDark ? 'shadow-xl shadow-gray-900/30' : 'shadow-xl shadow-gray-900/15')
-      : (isDark ? 'shadow-lg shadow-gray-900/20' : 'shadow-lg shadow-gray-900/10'),
+
     
     // Unified border radius system
     size === 'small' ? 'rounded-lg' : 'rounded-2xl',
