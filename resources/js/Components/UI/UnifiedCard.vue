@@ -5,7 +5,7 @@
     // Base styling with consistent shadows and borders
     isDark 
       ? 'bg-gray-800/50 backdrop-blur-sm border border-gray-700/50' 
-      : 'bg-white/80 backdrop-blur-sm border border-gray-200/60',
+      : 'bg-white/80 backdrop-blur-sm border test2 border-gray-200/60',
     
     // Consistent shadow system
     variant === 'elevated' 
@@ -102,7 +102,7 @@
 
   <!-- Loading Overlay -->
   <div v-if="loading" :class="[
-    'absolute inset-0 flex items-center justify-center rounded-2xl transition-all duration-200',
+    'absolute inset-0 test flex items-center justify-center rounded-2xl transition-all duration-200',
     isDark ? 'bg-gray-800/80 backdrop-blur-sm' : 'bg-white/80 backdrop-blur-sm'
   ]">
     <div class="flex items-center space-x-3">

@@ -272,11 +272,11 @@
     </div>
 
     <!-- Manager Dashboard Layout -->
-    <div v-else-if="isManager" class="manager-layout">
+    <!-- <div v-else-if="isManager" class="manager-layout">
       <ManagerDashboard :stats="managerStats" :team-members="teamMembers" :team-performance="teamPerformance"
         :team-activities="teamActivities" :loading="loading" @view-member="handleViewMember"
         @send-message="handleSendMessage" />
-    </div>
+    </div> -->
 
     <!-- Employee Dashboard Layout -->
     <div v-else class="employee-layout">
