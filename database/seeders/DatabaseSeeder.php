@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             CompetencyPermissionSeeder::class,
             DepartmentSeeder::class,
             CompetencySeeder::class,
+            // DemoDataSeeder::class, // Uncomment for demo setup
         ]);
 
         // Create admin users first

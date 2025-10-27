@@ -12,6 +12,11 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Check if table exists before trying to clean data
+        if (!Schema::hasTable('competency_assessments')) {
+            return;
+        }
+        
         // Clean up any invalid evidence_files data
         $assessments = DB::table('competency_assessments')
             ->whereNotNull('evidence_files')

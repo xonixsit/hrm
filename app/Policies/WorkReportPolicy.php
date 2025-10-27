@@ -18,7 +18,8 @@ class WorkReportPolicy
      */
     public function viewAny(User $user)
     {
-        return $user->hasAnyRole(['Employee', 'Manager', 'Admin', 'HR']);
+        // Allow if user has any role OR has an employee record
+        return $user->hasAnyRole(['Employee', 'Manager', 'Admin', 'HR']) || $user->employee;
     }
 
     /**
