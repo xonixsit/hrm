@@ -316,15 +316,6 @@ class LeaveController extends Controller
 
         $this->logAudit('Leave Approved', 'Approved leave ID: ' . $leave->id);
         
-        // Handle AJAX requests (but not Inertia requests)
-        if (($request->expectsJson() || $request->ajax()) && !$request->header('X-Inertia')) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Leave approved successfully.',
-                'leave' => $leave->fresh()
-            ]);
-        }
-        
         return redirect()->back()->with('success', 'Leave approved successfully.');
     }
 
@@ -358,15 +349,6 @@ class LeaveController extends Controller
         $this->notificationService->sendLeaveRequestRejected($leave, $request->input('comments', ''));
 
         $this->logAudit('Leave Rejected', 'Rejected leave ID: ' . $leave->id);
-        
-        // Handle AJAX requests (but not Inertia requests)
-        if (($request->expectsJson() || $request->ajax()) && !$request->header('X-Inertia')) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Leave rejected successfully.',
-                'leave' => $leave->fresh()
-            ]);
-        }
         
         return redirect()->back()->with('success', 'Leave rejected successfully.');
     }
