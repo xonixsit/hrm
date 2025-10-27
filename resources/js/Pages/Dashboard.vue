@@ -96,24 +96,35 @@
         <div class="lg:col-span-2 space-y-4">
 
           <!-- Action Required Section -->
-          <UnifiedCard v-if="pendingApprovals.length > 0" title="Action Required"
-            description="Items needing your immediate attention" :icon="ExclamationTriangleIcon" iconVariant="danger"
+          <UnifiedCard v-if="pendingApprovals.length > 0" title="Pending Items Overview"
+            description="Items requiring attention" :icon="ExclamationTriangleIcon" iconVariant="info"
             variant="elevated">
             <template #headerActions>
               <div class="flex items-center space-x-2">
                 <span
-                  class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
-                  {{ pendingApprovals.length }} pending
+                  class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                  {{ pendingApprovals.length }} items
                 </span>
-                <button @click="handleRefresh"
-                  class="p-2 text-gray-400 hover:text-gray-600 hover:bg-white rounded-lg transition-all">
-                  <ArrowPathIcon class="w-4 h-4" />
+                <button @click="navigateTo('leaves.index')"
+                  class="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700">
+                  Manage Approvals
                 </button>
               </div>
             </template>
 
-            <PendingApprovalsWidget :approvals="pendingApprovals" :loading="loading" @approve="handleApproval"
-              @reject="handleRejection" @view-all="() => router.visit(route('approvals.index'))" />
+            <div class="space-y-3">
+              <div v-for="approval in pendingApprovals.slice(0, 5)" :key="approval.id" class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div>
+                  <h4 class="font-medium text-gray-900">{{ approval.title }}</h4>
+                  <p class="text-sm text-gray-600">{{ approval.description }}</p>
+                  <span class="text-xs text-gray-500">{{ approval.requester }}</span>
+                </div>
+                <span class="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full">Pending</span>
+              </div>
+              <button v-if="pendingApprovals.length > 5" @click="navigateTo('leaves.index')" class="w-full text-center py-2 text-blue-600 hover:text-blue-800 text-sm">
+                View All {{ pendingApprovals.length }} Items
+              </button>
+            </div>
           </UnifiedCard>
 
           <!-- Competency Management Dashboard -->
@@ -565,43 +576,7 @@
     }
   };
 
-  const handleApproval = async (item) => {
-    loading.value = true;
-    try {
-      await axios.post(route('approvals.approve', item.id), {
-        type: item.type
-      });
-      await handleRefresh();
-    } catch (error) {
-      console.error('Approval error:', error);
-    } finally {
-      loading.value = false;
-    }
-  };
 
-  const handleRejection = (item) => {
-    rejectionItem.value = item;
-    rejectionReason.value = '';
-    showRejectionModal.value = true;
-  };
-
-  const confirmRejection = async () => {
-    if (!rejectionReason.value.trim()) return;
-
-    loading.value = true;
-    try {
-      await axios.post(route('approvals.reject', rejectionItem.value.id), {
-        reason: rejectionReason.value,
-        type: rejectionItem.value.type
-      });
-      showRejectionModal.value = false;
-      await handleRefresh();
-    } catch (error) {
-      console.error('Rejection error:', error);
-    } finally {
-      loading.value = false;
-    }
-  };
 
   const cancelRejection = () => {
     showRejectionModal.value = false;
