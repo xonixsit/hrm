@@ -746,7 +746,25 @@ const performanceViewMode = ref('individual');
 const selectedEmployeesForComparison = ref([]);
 const comparisonData = ref([]);
 const employeePerformanceList = ref([]);
-const canCreate = computed(() => hasAnyRole(['Employee', 'Manager', 'Admin', 'HR']));
+const canCreate = computed(() => {
+  // Match the policy logic: user needs role AND employee record
+  const hasRequiredRole = hasAnyRole(['Employee', 'Manager', 'Admin', 'HR']);
+  const hasEmployeeRecord = user.value?.employee != null;
+  
+  const result = hasRequiredRole && hasEmployeeRecord;
+  
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🔍 canCreate check:', {
+      hasRequiredRole,
+      hasEmployeeRecord,
+      userEmployee: user.value?.employee,
+      result,
+      userRoles: roles.value
+    });
+  }
+  
+  return result;
+});
 const activeDropdown = ref(null);
 const dropdownRefs = ref({});
 
@@ -1224,31 +1242,6 @@ onMounted(() => {
   if (hasAnyRole(['Admin', 'Manager', 'HR']) && props.employees.length > 0) {
     loadEmployeePerformanceList();
   }
-  
-  console.log('canCreate:', canCreate.value);
-  console.log('User roles:', roles.value);
-  console.log('Is authenticated:', isAuthenticated.value);
-  console.log('User object:', user.value);
-  console.log('Has Employee role:', hasRole('Employee'));
-  console.log('Has any role check:', hasAnyRole(['Employee', 'Manager', 'Admin', 'HR']));
-  
-  // Debug employee data
-  console.log('Employees data:', props.employees);
-  console.log('Employee options:', employeeOptions.value);
-  console.log('Current filters:', props.filters);
-  console.log('Local filters:', localFilters.value);
-  
-  // Test route helper
-  console.log('Testing route helper...');
-  try {
-    if (typeof route !== 'undefined') {
-      console.log('Route helper available:', route('work-reports.index'));
-    } else {
-      console.warn('Route helper not available - using fallback URLs');
-    }
-  } catch (error) {
-    console.error('Route helper error:', error);
-  }
 });
 
 // Breadcrumbs are already defined above
@@ -1261,7 +1254,6 @@ const headerActions = computed(() => {
       id: 'create',
       label: 'Submit New Report',
       variant: 'primary',
-      icon: 'plus',
       handler: () => router.visit(route('work-reports.create'))
     });
   }

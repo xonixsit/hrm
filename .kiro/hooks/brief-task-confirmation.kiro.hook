@@ -1,0 +1,16 @@
+{
+  "enabled": true,
+  "name": "Brief Task Confirmation",
+  "description": "Monitors all file changes and reminds the AI to provide only brief one-word confirmations after completing tasks or fixes, avoiding lengthy explanations to save credits",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "**/*"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "After fixing or completing any task or issue, provide only a one-word confirmation. Do not give lengthy clarifications or explanations. Save credits by being concise."
+  }
+}
