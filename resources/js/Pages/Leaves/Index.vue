@@ -286,10 +286,7 @@
                           <!-- Unified Dropdown Menu -->
                           <div
                             v-if="activeDropdown === leave.id"
-                            :class="[
-                              'absolute mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-20',
-                              dropdownPosition[leave.id] === 'left' ? 'right-0' : 'left-0'
-                            ]"
+                            class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-20"
                           >
                             <!-- View Action (always available) -->
                             <Link
@@ -560,6 +557,7 @@ const loading = ref(false);
 const leaveToDelete = ref(null);
 const activeDropdown = ref(null);
 const dropdownRefs = ref({});
+const dropdownPosition = ref({});
 
 // Approval modal refs
 const showApprovalModal = ref(false);
