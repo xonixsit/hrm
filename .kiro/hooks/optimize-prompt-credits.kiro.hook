@@ -1,0 +1,21 @@
+{
+  "enabled": true,
+  "name": "Credit-Optimized Prompt Handler",
+  "description": "Monitors code changes and provides concise, targeted prompts that maximize accuracy while minimizing credit usage by avoiding unnecessary research and repetitive issue reporting",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "app/**/*.php",
+      "resources/js/**/*.vue",
+      "resources/js/**/*.js",
+      "config/*.php",
+      "database/migrations/*.php",
+      "routes/*.php"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Analyze the changed files and provide a focused, credit-efficient response. Be concise and direct. Only address new issues - do not repeat previously identified problems. Avoid unnecessary research or verbose explanations. Focus on actionable insights that provide maximum value per credit spent. If this is a fix attempt, verify the solution works and only mention if there are remaining issues."
+  }
+}

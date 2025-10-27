@@ -855,11 +855,19 @@
 
   const employeeQuickActions = computed(() => [
     {
+      id: 'submit-work-report',
+      label: 'Submit Work Report',
+      description: 'Record your daily communication activities',
+      icon: DocumentTextIcon,
+      variant: 'primary',
+      route: 'work-reports.create'
+    },
+    {
       id: 'my-assessments',
       label: 'My Assessments',
       description: 'View and complete competency assessments',
       icon: CheckCircleIcon,
-      variant: 'primary',
+      variant: 'secondary',
       route: 'competency-assessments.my-assessments'
     },
     {
