@@ -568,7 +568,9 @@
   const handleApproval = async (item) => {
     loading.value = true;
     try {
-      await axios.post(route('approvals.approve', item.id));
+      await axios.post(route('approvals.approve', item.id), {
+        type: item.type
+      });
       await handleRefresh();
     } catch (error) {
       console.error('Approval error:', error);
@@ -589,7 +591,8 @@
     loading.value = true;
     try {
       await axios.post(route('approvals.reject', rejectionItem.value.id), {
-        reason: rejectionReason.value
+        reason: rejectionReason.value,
+        type: rejectionItem.value.type
       });
       showRejectionModal.value = false;
       await handleRefresh();

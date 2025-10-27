@@ -1196,6 +1196,97 @@ class DashboardController extends Controller
             ->all();
     }
 
+    public function approveItem(Request $request, $id)
+    {
+        try {
+            // Determine the type of approval based on the request or item
+            $type = $request->input('type');
+            
+            if (!$type) {
+                // Try to determine type from the item itself
+                if (Leave::find($id)) {
+                    $type = 'leave';
+                } elseif (Timesheet::find($id)) {
+                    $type = 'timesheet';
+                } elseif (CompetencyAssessment::find($id)) {
+                    $type = 'competency-assessment';
+                }
+            }
+            
+            switch ($type) {
+                case 'leave':
+                    $leave = Leave::findOrFail($id);
+                    $leave->update(['status' => 'approved']);
+                    return response()->json(['success' => true, 'message' => 'Leave request approved successfully']);
+                    
+                case 'timesheet':
+                    $timesheet = Timesheet::findOrFail($id);
+                    $timesheet->update(['status' => 'approved']);
+                    return response()->json(['success' => true, 'message' => 'Timesheet approved successfully']);
+                    
+                case 'competency-assessment':
+                    $assessment = CompetencyAssessment::findOrFail($id);
+                    $assessment->update(['status' => 'approved']);
+                    return response()->json(['success' => true, 'message' => 'Assessment approved successfully']);
+                    
+                default:
+                    return response()->json(['success' => false, 'message' => 'Unknown approval type'], 400);
+            }
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Approval failed: ' . $e->getMessage()], 500);
+        }
+    }
+    
+    public function rejectItem(Request $request, $id)
+    {
+        try {
+            $reason = $request->input('reason', 'No reason provided');
+            $type = $request->input('type');
+            
+            if (!$type) {
+                // Try to determine type from the item itself
+                if (Leave::find($id)) {
+                    $type = 'leave';
+                } elseif (Timesheet::find($id)) {
+                    $type = 'timesheet';
+                } elseif (CompetencyAssessment::find($id)) {
+                    $type = 'competency-assessment';
+                }
+            }
+            
+            switch ($type) {
+                case 'leave':
+                    $leave = Leave::findOrFail($id);
+                    $leave->update([
+                        'status' => 'rejected',
+                        'rejection_reason' => $reason
+                    ]);
+                    return response()->json(['success' => true, 'message' => 'Leave request rejected']);
+                    
+                case 'timesheet':
+                    $timesheet = Timesheet::findOrFail($id);
+                    $timesheet->update([
+                        'status' => 'rejected',
+                        'rejection_reason' => $reason
+                    ]);
+                    return response()->json(['success' => true, 'message' => 'Timesheet rejected']);
+                    
+                case 'competency-assessment':
+                    $assessment = CompetencyAssessment::findOrFail($id);
+                    $assessment->update([
+                        'status' => 'rejected',
+                        'rejection_reason' => $reason
+                    ]);
+                    return response()->json(['success' => true, 'message' => 'Assessment rejected']);
+                    
+                default:
+                    return response()->json(['success' => false, 'message' => 'Unknown approval type'], 400);
+            }
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Rejection failed: ' . $e->getMessage()], 500);
+        }
+    }
+
     private function getCurrentAttendanceStatus($employeeId)
     {
         $today = now()->format('Y-m-d');

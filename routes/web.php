@@ -437,6 +437,10 @@ Route::middleware('auth')->group(function () {
     Route::get('competency-assessments/{competencyAssessment}/workflow-history', [AssessmentWorkflowController::class, 'getWorkflowHistory'])->name('assessment-workflow.history');
     Route::get('assessment-workflow/pending-approvals', [AssessmentWorkflowController::class, 'getPendingApprovals'])->name('assessment-workflow.pending-approvals');
     
+    // Approval routes for dashboard
+    Route::post('approvals/{id}/approve', [DashboardController::class, 'approveItem'])->name('approvals.approve');
+    Route::post('approvals/{id}/reject', [DashboardController::class, 'rejectItem'])->name('approvals.reject');
+    
     // Development Plan routes
     Route::resource('development-plans', CompetencyDevelopmentPlanController::class);
     Route::post('development-plans/{developmentPlan}/update-status', [CompetencyDevelopmentPlanController::class, 'updateStatus'])->name('development-plans.update-status');
