@@ -598,6 +598,11 @@
       const statusResponse = await axios.get('/api/attendance/current');
       const currentStatus = statusResponse.data;
 
+      // Handle null or invalid response
+      if (!currentStatus || typeof currentStatus !== 'object') {
+        throw new Error('Invalid attendance status response');
+      }
+
       // Determine action based on current status
       let endpoint;
       if (!currentStatus.clocked_in) {
@@ -620,10 +625,22 @@
       }
     } catch (error) {
       console.error('Clock in/out error:', error);
-      if (error.response?.status === 419) {
+      
+      // Show user-friendly error message
+      let errorMessage = 'Clock in/out failed. Please try again.';
+      
+      if (error.message === 'Invalid attendance status response') {
+        errorMessage = 'Unable to get attendance status. Please ensure you have an employee profile.';
+      } else if (error.response?.status === 419) {
         // CSRF token mismatch - refresh page
         window.location.reload();
+        return;
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
       }
+      
+      // You can add a toast notification here if you have one
+      alert(errorMessage);
     } finally {
       loading.value = false;
     }

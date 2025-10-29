@@ -320,6 +320,31 @@ class DashboardController extends Controller
                 $data['myLeaves'] = Leave::where('employee_id', $employeeId)->latest()->take(5)->get();
                 $data['myTimesheets'] = Timesheet::where('employee_id', $employeeId)->latest()->take(5)->get();
                 $data['myFeedbacks'] = Feedback::where('reviewee_id', $user->id)->latest()->take(5)->get();
+            } else {
+                // User has no employee record - provide default attendance data
+                $data['currentAttendance'] = [
+                    'clocked_in' => false,
+                    'on_break' => false,
+                    'clock_in_time' => null,
+                    'todays_summary' => [
+                        'total_hours' => '0h 0m',
+                        'break_time' => '0h 0m',
+                        'sessions' => 0,
+                        'clock_ins' => 0
+                    ],
+                    'recent_activities' => [],
+                    'stats' => []
+                ];
+                $data['clockedIn'] = false;
+                
+                // Empty collections for users without employee records
+                $data['myAttendances'] = collect();
+                $data['myLeaves'] = collect();
+                $data['myTimesheets'] = collect();
+                $data['myFeedbacks'] = collect();
+                $data['personalActivities'] = [];
+                $data['myTasks'] = [];
+                $data['recentFeedback'] = [];
             }
         }
 

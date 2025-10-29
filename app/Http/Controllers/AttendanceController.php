@@ -183,7 +183,9 @@ class AttendanceController extends Controller
                 'success' => true,
                 'message' => 'Clocked in successfully.',
                 'attendance' => $existing->fresh(),
-                'clock_in_time' => $existing->clock_in->toISOString()
+                'clock_in_time' => $existing->clock_in->toISOString(),
+                'clocked_in' => true,
+                'on_break' => false
             ]);
         }
 
@@ -223,7 +225,9 @@ class AttendanceController extends Controller
             'success' => true,
             'message' => 'Clocked in successfully.',
             'attendance' => $attendance,
-            'clock_in_time' => $attendance->clock_in->toISOString()
+            'clock_in_time' => $attendance->clock_in->toISOString(),
+            'clocked_in' => true,
+            'on_break' => false
         ]);
     }
 
@@ -391,6 +395,20 @@ class AttendanceController extends Controller
                 'clocked_in' => false,
                 'on_break' => false,
                 'clock_in_time' => null,
+                'break_start_time' => null,
+                'current_session' => null,
+                'todays_summary' => [
+                    'total_hours' => '0h 0m',
+                    'break_time' => '0h 0m',
+                    'sessions' => 0,
+                    'clock_ins' => 0
+                ],
+                'recent_activities' => [],
+                'stats' => [
+                    'weekly_hours' => '0h 0m',
+                    'monthly_hours' => '0h 0m',
+                    'average_daily' => '0h 0m'
+                ],
                 'error' => 'No employee record found for this user.'
             ]);
         }
@@ -406,6 +424,8 @@ class AttendanceController extends Controller
                 'clocked_in' => false,
                 'on_break' => false,
                 'clock_in_time' => null,
+                'break_start_time' => null,
+                'current_session' => null,
                 'todays_summary' => $this->getTodaysSummary($employee->id),
                 'recent_activities' => $this->getRecentActivities($employee->id),
                 'stats' => $this->getAttendanceStats($employee->id)
@@ -414,7 +434,7 @@ class AttendanceController extends Controller
 
         return response()->json([
             'clocked_in' => $attendance->isClockedIn(),
-            'on_break' => $attendance->on_break,
+            'on_break' => $attendance->on_break ?? false,
             'clock_in_time' => $attendance->clock_in?->toISOString(),
             'break_start_time' => $attendance->current_break_start?->toISOString(),
             'current_session' => $attendance,
