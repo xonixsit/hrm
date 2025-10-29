@@ -33,6 +33,11 @@ Route::get('/', function () {
 });
 
 Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
+
+// Employee Handbook
+Route::get('/employee-handbook', function () {
+    return Inertia::render('EmployeeHandbook');
+})->middleware(['auth', 'verified'])->name('employee-handbook');
 Route::get('/dashboard-test', [App\Http\Controllers\DashboardTestController::class, 'test'])->middleware(['auth', 'verified'])->name('dashboard.test');
 
 Route::middleware('auth')->group(function () {

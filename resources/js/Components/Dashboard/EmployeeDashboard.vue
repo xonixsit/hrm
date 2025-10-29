@@ -458,6 +458,7 @@
     PlayIcon,
     BoltIcon,
     ChartBarIcon,
+    BookOpenIcon,
     DocumentTextIcon
   } from '@heroicons/vue/24/outline';
 
@@ -934,6 +935,14 @@
       icon: ExclamationTriangleIcon,
       variant: 'success',
       route: 'assessment-dashboard'
+    },
+    {
+      id: 'employee-handbook',
+      label: 'Employee Handbook',
+      description: 'Learn how to use the system effectively',
+      icon: BookOpenIcon,
+      variant: 'info',
+      route: 'employee-handbook'
     }
   ]);
 

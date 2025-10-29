@@ -384,6 +384,7 @@ const moreNavItems = computed(() => {
       { route: 'work-reports.index', label: 'Work Reports', category: 'regular' },
       { route: 'work-reports.leaderboard', label: 'Leaderboard', category: 'regular' },
       { route: 'feedbacks.index', label: 'Feedback', category: 'regular' },
+      { route: 'employee-handbook', label: 'Employee Handbook', category: 'regular' },
       { route: 'support.index', label: 'Support', category: 'regular' }
     ]
 

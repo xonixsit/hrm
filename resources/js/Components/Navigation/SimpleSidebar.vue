@@ -183,7 +183,8 @@ const navigationItems = computed(() => {
     { id: 'attendance', label: 'Time Tracking', route: 'attendances.index', icon: 'ClockIcon' },
     { id: 'leaves', label: 'Leave Requests', route: 'leaves.index', icon: 'CalendarIcon' },
     { id: 'assessments', label: 'My Assessments', route: 'competency-assessments.my-assessments', icon: 'ClipboardIcon' },
-    { id: 'reports', label: 'Work Reports', route: 'work-reports.index', icon: 'DocumentIcon' }
+    { id: 'reports', label: 'Work Reports', route: 'work-reports.index', icon: 'DocumentIcon' },
+    { id: 'handbook', label: 'Employee Handbook', route: 'employee-handbook', icon: 'BookOpenIcon' }
   )
 
   // Management items
