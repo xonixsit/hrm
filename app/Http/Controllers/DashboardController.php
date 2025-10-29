@@ -1436,8 +1436,10 @@ class DashboardController extends Controller
             ];
         }
 
+        $clockedIn = $attendance->isClockedIn();
+
         $result = [
-            'clocked_in' => $attendance->isClockedIn(),
+            'clocked_in' => $clockedIn,
             'on_break' => $attendance->on_break,
             'clock_in_time' => $attendance->clock_in?->toISOString(),
             'current_break_start' => $attendance->current_break_start?->toISOString(),
