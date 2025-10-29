@@ -105,6 +105,7 @@ class WorkReportController extends Controller
         if ($user->hasRole('Admin') || $user->hasRole('Manager') || $user->hasRole('HR')) {
             $employees = Employee::with('user')
                 ->whereHas('user')
+                ->whereNull('deleted_at') // Exclude soft-deleted employees
                 ->get()
                 ->map(function ($employee) {
                     return [
@@ -417,7 +418,8 @@ class WorkReportController extends Controller
         
         // Get employees based on user role
         $employeesQuery = Employee::with(['user', 'department'])
-            ->whereHas('user');
+            ->whereHas('user')
+            ->whereNull('deleted_at'); // Exclude soft-deleted employees
             
         // Role-based filtering: Only Admin can see all employees
         if (!$user->hasRole('Admin')) {

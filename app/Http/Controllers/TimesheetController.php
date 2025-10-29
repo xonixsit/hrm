@@ -41,6 +41,7 @@ class TimesheetController extends Controller
             $employees = Employee::with('user')
                 ->whereHas('user') // Only get employees that have users
                 ->where('status', 'active') // Only active employees
+                ->whereNull('deleted_at') // Exclude soft-deleted employees
                 ->orderBy('id')
                 ->get()
                 ->map(function ($employee) {
@@ -125,6 +126,7 @@ class TimesheetController extends Controller
             $employees = Employee::with('user')
                 ->whereHas('user') // Only get employees that have users
                 ->where('status', 'active') // Only active employees
+                ->whereNull('deleted_at') // Exclude soft-deleted employees
                 ->orderBy('id')
                 ->get()
                 ->map(function ($employee) {

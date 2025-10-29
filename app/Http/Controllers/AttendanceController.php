@@ -104,6 +104,7 @@ class AttendanceController extends Controller
             $filterOptions['employees'] = Employee::with('user')
                 ->whereHas('user') // Only get employees that have users
                 ->where('status', 'active') // Only active employees
+                ->whereNull('deleted_at') // Exclude soft-deleted employees
                 ->orderBy('id')
                 ->get()
                 ->map(function ($employee) {

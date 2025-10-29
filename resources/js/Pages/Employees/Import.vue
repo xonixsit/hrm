@@ -296,6 +296,10 @@
     departments: {
       type: Array,
       default: () => []
+    },
+    roles: {
+      type: Array,
+      default: () => []
     }
   })
 
@@ -448,7 +452,7 @@
       join_date: ['join date', 'start date', 'hire date', 'join_date', 'start_date', 'hire_date'],
       salary: ['salary', 'basic salary', 'annual salary', 'basic_salary', 'annual_salary'],
       contract_type: ['contract type', 'employment type', 'status', 'contract_type', 'employment_type'],
-      role: ['role', 'user role', 'system role', 'access role', 'permission role']
+      role: ['role', 'user role', 'system role', 'access role', 'permission role', 'user_role']
     }
 
     Object.keys(mappings).forEach(field => {

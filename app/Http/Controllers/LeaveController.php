@@ -133,7 +133,7 @@ class LeaveController extends Controller
             'canManageLeaves' => $isApprover,
             'filters' => [
                 'leaveTypes' => LeaveType::all(),
-                'employees' => $isApprover ? Employee::with('user')->get()->map(function($emp) {
+                'employees' => $isApprover ? Employee::with('user')->whereNull('deleted_at')->get()->map(function($emp) {
                     return ['id' => $emp->id, 'name' => $emp->user ? $emp->user->name : 'Unknown'];
                 }) : [],
             ],

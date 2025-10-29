@@ -156,6 +156,7 @@ class CompetencyAssessmentController extends Controller
         // Get employees and competencies for selection
         $employees = Employee::with(['user', 'department'])
             ->whereHas('user')
+            ->whereNull('deleted_at') // Exclude soft-deleted employees
             ->orderBy('id')
             ->get()
             ->map(function ($employee) {

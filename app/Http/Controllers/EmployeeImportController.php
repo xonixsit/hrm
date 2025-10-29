@@ -22,9 +22,11 @@ class EmployeeImportController extends Controller
     public function index()
     {
         $departments = Department::select('id', 'name')->get();
+        $roles = Role::select('id', 'name')->get();
         
         return Inertia::render('Employees/Import', [
-            'departments' => $departments
+            'departments' => $departments,
+            'roles' => $roles
         ]);
     }
 
@@ -44,6 +46,11 @@ class EmployeeImportController extends Controller
             'Role'
         ];
         
+        // Get available roles for sample data
+        $availableRoles = Role::pluck('name')->toArray();
+        $sampleRole1 = in_array('Employee', $availableRoles) ? 'Employee' : ($availableRoles[0] ?? 'Employee');
+        $sampleRole2 = in_array('Manager', $availableRoles) ? 'Manager' : ($availableRoles[0] ?? 'Employee');
+        
         $sampleData = [
             [
                 'John Doe',
@@ -54,7 +61,7 @@ class EmployeeImportController extends Controller
                 '2024-01-15',
                 '75000',
                 'Full-time',
-                'Employee'
+                $sampleRole1
             ],
             [
                 'Jane Smith',
@@ -65,7 +72,7 @@ class EmployeeImportController extends Controller
                 '2024-02-01',
                 '85000',
                 'Permanent',
-                'Manager'
+                $sampleRole2
             ],
             [
                 'Mike Johnson',
@@ -76,7 +83,7 @@ class EmployeeImportController extends Controller
                 '2024-03-01',
                 '55000',
                 'Contract',
-                'Employee'
+                $sampleRole1
             ]
         ];
         
@@ -245,6 +252,9 @@ class EmployeeImportController extends Controller
         $hasErrors = false;
 
         foreach ($data as $index => $row) {
+            // Get available roles dynamically
+            $availableRoles = Role::pluck('name')->toArray();
+            
             $validator = Validator::make($row, [
                 'name' => 'required|string|max:255',
                 'email' => 'required|email|unique:users,email',
@@ -254,7 +264,7 @@ class EmployeeImportController extends Controller
                 'join_date' => 'nullable|date',
                 'salary' => 'nullable|numeric|min:0',
                 'contract_type' => 'nullable|string|in:Full-time,Part-time,Contract,Temporary,Permanent',
-                'role' => 'nullable|string|in:Admin,HR,Manager,Employee'
+                'role' => 'nullable|string|in:' . implode(',', $availableRoles)
             ]);
 
             if ($validator->fails()) {
@@ -347,11 +357,16 @@ class EmployeeImportController extends Controller
         ]);
         
         // Assign role to user
-        $role = $row['role'] ?? 'Employee';
-        if (Role::where('name', $role)->exists()) {
+        $roleName = $row['role'] ?? 'Employee';
+        $role = Role::where('name', $roleName)->first();
+        if ($role) {
             $user->assignRole($role);
         } else {
-            $user->assignRole('Employee'); // Default fallback
+            // Try to find Employee role as fallback
+            $defaultRole = Role::where('name', 'Employee')->first();
+            if ($defaultRole) {
+                $user->assignRole($defaultRole);
+            }
         }
         
         // Store plain password temporarily for email
@@ -391,8 +406,9 @@ class EmployeeImportController extends Controller
 
         // Update user role if provided
         if (!empty($row['role'])) {
-            $role = $row['role'];
-            if (Role::where('name', $role)->exists()) {
+            $roleName = $row['role'];
+            $role = Role::where('name', $roleName)->first();
+            if ($role) {
                 // Remove all existing roles and assign the new one
                 $user->syncRoles([$role]);
             }

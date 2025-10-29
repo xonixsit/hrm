@@ -36,9 +36,11 @@ class SupportController extends Controller
             'status' => 'open',
         ]);
 
-        // Send email notification
-        $supportEmail = config('mail.support_email', config('mail.from.address'));
-        Mail::to($supportEmail)->send(new SupportRequestMail($supportRequest));
+        // Send email notification to all admin users
+        $adminUsers = \App\Models\User::role('Admin')->get();
+        foreach ($adminUsers as $admin) {
+            Mail::to($admin->email)->send(new SupportRequestMail($supportRequest));
+        }
 
         return redirect()->back()->with('success', 'Support request submitted successfully! We will get back to you soon.');
     }
