@@ -478,8 +478,18 @@ class AttendanceController extends Controller
             ]);
         }
 
+        $clockedIn = $attendance->isClockedIn();
+        
+        \Log::info('getCurrentStatus result:', [
+            'attendance_id' => $attendance->id,
+            'status' => $attendance->status,
+            'clock_in' => $attendance->clock_in,
+            'clock_out' => $attendance->clock_out,
+            'isClockedIn' => $clockedIn
+        ]);
+
         return response()->json([
-            'clocked_in' => $attendance->isClockedIn(),
+            'clocked_in' => $clockedIn,
             'on_break' => $attendance->on_break ?? false,
             'clock_in_time' => $attendance->clock_in?->toISOString(),
             'break_start_time' => $attendance->current_break_start?->toISOString(),

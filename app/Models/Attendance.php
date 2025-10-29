@@ -208,14 +208,7 @@ class Attendance extends Model
         }
         
         // Fallback check: if there's a clock_in time but no clock_out time, consider clocked in
-        // This handles cases where status might not be set correctly
         if ($this->clock_in && !$this->clock_out) {
-            \Log::warning('Attendance record has clock_in but status is not clocked_in', [
-                'id' => $this->id,
-                'status' => $this->status,
-                'clock_in' => $this->clock_in,
-                'clock_out' => $this->clock_out
-            ]);
             return true;
         }
         
