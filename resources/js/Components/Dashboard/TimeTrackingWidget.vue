@@ -203,8 +203,8 @@ onUnmounted(() => {
 // Computed properties
 const isClockedIn = computed(() => (props.currentAttendance && props.currentAttendance.clocked_in) || props.clockedIn);
 const isOnBreak = computed(() => props.currentAttendance && props.currentAttendance.on_break);
-const todaysSummary = computed(() => props.currentAttendance.todays_summary || {});
-const weeklyStats = computed(() => props.currentAttendance.stats || {});
+const todaysSummary = computed(() => props.currentAttendance?.todays_summary || {});
+const weeklyStats = computed(() => props.currentAttendance?.stats || {});
 
 // Status helpers
 const getStatusClasses = () => {
@@ -222,7 +222,7 @@ const getStatusText = () => {
 const getWorkDuration = () => {
   if (!isClockedIn.value) return '0h 0m';
   
-  if (props.currentAttendance.clock_in_time) {
+  if (props.currentAttendance?.clock_in_time) {
     const clockInTime = new Date(props.currentAttendance.clock_in_time);
     const now = new Date();
     const diffMs = now - clockInTime;

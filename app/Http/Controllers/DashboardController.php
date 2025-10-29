@@ -357,6 +357,46 @@ class DashboardController extends Controller
                     'upcomingBirthdays' => [],
                     'stats' => ['total' => 0, 'this_month' => 0, 'next_month' => 0],
                     'currentUserBirthday' => null,
+                ],
+                'currentAttendance' => [
+                    'clocked_in' => false,
+                    'on_break' => false,
+                    'clock_in_time' => null,
+                    'todays_summary' => [
+                        'total_hours' => '0h 0m',
+                        'break_time' => '0h 0m',
+                        'sessions' => 0,
+                        'clock_ins' => 0
+                    ],
+                    'recent_activities' => [],
+                    'stats' => []
+                ],
+                'clockedIn' => false,
+                'employeeStats' => [
+                    'attendanceRate' => 0,
+                    'hoursToday' => '0h 0m',
+                    'myWorkReports' => 0,
+                    'mySuccessfulCalls' => 0,
+                    'pendingLeaves' => 0,
+                    'approvedLeaves' => 0,
+                    'leaveBalance' => 0,
+                    'myPendingAssessments' => 0,
+                    'myCompletedAssessments' => 0,
+                    'myAverageRating' => null,
+                    'skillsGrowth' => 0,
+                    'competencyProgress' => 0,
+                    'daysWithCompany' => 0,
+                    'monthsWithCompany' => 0,
+                    'yearsOfService' => 0,
+                    'totalWorkHours' => 0,
+                    'projectsContributed' => 0,
+                    'totalAchievements' => 0,
+                    'recentAchievements' => [],
+                    'performanceRank' => 'N/A',
+                    'consistencyScore' => 0,
+                    'attendanceTrend' => 0,
+                    'performanceTrend' => 0,
+                    'productivityTrend' => 0,
                 ]
             ]);
         }

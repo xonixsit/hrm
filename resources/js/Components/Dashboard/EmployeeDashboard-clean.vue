@@ -18,7 +18,7 @@
           {{ clockButtonText }}
         </button>
         <button
-          v-if="isCurrentlyClockedIn && !currentAttendance.on_break"
+          v-if="isCurrentlyClockedIn && !(currentAttendance && currentAttendance.on_break)"
           @click="handleTakeBreak"
           :disabled="loading"
           class="break-button"
@@ -27,7 +27,7 @@
           Take Break
         </button>
         <button
-          v-if="isCurrentlyClockedIn && currentAttendance.on_break"
+          v-if="isCurrentlyClockedIn && (currentAttendance && currentAttendance.on_break)"
           @click="handleEndBreak"
           :disabled="loading"
           class="end-break-button"
@@ -410,7 +410,7 @@ let timeInterval = null;
 
 // Computed properties
 const isCurrentlyClockedIn = computed(() => {
-  return props.clockedIn || props.currentAttendance.clocked_in;
+  return props.clockedIn || (props.currentAttendance && props.currentAttendance.clocked_in);
 });
 
 const clockButtonText = computed(() => {

@@ -589,7 +589,7 @@
       return 'before-work';
     }
 
-    const clockInTime = props.currentAttendance.clock_in_time;
+    const clockInTime = props.currentAttendance?.clock_in_time;
     if (!clockInTime) {
       return 'before-work';
     }
@@ -605,7 +605,7 @@
       return 0;
     }
 
-    const clockInTime = props.currentAttendance.clock_in_time;
+    const clockInTime = props.currentAttendance?.clock_in_time;
     if (!clockInTime) {
       console.log('🔍 Progress: No clock in time, returning 0%');
       return 0;
@@ -688,7 +688,7 @@
       return 0;
     }
 
-    const clockInTime = props.currentAttendance.clock_in_time;
+    const clockInTime = props.currentAttendance?.clock_in_time;
     if (!clockInTime) {
       return 0;
     }
@@ -714,7 +714,7 @@
       return 0;
     }
 
-    const clockInTime = props.currentAttendance.clock_in_time;
+    const clockInTime = props.currentAttendance?.clock_in_time;
     if (!clockInTime) {
       console.log('🔍 ProgressWidth: No clock in time, returning 0');
       return 0;
@@ -762,7 +762,7 @@
       return 0;
     }
 
-    const clockInTime = props.currentAttendance.clock_in_time;
+    const clockInTime = props.currentAttendance?.clock_in_time;
     if (!clockInTime) {
       return 0;
     }
@@ -799,7 +799,7 @@
     const allBreakSessions = [];
 
     // Add completed break sessions from the break_sessions array
-    const breakSessions = props.currentAttendance.break_sessions || [];
+    const breakSessions = props.currentAttendance?.break_sessions || [];
     breakSessions.forEach(session => {
       if (session.start) {
         allBreakSessions.push({
@@ -939,7 +939,7 @@
   };
 
   const updateWorkDuration = () => {
-    if (isCurrentlyClockedIn.value && props.currentAttendance.clock_in_time) {
+    if (isCurrentlyClockedIn.value && props.currentAttendance?.clock_in_time) {
       const clockInTime = new Date(props.currentAttendance.clock_in_time);
       const now = new Date();
       const diffMs = now - clockInTime;
@@ -1004,7 +1004,7 @@
       console.log('🔍 Current state:', {
         isCurrentlyClockedIn: isCurrentlyClockedIn.value,
         clockedIn: props.clockedIn,
-        currentAttendanceClockedIn: props.currentAttendance.clocked_in
+        currentAttendanceClockedIn: props.currentAttendance?.clocked_in
       });
 
       emit('clock-in-out');
