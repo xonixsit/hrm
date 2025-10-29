@@ -33,6 +33,7 @@ Route::get('/', function () {
 });
 
 Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard-test', [App\Http\Controllers\DashboardTestController::class, 'test'])->middleware(['auth', 'verified'])->name('dashboard.test');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
