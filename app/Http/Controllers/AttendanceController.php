@@ -162,7 +162,7 @@ class AttendanceController extends Controller
             }
             
             // If clocked out, update the existing record instead of creating new one
-            $existing->update([
+            $updateData = [
                 'clock_in' => now(),
                 'clock_out' => null,
                 'status' => 'clocked_in',
@@ -175,12 +175,32 @@ class AttendanceController extends Controller
                 'latitude' => $request->input('latitude'),
                 'longitude' => $request->input('longitude'),
                 'location_verified' => $request->input('latitude') && $request->input('longitude')
+            ];
+
+            \Log::info('Updating existing attendance record:', [
+                'id' => $existing->id,
+                'old_status' => $existing->status,
+                'update_data' => $updateData
+            ]);
+
+            $existing->update($updateData);
+            
+            \Log::info('Attendance record updated:', [
+                'id' => $existing->id,
+                'status' => $existing->status,
+                'isClockedIn' => $existing->isClockedIn()
             ]);
             
             $this->logAudit('Attendance Clock In', 'Re-clocked in for employee ID: ' . $employee->id);
             
             // Refresh the attendance record to ensure we have the latest data
             $existing = $existing->fresh();
+
+            \Log::info('Attendance record after fresh():', [
+                'id' => $existing->id,
+                'status' => $existing->status,
+                'isClockedIn' => $existing->isClockedIn()
+            ]);
             
             return response()->json([
                 'success' => true,
@@ -205,7 +225,7 @@ class AttendanceController extends Controller
             $locationVerified = true;
         }
 
-        $attendance = Attendance::create([
+        $attendanceData = [
             'employee_id' => $employee->id,
             'date' => $today,
             'clock_in' => now(),
@@ -218,6 +238,17 @@ class AttendanceController extends Controller
             'on_break' => false,
             'total_break_minutes' => 0,
             'break_sessions' => []
+        ];
+
+        \Log::info('Creating attendance record with data:', $attendanceData);
+
+        $attendance = Attendance::create($attendanceData);
+
+        \Log::info('Attendance record created:', [
+            'id' => $attendance->id,
+            'status' => $attendance->status,
+            'clock_in' => $attendance->clock_in,
+            'isClockedIn' => $attendance->isClockedIn()
         ]);
 
         $this->logAudit('Attendance Clock In', 'Clocked in for employee ID: ' . $employee->id);
@@ -227,6 +258,13 @@ class AttendanceController extends Controller
         
         // Refresh the attendance record to ensure we have the latest data
         $attendance = $attendance->fresh();
+
+        \Log::info('Attendance record after fresh():', [
+            'id' => $attendance->id,
+            'status' => $attendance->status,
+            'clock_in' => $attendance->clock_in,
+            'isClockedIn' => $attendance->isClockedIn()
+        ]);
         
         return response()->json([
             'success' => true,
