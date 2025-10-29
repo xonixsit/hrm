@@ -21,6 +21,24 @@ class DepartmentSeeder extends Seeder
                 'status' => 'Active'
             ],
             [
+                'name' => 'Payment',
+                'code' => 'PMT',
+                'description' => 'Payment processing and financial transactions',
+                'status' => 'Active'
+            ],
+            [
+                'name' => 'Exisiting',
+                'code' => 'EXT',
+                'description' => 'Existing Client Operations',
+                'status' => 'Active'
+            ],
+            [
+                'name' => 'Billing',
+                'code' => 'BLG',
+                'description' => 'Billing Operations',
+                'status' => 'Active'
+            ],
+            [
                 'name' => 'Marketing',
                 'code' => 'MKT',
                 'description' => 'Marketing and brand management',
