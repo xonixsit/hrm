@@ -1451,7 +1451,6 @@ class DashboardController extends Controller
         usort($activities, function($a, $b) {
             return strtotime($b['time']) - strtotime($a['time']);
         });
-
         return array_slice($activities, 0, $limit);
     }
 
