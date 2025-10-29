@@ -556,10 +556,10 @@
 
   // Computed properties
   const isCurrentlyClockedIn = computed(() => {
-    const clockedIn = props.clockedIn || props.currentAttendance.clocked_in;
+    const clockedIn = props.clockedIn || (props.currentAttendance && props.currentAttendance.clocked_in);
     console.log('🔍 isCurrentlyClockedIn computed:', {
       propsClockedIn: props.clockedIn,
-      currentAttendanceClockedIn: props.currentAttendance.clocked_in,
+      currentAttendanceClockedIn: props.currentAttendance?.clocked_in,
       result: clockedIn
     });
     return clockedIn;

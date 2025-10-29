@@ -201,8 +201,8 @@ onUnmounted(() => {
 });
 
 // Computed properties
-const isClockedIn = computed(() => props.currentAttendance.clocked_in || props.clockedIn);
-const isOnBreak = computed(() => props.currentAttendance.on_break);
+const isClockedIn = computed(() => (props.currentAttendance && props.currentAttendance.clocked_in) || props.clockedIn);
+const isOnBreak = computed(() => props.currentAttendance && props.currentAttendance.on_break);
 const todaysSummary = computed(() => props.currentAttendance.todays_summary || {});
 const weeklyStats = computed(() => props.currentAttendance.stats || {});
 
