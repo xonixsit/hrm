@@ -286,6 +286,16 @@ const handleClockInOut = async () => {
       
       // Broadcast update to other components
       broadcastAttendanceUpdate()
+      
+      // Also broadcast custom event for immediate UI updates
+      window.dispatchEvent(new CustomEvent('attendance-state-changed', {
+        detail: {
+          clockedIn: false,
+          onBreak: false,
+          clockInTime: null,
+          breakStartTime: null
+        }
+      }))
     } else {
       // Clock in
       const response = await window.axios.post('/api/attendance/clock-in', {
@@ -301,6 +311,16 @@ const handleClockInOut = async () => {
       
       // Broadcast update to other components
       broadcastAttendanceUpdate()
+      
+      // Also broadcast custom event for immediate UI updates
+      window.dispatchEvent(new CustomEvent('attendance-state-changed', {
+        detail: {
+          clockedIn: true,
+          onBreak: false,
+          clockInTime: attendance.value.clockInTime,
+          breakStartTime: null
+        }
+      }))
     }
   } catch (error) {
     console.error('Clock in/out failed:', error)

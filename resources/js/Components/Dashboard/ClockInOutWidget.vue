@@ -19,6 +19,11 @@
       <div class="status-note">Check floating widget for live timer</div>
     </div>
 
+    <!-- Debug Info (remove in production) -->
+    <div v-if="true" class="debug-info" style="font-size: 10px; color: #666; padding: 8px; background: #f9f9f9; margin: 4px;">
+      Debug: clockedIn={{ attendance.clockedIn.value }}, onBreak={{ attendance.onBreak.value }}, clockInTime={{ attendance.clockInTime.value }}
+    </div>
+
     <!-- Action Buttons -->
     <div class="action-row">
       <button
@@ -34,6 +39,7 @@
         @click="handleBreak"
         :disabled="attendance.loading.value"
         class="secondary-action"
+        :key="`break-btn-${attendance.clockedIn.value}-${attendance.onBreak.value}`"
       >
         <component :is="attendance.onBreak.value ? PlayIcon : PauseIcon" class="w-4 h-4" />
         {{ attendance.onBreak.value ? 'End Break' : 'Take Break' }}
@@ -48,7 +54,7 @@
           <div class="time-label">WORK TIME</div>
         </div>
         <div class="time-metric">
-          <div class="time-value">1h 23m 0s</div>
+          <div class="time-value" id="main-break-time">{{ breakTimeFromFloatingWidget }}</div>
           <div class="time-label">BREAK TIME</div>
         </div>
         <div class="time-metric">
@@ -132,7 +138,7 @@
 <script setup>
 console.log('🎯 ClockInOutWidget script is loading...')
 
-import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
+import { computed, ref, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useAuth } from '@/composables/useAuth.js'
 import { 
   ClockIcon, 
@@ -614,6 +620,16 @@ const handleClockInOut = async () => {
           clockIns: 1
         }
       }
+      
+      // Broadcast state change to floating widget
+      window.dispatchEvent(new CustomEvent('attendance-state-changed', {
+        detail: {
+          clockedIn: false,
+          onBreak: false,
+          clockInTime: null,
+          breakStartTime: null
+        }
+      }))
     } else {
       console.log('Clocking in...')
       
@@ -634,8 +650,26 @@ const handleClockInOut = async () => {
       
       console.log('After clock in - clockedIn:', attendance.clockedIn.value, 'clockInTime:', attendance.clockInTime.value)
       
+      // Force UI update by triggering reactivity
+      await nextTick()
+      
       // Start updating work duration immediately
       updateWorkDuration()
+      
+      // Broadcast state change to floating widget
+      window.dispatchEvent(new CustomEvent('attendance-state-changed', {
+        detail: {
+          clockedIn: true,
+          onBreak: false,
+          clockInTime: attendance.clockInTime.value,
+          breakStartTime: null
+        }
+      }))
+      
+      // Fetch fresh status to ensure UI is in sync
+      setTimeout(() => {
+        fetchCurrentStatus()
+      }, 500)
     }
     
     emit('clock-in-out')
@@ -972,19 +1006,11 @@ const handleFloatingWidgetStateChange = (event) => {
   attendance.clockInTime.value = clockInTime
   breakStartTime.value = floatingBreakStartTime
   
-  // Update break time display
-  updateBreakTimeDisplay()
-  
-  console.log('✅ Main widget state synchronized with floating widget')akStartTime: floatingBreakStartTime } = event.detail
-  
-  // Update local state to match floating widget
-  attendance.clockedIn.value = clockedIn
-  attendance.onBreak.value = onBreak
-  attendance.clockInTime.value = clockInTime
-  breakStartTime.value = floatingBreakStartTime
-  
   // Update work duration immediately
   updateWorkDuration()
+  
+  // Update break time display
+  updateBreakTimeDisplay()
   
   console.log('✅ Main widget state synchronized with floating widget')
 }

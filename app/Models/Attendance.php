@@ -191,11 +191,6 @@ class Attendance extends Model
             }
         }
         
-        // If no breaks, return dash
-        if ($breakMinutes <= 0) {
-            return '-';
-        }
-        
         $hours = floor($breakMinutes / 60);
         $mins = $breakMinutes % 60;
         
