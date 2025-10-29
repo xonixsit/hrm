@@ -648,10 +648,17 @@
 
   const updateAttendanceStatus = async () => {
     try {
-      // Force a full page reload to get fresh data from DashboardController
-      window.location.reload();
+      // Use Inertia to reload only the attendance-related props
+      await router.reload({ 
+        only: ['currentAttendance', 'clockedIn', 'employeeStats'],
+        preserveScroll: true,
+        preserveState: true
+      });
+      
+      console.log('✅ Attendance status updated via Inertia reload');
     } catch (error) {
       console.error('Failed to update attendance status:', error);
+      // Fallback to page reload if Inertia reload fails
       window.location.reload();
     }
   };

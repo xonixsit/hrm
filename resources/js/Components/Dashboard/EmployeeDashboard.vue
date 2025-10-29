@@ -13,12 +13,12 @@
           <ClockIcon class="w-4 h-4" />
           {{ clockButtonText }}
         </button>
-        <button v-if="isCurrentlyClockedIn && !(currentAttendance && currentAttendance.on_break)"
+        <button v-if="isCurrentlyClockedIn && !isCurrentlyOnBreak"
           @click="handleTakeBreak" :disabled="loading" class="break-button">
           <PauseIcon class="w-4 h-4" />
           Take Break
         </button>
-        <button v-if="isCurrentlyClockedIn && (currentAttendance && currentAttendance.on_break)" @click="handleEndBreak"
+        <button v-if="isCurrentlyClockedIn && isCurrentlyOnBreak" @click="handleEndBreak"
           :disabled="loading" class="end-break-button">
           <PlayIcon class="w-4 h-4" />
           End Break
@@ -437,7 +437,7 @@
 </template>
 
 <script setup>
-  import { computed, ref, onMounted, onUnmounted } from 'vue';
+  import { computed, ref, onMounted, onUnmounted, watch } from 'vue';
   import { useAuth } from '@/composables/useAuth.js';
   import DashboardWidget from './DashboardWidget.vue';
   import QuickActions from './QuickActions.vue';
@@ -546,23 +546,58 @@
   // Composables
   const { user } = useAuth();
 
-  // Local state
+  // Local state for immediate UI updates
   const currentTime = ref(new Date());
   const currentDate = ref('');
   const realTimeWorkDuration = ref('0h 0m 0s');
   const realTimeBreakDuration = ref('0h 0m 0s');
   const breakStartTime = ref(null);
+  
+  // Local attendance state for immediate UI feedback
+  const localAttendanceState = ref({
+    clockedIn: false,
+    onBreak: false,
+    clockInTime: null,
+    breakStartTime: null,
+    lastUpdated: null
+  });
+  
   let timeInterval = null;
 
   // Computed properties
   const isCurrentlyClockedIn = computed(() => {
-    const clockedIn = props.clockedIn || (props.currentAttendance && props.currentAttendance.clocked_in);
-    console.log('🔍 isCurrentlyClockedIn computed:', {
+    // Use local state if it's more recent than props (for immediate UI feedback)
+    const propsClocked = props.clockedIn || (props.currentAttendance && props.currentAttendance.clocked_in);
+    
+    // If local state exists and is recent (within 10 seconds), use it for immediate feedback
+    if (localAttendanceState.value.lastUpdated) {
+      const timeSinceUpdate = Date.now() - localAttendanceState.value.lastUpdated;
+      if (timeSinceUpdate < 10000) { // 10 seconds
+        console.log('🔍 Using local state for immediate feedback:', localAttendanceState.value.clockedIn);
+        return localAttendanceState.value.clockedIn;
+      }
+    }
+    
+    // Otherwise use props as source of truth
+    console.log('🔍 isCurrentlyClockedIn computed from props:', {
       propsClockedIn: props.clockedIn,
       currentAttendanceClockedIn: props.currentAttendance?.clocked_in,
-      result: clockedIn
+      result: propsClocked
     });
-    return clockedIn;
+    return propsClocked;
+  });
+
+  const isCurrentlyOnBreak = computed(() => {
+    // Use local state if it's more recent than props (for immediate UI feedback)
+    if (localAttendanceState.value.lastUpdated) {
+      const timeSinceUpdate = Date.now() - localAttendanceState.value.lastUpdated;
+      if (timeSinceUpdate < 10000) { // 10 seconds
+        return localAttendanceState.value.onBreak;
+      }
+    }
+    
+    // Otherwise use props as source of truth
+    return props.currentAttendance && props.currentAttendance.on_break;
   });
 
   const clockButtonText = computed(() => {
@@ -1007,15 +1042,28 @@
         currentAttendanceClockedIn: props.currentAttendance?.clocked_in
       });
 
+      // Update local state immediately for instant UI feedback
+      const newClockedInState = !isCurrentlyClockedIn.value;
+      localAttendanceState.value = {
+        clockedIn: newClockedInState,
+        onBreak: false,
+        clockInTime: newClockedInState ? new Date().toISOString() : null,
+        breakStartTime: null,
+        lastUpdated: Date.now()
+      };
+
+      console.log('🚀 Updated local state for immediate feedback:', localAttendanceState.value);
+
+      // Emit to parent for API call
       emit('clock-in-out');
 
       // Also broadcast the state change for immediate floating widget sync
       setTimeout(() => {
         const updateEvent = new CustomEvent('attendance-state-changed', {
           detail: {
-            clockedIn: !isCurrentlyClockedIn.value,
+            clockedIn: newClockedInState,
             onBreak: false,
-            clockInTime: isCurrentlyClockedIn.value ? null : new Date().toISOString(),
+            clockInTime: newClockedInState ? new Date().toISOString() : null,
             breakStartTime: null,
             timestamp: Date.now()
           }
@@ -1024,13 +1072,25 @@
       }, 100);
     } catch (error) {
       console.error('Clock in/out failed:', error);
+      // Reset local state on error
+      localAttendanceState.value.lastUpdated = null;
     }
   };
 
   const handleTakeBreak = async () => {
     try {
       // Set break start time immediately for instant feedback
-      breakStartTime.value = new Date().toISOString();
+      const breakTime = new Date().toISOString();
+      breakStartTime.value = breakTime;
+      
+      // Update local state immediately
+      localAttendanceState.value = {
+        clockedIn: true,
+        onBreak: true,
+        clockInTime: (props.currentAttendance && props.currentAttendance.clock_in_time) || localAttendanceState.value.clockInTime,
+        breakStartTime: breakTime,
+        lastUpdated: Date.now()
+      };
 
       emit('action', { type: 'take-break' });
 
@@ -1041,7 +1101,7 @@
             clockedIn: true,
             onBreak: true,
             clockInTime: (props.currentAttendance && props.currentAttendance.clock_in_time) || null,
-            breakStartTime: breakStartTime.value,
+            breakStartTime: breakTime,
             timestamp: Date.now()
           }
         });
@@ -1049,11 +1109,24 @@
       }, 100);
     } catch (error) {
       console.error('Take break failed:', error);
+      // Reset local state on error
+      localAttendanceState.value.lastUpdated = null;
     }
   };
 
   const handleEndBreak = async () => {
     try {
+      // Update local state immediately
+      localAttendanceState.value = {
+        clockedIn: true,
+        onBreak: false,
+        clockInTime: (props.currentAttendance && props.currentAttendance.clock_in_time) || localAttendanceState.value.clockInTime,
+        breakStartTime: null,
+        lastUpdated: Date.now()
+      };
+      
+      breakStartTime.value = null;
+
       emit('action', { type: 'end-break' });
 
       // Also broadcast the state change for immediate floating widget sync
@@ -1071,6 +1144,8 @@
       }, 100);
     } catch (error) {
       console.error('End break failed:', error);
+      // Reset local state on error
+      localAttendanceState.value.lastUpdated = null;
     }
   };
 
@@ -1201,6 +1276,21 @@
   //   const days = Math.floor(hours / 24);
   //   return `in ${days}d`;
   // };
+
+  // Watch for prop changes to sync local state
+  watch(() => props.currentAttendance, (newAttendance) => {
+    if (newAttendance) {
+      // Clear local state when props update (props are source of truth)
+      localAttendanceState.value.lastUpdated = null;
+      console.log('🔄 Props updated, clearing local state. New attendance:', newAttendance);
+    }
+  }, { deep: true });
+
+  watch(() => props.clockedIn, (newClockedIn) => {
+    // Clear local state when props update
+    localAttendanceState.value.lastUpdated = null;
+    console.log('🔄 clockedIn prop updated:', newClockedIn);
+  });
 
   onMounted(() => {
     updateTime();

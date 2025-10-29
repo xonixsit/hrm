@@ -19,11 +19,6 @@
       <div class="status-note">Check floating widget for live timer</div>
     </div>
 
-    <!-- Debug Info (remove in production) -->
-    <div v-if="true" class="debug-info" style="font-size: 10px; color: #666; padding: 8px; background: #f9f9f9; margin: 4px;">
-      Debug: clockedIn={{ attendance.clockedIn.value }}, onBreak={{ attendance.onBreak.value }}, clockInTime={{ attendance.clockInTime.value }}
-    </div>
-
     <!-- Action Buttons -->
     <div class="action-row">
       <button
