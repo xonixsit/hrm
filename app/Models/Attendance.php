@@ -202,17 +202,19 @@ class Attendance extends Model
      */
     public function isClockedIn()
     {
-        // Primary check: status field
-        if ($this->status === 'clocked_in' || $this->status === 'on_break') {
-            return true;
+        // Check if there's clock_in time but no clock_out time
+        // Also consider status field for consistency with break states
+        if (!$this->clock_in || $this->clock_out) {
+            return false;
         }
         
-        // Fallback check: if there's a clock_in time but no clock_out time, consider clocked in
-        if ($this->clock_in && !$this->clock_out) {
-            return true;
+        // If status is explicitly set, use it for additional validation
+        if ($this->status) {
+            return in_array($this->status, ['clocked_in', 'on_break']);
         }
         
-        return false;
+        // Fallback: if there's clock_in but no clock_out, consider clocked in
+        return true;
     }
 
     /**

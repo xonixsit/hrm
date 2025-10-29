@@ -52,7 +52,7 @@
             <div class="duration-label">Work Time</div>
             <div class="duration-value">{{ realTimeWorkDuration }}</div>
           </div>
-          <div class="duration-item" v-if="currentAttendance && currentAttendance.on_break">
+          <div class="duration-item" v-if="isCurrentlyOnBreak">
             <div class="duration-label">Break Time</div>
             <div class="duration-value">{{ realTimeBreakDuration }}</div>
           </div>
@@ -640,7 +640,8 @@
       return 0;
     }
 
-    const clockInTime = props.currentAttendance?.clock_in_time;
+    // Use local state clock in time if available, otherwise use props
+    const clockInTime = localAttendanceState.value.clockInTime || props.currentAttendance?.clock_in_time;
     if (!clockInTime) {
       console.log('🔍 Progress: No clock in time, returning 0%');
       return 0;
@@ -723,7 +724,8 @@
       return 0;
     }
 
-    const clockInTime = props.currentAttendance?.clock_in_time;
+    // Use local state clock in time if available, otherwise use props
+    const clockInTime = localAttendanceState.value.clockInTime || props.currentAttendance?.clock_in_time;
     if (!clockInTime) {
       return 0;
     }
@@ -749,7 +751,8 @@
       return 0;
     }
 
-    const clockInTime = props.currentAttendance?.clock_in_time;
+    // Use local state clock in time if available, otherwise use props
+    const clockInTime = localAttendanceState.value.clockInTime || props.currentAttendance?.clock_in_time;
     if (!clockInTime) {
       console.log('🔍 ProgressWidth: No clock in time, returning 0');
       return 0;
@@ -797,7 +800,8 @@
       return 0;
     }
 
-    const clockInTime = props.currentAttendance?.clock_in_time;
+    // Use local state clock in time if available, otherwise use props
+    const clockInTime = localAttendanceState.value.clockInTime || props.currentAttendance?.clock_in_time;
     if (!clockInTime) {
       return 0;
     }
@@ -844,6 +848,16 @@
         });
       }
     });
+
+    // Add current ongoing break session if on break
+    if (isCurrentlyOnBreak.value && (localAttendanceState.value.breakStartTime || breakStartTime.value)) {
+      const currentBreakStart = localAttendanceState.value.breakStartTime || breakStartTime.value;
+      allBreakSessions.push({
+        start: currentBreakStart,
+        end: null, // Ongoing break
+        isOngoing: true
+      });
+    }
 
     // Add current ongoing break session if on break
     if (props.currentAttendance && props.currentAttendance.on_break) {
@@ -974,10 +988,13 @@
   };
 
   const updateWorkDuration = () => {
-    if (isCurrentlyClockedIn.value && props.currentAttendance?.clock_in_time) {
-      const clockInTime = new Date(props.currentAttendance.clock_in_time);
+    // Use local state clock in time if available, otherwise use props
+    const clockInTime = localAttendanceState.value.clockInTime || props.currentAttendance?.clock_in_time;
+    
+    if (isCurrentlyClockedIn.value && clockInTime) {
+      const clockIn = new Date(clockInTime);
       const now = new Date();
-      const diffMs = now - clockInTime;
+      const diffMs = now - clockIn;
 
       const hours = Math.floor(diffMs / (1000 * 60 * 60));
       const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
@@ -1277,6 +1294,27 @@
   //   return `in ${days}d`;
   // };
 
+  // Fetch fresh attendance status on mount
+  const fetchFreshStatus = async () => {
+    try {
+      const response = await window.axios.get('/api/attendance/current');
+      const data = response.data;
+      
+      // Update local state with fresh data
+      localAttendanceState.value = {
+        clockedIn: data.clocked_in,
+        onBreak: data.on_break,
+        clockInTime: data.clock_in_time,
+        breakStartTime: data.break_start_time,
+        lastUpdated: Date.now()
+      };
+      
+      console.log('🔄 Fresh status fetched:', data);
+    } catch (error) {
+      console.error('Failed to fetch fresh status:', error);
+    }
+  };
+
   // Watch for prop changes to sync local state
   watch(() => props.currentAttendance, (newAttendance) => {
     if (newAttendance) {
@@ -1292,9 +1330,12 @@
     console.log('🔄 clockedIn prop updated:', newClockedIn);
   });
 
-  onMounted(() => {
+  onMounted(async () => {
     updateTime();
     updateWorkDuration();
+    
+    // Fetch fresh attendance status to override stale props
+    await fetchFreshStatus();
 
     timeInterval = setInterval(() => {
       updateTime();

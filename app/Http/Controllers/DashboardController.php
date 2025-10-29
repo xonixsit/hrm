@@ -237,7 +237,7 @@ class DashboardController extends Controller
                 $myApprovedLeaves = Leave::where('employee_id', $employeeId)->where('status', 'approved')->count();
                 $myTotalLeaves = Leave::where('employee_id', $employeeId)->count();
 
-                // Get current attendance status
+                // Get current attendance status - use same logic as API
                 $currentAttendance = $this->getCurrentAttendanceStatus($employeeId);
 
                 // Employee competency metrics
@@ -1417,13 +1417,7 @@ class DashboardController extends Controller
             ->whereDate('date', $today)
             ->first();
 
-        Log::info('DashboardController getCurrentAttendanceStatus', [
-            'employee_id' => $employeeId,
-            'today' => $today,
-            'attendance_found' => $attendance ? true : false,
-            'attendance_status' => $attendance ? $attendance->status : null,
-            'attendance_clocked_in' => $attendance ? $attendance->isClockedIn() : null
-        ]);
+
 
         if (!$attendance) {
             return [
@@ -1450,7 +1444,7 @@ class DashboardController extends Controller
             'stats' => $this->getAttendanceStats($employeeId)
         ];
 
-        Log::info('DashboardController getCurrentAttendanceStatus result', $result);
+
 
         return $result;
     }
