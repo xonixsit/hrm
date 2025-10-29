@@ -15,6 +15,7 @@ use App\Jobs\SendWelcomeEmail;
 use Inertia\Inertia;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use League\Csv\Reader;
+use Spatie\Permission\Models\Role;
 
 class EmployeeImportController extends Controller
 {
@@ -39,7 +40,8 @@ class EmployeeImportController extends Controller
             'Phone',
             'Join Date',
             'Salary',
-            'Contract Type'
+            'Contract Type',
+            'Role'
         ];
         
         $sampleData = [
@@ -51,7 +53,8 @@ class EmployeeImportController extends Controller
                 '+1234567890',
                 '2024-01-15',
                 '75000',
-                'Full-time'
+                'Full-time',
+                'Employee'
             ],
             [
                 'Jane Smith',
@@ -61,7 +64,8 @@ class EmployeeImportController extends Controller
                 '+1234567891',
                 '2024-02-01',
                 '85000',
-                'Permanent'
+                'Permanent',
+                'Manager'
             ],
             [
                 'Mike Johnson',
@@ -71,7 +75,8 @@ class EmployeeImportController extends Controller
                 '+1234567892',
                 '2024-03-01',
                 '55000',
-                'Contract'
+                'Contract',
+                'Employee'
             ]
         ];
         
@@ -248,7 +253,8 @@ class EmployeeImportController extends Controller
                 'phone' => 'nullable|string|max:20',
                 'join_date' => 'nullable|date',
                 'salary' => 'nullable|numeric|min:0',
-                'contract_type' => 'nullable|string|in:Full-time,Part-time,Contract,Temporary,Permanent'
+                'contract_type' => 'nullable|string|in:Full-time,Part-time,Contract,Temporary,Permanent',
+                'role' => 'nullable|string|in:Admin,HR,Manager,Employee'
             ]);
 
             if ($validator->fails()) {
@@ -340,6 +346,14 @@ class EmployeeImportController extends Controller
             'password_reset_required' => true
         ]);
         
+        // Assign role to user
+        $role = $row['role'] ?? 'Employee';
+        if (Role::where('name', $role)->exists()) {
+            $user->assignRole($role);
+        } else {
+            $user->assignRole('Employee'); // Default fallback
+        }
+        
         // Store plain password temporarily for email
         $user->plain_password = $password;
         
@@ -374,6 +388,15 @@ class EmployeeImportController extends Controller
         $user->update([
             'name' => $row['name']
         ]);
+
+        // Update user role if provided
+        if (!empty($row['role'])) {
+            $role = $row['role'];
+            if (Role::where('name', $role)->exists()) {
+                // Remove all existing roles and assign the new one
+                $user->syncRoles([$role]);
+            }
+        }
 
         // Update employee information
         $employee = $user->employee;
@@ -466,10 +489,10 @@ class EmployeeImportController extends Controller
                 'startColor' => ['rgb' => 'E3F2FD']
             ]
         ];
-        $sheet->getStyle('A1:H1')->applyFromArray($headerStyle);
+        $sheet->getStyle('A1:I1')->applyFromArray($headerStyle);
         
         // Auto-size columns
-        foreach (range('A', 'H') as $column) {
+        foreach (range('A', 'I') as $column) {
             $sheet->getColumnDimension($column)->setAutoSize(true);
         }
         
