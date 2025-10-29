@@ -152,8 +152,8 @@ class AttendanceController extends Controller
             ->first();
             
         if ($existing) {
-            // If record exists and is not clocked out, prevent new clock-in
-            if ($existing->status !== 'clocked_out') {
+            // If record exists and is currently clocked in, prevent new clock-in
+            if ($existing->isClockedIn()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Already clocked in today.',
@@ -161,7 +161,7 @@ class AttendanceController extends Controller
                 ], 400);
             }
             
-            // If clocked out, update the existing record instead of creating new one
+            // If not clocked in, update the existing record instead of creating new one
             $updateData = [
                 'clock_in' => now(),
                 'clock_out' => null,
