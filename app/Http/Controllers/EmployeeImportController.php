@@ -310,7 +310,19 @@ class EmployeeImportController extends Controller
                     } else {
                         // Create new user and employee
                         $user = $this->createUser($row);
-                        $employee = $this->createEmployee($user, $row);
+                        
+                        try {
+                            $employee = $this->createEmployee($user, $row);
+                        } catch (\Exception $e) {
+                            // Log the specific error for debugging
+                            \Log::error('Employee creation failed for user ' . $user->id . ': ' . $e->getMessage(), [
+                                'user_id' => $user->id,
+                                'row_data' => $row,
+                                'error' => $e->getMessage(),
+                                'trace' => $e->getTraceAsString()
+                            ]);
+                            throw new \Exception('Failed to create employee record: ' . $e->getMessage());
+                        }
                         
                         // Send welcome email with credentials if requested
                         if ($options['sendWelcomeEmails']) {
@@ -382,11 +394,23 @@ class EmployeeImportController extends Controller
             $department = Department::where('name', $row['department'])->first();
         }
 
+        // If no department found and department is required, create a default one or use existing default
+        if (!$department) {
+            $department = Department::firstOrCreate(
+                ['name' => 'General'],
+                [
+                    'code' => 'GEN',
+                    'description' => 'General Department',
+                    'status' => 'Active'
+                ]
+            );
+        }
+
         return Employee::create([
             'user_id' => $user->id,
             'employee_code' => $this->generateEmployeeCode(),
-            'job_title' => $row['job_title'] ?? null,
-            'department_id' => $department?->id,
+            'job_title' => $row['job_title'] ?? 'Employee',
+            'department_id' => $department->id,
             'phone' => $row['phone'] ?? null,
             'join_date' => !empty($row['join_date']) ? $row['join_date'] : now(),
             'salary' => $row['salary'] ?? null,
@@ -422,6 +446,18 @@ class EmployeeImportController extends Controller
                 $department = Department::where('name', $row['department'])->first();
             }
 
+            // If no department found, keep existing or create default
+            if (!$department && !$employee->department_id) {
+                $department = Department::firstOrCreate(
+                    ['name' => 'General'],
+                    [
+                        'code' => 'GEN',
+                        'description' => 'General Department',
+                        'status' => 'Active'
+                    ]
+                );
+            }
+
             $employee->update([
                 'job_title' => $row['job_title'] ?? $employee->job_title,
                 'department_id' => $department?->id ?? $employee->department_id,
@@ -431,6 +467,9 @@ class EmployeeImportController extends Controller
                 'contract_type' => $row['contract_type'] ?? $employee->contract_type,
                 'employment_type' => $this->mapEmploymentType($row['contract_type'] ?? $employee->employment_type)
             ]);
+        } else {
+            // If user exists but no employee record, create one
+            $this->createEmployee($user, $row);
         }
     }
 
