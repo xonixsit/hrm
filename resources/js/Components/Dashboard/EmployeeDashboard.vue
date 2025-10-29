@@ -569,10 +569,10 @@
     // Use local state if it's more recent than props (for immediate UI feedback)
     const propsClocked = props.clockedIn || (props.currentAttendance && props.currentAttendance.clocked_in);
     
-    // If local state exists and is recent (within 10 seconds), use it for immediate feedback
+    // If local state exists and is recent (within 15 seconds), use it for immediate feedback
     if (localAttendanceState.value.lastUpdated) {
       const timeSinceUpdate = Date.now() - localAttendanceState.value.lastUpdated;
-      if (timeSinceUpdate < 10000) { // 10 seconds
+      if (timeSinceUpdate < 15000) { // 15 seconds
         console.log('🔍 Using local state for immediate feedback:', localAttendanceState.value.clockedIn);
         return localAttendanceState.value.clockedIn;
       }
@@ -591,7 +591,7 @@
     // Use local state if it's more recent than props (for immediate UI feedback)
     if (localAttendanceState.value.lastUpdated) {
       const timeSinceUpdate = Date.now() - localAttendanceState.value.lastUpdated;
-      if (timeSinceUpdate < 10000) { // 10 seconds
+      if (timeSinceUpdate < 15000) { // 15 seconds
         return localAttendanceState.value.onBreak;
       }
     }

@@ -179,13 +179,17 @@ class AttendanceController extends Controller
             
             $this->logAudit('Attendance Clock In', 'Re-clocked in for employee ID: ' . $employee->id);
             
+            // Refresh the attendance record to ensure we have the latest data
+            $existing = $existing->fresh();
+            
             return response()->json([
                 'success' => true,
                 'message' => 'Clocked in successfully.',
-                'attendance' => $existing->fresh(),
+                'attendance' => $existing,
                 'clock_in_time' => $existing->clock_in->toISOString(),
-                'clocked_in' => true,
-                'on_break' => false
+                'clocked_in' => $existing->isClockedIn(),
+                'on_break' => $existing->on_break ?? false,
+                'status' => $existing->status
             ]);
         }
 
@@ -221,13 +225,17 @@ class AttendanceController extends Controller
         // Broadcast real-time update
         $this->broadcastAttendanceUpdate($employee->id, $attendance);
         
+        // Refresh the attendance record to ensure we have the latest data
+        $attendance = $attendance->fresh();
+        
         return response()->json([
             'success' => true,
             'message' => 'Clocked in successfully.',
             'attendance' => $attendance,
             'clock_in_time' => $attendance->clock_in->toISOString(),
-            'clocked_in' => true,
-            'on_break' => false
+            'clocked_in' => $attendance->isClockedIn(),
+            'on_break' => $attendance->on_break ?? false,
+            'status' => $attendance->status
         ]);
     }
 

@@ -620,6 +620,8 @@
       });
 
       if (response.data.success) {
+        console.log('🎯 Clock in/out successful, response:', response.data);
+        
         // Update local state immediately without full refresh
         await updateAttendanceStatus();
       }
@@ -648,6 +650,10 @@
 
   const updateAttendanceStatus = async () => {
     try {
+      // First, verify the current status via API
+      const statusCheck = await axios.get('/api/attendance/current');
+      console.log('🔍 API status check before reload:', statusCheck.data);
+      
       // Use Inertia to reload only the attendance-related props
       await router.reload({ 
         only: ['currentAttendance', 'clockedIn', 'employeeStats'],

@@ -1417,6 +1417,14 @@ class DashboardController extends Controller
             ->whereDate('date', $today)
             ->first();
 
+        Log::info('DashboardController getCurrentAttendanceStatus', [
+            'employee_id' => $employeeId,
+            'today' => $today,
+            'attendance_found' => $attendance ? true : false,
+            'attendance_status' => $attendance ? $attendance->status : null,
+            'attendance_clocked_in' => $attendance ? $attendance->isClockedIn() : null
+        ]);
+
         if (!$attendance) {
             return [
                 'clocked_in' => false,
@@ -1428,7 +1436,7 @@ class DashboardController extends Controller
             ];
         }
 
-        return [
+        $result = [
             'clocked_in' => $attendance->isClockedIn(),
             'on_break' => $attendance->on_break,
             'clock_in_time' => $attendance->clock_in?->toISOString(),
@@ -1439,6 +1447,10 @@ class DashboardController extends Controller
             'recent_activities' => $this->getRecentActivities($employeeId),
             'stats' => $this->getAttendanceStats($employeeId)
         ];
+
+        Log::info('DashboardController getCurrentAttendanceStatus result', $result);
+
+        return $result;
     }
 
     private function getTodaysSummary($employeeId)
