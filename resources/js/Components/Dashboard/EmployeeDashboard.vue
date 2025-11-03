@@ -107,7 +107,7 @@
       </div>
     </div>
 
-    <!-- Stats Overview -->
+    <!-- Stats Overview 
     <div class="stats-overview">
       <div class="stat-card">
         <div class="stat-icon">
@@ -148,7 +148,7 @@
           <div class="stat-label">Performance Rank</div>
         </div>
       </div>
-    </div>
+    </div-->
 
     <!-- Quick Actions -->
     <div class="quick-actions">
@@ -382,18 +382,18 @@ const timelineMarkers = computed(() => {
     let label;
     let isLunch = false;
     
-    // Format hour labels
+    // Format hour labels (short format without :00)
     if (hour === 0) {
-      label = '12:00 AM';
+      label = '12 AM';
     } else if (hour === 12) {
-      label = '12:00 PM';
+      label = '12 PM';
       isLunch = true; // Lunch break
     } else if (hour < 12) {
-      label = `${hour}:00 AM`;
+      label = `${hour} AM`;
     } else if (hour === 18) {
-      label = '6:00 PM';
+      label = '6 PM';
     } else {
-      label = `${hour - 12}:00 PM`;
+      label = `${hour - 12} PM`;
     }
     
     // Mark lunch time and breaks
@@ -1007,6 +1007,14 @@ onUnmounted(() => {
   @apply absolute flex flex-col items-center transform -translate-x-1/2;
 }
 
+.time-marker.start-marker .marker-time {
+  @apply opacity-0;
+}
+
+.time-marker.end-marker .marker-time {
+  @apply opacity-0;
+}
+
 .marker-line {
   @apply w-px h-4 bg-gray-300 mb-1;
 }
@@ -1120,6 +1128,33 @@ onUnmounted(() => {
   50% { transform: scale(1.2); }
 }
 
+@keyframes liveStreamPulse {
+  0%, 100% { 
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% { 
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+}
+
+@keyframes liveStreamRipple {
+  0% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(2.5);
+    opacity: 0;
+  }
+}
+
+@keyframes liveStreamRipple {
+  0% { transform: scale(1); opacity: 0.6; }
+  100% { transform: scale(2.5); opacity: 0; }
+}
+
 /* Progress Information */
 .time-progress-info {
   @apply flex justify-between items-center mt-2;
@@ -1162,7 +1197,20 @@ onUnmounted(() => {
 }
 
 .status-working .status-dot {
-  @apply bg-green-500;
+  @apply bg-green-500 relative;
+  animation: liveStreamPulse 2s infinite ease-in-out;
+}
+
+.status-working .status-dot::before {
+  content: '';
+  @apply absolute inset-0 rounded-full bg-green-500;
+  animation: liveStreamRipple 2s infinite ease-out;
+}
+
+.status-working .status-dot::after {
+  content: '';
+  @apply absolute inset-0 rounded-full bg-green-400;
+  animation: liveStreamRipple 2s infinite ease-out 0.5s;
 }
 
 .status-break .status-dot {
