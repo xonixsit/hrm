@@ -1444,7 +1444,14 @@ class DashboardController extends Controller
             'stats' => $this->getAttendanceStats($employeeId)
         ];
 
-
+        // Log for debugging
+        \Log::info('DashboardController getCurrentAttendanceStatus', [
+            'employee_id' => $employeeId,
+            'attendance_id' => $attendance->id,
+            'break_sessions' => $attendance->break_sessions,
+            'break_sessions_count' => count($attendance->break_sessions ?? []),
+            'result_break_sessions' => $result['break_sessions']
+        ]);
 
         return $result;
     }

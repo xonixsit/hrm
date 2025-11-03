@@ -6,6 +6,7 @@ use App\Models\Attendance;
 use App\Models\Employee;
 use App\Models\Timesheet;
 use App\Models\Project;
+use App\Events\AttendanceUpdated;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -229,7 +230,7 @@ class AttendanceController extends Controller
         $this->logAudit('Attendance Clock In', 'Clocked in for employee ID: ' . $employee->id);
         
         // Broadcast real-time update
-        $this->broadcastAttendanceUpdate($employee->id, $attendance);
+        $this->broadcastAttendanceUpdate($employee->id, $attendance, 'clock-in');
         
         // Refresh the attendance record to ensure we have the latest data
         $attendance = $attendance->fresh();
@@ -292,7 +293,7 @@ class AttendanceController extends Controller
         $this->logAudit('Attendance Clock Out', 'Clocked out for employee ID: ' . $employee->id);
         
         // Broadcast real-time update
-        $this->broadcastAttendanceUpdate($employee->id, $attendance);
+        $this->broadcastAttendanceUpdate($employee->id, $attendance, 'clock-out');
         
         $message = 'Clocked out successfully.';
         if ($timesheetResult['created']) {
@@ -340,7 +341,7 @@ class AttendanceController extends Controller
             $this->logAudit('Break Started', 'Started break for employee ID: ' . $employee->id);
             
             // Broadcast real-time update
-            $this->broadcastAttendanceUpdate($employee->id, $attendance);
+            $this->broadcastAttendanceUpdate($employee->id, $attendance, 'start-break');
             
             return response()->json([
                 'success' => true,
@@ -386,7 +387,7 @@ class AttendanceController extends Controller
             $this->logAudit('Break Ended', 'Ended break for employee ID: ' . $employee->id);
             
             // Broadcast real-time update
-            $this->broadcastAttendanceUpdate($employee->id, $attendance);
+            $this->broadcastAttendanceUpdate($employee->id, $attendance, 'end-break');
             
             return response()->json([
                 'success' => true,
@@ -450,18 +451,29 @@ class AttendanceController extends Controller
 
         $clockedIn = $attendance->isClockedIn();
         
+        // Log for debugging
+        \Log::info('getCurrentStatus API response', [
+            'employee_id' => $employee->id,
+            'attendance_id' => $attendance->id,
+            'clocked_in' => $clockedIn,
+            'on_break' => $attendance->on_break,
+            'break_sessions' => $attendance->break_sessions,
+            'break_sessions_count' => count($attendance->break_sessions ?? [])
+        ]);
 
-
-        return response()->json([
+        $response = [
             'clocked_in' => $clockedIn,
             'on_break' => $attendance->on_break ?? false,
             'clock_in_time' => $attendance->clock_in?->toISOString(),
             'break_start_time' => $attendance->current_break_start?->toISOString(),
+            'break_sessions' => $attendance->break_sessions ?? [], // Explicitly include break_sessions
             'current_session' => $attendance,
             'todays_summary' => $this->getTodaysSummary($employee->id),
             'recent_activities' => $this->getRecentActivities($employee->id),
             'stats' => $this->getAttendanceStats($employee->id)
-        ]);
+        ];
+
+        return response()->json($response);
     }
 
     private function getTodaysSummary($employeeId)
@@ -574,19 +586,40 @@ class AttendanceController extends Controller
         ];
     }
 
-    private function broadcastAttendanceUpdate($employeeId, $attendance)
+    private function broadcastAttendanceUpdate($employeeId, $attendance, $action = 'update')
     {
-        // This would integrate with your WebSocket broadcasting system
-        // For now, we'll just log it
+        // Get the employee model
+        $employee = Employee::find($employeeId);
+        
+        if (!$employee) {
+            \Log::error('Employee not found for broadcasting attendance update', ['employee_id' => $employeeId]);
+            return;
+        }
+        
+        // Prepare attendance data for broadcasting
+        $attendanceData = [
+            'clocked_in' => $attendance->isClockedIn(),
+            'on_break' => $attendance->on_break ?? false,
+            'clock_in_time' => $attendance->clock_in?->toISOString(),
+            'current_break_start' => $attendance->current_break_start?->toISOString(),
+            'break_sessions' => $attendance->break_sessions ?? [],
+            'todays_summary' => [
+                'total_hours' => $attendance->work_duration,
+                'break_time' => $attendance->break_duration
+            ],
+            'action' => $action
+        ];
+        
+        // Broadcast real-time attendance update using Laravel Echo
+        broadcast(new AttendanceUpdated($employee, $attendanceData));
+        
         \Log::info('Broadcasting attendance update', [
             'employee_id' => $employeeId,
             'attendance_id' => $attendance->id,
             'status' => $attendance->status,
-            'on_break' => $attendance->on_break
+            'on_break' => $attendance->on_break,
+            'action' => $action
         ]);
-        
-        // In a real implementation, you might use Laravel Broadcasting:
-        // broadcast(new AttendanceUpdated($attendance));
     }
 
     public function edit(Attendance $attendance)

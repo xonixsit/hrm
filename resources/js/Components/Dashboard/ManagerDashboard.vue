@@ -473,7 +473,7 @@ const managerQuickActions = computed(() => [
     description: 'Provide feedback to team members',
     icon: DocumentTextIcon,
     variant: 'secondary',
-    route: 'feedback.create'
+    route: 'feedbacks.create'
   }
 ]);
 

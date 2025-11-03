@@ -111,12 +111,16 @@ class FeedbackController extends Controller
 
     public function create()
     {
+        $this->authorize('create', Feedback::class);
+        
         $users = User::all();
         return Inertia::render('Feedbacks/Create', ['users' => $users]);
     }
 
     public function store(Request $request)
     {
+        $this->authorize('create', Feedback::class);
+        
         $validated = $request->validate([
             'reviewee_id' => 'required|exists:users,id',
             'period' => 'required|string|max:255',

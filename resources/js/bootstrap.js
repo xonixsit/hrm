@@ -11,6 +11,54 @@ if (token) {
     console.error('CSRF token not found: Please ensure the CSRF token is properly set.');
 }
 
+/**
+ * Echo exposes an expressive API for subscribing to channels and listening
+ * for events that are broadcast by Laravel. Echo and event broadcasting
+ * allows your team to easily build robust real-time web applications.
+ */
+
+// Only initialize Echo if Pusher credentials are available
+const pusherKey = import.meta.env.VITE_PUSHER_APP_KEY;
+const pusherCluster = import.meta.env.VITE_PUSHER_APP_CLUSTER ?? 'mt1';
+
+if (pusherKey) {
+    import('laravel-echo').then(({ default: Echo }) => {
+        import('pusher-js').then(({ default: Pusher }) => {
+            window.Pusher = Pusher;
+
+            window.Echo = new Echo({
+                broadcaster: 'pusher',
+                key: pusherKey,
+                cluster: pusherCluster,
+                wsHost: import.meta.env.VITE_PUSHER_HOST ? import.meta.env.VITE_PUSHER_HOST : `ws-${pusherCluster}.pusherapp.com`,
+                wsPort: import.meta.env.VITE_PUSHER_PORT ?? 80,
+                wssPort: import.meta.env.VITE_PUSHER_PORT ?? 443,
+                forceTLS: (import.meta.env.VITE_PUSHER_SCHEME ?? 'https') === 'https',
+                enabledTransports: ['ws', 'wss'],
+                auth: {
+                    headers: {
+                        'X-CSRF-TOKEN': token?.content,
+                    },
+                },
+            });
+
+            console.log('✅ Laravel Echo initialized with Pusher');
+        }).catch(error => {
+            console.warn('⚠️ Failed to load Pusher:', error);
+            console.log('📝 Run: npm install pusher-js');
+        });
+    }).catch(error => {
+        console.warn('⚠️ Failed to load Laravel Echo:', error);
+        console.log('📝 Run: npm install laravel-echo');
+    });
+} else {
+    console.warn('⚠️ Pusher credentials not found. Real-time features disabled.');
+    console.log('📝 Add VITE_PUSHER_APP_KEY to your .env file to enable real-time features.');
+    
+    // Set Echo to null so components can check for its availability
+    window.Echo = null;
+}
+
 // Add axios interceptors to handle response errors safely
 axios.interceptors.response.use(
   (response) => {

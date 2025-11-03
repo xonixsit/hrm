@@ -88,11 +88,22 @@ class Attendance extends Model
         $breakDuration = $this->current_break_start->diffInMinutes(now());
         $breakSessions = $this->break_sessions ?? [];
         
-        $breakSessions[] = [
+        $newBreakSession = [
             'start' => $this->current_break_start->toISOString(),
             'end' => now()->toISOString(),
             'duration_minutes' => $breakDuration
         ];
+        
+        $breakSessions[] = $newBreakSession;
+
+        // Log for debugging
+        \Log::info('Ending break session', [
+            'attendance_id' => $this->id,
+            'employee_id' => $this->employee_id,
+            'new_break_session' => $newBreakSession,
+            'total_break_sessions' => count($breakSessions),
+            'all_break_sessions' => $breakSessions
+        ]);
 
         $this->update([
             'on_break' => false,
@@ -100,6 +111,14 @@ class Attendance extends Model
             'break_sessions' => $breakSessions,
             'total_break_minutes' => ($this->total_break_minutes ?? 0) + $breakDuration,
             'status' => 'clocked_in'
+        ]);
+
+        // Verify the data was saved
+        $this->refresh();
+        \Log::info('Break session saved to database', [
+            'attendance_id' => $this->id,
+            'saved_break_sessions' => $this->break_sessions,
+            'total_sessions_count' => count($this->break_sessions ?? [])
         ]);
 
         return true;

@@ -475,9 +475,9 @@
             </svg>
             <h3 class="mt-2 text-sm font-medium text-gray-900">No feedback submissions</h3>
             <p class="mt-1 text-sm text-gray-500">
-              {{ hasActiveFilters ? 'Try adjusting your filters' : 'Get started by submitting your first feedback' }}
+              {{ hasActiveFilters ? 'Try adjusting your filters' : (hasAnyRole(['Admin', 'HR', 'Manager']) ? 'Get started by submitting your first feedback' : 'No feedback has been submitted for you yet') }}
             </p>
-            <div v-if="hasActiveFilters" class="mt-6">
+            <div v-if="hasActiveFilters && hasAnyRole(['Admin', 'HR', 'Manager'])" class="mt-6">
               <Link 
                 :href="route('feedbacks.create')" 
                 class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
@@ -673,15 +673,22 @@ const breadcrumbs = computed(() => [
   { label: 'Feedback Management', current: true }
 ]);
 
-const headerActions = computed(() => [
-  {
-    id: 'new-feedback',
-    label: 'Submit Feedback',
-    icon: 'plus',
-    variant: 'primary',
-    href: route('feedbacks.create')
+const headerActions = computed(() => {
+  const actions = [];
+  
+  // Only show Submit Feedback button for Admin, HR, and Manager roles
+  if (hasAnyRole(['Admin', 'HR', 'Manager'])) {
+    actions.push({
+      id: 'new-feedback',
+      label: 'Submit Feedback',
+      icon: 'plus',
+      variant: 'primary',
+      href: route('feedbacks.create')
+    });
   }
-]);
+  
+  return actions;
+});
 
 // Helper functions
 const formatDate = (dateString) => {

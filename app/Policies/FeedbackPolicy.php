@@ -13,7 +13,7 @@ class FeedbackPolicy
      */
     public function viewAny(User $user): bool
     {
-        return true; // All authenticated users can view feedbacks
+        return true; // All authenticated users can view feedbacks (employees can see feedback about them)
     }
 
     /**
@@ -35,7 +35,8 @@ class FeedbackPolicy
      */
     public function create(User $user): bool
     {
-        return true; // All authenticated users can create feedback
+        // Only Admin, HR, and Manager roles can create/submit feedback
+        return $user->hasAnyRole(['Admin', 'HR', 'Manager']);
     }
 
     /**

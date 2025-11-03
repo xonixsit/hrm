@@ -282,6 +282,43 @@ Route::middleware('auth')->group(function () {
         }
     })->name('test-analytics');
 
+    // Test Pusher broadcasting
+    Route::get('test-pusher', function() {
+        $user = Auth::user();
+        $employee = $user->employee;
+        
+        if (!$employee) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No employee record found'
+            ]);
+        }
+        
+        // Create test attendance data
+        $testData = [
+            'clocked_in' => true,
+            'on_break' => false,
+            'clock_in_time' => now()->toISOString(),
+            'current_break_start' => null,
+            'todays_summary' => [
+                'total_hours' => '1h 30m',
+                'break_time' => '0h 15m'
+            ],
+            'action' => 'test'
+        ];
+        
+        // Broadcast test event
+        broadcast(new \App\Events\AttendanceUpdated($employee, $testData));
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Test broadcast sent successfully',
+            'employee_id' => $employee->id,
+            'channel' => 'attendance.' . $employee->id,
+            'data' => $testData
+        ]);
+    })->name('test-pusher');
+
     Route::get('test-assessment-creation', function() {
         $employee = \App\Models\Employee::first();
         $competency = \App\Models\Competency::first();

@@ -108,6 +108,19 @@
               <p class="text-sm text-gray-400 mt-1">All work time was continuous</p>
             </div>
             <div v-else class="space-y-3">
+              <!-- Total Break Time Summary -->
+              <div class="p-4 bg-gradient-to-r from-orange-100 to-orange-50 rounded-lg border-2 border-orange-300 mb-4">
+                <div class="flex justify-between items-center">
+                  <div class="flex items-center space-x-2">
+                    <PauseIcon class="w-5 h-5 text-orange-600" />
+                    <span class="text-sm font-semibold text-orange-900">Total Break Time</span>
+                  </div>
+                  <span class="text-lg font-bold text-orange-900">{{ totalBreakTimeFormatted }}</span>
+                </div>
+                <p class="text-xs text-orange-700 mt-1">{{ breakSessions.length }} break session{{ breakSessions.length !== 1 ? 's' : '' }}</p>
+              </div>
+
+              <!-- Individual Break Sessions -->
               <div
                 v-for="(session, index) in breakSessions"
                 :key="index"
@@ -126,7 +139,7 @@
                 </div>
                 <div class="text-right">
                   <p class="text-sm font-medium text-neutral-900">
-                    {{ session.duration_minutes ? `${session.duration_minutes}m` : '—' }}
+                    {{ formatBreakDuration(session) }}
                   </p>
                 </div>
               </div>
@@ -200,7 +213,10 @@ import {
   ClockIcon,
   PauseIcon,
   ListBulletIcon,
-  CheckCircleIcon
+  CheckCircleIcon,
+  CalendarIcon,
+  ArrowRightOnRectangleIcon,
+  ArrowLeftOnRectangleIcon
 } from '@heroicons/vue/24/outline';
 
 const props = defineProps({
@@ -382,6 +398,63 @@ const statusSubtitle = computed(() => {
     default:
       return 'Status unknown';
   }
+});
+
+// Format break session duration
+const formatBreakDuration = (session) => {
+  if (!session.start || !session.end) {
+    return '—';
+  }
+  
+  // Always calculate duration from start and end times for accuracy
+  try {
+    const start = new Date(session.start);
+    const end = new Date(session.end);
+    const diffMs = end - start;
+    const diffMinutes = Math.floor(diffMs / (1000 * 60));
+    
+    const hours = Math.floor(diffMinutes / 60);
+    const minutes = diffMinutes % 60;
+    
+    if (hours > 0) {
+      return `${hours}h ${minutes}m`;
+    }
+    return `${minutes}m`;
+  } catch (error) {
+    console.error('Error calculating break duration:', error);
+    return '—';
+  }
+};
+
+// Calculate total break time
+const totalBreakTimeFormatted = computed(() => {
+  if (!props.breakSessions || props.breakSessions.length === 0) {
+    return '0m';
+  }
+  
+  let totalMinutes = 0;
+  
+  props.breakSessions.forEach(session => {
+    if (session.start && session.end) {
+      try {
+        const start = new Date(session.start);
+        const end = new Date(session.end);
+        const diffMs = end - start;
+        const diffMinutes = Math.floor(diffMs / (1000 * 60));
+        totalMinutes += diffMinutes;
+      } catch (error) {
+        console.error('Error calculating break duration for session:', session, error);
+      }
+    }
+  });
+  
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  
+  if (hours > 0) {
+    return `${hours}h ${minutes}m`;
+  }
+  return `${minutes}m`;
 });
 
 const deleteRecord = () => {

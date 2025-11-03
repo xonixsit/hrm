@@ -68,8 +68,8 @@
           <span class="stat-label">Today</span>
         </div>
         <div class="stat">
-          <span class="stat-value">{{ breakTime }}</span>
-          <span class="stat-label">Break</span>
+          <span class="stat-value">{{ attendance.onBreak ? breakTime : totalBreakTime }}</span>
+          <span class="stat-label">{{ attendance.onBreak ? 'Current' : 'Total' }}</span>
         </div>
       </div>
     </div>
@@ -93,7 +93,8 @@ import {
 } from '@heroicons/vue/24/outline'
 
 // State with localStorage persistence
-const isExpanded = ref(false)
+const isExpanded = ref(false) // Will be set based on clock-in status
+const userHasManuallyToggled = ref(false) // Track if user has manually interacted
 const attendance = ref({
   clockedIn: false,
   onBreak: false,
@@ -102,6 +103,7 @@ const attendance = ref({
 const loading = ref(false)
 const currentTimer = ref('0h 0m 0s')
 const breakStartTime = ref(null)
+const completedBreakSessions = ref([])
 
 // State persistence helpers
 const saveStateToStorage = () => {
@@ -111,6 +113,7 @@ const saveStateToStorage = () => {
       onBreak: attendance.value.onBreak,
       clockInTime: attendance.value.clockInTime,
       breakStartTime: breakStartTime.value,
+      completedBreakSessions: completedBreakSessions.value,
       lastUpdate: new Date().toISOString()
     }
     localStorage.setItem('floating-attendance-state', JSON.stringify(state))
@@ -134,6 +137,7 @@ const loadStateFromStorage = () => {
         attendance.value.onBreak = state.onBreak || false
         attendance.value.clockInTime = state.clockInTime || null
         breakStartTime.value = state.breakStartTime || null
+        completedBreakSessions.value = state.completedBreakSessions || []
         return true
       }
     }
@@ -227,6 +231,36 @@ const breakTime = computed(() => {
   return '0h 0m'
 })
 
+// Calculate total break time for today (completed breaks + current break)
+const totalBreakTime = computed(() => {
+  let totalMinutes = 0
+  
+  // Add completed break sessions
+  completedBreakSessions.value.forEach(session => {
+    if (session.start && session.end) {
+      const start = new Date(session.start)
+      const end = new Date(session.end)
+      const diffMs = end - start
+      totalMinutes += Math.floor(diffMs / (1000 * 60))
+    }
+  })
+  
+  // Add current break session if on break
+  if (attendance.value.onBreak && breakStartTime.value) {
+    const breakStart = new Date(breakStartTime.value)
+    if (!isNaN(breakStart.getTime())) {
+      const now = new Date()
+      const diffMs = Math.max(0, now - breakStart)
+      totalMinutes += Math.floor(diffMs / (1000 * 60))
+    }
+  }
+  
+  const hours = Math.floor(totalMinutes / 60)
+  const minutes = totalMinutes % 60
+  
+  return `${hours}h ${minutes}m`
+})
+
 const clockClasses = computed(() => [
   'clock',
   {
@@ -239,6 +273,28 @@ const clockClasses = computed(() => [
 // Methods
 const toggleWidget = () => {
   isExpanded.value = !isExpanded.value
+  userHasManuallyToggled.value = true
+}
+
+const updateExpandedState = (forceUpdate = false) => {
+  // Auto-update expanded state on major changes or force update
+  if (forceUpdate || !userHasManuallyToggled.value) {
+    const newExpandedState = !attendance.value.clockedIn
+    const wasChanged = isExpanded.value !== newExpandedState
+    
+    // Widget should be expanded (open) when user is NOT clocked in
+    // Widget should be collapsed (closed) when user IS clocked in
+    isExpanded.value = newExpandedState
+    
+    if (forceUpdate) {
+      // Reset manual toggle flag on major status changes
+      userHasManuallyToggled.value = false
+    }
+    
+    if (wasChanged) {
+      console.log(`FloatingWidget: Auto-${newExpandedState ? 'expanded' : 'collapsed'} (clockedIn: ${attendance.value.clockedIn}, force: ${forceUpdate})`)
+    }
+  }
 }
 
 const updateTimer = () => {
@@ -260,6 +316,11 @@ const updateTimer = () => {
     const seconds = Math.floor((diffMs % (1000 * 60)) / 1000)
     
     currentTimer.value = `${hours}h ${minutes}m ${seconds}s`
+    
+    // Broadcast updated times to dashboard every 10 seconds
+    if (seconds % 10 === 0) {
+      broadcastCurrentStatus()
+    }
   } else {
     currentTimer.value = '0h 0m 0s'
   }
@@ -275,6 +336,7 @@ const handleClockInOut = async () => {
         timestamp: new Date().toISOString()
       })
       
+      // Update local state immediately for UI feedback
       attendance.value.clockedIn = false
       attendance.value.onBreak = false
       attendance.value.clockInTime = null
@@ -284,24 +346,21 @@ const handleClockInOut = async () => {
       // Save state to localStorage
       saveStateToStorage()
       
-      // Broadcast update to other components
-      broadcastAttendanceUpdate()
+      // Update expanded state (widget should open when clocked out)
+      updateExpandedState(true)
       
-      // Also broadcast custom event for immediate UI updates
-      window.dispatchEvent(new CustomEvent('attendance-state-changed', {
-        detail: {
-          clockedIn: false,
-          onBreak: false,
-          clockInTime: null,
-          breakStartTime: null
-        }
-      }))
+      // Broadcast clock out status change immediately for dashboard sync
+      broadcastCurrentStatus()
+      
+      // Note: Laravel Echo will broadcast the update automatically from the backend
+      
     } else {
       // Clock in
       const response = await window.axios.post('/api/attendance/clock-in', {
         timestamp: new Date().toISOString()
       })
       
+      // Update local state immediately for UI feedback
       attendance.value.clockedIn = true
       attendance.value.onBreak = false
       attendance.value.clockInTime = response.data.clock_in_time || new Date().toISOString()
@@ -309,18 +368,13 @@ const handleClockInOut = async () => {
       // Save state to localStorage
       saveStateToStorage()
       
-      // Broadcast update to other components
-      broadcastAttendanceUpdate()
+      // Update expanded state (widget should close when clocked in)
+      updateExpandedState(true)
       
-      // Also broadcast custom event for immediate UI updates
-      window.dispatchEvent(new CustomEvent('attendance-state-changed', {
-        detail: {
-          clockedIn: true,
-          onBreak: false,
-          clockInTime: attendance.value.clockInTime,
-          breakStartTime: null
-        }
-      }))
+      // Broadcast clock in status change immediately for dashboard sync
+      broadcastCurrentStatus()
+      
+      // Note: Laravel Echo will broadcast the update automatically from the backend
     }
   } catch (error) {
     console.error('Clock in/out failed:', error)
@@ -335,22 +389,43 @@ const handleBreak = async () => {
     loading.value = true
     
     if (attendance.value.onBreak) {
-      // End break
+      // End break - save completed break session
+      if (breakStartTime.value) {
+        const completedBreak = {
+          start: breakStartTime.value,
+          end: new Date().toISOString(),
+          isOngoing: false
+        }
+        
+        // Add to completed breaks array
+        completedBreakSessions.value = [
+          ...completedBreakSessions.value,
+          completedBreak
+        ]
+        
+        console.log('💾 FloatingWidget: Saved completed break session:', completedBreak)
+      }
+      
       const response = await window.axios.post('/api/attendance/break-end', {
         timestamp: new Date().toISOString()
       })
       
+      // Update local state immediately for UI feedback
       attendance.value.onBreak = false
       breakStartTime.value = null
       
-      // Save state to localStorage
+      // Save state to localStorage (including completed breaks)
       saveStateToStorage()
       
-      // Broadcast update to other components
-      broadcastAttendanceUpdate()
+      // Broadcast break status change immediately for dashboard sync
+      broadcastBreakStatusChange('end-break')
+      
+      // Note: Laravel Echo will broadcast the update automatically from the backend
+      
     } else {
       // Start break - set break start time immediately for instant feedback
-      breakStartTime.value = new Date().toISOString()
+      const newBreakStartTime = new Date().toISOString()
+      breakStartTime.value = newBreakStartTime
       attendance.value.onBreak = true
       
       const response = await window.axios.post('/api/attendance/break-start', {
@@ -365,8 +440,10 @@ const handleBreak = async () => {
       // Save state to localStorage
       saveStateToStorage()
       
-      // Broadcast update to other components
-      broadcastAttendanceUpdate()
+      // Broadcast break status change immediately for dashboard sync
+      broadcastBreakStatusChange('start-break')
+      
+      // Note: Laravel Echo will broadcast the update automatically from the backend
     }
   } catch (error) {
     console.error('Break action failed:', error)
@@ -381,9 +458,33 @@ const fetchCurrentStatus = async () => {
     const response = await window.axios.get('/api/attendance/current')
     const data = response.data
     
+    // Check if this is a new day (different clock_in_time means new session)
+    const newClockInTime = data.clock_in_time
+    const currentClockInTime = attendance.value.clockInTime
+    
+    // If clock in time changed or we're not clocked in, it's a new session
+    if (newClockInTime !== currentClockInTime || !data.clocked_in) {
+      // Clear completed break sessions for new day/session
+      completedBreakSessions.value = []
+      console.log('🔄 FloatingWidget: New session detected, cleared completed breaks')
+    }
+    
     attendance.value.clockedIn = data.clocked_in || false
     attendance.value.onBreak = data.on_break || false
     attendance.value.clockInTime = data.clock_in_time || null
+    
+    // Load break sessions from server data
+    if (data.break_sessions && Array.isArray(data.break_sessions)) {
+      completedBreakSessions.value = data.break_sessions.map(session => ({
+        start: session.start,
+        end: session.end,
+        isOngoing: false
+      }))
+      console.log('📊 FloatingWidget: Loaded break sessions from server:', {
+        serverBreakSessions: data.break_sessions.length,
+        localBreakSessions: completedBreakSessions.value.length
+      })
+    }
     
     // Use the same logic as main dashboard for break start time
     if (data.on_break) {
@@ -406,10 +507,16 @@ const fetchCurrentStatus = async () => {
       breakStartTime.value = null
     }
     
+    // Update expanded state based on clock-in status
+    updateExpandedState()
+    
     console.log('FloatingWidget: Fetched status:', {
       clockedIn: attendance.value.clockedIn,
       onBreak: attendance.value.onBreak,
-      breakStartTime: breakStartTime.value
+      breakStartTime: breakStartTime.value,
+      completedBreaks: completedBreakSessions.value.length,
+      totalBreakTime: totalBreakTime.value,
+      isExpanded: isExpanded.value
     })
   } catch (error) {
     console.error('Failed to fetch attendance status:', error)
@@ -424,9 +531,43 @@ const handleStorageChange = (event) => {
   }
 }
 
-// Listen for custom attendance state change events
+// Listen for attendance updates via Laravel Echo
+const handleAttendanceUpdate = (data) => {
+  console.log('FloatingWidget: Received attendance update via Echo:', data)
+  
+  // Update local state immediately for responsive UI
+  attendance.value.clockedIn = data.clocked_in
+  attendance.value.onBreak = data.on_break
+  attendance.value.clockInTime = data.clock_in_time
+  
+  // Update break start time
+  if (data.on_break && data.break_start_time) {
+    breakStartTime.value = data.break_start_time
+  } else if (!data.on_break) {
+    breakStartTime.value = null
+  }
+  
+  // Save to localStorage for persistence
+  saveStateToStorage()
+  
+  // Update timer immediately
+  updateTimer()
+  
+  // Update expanded state based on new clock-in status
+  updateExpandedState()
+  
+  console.log('FloatingWidget: State updated via Echo:', {
+    clockedIn: attendance.value.clockedIn,
+    onBreak: attendance.value.onBreak,
+    clockInTime: attendance.value.clockInTime,
+    breakStartTime: breakStartTime.value,
+    isExpanded: isExpanded.value
+  })
+}
+
+// Fallback: Listen for custom attendance state change events (legacy support)
 const handleAttendanceStateChange = (event) => {
-  console.log('FloatingWidget: Received attendance state change:', event.detail)
+  console.log('FloatingWidget: Received attendance state change (legacy):', event.detail)
   
   const { clockedIn, onBreak, clockInTime, breakStartTime: eventBreakStartTime } = event.detail
   
@@ -448,11 +589,15 @@ const handleAttendanceStateChange = (event) => {
   // Update timer immediately
   updateTimer()
   
-  console.log('FloatingWidget: State updated to:', {
+  // Update expanded state based on new clock-in status
+  updateExpandedState()
+  
+  console.log('FloatingWidget: State updated (legacy):', {
     clockedIn: attendance.value.clockedIn,
     onBreak: attendance.value.onBreak,
     breakStartTime: breakStartTime.value,
-    eventBreakStartTime: eventBreakStartTime
+    eventBreakStartTime: eventBreakStartTime,
+    isExpanded: isExpanded.value
   })
 }
 
@@ -464,6 +609,82 @@ const broadcastAttendanceUpdate = () => {
     localStorage.removeItem('attendance-update')
   } catch (error) {
     console.warn('Failed to broadcast attendance update:', error)
+  }
+}
+
+// Broadcast current status to dashboard (for initial sync)
+const broadcastCurrentStatus = () => {
+  try {
+    // Broadcast via custom event for immediate dashboard sync
+    const statusEvent = new CustomEvent('attendance-state-changed', {
+      detail: {
+        clockedIn: attendance.value.clockedIn,
+        onBreak: attendance.value.onBreak,
+        clockInTime: attendance.value.clockInTime,
+        breakStartTime: breakStartTime.value,
+        completedBreakSessions: completedBreakSessions.value,
+        totalBreakTime: totalBreakTime.value,
+        currentBreakTime: breakTime.value,
+        todaysHours: todaysHours.value,
+        timestamp: Date.now(),
+        source: 'floating-widget-load'
+      }
+    });
+    
+    window.dispatchEvent(statusEvent);
+    
+    // Also update localStorage for persistence
+    broadcastAttendanceUpdate();
+    
+    console.log('FloatingWidget: Broadcasted current status to dashboard:', {
+      clockedIn: attendance.value.clockedIn,
+      onBreak: attendance.value.onBreak,
+      clockInTime: attendance.value.clockInTime,
+      breakStartTime: breakStartTime.value,
+      completedBreaks: completedBreakSessions.value.length,
+      totalBreakTime: totalBreakTime.value
+    });
+  } catch (error) {
+    console.warn('Failed to broadcast current status:', error);
+  }
+}
+
+// Broadcast break status changes to dashboard (for immediate sync)
+const broadcastBreakStatusChange = (action) => {
+  try {
+    // Broadcast via custom event for immediate dashboard sync
+    const breakEvent = new CustomEvent('attendance-state-changed', {
+      detail: {
+        clockedIn: attendance.value.clockedIn,
+        onBreak: attendance.value.onBreak,
+        clockInTime: attendance.value.clockInTime,
+        breakStartTime: breakStartTime.value,
+        completedBreakSessions: completedBreakSessions.value,
+        totalBreakTime: totalBreakTime.value,
+        currentBreakTime: breakTime.value,
+        todaysHours: todaysHours.value,
+        timestamp: Date.now(),
+        source: 'floating-widget-break',
+        action: action
+      }
+    });
+    
+    window.dispatchEvent(breakEvent);
+    
+    // Also update localStorage for persistence
+    broadcastAttendanceUpdate();
+    
+    console.log(`FloatingWidget: Broadcasted break ${action} to dashboard:`, {
+      clockedIn: attendance.value.clockedIn,
+      onBreak: attendance.value.onBreak,
+      clockInTime: attendance.value.clockInTime,
+      breakStartTime: breakStartTime.value,
+      completedBreaks: completedBreakSessions.value.length,
+      totalBreakTime: totalBreakTime.value,
+      action: action
+    });
+  } catch (error) {
+    console.warn('Failed to broadcast break status change:', error);
   }
 }
 
@@ -484,13 +705,41 @@ onMounted(async () => {
   saveStateToStorage()
   updateTimer()
   
+  // Broadcast current status to dashboard for immediate sync
+  setTimeout(() => {
+    broadcastCurrentStatus()
+  }, 100) // Small delay to ensure dashboard is ready
+  
   // Start real-time updates
   timerInterval = setInterval(updateTimer, 1000) // Update every second
   
-  // Listen for attendance updates from other components
+  // Subscribe to Laravel Echo attendance updates
+  if (window.Echo) {
+    // Get current user's employee ID from the page props or API
+    try {
+      const userResponse = await window.axios.get('/api/user')
+      const employeeId = userResponse.data?.employee?.id
+      
+      if (employeeId) {
+        // Subscribe to private channel for this employee
+        window.Echo.private(`attendance.${employeeId}`)
+          .listen('.attendance.updated', handleAttendanceUpdate)
+        
+        console.log(`FloatingWidget: Subscribed to Echo channel attendance.${employeeId}`)
+      } else {
+        console.warn('FloatingWidget: No employee ID found for Echo subscription')
+      }
+    } catch (error) {
+      console.error('FloatingWidget: Failed to get user data for Echo subscription:', error)
+    }
+  } else {
+    console.warn('FloatingWidget: Echo not available')
+  }
+  
+  // Listen for attendance updates from other components (legacy)
   window.addEventListener('storage', handleStorageChange)
   
-  // Listen for custom attendance state change events from dashboard
+  // Listen for custom attendance state change events from dashboard (legacy)
   window.addEventListener('attendance-state-changed', handleAttendanceStateChange)
   
   console.log('FloatingWidget: Event listeners registered')
@@ -498,6 +747,24 @@ onMounted(async () => {
 
 onUnmounted(() => {
   if (timerInterval) clearInterval(timerInterval)
+  
+  // Unsubscribe from Echo channels
+  if (window.Echo) {
+    // We need to leave all attendance channels this component might have subscribed to
+    // Since we don't store the employeeId, we'll try to get it again or use a more general approach
+    try {
+      // Leave any attendance channels (this is a bit of a workaround)
+      window.Echo.connector.pusher.allChannels().forEach(channel => {
+        if (channel.name.startsWith('private-attendance.')) {
+          window.Echo.leave(channel.name.replace('private-', ''))
+        }
+      })
+      console.log('FloatingWidget: Unsubscribed from Echo channels')
+    } catch (error) {
+      console.warn('FloatingWidget: Error unsubscribing from Echo channels:', error)
+    }
+  }
+  
   window.removeEventListener('storage', handleStorageChange)
   window.removeEventListener('attendance-state-changed', handleAttendanceStateChange)
   
