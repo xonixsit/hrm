@@ -1,8 +1,8 @@
 <template>
   <AuthenticatedLayout>
     <PageLayout
-      title="Request Leave"
-      subtitle="Submit a new leave request for approval"
+      title="Apply for Leave"
+      subtitle="Submit a leave application for approval"
       :breadcrumbs="breadcrumbs"
       :actions="headerActions"
     >
@@ -13,31 +13,31 @@
             <div class="flex items-center">
               <div :class="[
                 'flex items-center justify-center w-8 h-8 rounded-full border-2',
-                currentStep >= 1 ? 'bg-indigo-600 border-indigo-600 text-white' : 'border-gray-300 text-gray-500'
+                currentStep >= 1 ? 'bg-teal-600 border-teal-600 text-white' : 'border-gray-300 text-gray-500'
               ]">
                 <span class="text-sm font-medium">1</span>
               </div>
               <span :class="[
                 'ml-2 text-sm font-medium',
-                currentStep >= 1 ? 'text-indigo-600' : 'text-gray-500'
+                currentStep >= 1 ? 'text-teal-600' : 'text-gray-500'
               ]">Leave Details</span>
             </div>
             <div class="flex-1 h-0.5 bg-gray-200 mx-4">
               <div :class="[
                 'h-full transition-all duration-300',
-                currentStep >= 2 ? 'bg-indigo-600' : 'bg-gray-200'
+                currentStep >= 2 ? 'bg-teal-600' : 'bg-gray-200'
               ]"></div>
             </div>
             <div class="flex items-center">
               <div :class="[
                 'flex items-center justify-center w-8 h-8 rounded-full border-2',
-                currentStep >= 2 ? 'bg-indigo-600 border-indigo-600 text-white' : 'border-gray-300 text-gray-500'
+                currentStep >= 2 ? 'bg-teal-600 border-teal-600 text-white' : 'border-gray-300 text-gray-500'
               ]">
                 <span class="text-sm font-medium">2</span>
               </div>
               <span :class="[
                 'ml-2 text-sm font-medium',
-                currentStep >= 2 ? 'text-indigo-600' : 'text-gray-500'
+                currentStep >= 2 ? 'text-teal-600' : 'text-gray-500'
               ]">Review & Submit</span>
             </div>
           </div>
@@ -54,7 +54,7 @@
                 <div class="border-b border-gray-200 pb-4">
                   <h3 class="text-lg font-medium text-gray-900">Leave Information</h3>
                   <p class="mt-1 text-sm text-gray-600">
-                    Please provide the details of your leave request.
+                    Please provide the details of your leave application.
                   </p>
                 </div>
 
@@ -71,7 +71,7 @@
                       :class="[
                         'relative rounded-lg border p-4 cursor-pointer focus:outline-none transition-all duration-200',
                         form.leave_type_id === type.id 
-                          ? 'border-indigo-600 ring-2 ring-indigo-600 bg-indigo-50' 
+                          ? 'border-teal-600 ring-2 ring-teal-600 bg-teal-50' 
                           : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
                       ]"
                     >
@@ -82,7 +82,7 @@
                             :value="type.id"
                             v-model="form.leave_type_id"
                             type="radio"
-                            class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300"
+                            class="focus:ring-teal-500 h-4 w-4 text-teal-600 border-gray-300"
                           />
                         </div>
                         <div class="ml-3 flex-1">
@@ -121,7 +121,7 @@
                           v-model="form.from_date" 
                           type="date" 
                           :min="minDate"
-                          class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm pl-10"
+                          class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm pl-10"
                           :class="{ 'border-red-300 focus:border-red-500 focus:ring-red-500': form.errors.from_date }"
                           @change="validateDates"
                         />
@@ -146,7 +146,7 @@
                           v-model="form.to_date" 
                           type="date" 
                           :min="form.from_date || minDate"
-                          class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm pl-10"
+                          class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm pl-10"
                           :class="{ 'border-red-300 focus:border-red-500 focus:ring-red-500': form.errors.to_date }"
                           @change="validateDates"
                         />
@@ -193,8 +193,8 @@
                       v-model="form.reason" 
                       rows="4"
                       maxlength="500"
-                      placeholder="Please provide a detailed reason for your leave request. Include any relevant information that will help your manager understand the context of your request."
-                      class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm resize-none"
+                      placeholder="Please provide a detailed reason for your leave application. Include any relevant information that will help your manager understand the context of your application."
+                      class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm resize-none"
                       :class="{ 'border-red-300 focus:border-red-500 focus:ring-red-500': form.errors.reason }"
                     ></textarea>
                     <div class="absolute bottom-3 right-3 text-xs text-gray-400">
@@ -218,9 +218,9 @@
                     type="button"
                     @click="nextStep"
                     :disabled="!canProceedToReview"
-                    class="inline-flex items-center px-6 py-3 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                    class="inline-flex items-center px-6 py-3 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
                   >
-                    Review Request
+                    Review Application
                     <svg class="ml-2 -mr-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                     </svg>
@@ -231,9 +231,9 @@
               <!-- Step 2: Review & Submit -->
               <div v-show="currentStep === 2" class="space-y-6">
                 <div class="border-b border-gray-200 pb-4">
-                  <h3 class="text-lg font-medium text-gray-900">Review Your Request</h3>
+                  <h3 class="text-lg font-medium text-gray-900">Review Your Application</h3>
                   <p class="mt-1 text-sm text-gray-600">
-                    Please review your leave request details before submitting.
+                    Please review your leave application details before submitting.
                   </p>
                 </div>
 
@@ -270,7 +270,7 @@
                       id="confirmation"
                       v-model="confirmationChecked"
                       type="checkbox"
-                      class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded"
+                      class="focus:ring-teal-500 h-4 w-4 text-teal-600 border-gray-300 rounded"
                     />
                   </div>
                   <div class="ml-3 text-sm">
@@ -278,7 +278,7 @@
                       I confirm that the information provided is accurate
                     </label>
                     <p class="text-gray-500">
-                      By checking this box, I acknowledge that I have reviewed my leave request and confirm that all details are correct.
+                      By checking this box, I acknowledge that I have reviewed my leave application and confirm that all details are correct.
                     </p>
                   </div>
                 </div>
@@ -288,7 +288,7 @@
                   <button 
                     type="button"
                     @click="previousStep"
-                    class="inline-flex items-center px-6 py-3 border border-gray-300 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200"
+                    class="inline-flex items-center px-6 py-3 border border-gray-300 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-colors duration-200"
                   >
                     <svg class="mr-2 -ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
@@ -307,7 +307,7 @@
                     <svg v-else class="mr-2 -ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                     </svg>
-                    {{ form.processing ? 'Submitting Request...' : 'Submit Leave Request' }}
+                    {{ form.processing ? 'Submitting Application...' : 'Submit Application' }}
                   </button>
                 </div>
               </div>
@@ -320,13 +320,13 @@
           <!-- Duration Calculator -->
           <ContentCard v-if="form.from_date && form.to_date">
             <div class="text-center">
-              <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-indigo-100">
-                <svg class="h-6 w-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-teal-100">
+                <svg class="h-6 w-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
               </div>
               <h3 class="mt-4 text-lg font-medium text-gray-900">Leave Duration</h3>
-              <p class="mt-2 text-3xl font-bold text-indigo-600">{{ calculateDuration() }}</p>
+              <p class="mt-2 text-3xl font-bold text-teal-600">{{ calculateDuration() }}</p>
               <p class="mt-1 text-sm text-gray-500">
                 {{ formatDate(form.from_date) }} to {{ formatDate(form.to_date) }}
               </p>
@@ -352,7 +352,7 @@
                 <svg class="flex-shrink-0 h-5 w-5 text-green-500 mt-0.5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                 </svg>
-                <span>Submit requests at least 2 weeks in advance</span>
+                <span>Submit applications at least 2 weeks in advance</span>
               </div>
               <div class="flex items-start">
                 <svg class="flex-shrink-0 h-5 w-5 text-green-500 mt-0.5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -381,7 +381,7 @@
 </template>
 
 <script setup>
-import { Link, useForm } from '@inertiajs/vue3';
+import { useForm } from '@inertiajs/vue3';
 import { computed, ref, onMounted } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import PageLayout from '@/Components/Layout/PageLayout.vue';
@@ -450,7 +450,7 @@ const canProceedToReview = computed(() => {
 const breadcrumbs = computed(() => [
   { label: 'Dashboard', href: route('dashboard') },
   { label: 'Leaves', href: route('leaves.index') },
-  { label: 'New Request', current: true }
+  { label: 'Apply', current: true }
 ]);
 
 const headerActions = computed(() => [

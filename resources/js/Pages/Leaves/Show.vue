@@ -6,8 +6,7 @@
       :breadcrumbs="breadcrumbs"
       :actions="headerActions"
     >
-      <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-        <div class="p-6">
+      <ContentCard>
             <!-- Status Badge -->
             <div class="flex justify-end mb-6">
               <span :class="getStatusClasses(leave?.status)" class="inline-flex items-center px-3 py-1 text-sm font-medium rounded-full">
@@ -31,7 +30,7 @@
               <h3 class="text-lg font-medium text-gray-900 mb-4">Employee Information</h3>
               <div class="flex items-center space-x-4">
                 <div class="flex-shrink-0">
-                  <div class="h-16 w-16 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
+                  <div class="h-16 w-16 rounded-full bg-gradient-to-r from-teal-500 to-cyan-600 flex items-center justify-center">
                     <span class="text-xl font-bold text-white">
                       {{ getInitials(leave.employee.user.name) }}
                     </span>
@@ -56,7 +55,7 @@
                 <div>
                   <dt class="text-sm font-medium text-gray-500 mb-1">Leave Type</dt>
                   <dd class="flex items-center">
-                    <div class="w-3 h-3 rounded-full bg-indigo-500 mr-2"></div>
+                    <div class="w-3 h-3 rounded-full bg-teal-500 mr-2"></div>
                     <span class="text-sm font-medium text-gray-900">{{ leave?.leave_type?.name || 'N/A' }}</span>
                   </dd>
                 </div>
@@ -130,7 +129,7 @@
                     id="approval-comments"
                     v-model="approvalComments"
                     rows="3"
-                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm"
                     placeholder="Add any comments about this leave request..."
                   ></textarea>
                 </div>
@@ -163,7 +162,7 @@
             <div class="border-t border-gray-200 pt-6">
               <Link 
                 :href="route('leaves.index')" 
-                class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200"
+                class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-colors duration-200"
               >
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -171,8 +170,7 @@
                 Back to Leaves
               </Link>
           </div>
-        </div>
-      </div>
+      </ContentCard>
     </PageLayout>
   </AuthenticatedLayout>
 </template>
@@ -182,6 +180,7 @@ import { Link, router } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import PageLayout from '@/Components/Layout/PageLayout.vue';
+import ContentCard from '@/Components/Layout/ContentCard.vue';
 import HorizontalCalendar from '@/Components/Calendar/HorizontalCalendar.vue';
 import { useAuth } from '@/composables/useAuth';
 

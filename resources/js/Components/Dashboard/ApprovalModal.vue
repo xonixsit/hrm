@@ -12,7 +12,7 @@
             <div class="text-sm">
               <div class="font-medium text-gray-900">{{ approval?.employee?.user?.name || approval?.requester || 'Unknown User' }}</div>
               
-              <!-- For Leave Requests -->
+              <!-- For Leave Applications -->
               <div v-if="approval?.leave_type" class="text-gray-600">
                 <div>{{ approval.leave_type.name }}</div>
                 <div>{{ formatDate(approval.from_date) }} - {{ formatDate(approval.to_date) }}</div>

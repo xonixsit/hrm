@@ -181,7 +181,7 @@ const navigationItems = computed(() => {
     { id: 'dashboard', label: 'Dashboard', route: 'dashboard', icon: 'HomeIcon' },
     { id: 'profile', label: 'My Profile', route: 'profile.edit', icon: 'UserIcon' },
     { id: 'attendance', label: 'Time Tracking', route: 'attendances.index', icon: 'ClockIcon' },
-    { id: 'leaves', label: 'Leave Requests', route: 'leaves.index', icon: 'CalendarIcon' },
+    { id: 'leaves', label: 'Leave Applications', route: 'leaves.index', icon: 'CalendarIcon' },
     { id: 'assessments', label: 'My Assessments', route: 'competency-assessments.my-assessments', icon: 'ClipboardIcon' },
     { id: 'reports', label: 'Work Reports', route: 'work-reports.index', icon: 'DocumentIcon' },
     { id: 'handbook', label: 'Employee Handbook', route: 'employee-handbook', icon: 'BookOpenIcon' }

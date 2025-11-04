@@ -48,7 +48,7 @@
               <svg v-else-if="item.route === 'attendances.index'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <!-- Leave Requests Icon - White -->
+              <!-- Leave Applications Icon - White -->
               <svg v-else-if="item.route === 'leaves.index'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
@@ -360,7 +360,7 @@ const props = defineProps({
 })
 
 const { user, roles: userRoles } = useAuth()
-const { isDark, toggleTheme } = useTheme()
+const { isDark } = useTheme()
 
 const showMore = ref(false)
 const showUserMenu = ref(false)
@@ -381,7 +381,7 @@ const userInitials = computed(() => {
 const mainNavItems = computed(() => [
   { route: 'dashboard', label: 'Dashboard' },
   { route: 'attendances.index', label: 'Time Tracking' },
-  { route: 'leaves.index', label: 'Leave Requests' },
+  { route: 'leaves.index', label: 'Leave Applications' },
   { route: 'competency-assessments.my-assessments', label: 'My Assessments' }
 ])
 

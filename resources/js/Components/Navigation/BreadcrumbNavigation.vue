@@ -136,8 +136,8 @@
             icon="ClockIcon"
           />
           <NavCard
-            title="Leave Requests"
-            description="Request time off and view status"
+            title="Leave Applications"
+            description="Apply for time off and view status"
             :href="route('leaves.index')"
             icon="CalendarIcon"
           />

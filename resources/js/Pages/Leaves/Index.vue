@@ -2,7 +2,7 @@
   <AuthenticatedLayout>
     <PageLayout
       title="Leave Management"
-      subtitle="View and manage leave requests"
+      subtitle="View and manage leave applications"
       :breadcrumbs="breadcrumbs"
       :actions="headerActions"
     >
@@ -11,9 +11,9 @@
           <!-- Header Actions -->
           <div class="flex justify-between items-start mb-6">
             <div>
-              <h3 class="text-lg font-medium text-gray-900">Leave Requests</h3>
+              <h3 class="text-lg font-medium text-gray-900">Leave Applications</h3>
               <p class="mt-1 text-sm text-gray-600">
-                View and manage leave requests.
+                View and manage leave applications.
               </p>
             </div>
             <div class="flex items-center space-x-4">
@@ -26,7 +26,7 @@
                   v-model="localFilters.search"
                   type="text"
                   placeholder="Search by employee name or reason..."
-                  class="block w-80 pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  class="block w-80 pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-teal-500 focus:border-teal-500 sm:text-sm"
                   @input="debouncedApplyFilters"
                 />
               </div>
@@ -34,7 +34,7 @@
               <!-- Show Filters Button -->
               <button
                 @click="showFilters = !showFilters"
-                class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
               >
                 <FunnelIcon class="w-4 h-4 mr-2" />
                 {{ showFilters ? 'Hide Filters' : 'Show Filters' }}
@@ -50,7 +50,7 @@
                   <label class="block text-sm font-medium text-gray-700 mb-1">Employee</label>
                   <select
                     v-model="localFilters.employee_id"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500 sm:text-sm"
                     @change="applyFilters"
                   >
                     <option value="">All employees</option>
@@ -65,7 +65,7 @@
                   <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
                   <select
                     v-model="localFilters.status"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500 sm:text-sm"
                     @change="applyFilters"
                   >
                     <option value="">All statuses</option>
@@ -80,7 +80,7 @@
                   <label class="block text-sm font-medium text-gray-700 mb-1">Leave Type</label>
                   <select
                     v-model="localFilters.type"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500 sm:text-sm"
                     @change="applyFilters"
                   >
                     <option value="">All types</option>
@@ -96,7 +96,7 @@
                   <input
                     v-model="localFilters.date_from"
                     type="date"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500 sm:text-sm"
                     @change="applyFilters"
                   />
                 </div>
@@ -107,7 +107,7 @@
                   <input
                     v-model="localFilters.date_to"
                     type="date"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500 sm:text-sm"
                     @change="applyFilters"
                   />
                 </div>
@@ -119,12 +119,12 @@
                 
                 <span 
                   v-if="localFilters.employee_id"
-                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-teal-100 text-teal-800"
                 >
                   Employee: {{ getEmployeeName(localFilters.employee_id) }}
                   <button 
                     @click="clearFilter('employee_id')"
-                    class="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full text-blue-400 hover:bg-blue-200 hover:text-blue-500 focus:outline-none"
+                    class="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full text-teal-400 hover:bg-teal-200 hover:text-teal-500 focus:outline-none"
                   >
                     <span class="sr-only">Remove employee filter</span>
                     <svg class="w-2 h-2" fill="currentColor" viewBox="0 0 8 8">
@@ -135,12 +135,12 @@
 
                 <span 
                   v-if="localFilters.status"
-                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"
+                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-teal-100 text-teal-800"
                 >
                   Status: {{ formatStatus(localFilters.status) }}
                   <button 
                     @click="clearFilter('status')"
-                    class="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full text-green-400 hover:bg-green-200 hover:text-green-500 focus:outline-none"
+                    class="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full text-teal-400 hover:bg-teal-200 hover:text-teal-500 focus:outline-none"
                   >
                     <span class="sr-only">Remove status filter</span>
                     <svg class="w-2 h-2" fill="currentColor" viewBox="0 0 8 8">
@@ -151,12 +151,12 @@
 
                 <span 
                   v-if="localFilters.type"
-                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800"
+                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-teal-100 text-teal-800"
                 >
                   Type: {{ getLeaveTypeName(localFilters.type) }}
                   <button 
                     @click="clearFilter('type')"
-                    class="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full text-yellow-400 hover:bg-yellow-200 hover:text-yellow-500 focus:outline-none"
+                    class="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full text-teal-400 hover:bg-teal-200 hover:text-teal-500 focus:outline-none"
                   >
                     <span class="sr-only">Remove type filter</span>
                     <svg class="w-2 h-2" fill="currentColor" viewBox="0 0 8 8">
@@ -167,12 +167,12 @@
 
                 <span 
                   v-if="localFilters.date_from"
-                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800"
+                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-teal-100 text-teal-800"
                 >
                   From: {{ formatDate(localFilters.date_from) }}
                   <button 
                     @click="clearFilter('date_from')"
-                    class="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full text-purple-400 hover:bg-purple-200 hover:text-purple-500 focus:outline-none"
+                    class="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full text-teal-400 hover:bg-teal-200 hover:text-teal-500 focus:outline-none"
                   >
                     <span class="sr-only">Remove date from filter</span>
                     <svg class="w-2 h-2" fill="currentColor" viewBox="0 0 8 8">
@@ -183,12 +183,12 @@
 
                 <span 
                   v-if="localFilters.date_to"
-                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800"
+                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-teal-100 text-teal-800"
                 >
                   To: {{ formatDate(localFilters.date_to) }}
                   <button 
                     @click="clearFilter('date_to')"
-                    class="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full text-purple-400 hover:bg-purple-200 hover:text-purple-500 focus:outline-none"
+                    class="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full text-teal-400 hover:bg-teal-200 hover:text-teal-500 focus:outline-none"
                   >
                     <span class="sr-only">Remove date to filter</span>
                     <svg class="w-2 h-2" fill="currentColor" viewBox="0 0 8 8">
@@ -199,7 +199,7 @@
 
                 <button 
                   @click="resetFilters"
-                  class="text-sm text-blue-600 hover:text-blue-800"
+                  class="text-sm text-teal-600 hover:text-teal-800"
                 >
                   Clear all
                 </button>
@@ -312,7 +312,7 @@
                               <svg class="w-4 h-4 mr-3 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                               </svg>
-                              Approve Request
+                              Approve
                             </button>
 
                             <!-- Reject Action -->
@@ -324,7 +324,7 @@
                               <svg class="w-4 h-4 mr-3 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                               </svg>
-                              Reject Request
+                              Reject
                             </button>
 
                             <!-- Edit Action -->
@@ -336,7 +336,7 @@
                               <svg class="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                               </svg>
-                              Edit Request
+                              Edit
                             </Link>
 
                             <!-- Delete Action -->
@@ -348,7 +348,7 @@
                               <svg class="w-4 h-4 mr-3 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                               </svg>
-                              Delete Request
+                              Delete
                             </button>
                           </div>
                         </div>
@@ -365,19 +365,19 @@
               <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
-              <h3 class="mt-2 text-sm font-medium text-gray-900">No leave requests</h3>
+              <h3 class="mt-2 text-sm font-medium text-gray-900">No leave applications</h3>
               <p class="mt-1 text-sm text-gray-500">
-                {{ hasActiveFilters ? 'Try adjusting your filters' : 'Get started by creating a new leave request' }}
+                {{ hasActiveFilters ? 'Try adjusting your filters' : 'Get started by applying for leave' }}
               </p>
               <div v-if="hasActiveFilters" class="mt-6">
                 <Link 
                   :href="route('leaves.create')" 
-                  class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+                  class="inline-flex items-center px-4 py-2 bg-teal-600 text-white text-sm font-medium rounded-lg hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 transition-colors"
                 >
                   <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                   </svg>
-                  Create New Request
+                  Apply for Leave
                 </Link>
               </div>
             </div>
@@ -432,7 +432,7 @@
                         :class="[
                           'relative inline-flex items-center px-4 py-2 text-sm font-semibold',
                           link.active 
-                            ? 'z-10 bg-blue-600 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600' 
+                            ? 'z-10 bg-teal-600 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600' 
                             : 'text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0'
                         ]"
                       >
@@ -471,11 +471,11 @@
                 </div>
                 <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
                   <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
-                    Delete Leave Request
+                    Delete Leave Application
                   </h3>
                   <div class="mt-2">
                     <p class="text-sm text-gray-500">
-                      Are you sure you want to delete this leave request? This action cannot be undone.
+                      Are you sure you want to delete this leave application? This action cannot be undone.
                     </p>
                   </div>
                 </div>
@@ -492,7 +492,7 @@
               <button 
                 @click="showDeleteModal = false" 
                 type="button" 
-                class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
               >
                 Cancel
               </button>
@@ -595,8 +595,8 @@ const breadcrumbs = computed(() => [
 
 const headerActions = computed(() => [
   {
-    id: 'new-request',
-    label: 'New Request',
+    id: 'apply-leave',
+    label: 'Apply',
     icon: 'plus',
     variant: 'primary',
     href: route('leaves.create')
