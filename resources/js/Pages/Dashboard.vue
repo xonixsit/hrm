@@ -101,7 +101,7 @@
             variant="elevated">
             <template #headerActions>
               <button @click="navigateTo('leaves.index')"
-                class="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700">
+                class="px-4 py-2 bg-teal-600 text-white text-sm rounded-lg hover:bg-teal-700 transition-colors shadow-lg shadow-teal-500/25">
                 Manage All Approvals
               </button>
             </template>
@@ -130,7 +130,7 @@
             :icon="AcademicCapIcon" iconVariant="primary" variant="elevated">
             <template #headerActions>
               <button @click="navigateTo('assessment-dashboard')"
-                class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/25">
+                class="inline-flex items-center px-4 py-2 bg-teal-600 text-white text-sm font-medium rounded-lg hover:bg-teal-700 transition-colors shadow-lg shadow-teal-500/25">
                 View Details
                 <ChevronRightIcon class="w-4 h-4 ml-1" />
               </button>
@@ -193,7 +193,7 @@
           <UnifiedCard title="Quick Actions" description="Common tasks" :icon="PlusIcon" iconVariant="primary">
             <div class="space-y-3">
               <button @click="navigateTo('competencies.create')"
-                class="w-full flex items-center justify-between px-4 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all group shadow-lg shadow-blue-500/25">
+                class="w-full flex items-center justify-between px-4 py-3 bg-gradient-to-r from-teal-500 to-teal-600 text-white rounded-xl hover:from-teal-600 hover:to-teal-700 transition-all group shadow-lg shadow-teal-500/25">
                 <div class="flex items-center">
                   <AcademicCapIcon class="w-5 h-5 mr-3" />
                   <span class="font-medium">Add Competency</span>
