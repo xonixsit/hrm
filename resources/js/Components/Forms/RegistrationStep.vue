@@ -434,11 +434,11 @@ onMounted(() => {
 }
 
 .step-number-badge {
-  @apply flex items-center justify-center w-8 h-8 bg-primary-100 text-primary-700 rounded-full font-medium text-sm flex-shrink-0;
+  @apply flex items-center justify-center w-8 h-8 bg-teal-100 text-teal-700 rounded-full font-medium text-sm flex-shrink-0;
 }
 
 .registration-step--active .step-number-badge {
-  @apply bg-primary-600 text-white;
+  @apply bg-teal-600 text-white;
 }
 
 .registration-step--completed .step-number-badge {
@@ -543,6 +543,6 @@ onMounted(() => {
 
 /* Focus states */
 .step-actions button:focus {
-  @apply outline-none ring-2 ring-offset-2 ring-primary-500;
+  @apply outline-none ring-2 ring-offset-2 ring-teal-500;
 }
 </style>

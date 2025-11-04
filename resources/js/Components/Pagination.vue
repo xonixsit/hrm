@@ -586,7 +586,7 @@ scoped>
 .pagination-page-size-select {
   @apply px-3 py-1.5 border border-neutral-300 rounded-md;
   @apply bg-white text-neutral-900 text-sm;
-  @apply focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500;
+  @apply focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500;
   @apply disabled:opacity-50 disabled:cursor-not-allowed;
   @apply transition-colors duration-200;
 }
@@ -605,7 +605,7 @@ scoped>
   @apply text-sm font-medium text-neutral-700;
   @apply bg-white border border-neutral-300 rounded-md;
   @apply hover:bg-neutral-50 hover:text-neutral-900;
-  @apply focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
+  @apply focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2;
   @apply disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white;
   @apply transition-all duration-200;
 }
@@ -633,14 +633,14 @@ scoped>
   @apply text-sm font-medium text-neutral-700;
   @apply bg-white border border-neutral-300 rounded-md;
   @apply hover:bg-neutral-50 hover:text-neutral-900;
-  @apply focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
+  @apply focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2;
   @apply disabled:cursor-default;
   @apply transition-all duration-200;
 }
 
 .pagination-page-button--current {
-  @apply bg-primary-600 border-primary-600 text-white;
-  @apply hover:bg-primary-700 hover:border-primary-700;
+  @apply bg-teal-600 border-teal-600 text-white;
+  @apply hover:bg-teal-700 hover:border-teal-700;
 }
 
 .pagination-page-button--hover:hover {
@@ -664,16 +664,16 @@ scoped>
 .pagination-jump-input {
   @apply w-16 px-2 py-1.5 border border-neutral-300 rounded-md;
   @apply bg-white text-neutral-900 text-sm text-center;
-  @apply focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500;
+  @apply focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500;
   @apply disabled:opacity-50 disabled:cursor-not-allowed;
   @apply transition-colors duration-200;
 }
 
 .pagination-jump-button {
   @apply px-3 py-1.5 text-sm font-medium;
-  @apply bg-primary-600 text-white border border-primary-600 rounded-md;
-  @apply hover:bg-primary-700 hover:border-primary-700;
-  @apply focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
+  @apply bg-teal-600 text-white border border-teal-600 rounded-md;
+  @apply hover:bg-teal-700 hover:border-teal-700;
+  @apply focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2;
   @apply disabled:opacity-50 disabled:cursor-not-allowed;
   @apply transition-all duration-200;
 }
@@ -744,7 +744,7 @@ scoped>
 
 .theme-dark .pagination-page-size-select {
   @apply bg-neutral-800 border-neutral-600 text-neutral-200;
-  @apply focus:ring-primary-400 focus:border-primary-400;
+  @apply focus:ring-teal-400 focus:border-teal-400;
 }
 
 .theme-dark .pagination-button {
@@ -759,8 +759,8 @@ scoped>
 }
 
 .theme-dark .pagination-page-button--current {
-  @apply bg-primary-600 border-primary-600 text-white;
-  @apply hover:bg-primary-700 hover:border-primary-700;
+  @apply bg-teal-600 border-teal-600 text-white;
+  @apply hover:bg-teal-700 hover:border-teal-700;
 }
 
 .theme-dark .pagination-ellipsis {
@@ -773,7 +773,7 @@ scoped>
 
 .theme-dark .pagination-jump-input {
   @apply bg-neutral-800 border-neutral-600 text-neutral-200;
-  @apply focus:ring-primary-400 focus:border-primary-400;
+  @apply focus:ring-teal-400 focus:border-teal-400;
 }
 
 .theme-dark .pagination-loading {
@@ -788,7 +788,7 @@ scoped>
   }
   
   .pagination-page-button--current {
-    @apply border-2 border-primary-800;
+    @apply border-2 border-teal-800;
   }
 }
 
