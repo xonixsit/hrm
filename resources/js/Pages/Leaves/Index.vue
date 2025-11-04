@@ -597,7 +597,7 @@ const headerActions = computed(() => [
   {
     id: 'apply-leave',
     label: 'Apply',
-    icon: 'plus',
+    icon: 'PlusIcon',
     variant: 'primary',
     href: route('leaves.create')
   }

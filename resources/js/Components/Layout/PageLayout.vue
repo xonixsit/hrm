@@ -14,14 +14,14 @@
     <!-- Main Content Area -->
     <div :class="contentClasses">
       <!-- Sidebar -->
-      <aside v-if="hasSidebar && sidebarItems?.length" :class="sidebarClasses">
+      <!-- <aside v-if="hasSidebar && sidebarItems?.length" :class="sidebarClasses">
         <PageSidebar :items="sidebarItems" :collapsible="collapsibleSidebar" :collapsed="sidebarCollapsed"
           @toggle="handleSidebarToggle" @item-click="handleSidebarItemClick">
           <template v-if="$slots.sidebar" #default>
             <slot name="sidebar" />
           </template>
         </PageSidebar>
-      </aside>
+      </aside> -->
 
       <!-- Main Content -->
       <main :class="mainContentClasses" role="main">
@@ -66,8 +66,8 @@
   import { computed, ref, provide, onMounted, onUnmounted } from 'vue';
   import { useResponsive } from '@/composables/useResponsive';
   import PageHeader from './PageHeader.vue';
-  import PageSidebar from './PageSidebar.vue';
-  import AppFooter from './AppFooter.vue';
+  // import PageSidebar from './PageSidebar.vue';
+  // import AppFooter from './AppFooter.vue';
 
   const props = defineProps({
     // Page content
@@ -214,14 +214,14 @@
     }
   ]);
 
-  const sidebarClasses = computed(() => [
-    'page-sidebar',
-    'flex-shrink-0',
-    {
-      'sidebar-collapsed': sidebarCollapsed.value,
-      'mobile-sidebar': isMobile.value
-    }
-  ]);
+  // const sidebarClasses = computed(() => [
+  //   'page-sidebar',
+  //   'flex-shrink-0',
+  //   {
+  //     'sidebar-collapsed': sidebarCollapsed.value,
+  //     'mobile-sidebar': isMobile.value
+  //   }
+  // ]);
 
   const mainContentClasses = computed(() => [
     'main-content',
@@ -263,9 +263,9 @@
     emit('sidebar-toggle', sidebarCollapsed.value);
   };
 
-  const handleSidebarItemClick = (item) => {
-    emit('sidebar-item-click', item);
-  };
+  // const handleSidebarItemClick = (item) => {
+  //   emit('sidebar-item-click', item);
+  // };
 
   const getErrorActionClasses = (action) => [
     'inline-flex items-center px-4 py-2 rounded-md text-sm font-medium transition-colors',

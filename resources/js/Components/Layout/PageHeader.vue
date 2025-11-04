@@ -36,7 +36,7 @@
               :class="getActionClasses(action)"
               :title="action.tooltip"
             >
-              <component v-if="action.icon" :is="action.icon" class="action-icon" />
+              <!-- <component v-if="action.icon" :is="action.icon" class="action-icon text-white" /> -->
               <span v-if="action.label && !action.iconOnly" class="action-label">{{ action.label }}</span>
             </button>
             
@@ -62,7 +62,7 @@
                     :disabled="action.disabled"
                     class="overflow-action"
                   >
-                    <component v-if="action.icon" :is="action.icon" class="w-4 h-4" />
+                    <!-- <component v-if="action.icon" :is="action.icon" class="w-4 h-4" /> -->
                     <span>{{ action.label }}</span>
                   </button>
                 </div>
