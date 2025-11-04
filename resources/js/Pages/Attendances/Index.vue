@@ -276,13 +276,7 @@
                       >
                         Edit
                       </Link>
-                      <button
-                        v-if="canManualClockOut(attendance)"
-                        @click="openManualClockOut(attendance)"
-                        class="text-orange-600 hover:text-orange-900"
-                      >
-                        Clock Out
-                      </button>
+
                     </div>
                   </td>
                 </tr>
@@ -367,13 +361,7 @@
       </div>
     </PageLayout>
 
-    <!-- Manual Clock Out Modal -->
-    <ManualClockOutModal
-      :show="showManualClockOutModal"
-      :attendance="selectedAttendance"
-      @close="closeManualClockOut"
-      @success="handleManualClockOutSuccess"
-    />
+
   </AuthenticatedLayout>
 </template>
 

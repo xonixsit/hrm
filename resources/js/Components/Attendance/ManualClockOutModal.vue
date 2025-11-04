@@ -51,9 +51,9 @@
           <!-- Clock Out Time -->
           <div class="mb-6">
             <label class="block text-sm font-medium text-gray-700 mb-2">
-              Clock Out Time
+              Clock Out Time2
             </label>
-            <input v-model="clockOutTime" type="datetime-local" :min="getMinDateTime()" :max="getMaxDateTime()"
+            <input v-model="clockOutTime" type="datetime-local" 
               class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
               required />
             <p class="mt-1 text-xs text-gray-500">
@@ -186,8 +186,34 @@
   }
 
   const getMaxDateTime = () => {
-    // Always allow clock out up to current time, regardless of attendance date
-    return getCurrentDateTime()
+    // For past attendance dates, allow clock out up to end of that day
+    // For today's attendance, allow up to current time
+    const attendanceDate = props.attendance?.date
+    if (!attendanceDate) return getCurrentDateTime()
+    
+    try {
+      const now = new Date()
+      const todayString = now.toISOString().split('T')[0]
+      
+      let attendanceDateString
+      if (attendanceDate.includes('-')) {
+        attendanceDateString = attendanceDate
+      } else {
+        const attendanceDateObj = new Date(attendanceDate)
+        attendanceDateString = attendanceDateObj.toISOString().split('T')[0]
+      }
+      
+      // If attendance is from today, limit to current time
+      if (todayString === attendanceDateString) {
+        return getCurrentDateTime()
+      } else {
+        // For past dates, allow up to end of that day (11:59 PM)
+        return `${attendanceDateString}T23:59`
+      }
+    } catch (error) {
+      console.error('Error calculating max datetime:', error)
+      return getCurrentDateTime()
+    }
   }
 
   const handleBackdropClick = () => {
@@ -225,27 +251,46 @@
   }
 
   onMounted(() => {
+    console.log('=== MANUAL CLOCK OUT MODAL DEBUG ===')
+    console.log('Full attendance object:', JSON.stringify(props.attendance, null, 2))
+    
     // Set default clock out time to the attendance date
     if (!props.attendance?.date) {
+      console.log('No attendance date found, using current time')
       clockOutTime.value = getCurrentDateTime()
       return
     }
 
     try {
-      // Get the attendance date and set a reasonable default time (5 PM)
       const attendanceDate = props.attendance.date
-      const defaultTime = `${attendanceDate}T17:00` // 5 PM on attendance date
-      
-      // If the default time would be in the future, use current time instead
-      const defaultDateTime = new Date(defaultTime)
       const now = new Date()
       
-      if (defaultDateTime > now) {
-        clockOutTime.value = getCurrentDateTime()
+      console.log('Raw attendance date:', attendanceDate)
+      console.log('Current date:', now.toISOString())
+      
+      // Always use the attendance date, regardless of format
+      let attendanceDateString
+      
+      if (attendanceDate.includes('-')) {
+        // Already in YYYY-MM-DD format
+        attendanceDateString = attendanceDate
       } else {
-        clockOutTime.value = defaultTime
+        // Convert other formats to YYYY-MM-DD
+        const dateObj = new Date(attendanceDate)
+        attendanceDateString = dateObj.toISOString().split('T')[0]
       }
+      
+      console.log('Processed attendance date string:', attendanceDateString)
+      
+      // Always use 5 PM on the attendance date as default
+      const defaultTime = `${attendanceDateString}T17:00`
+      clockOutTime.value = defaultTime
+      
+      console.log('Final clock out time set to:', clockOutTime.value)
+      console.log('=== END DEBUG ===')
+      
     } catch (error) {
+      console.error('Error setting default clock out time:', error)
       clockOutTime.value = getCurrentDateTime()
     }
   })

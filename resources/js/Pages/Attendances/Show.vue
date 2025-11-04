@@ -100,6 +100,82 @@
             </div>
           </ContentCard>
 
+          <!-- Manual Clock Out Section -->
+          <ContentCard 
+            v-if="canManualClockOut" 
+            title="Manual Clock Out" 
+            class="shadow-sm hover:shadow-md transition-shadow duration-200 border-orange-200 bg-orange-50"
+          >
+            <div class="space-y-4">
+              <div class="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                <div class="flex items-start space-x-2">
+                  <ExclamationTriangleIcon class="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p class="text-sm font-medium text-amber-800">Manual Clock Out Required</p>
+                    <p class="text-xs text-amber-700 mt-1">
+                      This employee is still clocked in. You can manually clock them out by setting the clock out time below.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Clock Out Time
+                  </label>
+                  <input 
+                    v-model="clockOutTime" 
+                    type="datetime-local" 
+                    :min="getMinDateTime()" 
+                    :max="getMaxDateTime()"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    required 
+                  />
+                  <p class="mt-1 text-xs text-gray-500">
+                    Must be after clock-in time ({{ formatTime(attendance.clock_in) }}) and not in the future.
+                  </p>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Reason for Manual Clock Out
+                  </label>
+                  <textarea 
+                    v-model="clockOutReason" 
+                    rows="3"
+                    placeholder="Please provide a reason for the manual clock out (e.g., forgot to clock out, system issue, etc.)"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm resize-none"
+                    required
+                  ></textarea>
+                </div>
+
+                <div class="flex items-center justify-end space-x-3">
+                  <button
+                    @click="resetClockOutForm"
+                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                  >
+                    Reset
+                  </button>
+                  <button
+                    @click="handleManualClockOut"
+                    :disabled="!isClockOutFormValid || processing"
+                    class="px-4 py-2 text-sm font-medium text-white bg-orange-600 border border-transparent rounded-lg hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <span v-if="processing" class="flex items-center">
+                      <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Processing...
+                    </span>
+                    <span v-else>Clock Out Employee</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </ContentCard>
+
           <!-- Break Sessions -->
           <ContentCard title="Break Sessions" class="shadow-sm hover:shadow-md transition-shadow duration-200">
             <div v-if="breakSessions.length === 0" class="text-center py-12">
@@ -201,8 +277,9 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, ref, onMounted } from 'vue';
 import { router } from '@inertiajs/vue3';
+import axios from 'axios';
 import { useAuth } from '@/composables/useAuth';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import PageLayout from '@/Components/Layout/PageLayout.vue';
@@ -230,6 +307,28 @@ const props = defineProps({
 const { user, hasRole, hasAnyRole } = useAuth();
 
 const isAdminOrHR = computed(() => hasAnyRole(['Admin', 'HR']));
+
+// Clock out functionality
+const clockOutTime = ref('');
+const clockOutReason = ref('');
+const processing = ref(false);
+
+// Manual clock out computed properties
+const canManualClockOut = computed(() => {
+  // Show manual clock out if:
+  // 1. User is Admin/HR OR it's their own attendance
+  // 2. Employee is still clocked in (no clock_out time)
+  // 3. Attendance is not already clocked out
+  const isOwnAttendance = user.value?.employee?.id === props.attendance.employee_id;
+  const canEdit = isAdminOrHR.value || isOwnAttendance;
+  const isStillClockedIn = !props.attendance.clock_out && props.attendance.status !== 'clocked_out';
+  
+  return canEdit && isStillClockedIn;
+});
+
+const isClockOutFormValid = computed(() => {
+  return clockOutTime.value && clockOutReason.value.trim().length >= 10;
+});
 
 // Breadcrumbs configuration
 const breadcrumbs = computed(() => [
@@ -274,7 +373,11 @@ const headerActions = computed(() => {
 // Helper functions
 const formatDate = (dateString) => {
   if (!dateString) return 'N/A';
-  const date = new Date(dateString);
+  
+  // Fix timezone issue by treating date as local date, not UTC
+  // For date strings like "2025-10-30", add time to force local timezone
+  const date = new Date(dateString + 'T12:00:00'); // Add noon time to avoid timezone shifts
+  
   return date.toLocaleDateString('en-US', {
     weekday: 'long',
     year: 'numeric',
@@ -285,12 +388,23 @@ const formatDate = (dateString) => {
 
 const formatTime = (timeString) => {
   if (!timeString) return 'N/A';
-  const date = new Date(timeString);
-  return date.toLocaleTimeString('en-US', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true
-  });
+  
+  try {
+    // The timeString comes from database as UTC (e.g., "2025-11-04T06:46:00.000000Z")
+    // We need to display it in PST
+    const date = new Date(timeString);
+    
+    // Convert UTC to PST for display
+    return date.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+      timeZone: 'America/Los_Angeles' // This converts UTC to PST
+    });
+  } catch (error) {
+    console.error('Error formatting time:', error);
+    return 'N/A';
+  }
 };
 
 const formatDateTime = (dateTimeString) => {
@@ -468,4 +582,107 @@ const deleteRecord = () => {
     }
   });
 };
+
+// Manual clock out methods
+const getMinDateTime = () => {
+  if (!props.attendance?.clock_in) return '';
+
+  try {
+    const clockIn = new Date(props.attendance.clock_in);
+    // Add 1 minute to ensure clock out is after clock in
+    clockIn.setMinutes(clockIn.getMinutes() + 1);
+    return clockIn.toISOString().slice(0, 16);
+  } catch (error) {
+    return '';
+  }
+};
+
+const getMaxDateTime = () => {
+  const attendanceDate = props.attendance?.date;
+  if (!attendanceDate) return new Date().toISOString().slice(0, 16);
+  
+  // Use the attendance date directly (it's already in YYYY-MM-DD format)
+  const attendanceDateString = attendanceDate;
+  
+  // For past dates, allow up to end of that day (11:59 PM)
+  return `${attendanceDateString}T23:59`;
+};
+
+const resetClockOutForm = () => {
+  // Set default clock out time based on attendance date
+  const attendanceDate = props.attendance?.date;
+  if (!attendanceDate) {
+    clockOutTime.value = new Date().toISOString().slice(0, 16);
+    clockOutReason.value = '';
+    return;
+  }
+
+  // Use the attendance date directly (it's already in YYYY-MM-DD format)
+  const attendanceDateString = attendanceDate;
+  
+  // Calculate default clock out time based on clock in time
+  let defaultTime;
+  
+  if (props.attendance?.clock_in) {
+    try {
+      // Parse the clock in time and add 8 hours as default work duration
+      const clockInTime = new Date(props.attendance.clock_in);
+      const defaultClockOut = new Date(clockInTime.getTime() + (8 * 60 * 60 * 1000)); // Add 8 hours
+      
+      // Format as datetime-local input format
+      const year = defaultClockOut.getFullYear();
+      const month = String(defaultClockOut.getMonth() + 1).padStart(2, '0');
+      const day = String(defaultClockOut.getDate()).padStart(2, '0');
+      const hours = String(defaultClockOut.getHours()).padStart(2, '0');
+      const minutes = String(defaultClockOut.getMinutes()).padStart(2, '0');
+      
+      defaultTime = `${year}-${month}-${day}T${hours}:${minutes}`;
+    } catch (error) {
+      console.error('Error calculating default clock out time:', error);
+      // Fallback to 6 PM on attendance date
+      defaultTime = `${attendanceDateString}T18:00`;
+    }
+  } else {
+    // No clock in time, use 6 PM as default
+    defaultTime = `${attendanceDateString}T18:00`;
+  }
+  
+  clockOutTime.value = defaultTime;
+  clockOutReason.value = '';
+};
+
+const handleManualClockOut = async () => {
+  if (!isClockOutFormValid.value) return;
+
+  processing.value = true;
+
+  try {
+    const response = await axios.post(route('attendances.manual-clock-out'), {
+      attendance_id: props.attendance.id,
+      clock_out_time: clockOutTime.value,
+      reason: clockOutReason.value.trim()
+    });
+
+    if (response.data.success) {
+      // Refresh the page to show updated data
+      router.visit(route('attendances.show', props.attendance.id), {
+        onSuccess: () => {
+          alert('Employee clocked out successfully!');
+        }
+      });
+    } else {
+      alert(response.data.message || 'Failed to clock out');
+    }
+  } catch (error) {
+    console.error('Clock out error:', error);
+    alert(error.response?.data?.message || 'An error occurred while clocking out');
+  } finally {
+    processing.value = false;
+  }
+};
+
+// Initialize clock out form when component mounts
+onMounted(() => {
+  resetClockOutForm();
+});
 </script>

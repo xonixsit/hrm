@@ -622,6 +622,73 @@ class AttendanceController extends Controller
         ]);
     }
 
+    public function create()
+    {
+        // Only HR/Admin can create attendance records
+        $this->authorize('create', Attendance::class);
+        
+        // Get employees for selection (Admin/HR only)
+        $employees = Employee::with('user')
+            ->whereHas('user')
+            ->where('status', 'active')
+            ->whereNull('deleted_at')
+            ->orderBy('id')
+            ->get()
+            ->map(function ($employee) {
+                return [
+                    'id' => $employee->id,
+                    'name' => $employee->user->name,
+                    'employee_code' => $employee->employee_code
+                ];
+            });
+
+        return Inertia::render('Attendances/Create', [
+            'employees' => $employees
+        ]);
+    }
+
+    public function store(Request $request)
+    {
+        // Only HR/Admin can create attendance records
+        $this->authorize('create', Attendance::class);
+
+        $validated = $request->validate([
+            'employee_id' => 'required|exists:employees,id',
+            'date' => 'required|date',
+            'clock_in' => 'required|date',
+            'clock_out' => 'nullable|date|after:clock_in',
+            'notes' => 'nullable|string|max:1000',
+            'location' => 'nullable|string|max:255'
+        ]);
+
+        // Parse datetime strings as local time
+        $validated['clock_in'] = \Carbon\Carbon::parse($validated['clock_in'])->tz(config('app.timezone'));
+        
+        if (isset($validated['clock_out'])) {
+            $validated['clock_out'] = \Carbon\Carbon::parse($validated['clock_out'])->tz(config('app.timezone'));
+        }
+
+        // Set additional fields
+        $validated['status'] = isset($validated['clock_out']) ? 'clocked_out' : 'clocked_in';
+        $validated['on_break'] = false;
+        $validated['total_break_minutes'] = 0;
+        $validated['break_sessions'] = [];
+        $validated['ip_address'] = $request->ip();
+        $validated['location_verified'] = false;
+
+        $attendance = Attendance::create($validated);
+
+        // Calculate work minutes if clocked out
+        if ($attendance->clock_out) {
+            $workMinutes = $attendance->calculateWorkMinutes();
+            $attendance->update(['work_minutes' => $workMinutes]);
+        }
+
+        $this->logAudit('Attendance Created', 'Created attendance record ID: ' . $attendance->id . ' for employee ID: ' . $validated['employee_id']);
+
+        return redirect()->route('attendances.index')->with('success', 'Attendance record created successfully.');
+    }
+
     public function edit(Attendance $attendance)
     {
         // Check authorization
@@ -965,11 +1032,26 @@ class AttendanceController extends Controller
     {
         $validated = $request->validate([
             'attendance_id' => 'required|exists:attendances,id',
-            'clock_out_time' => 'required|date',
+            'clock_out_time' => 'required|string', // Changed from 'date' to 'string' to avoid automatic conversion
             'reason' => 'required|string|min:10|max:500'
         ]);
 
+        // Debug logging
+        \Log::info('Manual Clock Out Request Data:', [
+            'raw_request' => $request->all(),
+            'validated' => $validated,
+            'clock_out_time_raw' => $request->input('clock_out_time')
+        ]);
+
         $attendance = Attendance::findOrFail($validated['attendance_id']);
+        
+        // Debug attendance data
+        \Log::info('Attendance Data for Clock Out:', [
+            'attendance_id' => $attendance->id,
+            'attendance_date' => $attendance->date,
+            'clock_in' => $attendance->clock_in,
+            'employee_id' => $attendance->employee_id
+        ]);
         
         // Check authorization - only HR/Admin can manually clock out others
         if (!Auth::user()->hasRole(['Admin', 'HR']) && $attendance->employee_id !== Auth::user()->employee?->id) {
@@ -987,12 +1069,29 @@ class AttendanceController extends Controller
             ], 400);
         }
 
-        // Parse clock out time as local time (no timezone conversion)
-        $clockOutTime = \Carbon\Carbon::parse($validated['clock_out_time'])->tz(config('app.timezone'));
-        if ($clockOutTime->lte($attendance->clock_in)) {
+        // Parse clock out time as PST and convert to UTC for storage
+        // Input format: "2025-11-03T22:46" should be treated as 10:46 PM PST
+        
+        // Parse the input as PST time first
+        $clockOutTimePST = \Carbon\Carbon::createFromFormat('Y-m-d\TH:i', $validated['clock_out_time'], 'America/Los_Angeles');
+        
+        // Convert to UTC for storage (this is what gets saved to database)
+        $clockOutTime = $clockOutTimePST->utc();
+        
+        \Log::info('Clock Out Time Conversion:', [
+            'input' => $validated['clock_out_time'],
+            'parsed_as_pst' => $clockOutTimePST->format('Y-m-d H:i:s T'),
+            'converted_to_utc' => $clockOutTime->format('Y-m-d H:i:s T'),
+            'utc_iso' => $clockOutTime->toISOString()
+        ]);
+        
+        // Convert both times to PST for comparison
+        $clockInPST = $attendance->clock_in->copy()->setTimezone('America/Los_Angeles');
+        
+        if ($clockOutTimePST->lte($clockInPST)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Clock out time must be after clock in time.'
+                'message' => 'Clock out time must be after clock in time. Clock in: ' . $clockInPST->format('Y-m-d H:i:s T') . ', Clock out: ' . $clockOutTimePST->format('Y-m-d H:i:s T')
             ], 400);
         }
 
@@ -1025,7 +1124,7 @@ class AttendanceController extends Controller
                 'message' => 'Clock out date cannot be in the future.'
             ], 400);
         }
-
+        
         // End any active break
         if ($attendance->on_break) {
             $attendance->endBreak();

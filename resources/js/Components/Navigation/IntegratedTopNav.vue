@@ -2,10 +2,10 @@
   <!-- Integrated Top Navigation with Better Visual Cohesion -->
   <nav :class="[
     'w-full transition-all duration-200 sticky top-0 z-50',
-    // Enhanced background with subtle gradient and better shadow
+    // Enhanced background with brand colors matching Xonobics logo (teal/cyan theme)
     isDark 
       ? 'bg-gradient-to-r from-gray-900 via-gray-900 to-gray-800 border-b border-gray-700 shadow-lg shadow-gray-900/20' 
-      : 'bg-gradient-to-r from-white via-white to-blue-50/30 border-b border-gray-200/60 shadow-lg shadow-gray-900/10 backdrop-blur-sm'
+      : 'bg-gradient-to-r from-teal-500 via-teal-600 to-cyan-600 border-b border-teal-700/60 shadow-lg shadow-teal-900/20 backdrop-blur-sm'
   ]" 
   style="display: block !important; visibility: visible !important;"
   data-testid="integrated-top-navigation">
@@ -17,9 +17,9 @@
         <div class="flex items-center space-x-6">
           <!-- Logo -->
           <div class="flex items-center space-x-3">
-            <div class="flex items-center">
+            <div class="flex items-center bg-white/95 backdrop-blur-sm rounded-xl px-4 py-2 shadow-lg hover:bg-white hover:shadow-xl transition-all duration-300 transform hover:scale-105 border border-white/20">
               <!-- Xonobics Logo -->
-              <img src="/images/xonobics_logo.png" alt="Xonobics" class="h-8 w-auto object-contain" />
+              <img src="/images/xonobics_logo.png" alt="Xonobics" class="h-8 w-auto object-contain filter drop-shadow-sm" />
             </div>
           </div>
 
@@ -34,26 +34,26 @@
                 isActive(item.route)
                   ? (isDark 
                       ? 'bg-blue-600/20 text-blue-300' 
-                      : 'bg-blue-50 text-blue-700')
+                      : 'bg-white/25 text-white border border-white/40 shadow-lg backdrop-blur-sm font-semibold')
                   : (isDark 
                       ? 'text-gray-300 hover:text-white hover:bg-gray-700/50' 
-                      : 'text-gray-700 hover:text-gray-900 hover:bg-white/60')
+                      : 'text-white/90 hover:text-white hover:bg-white/15 backdrop-blur-sm hover:shadow-md')
               ]"
             >
-              <!-- Dashboard Icon - Blue -->
-              <svg v-if="item.route === 'dashboard'" class="w-4 h-4" fill="none" stroke="#3B82F6" viewBox="0 0 24 24">
+              <!-- Dashboard Icon - White -->
+              <svg v-if="item.route === 'dashboard'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
               </svg>
-              <!-- Time Tracking Icon - Green -->
-              <svg v-else-if="item.route === 'attendances.index'" class="w-4 h-4" fill="none" stroke="#10B981" viewBox="0 0 24 24">
+              <!-- Time Tracking Icon - White -->
+              <svg v-else-if="item.route === 'attendances.index'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <!-- Leave Requests Icon - Orange -->
-              <svg v-else-if="item.route === 'leaves.index'" class="w-4 h-4" fill="none" stroke="#F59E0B" viewBox="0 0 24 24">
+              <!-- Leave Requests Icon - White -->
+              <svg v-else-if="item.route === 'leaves.index'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
-              <!-- My Assessments Icon - Purple -->
-              <svg v-else class="w-4 h-4" fill="none" stroke="#8B5CF6" viewBox="0 0 24 24">
+              <!-- My Assessments Icon - White -->
+              <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
               <span class="hidden xl:inline">{{ item.label }}</span>
@@ -68,13 +68,13 @@
                   showMore
                     ? (isDark 
                         ? 'bg-gray-700/50 text-white' 
-                        : 'bg-white/60 text-gray-900')
+                        : 'bg-white/25 text-white border border-white/40 shadow-lg backdrop-blur-sm font-semibold')
                     : (isDark 
                         ? 'text-gray-300 hover:text-white hover:bg-gray-700/50' 
-                        : 'text-gray-700 hover:text-gray-900 hover:bg-white/60')
+                        : 'text-white/90 hover:text-white hover:bg-white/15 backdrop-blur-sm hover:shadow-md')
                 ]">
-                <!-- More Menu Icon - Indigo -->
-                <svg class="w-4 h-4" fill="none" stroke="#6366F1" viewBox="0 0 24 24">
+                <!-- More Menu Icon - White -->
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
                 <span class="hidden xl:inline">More</span>
@@ -110,7 +110,7 @@
                         ]"
                       >
                         <!-- Regular Items Icon - Teal -->
-                        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="#14B8A6" viewBox="0 0 24 24">
+                        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="#0D9488" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
                         <span>{{ item.label }}</span>
@@ -144,8 +144,8 @@
                                   : 'text-gray-700 hover:text-gray-900 hover:bg-gray-50')
                           ]"
                         >
-                          <!-- Management Items Icon - Blue -->
-                          <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="#3B82F6" viewBox="0 0 24 24">
+                          <!-- Management Items Icon - Cyan -->
+                          <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="#0891B2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                           </svg>
                           <span>{{ item.label }}</span>
@@ -163,7 +163,7 @@
                         isDark ? 'text-red-400' : 'text-red-600'
                       ]">
                         <!-- Admin Section Lock Icon - Red -->
-                        <svg class="w-3 h-3" fill="none" stroke="#EF4444" viewBox="0 0 24 24">
+                        <svg class="w-3 h-3" fill="none" stroke="#DC2626" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                         </svg>
                         <span>Admin</span>
@@ -185,7 +185,7 @@
                           ]"
                         >
                           <!-- Admin Items Icon - Red -->
-                          <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="#EF4444" viewBox="0 0 24 24">
+                          <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="#DC2626" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                           </svg>
@@ -229,14 +229,14 @@
                 showUserMenu
                   ? (isDark 
                       ? 'bg-gray-700/50 text-white' 
-                      : 'bg-white/60 text-gray-900')
+                      : 'bg-white/25 text-white border border-white/40 shadow-lg backdrop-blur-sm font-semibold')
                   : (isDark 
                       ? 'text-gray-300 hover:text-white hover:bg-gray-700/50' 
-                      : 'text-gray-700 hover:text-gray-900 hover:bg-white/60')
+                      : 'text-white/90 hover:text-white hover:bg-white/15 backdrop-blur-sm hover:shadow-md')
               ]">
               <div :class="[
                 'w-9 h-9 rounded-lg flex items-center justify-center text-sm font-bold',
-                isDark ? 'bg-blue-600 text-white' : 'bg-blue-500 text-white'
+                isDark ? 'bg-teal-600 text-white' : 'bg-teal-500 text-white'
               ]">
                 {{ userInitials }}
               </div>
@@ -244,7 +244,7 @@
                 <div class="font-medium text-sm">{{ user?.name }}</div>
                 <div :class="[
                   'text-xs',
-                  isDark ? 'text-gray-400' : 'text-gray-500'
+                  isDark ? 'text-gray-400' : 'text-white/70'
                 ]">
                   {{ userRoles?.join(', ') || 'User' }}
                 </div>
@@ -282,8 +282,8 @@
                       ? 'text-gray-300 hover:text-white hover:bg-gray-700/50' 
                       : 'text-gray-700 hover:text-gray-900 hover:bg-gray-50'
                   ]">
-                    <!-- Profile Settings Icon - Blue -->
-                    <svg class="w-4 h-4" fill="none" stroke="#3B82F6" viewBox="0 0 24 24">
+                    <!-- Profile Settings Icon - Teal -->
+                    <svg class="w-4 h-4" fill="none" stroke="#0D9488" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
                     <span>Profile Settings</span>
@@ -293,7 +293,7 @@
                     'text-red-600 hover:text-red-700 hover:bg-red-50'
                   ]">
                     <!-- Sign Out Icon - Red -->
-                    <svg class="w-4 h-4" fill="none" stroke="#EF4444" viewBox="0 0 24 24">
+                    <svg class="w-4 h-4" fill="none" stroke="#DC2626" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                     </svg>
                     <span>Sign Out</span>
