@@ -332,7 +332,7 @@ const inputClasses = computed(() => {
   
   // State classes
   const stateClasses = {
-    default: 'ring-neutral-300 focus:ring-primary-600 bg-white text-neutral-900',
+    default: 'ring-neutral-300 focus:ring-teal-600 bg-white text-neutral-900',
     error: 'ring-error-300 focus:ring-error-600 bg-error-50 text-error-900',
     disabled: 'ring-neutral-200 bg-neutral-50 text-neutral-500',
     readonly: 'ring-neutral-200 bg-neutral-50 text-neutral-500'

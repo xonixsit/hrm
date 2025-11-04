@@ -191,8 +191,8 @@ const handleSubmit = () => {
 }
 
 .login-link {
-  @apply text-primary-600 hover:text-primary-700 underline font-medium;
-  @apply focus:outline-none focus:ring-2 focus:ring-primary-500 rounded;
+  @apply text-teal-600 hover:text-teal-700 underline font-medium;
+  @apply focus:outline-none focus:ring-2 focus:ring-teal-500 rounded;
 }
 
 /* Responsive adjustments */

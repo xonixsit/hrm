@@ -241,7 +241,7 @@ const getPageButtonClasses = (page) => [
 
 .page-size-select {
   @apply border border-neutral-300 rounded-md bg-white;
-  @apply hover:border-neutral-400 focus:border-primary-500 focus:ring-1 focus:ring-primary-500;
+  @apply hover:border-neutral-400 focus:border-teal-500 focus:ring-1 focus:ring-teal-500;
   @apply focus:outline-none transition-colors duration-150;
   @apply cursor-pointer;
   /* Flexible sizing that adapts to content and screen */
@@ -299,7 +299,7 @@ const getPageButtonClasses = (page) => [
 }
 
 .pagination-button.active {
-  @apply bg-primary-600 text-white hover:bg-primary-700 hover:text-white;
+  @apply bg-teal-600 text-white hover:bg-teal-700 hover:text-white;
 }
 
 .ellipsis {
@@ -341,7 +341,7 @@ const getPageButtonClasses = (page) => [
 
 .table-pagination[data-theme="dark"] .page-size-select {
   @apply bg-neutral-700 border-neutral-600 text-neutral-200;
-  @apply hover:border-neutral-500 focus:border-primary-500;
+  @apply hover:border-neutral-500 focus:border-teal-500;
 }
 
 .table-pagination[data-theme="dark"] .nav-button {

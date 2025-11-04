@@ -109,7 +109,7 @@ const isSignupFormValid = computed(() => {
         <Head title="HR Management - Sign In" />
         
         <!-- Left Side - Branding/Hero Section -->
-        <div class="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary-600 via-primary-700 to-secondary-600 relative overflow-hidden">
+        <div class="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-teal-500 via-teal-600 to-cyan-600 relative overflow-hidden">
             <!-- Background Pattern -->
             <div class="absolute inset-0 bg-black/10"></div>
             <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
@@ -127,7 +127,7 @@ const isSignupFormValid = computed(() => {
                 
                 <h1 class="text-5xl font-bold mb-6 leading-tight">
                     Welcome to
-                    <span class="text-accent-300">HR Management</span>
+                    <span class="text-cyan-300">HR Management</span>
                 </h1>
                 
                 
@@ -164,7 +164,7 @@ const isSignupFormValid = computed(() => {
             <div class="mx-auto w-full max-w-md">
                 <!-- Mobile Logo -->
                 <div class="flex justify-center mb-8">
-                    <ApplicationLogo class="h-auto w-56 text-primary-600 filter drop-shadow(0 0 2px rgba(0, 0, 0, 0.05))" />
+                    <ApplicationLogo class="h-auto w-56 text-teal-600 filter drop-shadow(0 0 2px rgba(0, 0, 0, 0.05))" />
                 </div>
                 
                 <!-- Header -->
@@ -176,7 +176,7 @@ const isSignupFormValid = computed(() => {
                         {{ isSignup ? 'Already have an account?' : "Don't have an account?" }}
                         <button 
                             @click="toggleForm"
-                            class="font-medium text-primary-600 hover:text-primary-500 transition-colors duration-200 underline"
+                            class="font-medium text-teal-600 hover:text-teal-500 transition-colors duration-200 underline"
                         >
                             {{ isSignup ? 'Sign in here' : 'Create one here' }}
                         </button>
@@ -240,7 +240,7 @@ const isSignupFormValid = computed(() => {
                         <Link
                             v-if="canResetPassword"
                             :href="route('password.request')"
-                            class="text-sm font-medium text-primary-600 hover:text-primary-500 transition-colors duration-200"
+                            class="text-sm font-medium text-teal-600 hover:text-teal-500 transition-colors duration-200"
                         >
                             Forgot password?
                         </Link>
@@ -352,9 +352,9 @@ const isSignupFormValid = computed(() => {
                 <div class="mt-8 text-center">
                     <p class="text-xs text-neutral-500">
                         By signing in, you agree to our
-                        <a href="#" class="font-medium text-primary-600 hover:text-primary-500">Terms of Service</a>
+                        <a href="#" class="font-medium text-teal-600 hover:text-teal-500">Terms of Service</a>
                         and
-                        <a href="#" class="font-medium text-primary-600 hover:text-primary-500">Privacy Policy</a>
+                        <a href="#" class="font-medium text-teal-600 hover:text-teal-500">Privacy Policy</a>
                     </p>
                 </div>
             </div>

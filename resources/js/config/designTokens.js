@@ -8,29 +8,29 @@
 export const designTokens = {
   // Color System
   colors: {
-    // Primary Colors - Modern gradient-based scheme
+    // Primary Colors - Teal theme matching Xonobics brand
     primary: {
-      50: '#eff6ff',
-      100: '#dbeafe',
-      200: '#bfdbfe',
-      300: '#93c5fd',
-      400: '#60a5fa',
-      500: '#6366f1', // Main primary color
-      600: '#4f46e5',
-      700: '#4338ca',
-      800: '#3730a3',
-      900: '#312e81',
-      950: '#1e1b4b'
+      50: '#f0fdfa',
+      100: '#ccfbf1',
+      200: '#99f6e4',
+      300: '#5eead4',
+      400: '#2dd4bf',
+      500: '#14b8a6', // Main primary color - teal-500
+      600: '#0d9488',
+      700: '#0f766e',
+      800: '#115e59',
+      900: '#134e4a',
+      950: '#042f2e'
     },
     
-    // Secondary Colors - Cyan to Sky gradient
+    // Secondary Colors - Cyan complementing teal
     secondary: {
       50: '#ecfeff',
       100: '#cffafe',
       200: '#a5f3fc',
       300: '#67e8f9',
       400: '#22d3ee',
-      500: '#06b6d4', // Main secondary color
+      500: '#06b6d4', // Main secondary color - cyan-500
       600: '#0891b2',
       700: '#0e7490',
       800: '#155e75',

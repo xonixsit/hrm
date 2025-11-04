@@ -253,16 +253,16 @@ const variantClasses = computed(() => {
   const variants = {
     primary: [
       'bg-gradient-to-r',
-      'from-primary-500',
-      'to-primary-600',
+      'from-teal-500',
+      'to-teal-600',
       'text-white',
       'shadow-sm',
-      'hover:from-primary-600',
-      'hover:to-primary-700',
+      'hover:from-teal-600',
+      'hover:to-teal-700',
       'hover:shadow-md',
-      'active:from-primary-700',
-      'active:to-primary-800',
-      'focus:ring-primary-500'
+      'active:from-teal-700',
+      'active:to-teal-800',
+      'focus:ring-teal-500'
     ],
     secondary: [
       'border',
@@ -514,7 +514,7 @@ onUnmounted(() => {
 
 /* Enhanced focus states for accessibility */
 .btn-base:focus-visible {
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.2);
 }
 
 /* Reduced motion support */
