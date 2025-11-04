@@ -2,9 +2,15 @@
   <div class="time-tracking-widget">
     <!-- Hero Time Display -->
     <div class="time-hero">
+      <!-- Welcome Greeting -->
+      <div class="welcome-greeting">
+        <h2 class="greeting-text">Welcome back, {{ employeeName }}!</h2>
+        <p class="greeting-subtitle">Ready to make today productive?</p>
+      </div>
+      
       <div class="current-time-display">
         <div class="time-section">
-          <div class="current-time">{{ currentTime }}</div>
+          <div class="current-time">{{ formattedTime }}</div>
           <div class="current-date">{{ currentDate }}</div>
         </div>
         <div class="status-section">
@@ -164,6 +170,10 @@ const props = defineProps({
   variant: {
     type: String,
     default: 'default'
+  },
+  employeeName: {
+    type: String,
+    default: 'Employee'
   }
 });
 
@@ -179,7 +189,8 @@ const updateTime = () => {
   currentTime.value = now.toLocaleTimeString('en-US', {
     hour: '2-digit',
     minute: '2-digit',
-    second: '2-digit'
+    second: '2-digit',
+    hour12: true
   });
   currentDate.value = now.toLocaleDateString('en-US', {
     weekday: 'long',
@@ -188,6 +199,10 @@ const updateTime = () => {
     day: 'numeric'
   });
 };
+
+const formattedTime = computed(() => {
+  return currentTime.value;
+});
 
 onMounted(() => {
   updateTime();
@@ -262,7 +277,20 @@ const getPrimaryButtonText = () => {
 
 /* Hero Time Display */
 .time-hero {
-  @apply text-center;
+  @apply text-center space-y-6;
+}
+
+/* Welcome Greeting */
+.welcome-greeting {
+  @apply space-y-2;
+}
+
+.greeting-text {
+  @apply text-2xl font-bold text-gray-900;
+}
+
+.greeting-subtitle {
+  @apply text-sm text-gray-600 font-medium;
 }
 
 .current-time-display {

@@ -285,8 +285,8 @@
         <div class="lg:col-span-3">
           <EmployeeDashboard :stats="employeeStats" :personal-activities="personalActivities" :my-tasks="myTasks"
             :recent-feedback="recentFeedback" :clocked-in="clockedIn" :current-attendance="currentAttendance"
-            :birthday-notifications="birthdayData" :loading="loading" @clock-in-out="handleClockInOut"
-            @action="handleAction" @toggle-task="handleToggleTask" @view-task="handleViewTask" />
+            :birthday-notifications="birthdayData" :loading="loading" :employee-name="user?.name || 'Employee'"
+            @clock-in-out="handleClockInOut" @action="handleAction" @toggle-task="handleToggleTask" @view-task="handleViewTask" />
         </div>
 
         <!-- Right Sidebar -->

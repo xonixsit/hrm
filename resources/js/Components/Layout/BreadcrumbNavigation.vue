@@ -675,21 +675,21 @@ const getTabIndex = (item, index) => {
 }
 
 .breadcrumb-separator {
-  @apply w-4 h-4 text-neutral-400 mx-2 flex-shrink-0;
+  @apply w-4 h-4 text-gray-400 mx-2 flex-shrink-0;
 }
 
 .breadcrumb-link {
   @apply inline-flex items-center space-x-1 px-2 py-1 rounded-md transition-colors;
-  @apply text-neutral-600 hover:text-neutral-900;
+  @apply text-gray-600 hover:text-teal-700;
   @apply max-w-xs truncate;
 }
 
 .breadcrumb-link--clickable {
-  @apply hover:bg-neutral-100 cursor-pointer;
+  @apply hover:bg-teal-50 cursor-pointer;
 }
 
 .breadcrumb-link--active {
-  @apply text-neutral-900 font-medium;
+  @apply text-teal-700 font-medium;
   @apply cursor-default;
 }
 

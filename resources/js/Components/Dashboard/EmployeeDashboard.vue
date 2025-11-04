@@ -2,9 +2,13 @@
   <div class="employee-dashboard">
     <!-- Time Tracking Section -->
     <div class="time-tracking-section">
-      <!-- Real-time Clock Display -->
-      <div class="real-time-clock">
-        <div class="clock-display">
+      <!-- Combined Welcome & Clock Display -->
+      <div class="welcome-clock-display">
+        <div class="welcome-section">
+          <h2 class="greeting-text">Welcome back, {{ employeeName }}! 👋</h2>
+          <p class="greeting-subtitle">Ready to make today productive?</p>
+        </div>
+        <div class="clock-section">
           <div class="current-time">{{ currentTimeFormatted }}</div>
           <div class="current-date">{{ currentDate }}</div>
         </div>
@@ -271,6 +275,10 @@ const props = defineProps({
       upcomingBirthdays: [],
       stats: {}
     })
+  },
+  employeeName: {
+    type: String,
+    default: 'Employee'
   }
 });
 
@@ -962,9 +970,33 @@ onUnmounted(() => {
   @apply bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden;
 }
 
-/* Real-time Clock Display */
-.real-time-clock {
-  @apply flex items-center justify-between p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200;
+/* Combined Welcome & Clock Display */
+.welcome-clock-display {
+  @apply flex items-center justify-between p-6 bg-gradient-to-r from-teal-50 to-cyan-50 border-b border-gray-200;
+}
+
+.welcome-section {
+  @apply flex flex-col justify-center;
+}
+
+.greeting-text {
+  @apply text-2xl font-bold text-gray-900 leading-tight;
+}
+
+.greeting-subtitle {
+  @apply text-sm text-gray-600 font-medium mt-1;
+}
+
+.clock-section {
+  @apply flex flex-col justify-center text-right;
+}
+
+.current-time {
+  @apply text-2xl font-bold text-gray-900 font-mono leading-tight;
+}
+
+.current-date {
+  @apply text-sm text-gray-600 mt-1;
 }
 
 .clock-display {
