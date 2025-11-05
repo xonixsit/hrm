@@ -91,16 +91,21 @@
             <li>Log in using your email and the password provided above</li>
             <li>You'll be prompted to change your password on first login</li>
             <li>Complete your profile setup in the dashboard</li>
+            <li><strong>📚 Important: Review the Employee Handbook</strong> - After logging in, please go through the Employee Handbook available in your dashboard for important company policies and procedures</li>
         </ol>
         @endif
 
         <p>Here's what you can expect next:</p>
         
-        <ul>
-            <li><strong>System Access:</strong> You now have access to our employee portal where you can manage your profile, view schedules, and more.</li>
-            <li><strong>Onboarding:</strong> Your manager will reach out soon with onboarding information and next steps.</li>
-            <li><strong>Resources:</strong> Explore the employee handbook and company resources in your dashboard.</li>
-        </ul>
+        <div style="background: #f0f9ff; border: 1px solid #0ea5e9; border-radius: 6px; padding: 15px; margin: 20px 0;">
+            <strong style="color: #0c4a6e;">📋 Important First Steps After Login:</strong>
+            <ul style="margin: 10px 0; padding-left: 20px; color: #0c4a6e;">
+                <li><strong>Employee Handbook:</strong> Please review the Employee Handbook thoroughly - it contains essential company policies, procedures, and guidelines</li>
+                <li><strong>System Access:</strong> Familiarize yourself with the employee portal features</li>
+                <li><strong>Profile Setup:</strong> Complete your profile information</li>
+                <li><strong>Onboarding:</strong> Your manager will reach out with additional onboarding steps</li>
+            </ul>
+        </div>
 
         <p>If you have any questions or need assistance, please don't hesitate to reach out to our HR team.</p>
 
