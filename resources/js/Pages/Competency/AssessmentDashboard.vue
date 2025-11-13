@@ -96,7 +96,7 @@
               <div class="widget-actions">
                 <button
                   @click="navigateToPendingAssessments"
-                  class="text-sm text-blue-600 hover:text-blue-800"
+                  class="text-sm text-teal-600 hover:text-teal-800"
                 >
                   View All
                 </button>
@@ -134,7 +134,7 @@
                     <div class="assessment-title">
                       <Link
                         :href="route('competency-assessments.by-employee', assessment.employee.id)"
-                        class="text-blue-600 hover:text-blue-800 hover:underline"
+                        class="text-teal-600 hover:text-teal-800 hover:underline"
                       >
                         {{ assessment.employee.name }}
                       </Link>
@@ -172,7 +172,7 @@
               <div class="widget-actions">
                 <button
                   @click="navigateToAssessmentCycles"
-                  class="text-sm text-blue-600 hover:text-blue-800"
+                  class="text-sm text-teal-600 hover:text-teal-800"
                 >
                   Manage Cycles
                 </button>
@@ -243,7 +243,7 @@
                   @click="navigateToNewAssessment"
                   class="quick-action-item"
                 >
-                  <div class="quick-action-icon bg-blue-100 text-blue-600">
+                  <div class="quick-action-icon bg-teal-100 text-teal-600">
                     <DocumentPlusIcon class="w-6 h-6" />
                   </div>
                   <div class="quick-action-text">
@@ -757,11 +757,11 @@ onMounted(() => {
 }
 
 .action-button.primary {
-  @apply text-white bg-blue-600 hover:bg-blue-700 focus:ring-blue-500;
+  @apply text-white bg-teal-600 hover:bg-teal-700 focus:ring-teal-500;
 }
 
 .action-button.secondary {
-  @apply text-gray-700 bg-white border-gray-300 hover:bg-gray-50 focus:ring-blue-500;
+  @apply text-gray-700 bg-white border-gray-300 hover:bg-gray-50 focus:ring-teal-500;
 }
 
 .action-button:disabled {
@@ -816,7 +816,7 @@ onMounted(() => {
 }
 
 .assessment-avatar .avatar-circle {
-  @apply w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-medium;
+  @apply w-10 h-10 bg-teal-100 text-teal-600 rounded-full flex items-center justify-center text-sm font-medium;
 }
 
 .assessment-details {
@@ -840,7 +840,7 @@ onMounted(() => {
 }
 
 .btn-primary {
-  @apply text-white bg-blue-600 hover:bg-blue-700;
+  @apply text-white bg-teal-600 hover:bg-teal-700;
 }
 
 /* Cycle List */
@@ -877,7 +877,7 @@ onMounted(() => {
 }
 
 .progress-fill {
-  @apply h-full bg-blue-500 transition-all duration-300;
+  @apply h-full bg-teal-500 transition-all duration-300;
 }
 
 .progress-text {
