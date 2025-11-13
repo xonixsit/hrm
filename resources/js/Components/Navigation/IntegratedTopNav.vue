@@ -401,15 +401,17 @@ const moreNavItems = computed(() => {
 
     const isManagement = rolesArray.includes('Admin') || rolesArray.includes('Manager') || rolesArray.includes('HR')
     const isAdmin = rolesArray.includes('Admin')
-    const isHR = rolesArray.includes('HR')
 
     if (isManagement) {
       items.push(
         { route: 'employees.index', label: 'Employee Management', category: 'management' },
         { route: 'competency-assessments.index', label: 'All Assessments', category: 'management' },
+        { route: 'assessment-dashboard', label: 'Assessment Dashboard', category: 'management' },
+        { route: 'competency-assessments.pending', label: 'Pending Assessments', category: 'management' },
+        { route: 'assessment-cycle-manager', label: 'Assessment Cycles', category: 'management' },
+        { route: 'competencies.index', label: 'Competency Setup', category: 'management' },
         { route: 'leave-types.index', label: 'Leave Policies', category: 'management' },
         { route: 'support.index', label: 'Support Management', category: 'management' }
-
       )
     }
 
