@@ -174,7 +174,7 @@
             <p class="text-gray-500 mb-6">This employee doesn't have any assessments yet.</p>
             <Link
               :href="route('competency-assessments.create', { employee_id: employee.id })"
-              class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              class="inline-flex items-center px-4 py-2 bg-teal-500 text-white text-sm font-medium rounded-md hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
             >
               <PlusIcon class="w-4 h-4 mr-2" />
               Create First Assessment
@@ -253,7 +253,7 @@
                   <Link
                     v-if="assessment.status === 'draft'"
                     :href="route('competency-assessments.evaluate', assessment.id)"
-                    class="inline-flex items-center px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    class="inline-flex items-center px-3 py-2 bg-teal-500 text-white text-sm font-medium rounded-md hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
                   >
                     <PencilIcon class="w-4 h-4 mr-2" />
                     Complete
@@ -285,7 +285,7 @@
                   :class="[
                     'px-3 py-2 text-sm font-medium rounded-md',
                     link.active
-                      ? 'bg-blue-600 text-white'
+                      ? 'bg-teal-500 text-white'
                       : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
                   ]"
                   v-html="link.label"
@@ -341,7 +341,7 @@
               <h3 class="text-lg font-medium text-gray-900">Development Plans</h3>
               <button
                 @click="createDevelopmentPlan"
-                class="inline-flex items-center px-3 py-1 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                class="inline-flex items-center px-3 py-1 bg-teal-500 text-white text-sm font-medium rounded-md hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
               >
                 <PlusIcon class="w-4 h-4 mr-1" />
                 New Plan
@@ -354,7 +354,7 @@
                 <p class="text-gray-500 mb-4">Create development plans to track competency improvement goals.</p>
                 <button
                   @click="createDevelopmentPlan"
-                  class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700"
+                  class="inline-flex items-center px-4 py-2 bg-teal-500 text-white text-sm font-medium rounded-md hover:bg-teal-600"
                 >
                   <PlusIcon class="w-4 h-4 mr-2" />
                   Create First Plan

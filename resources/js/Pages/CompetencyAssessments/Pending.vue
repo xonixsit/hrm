@@ -118,7 +118,7 @@
                   <Link
                     v-if="canAssess(assessment)"
                     :href="route('competency-assessments.evaluate', assessment.id)"
-                    class="inline-flex items-center px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    class="inline-flex items-center px-3 py-2 bg-teal-500 text-white text-sm font-medium rounded-md hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
                   >
                     <PencilIcon class="w-4 h-4 mr-2" />
                     Complete Assessment
@@ -148,7 +148,7 @@
                   :class="[
                     'px-3 py-2 text-sm font-medium rounded-md',
                     link.active
-                      ? 'bg-blue-600 text-white'
+                      ? 'bg-teal-500 text-white'
                       : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
                   ]"
                   v-html="link.label"
