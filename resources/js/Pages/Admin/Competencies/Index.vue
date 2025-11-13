@@ -218,7 +218,7 @@ const exportCompetencies = () => {
                             </button>
                             <Link
                                 :href="route('competencies.create')"
-                                class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                class="inline-flex items-center px-4 py-2 bg-teal-600 text-white text-sm font-medium rounded-md hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
                             >
                                 <PlusIcon class="w-4 h-4 mr-2" />
                                 Add Competency
@@ -471,7 +471,7 @@ const exportCompetencies = () => {
                                             </div>
                                             <div class="ml-2 w-16 bg-gray-200 rounded-full h-1.5">
                                                 <div
-                                                    class="bg-blue-600 h-1.5 rounded-full"
+                                                    class="bg-teal-600 h-1.5 rounded-full"
                                                     :style="{ width: `${Math.min(100, (competency.assessments_count || 0) * 2)}%` }"
                                                 ></div>
                                             </div>
@@ -537,7 +537,7 @@ const exportCompetencies = () => {
                                     :class="[
                                         'px-3 py-2 text-sm font-medium rounded-md',
                                         link.active
-                                            ? 'bg-blue-600 text-white'
+                                            ? 'bg-teal-600 text-white'
                                             : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
                                     ]"
                                     v-html="link.label"
@@ -615,7 +615,7 @@ const exportCompetencies = () => {
                     <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
                         <button type="button" 
                                 @click="showImpactModal = false"
-                                class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
+                                class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-teal-600 text-base font-medium text-white hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 sm:ml-3 sm:w-auto sm:text-sm">
                             Close
                         </button>
                     </div>

@@ -622,15 +622,15 @@
   const comparisonData = ref([]);
   const employeePerformanceList = ref([]);
   const canCreate = computed(() => {
-    // Match the policy logic: user needs role AND employee record
-    const hasRequiredRole = hasAnyRole(['Employee', 'Manager', 'Admin', 'HR']);
+    // Only employees can submit work reports, not admin/management
+    const isEmployee = hasRole('Employee') && !hasAnyRole(['Admin', 'Manager', 'HR']);
     const hasEmployeeRecord = user.value?.employee != null;
 
-    const result = hasRequiredRole && hasEmployeeRecord;
+    const result = isEmployee && hasEmployeeRecord;
 
     if (process.env.NODE_ENV === 'development') {
       console.log('🔍 canCreate check:', {
-        hasRequiredRole,
+        isEmployee,
         hasEmployeeRecord,
         userEmployee: user.value?.employee,
         result,
