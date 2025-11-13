@@ -413,6 +413,7 @@ const moreNavItems = computed(() => {
       items.push(
         { route: 'admin.roles.index', label: 'Role Management', category: 'admin' },
         { route: 'admin.system-settings.index', label: 'System Settings', category: 'admin' },
+        { route: 'leave-types.index', label: 'Leave Policies', category: 'admin' },
         { route: 'organizational-analytics.index', label: 'Analytics', category: 'admin' },
         { route: 'support.index', label: 'Support Management', category: 'admin' }
       )

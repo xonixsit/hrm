@@ -40,10 +40,13 @@ class NotificationService
                 }
             }
             
+            // Always send to hr@xonobics.com
+            $this->queueEmail('hr@xonobics.com', new LeaveRequestSubmitted($leaveRequest), 'leave_submitted');
+            
             Log::info('Leave request submitted notification queued', [
                 'leave_request_id' => $leaveRequest->id,
                 'employee_id' => $leaveRequest->employee_id,
-                'recipients_count' => $recipients->count()
+                'recipients_count' => $recipients->count() + 1
             ]);
         } catch (\Exception $e) {
             Log::error('Failed to queue leave request submitted notification', [
