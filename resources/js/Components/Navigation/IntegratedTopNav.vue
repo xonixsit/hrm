@@ -407,10 +407,19 @@ const moreNavItems = computed(() => {
       items.push(
         { route: 'employees.index', label: 'Employee Management', category: 'management' },
         { route: 'competency-assessments.index', label: 'All Assessments', category: 'management' },
-        { route: 'leave-types.index', label: 'Leave Policies', category: 'management' },
-        { route: 'support.admin', label: 'Support Management', category: 'management' }
+        { route: 'leave-types.index', label: 'Leave Policies', category: 'admin' },
+        { route: 'support.admin', label: 'Support Management', category: 'admin' }
+
       )
     }
+
+    // // HR specific items (only if not admin to avoid duplicates)
+    // if (isHR && !isAdmin) {
+    //   items.push(
+    //     { route: 'leave-types.index', label: 'Leave Policies', category: 'management' },
+    //     { route: 'support.admin', label: 'Support Management', category: 'management' }
+    //   )
+    // }
 
     if (isAdmin) {
       items.push(
