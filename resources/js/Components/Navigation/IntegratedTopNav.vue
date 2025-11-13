@@ -406,13 +406,7 @@ const moreNavItems = computed(() => {
     if (isManagement) {
       items.push(
         { route: 'employees.index', label: 'Employee Management', category: 'management' },
-        { route: 'competency-assessments.index', label: 'All Assessments', category: 'management' }
-      )
-    }
-
-    // HR specific items
-    if (isHR) {
-      items.push(
+        { route: 'competency-assessments.index', label: 'All Assessments', category: 'management' },
         { route: 'leave-types.index', label: 'Leave Policies', category: 'management' },
         { route: 'support.admin', label: 'Support Management', category: 'management' }
       )
