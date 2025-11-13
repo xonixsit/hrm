@@ -407,8 +407,8 @@ const moreNavItems = computed(() => {
       items.push(
         { route: 'employees.index', label: 'Employee Management', category: 'management' },
         { route: 'competency-assessments.index', label: 'All Assessments', category: 'management' },
-        { route: 'leave-types.index', label: 'Leave Policies', category: 'admin' },
-        { route: 'support.admin', label: 'Support Management', category: 'admin' }
+        { route: 'leave-types.index', label: 'Leave Policies', category: 'management' },
+        { route: 'support.index', label: 'Support Management', category: 'management' }
 
       )
     }
@@ -427,7 +427,7 @@ const moreNavItems = computed(() => {
         { route: 'admin.system-settings.index', label: 'System Settings', category: 'admin' },
         { route: 'leave-types.index', label: 'Leave Policies', category: 'admin' },
         { route: 'organizational-analytics.index', label: 'Analytics', category: 'admin' },
-        { route: 'support.admin', label: 'Support Management', category: 'admin' }
+        { route: 'support.index', label: 'Support Management', category: 'admin' }
       )
     }
 
