@@ -62,7 +62,7 @@ defineEmits(['view-member', 'send-message']);
 }
 
 .member-count {
-  @apply inline-flex items-center justify-center w-6 h-6 bg-blue-100 text-blue-800 text-sm font-bold rounded-full;
+  @apply inline-flex items-center justify-center w-6 h-6 bg-teal-100 text-teal-800 text-sm font-bold rounded-full;
 }
 
 .members-list {
@@ -74,7 +74,7 @@ defineEmits(['view-member', 'send-message']);
 }
 
 .member-avatar {
-  @apply w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-medium;
+  @apply w-10 h-10 bg-teal-100 text-teal-600 rounded-full flex items-center justify-center font-medium;
 }
 
 .member-info {
@@ -98,7 +98,7 @@ defineEmits(['view-member', 'send-message']);
 }
 
 .view-button {
-  @apply bg-blue-100 text-blue-600 hover:bg-blue-200;
+  @apply bg-teal-100 text-teal-600 hover:bg-teal-200;
 }
 
 .message-button {

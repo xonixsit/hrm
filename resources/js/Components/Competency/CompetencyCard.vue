@@ -128,9 +128,9 @@
 
       <!-- Development Plan Indicator -->
       <div v-if="hasDevelopmentPlan" class="development-indicator">
-        <div class="flex items-center mt-3 p-2 bg-blue-50 rounded-md">
-          <AcademicCapIcon class="w-4 h-4 text-blue-600 mr-2" />
-          <span class="text-xs text-blue-700">Development plan active</span>
+        <div class="flex items-center mt-3 p-2 bg-teal-50 rounded-md">
+          <AcademicCapIcon class="w-4 h-4 text-teal-600 mr-2" />
+          <span class="text-xs text-teal-700">Development plan active</span>
         </div>
       </div>
     </div>
@@ -302,7 +302,7 @@ const cardClasses = computed(() => [
 const categoryClasses = computed(() => {
   // Map categories to colors
   const categoryColors = {
-    'Attendance & Punctuality': 'bg-blue-100 text-blue-800',
+    'Attendance & Punctuality': 'bg-teal-100 text-teal-800',
     'Performance in Sales/Targets': 'bg-green-100 text-green-800',
     'File Handling & Accuracy': 'bg-purple-100 text-purple-800',
     'Calling & Call Backs': 'bg-orange-100 text-orange-800',

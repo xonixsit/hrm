@@ -45,7 +45,7 @@ const getActionIcon = (iconName) => {
 
 const getActionClasses = (variant) => {
   const variantClasses = {
-    primary: 'bg-blue-600 text-white hover:bg-blue-700',
+    primary: 'bg-teal-600 text-white hover:bg-teal-700',
     secondary: 'bg-gray-100 text-gray-700 hover:bg-gray-200',
     ghost: 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
   };
@@ -55,7 +55,7 @@ const getActionClasses = (variant) => {
 
 <style scoped>
 .quick-actions-widget {
-  @apply bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-gray-200 p-6 space-y-4;
+  @apply bg-gradient-to-br from-teal-50 to-indigo-50 rounded-xl border border-gray-200 p-6 space-y-4;
 }
 
 .widget-header {
@@ -72,7 +72,7 @@ const getActionClasses = (variant) => {
 
 .action-button {
   @apply flex flex-col items-center space-y-2 p-4 rounded-lg font-medium text-sm transition-all duration-200;
-  @apply focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500;
+  @apply focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500;
 }
 
 .action-label {

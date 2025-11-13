@@ -4,14 +4,14 @@
       subtitle="Set up assessment context, select employees and competencies to evaluate" :breadcrumbs="breadcrumbs"
       :actions="headerActions">
       <!-- Progress Indicator -->
-      <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+      <div class="bg-teal-50 border border-teal-200 rounded-lg p-4 mb-6">
         <div class="flex items-center space-x-2">
-          <div class="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-medium">
+          <div class="w-6 h-6 bg-teal-600 text-white rounded-full flex items-center justify-center text-xs font-medium">
             1
           </div>
           <div>
-            <p class="text-sm font-medium text-blue-900">Setup Assessment</p>
-            <p class="text-xs text-blue-700">Configure context, select participants, and create assessments</p>
+            <p class="text-sm font-medium text-teal-900">Setup Assessment</p>
+            <p class="text-xs text-teal-700">Configure context, select participants, and create assessments</p>
           </div>
         </div>
       </div>
@@ -29,7 +29,7 @@
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-1">Assessment Cycle</label>
                   <select v-model="form.assessment_cycle_id"
-                    class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
                     <option value="">No specific cycle</option>
                     <option v-for="cycle in assessmentCycles" :key="cycle.id" :value="cycle.id">
                       {{ cycle.name }}
@@ -40,7 +40,7 @@
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-1">Assessment Type</label>
                   <select v-model="form.assessment_type"
-                    class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
                     <option value="manager">Manager Assessment</option>
                     <option value="self">Self Assessment</option>
                     <option value="peer">Peer Assessment</option>
@@ -50,10 +50,10 @@
               </div>
 
               <!-- Selected Cycle Info -->
-              <div v-if="selectedCycle" class="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <div v-if="selectedCycle" class="p-3 bg-teal-50 border border-teal-200 rounded-lg">
                 <div class="flex items-center justify-between text-sm">
-                  <span class="font-medium text-blue-900">{{ selectedCycle.name }}</span>
-                  <span class="text-blue-700">{{ formatDate(selectedCycle.start_date) }} - {{
+                  <span class="font-medium text-teal-900">{{ selectedCycle.name }}</span>
+                  <span class="text-teal-700">{{ formatDate(selectedCycle.start_date) }} - {{
                     formatDate(selectedCycle.end_date) }}</span>
                 </div>
               </div>
@@ -63,7 +63,7 @@
             <div class="space-y-4">
               <div class="flex items-center justify-between">
                 <h3 class="text-lg font-semibold text-gray-900">Select Employees</h3>
-                <div v-if="selectedEmployees.length > 0" class="text-sm text-blue-600 font-medium">
+                <div v-if="selectedEmployees.length > 0" class="text-sm text-teal-600 font-medium">
                   {{ selectedEmployees.length }} selected
                 </div>
               </div>
@@ -72,12 +72,12 @@
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="relative">
                   <input v-model="employeeSearch" type="text" placeholder="Search employees..."
-                    class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+                    class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500" />
                   <MagnifyingGlassIcon class="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                 </div>
 
                 <select v-model="selectedDepartment"
-                  class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
+                  class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white">
                   <option value="">All Departments</option>
                   <option v-for="department in departments" :key="department.id" :value="department.id">
                     {{ department.name }}
@@ -87,12 +87,12 @@
 
               <!-- Select All / Clear All Actions -->
               <div v-if="displayedEmployees.length > 0" class="flex items-center justify-between text-sm">
-                <button type="button" @click="selectAllEmployees" class="text-blue-600 hover:text-blue-800 font-medium"
+                <button type="button" @click="selectAllEmployees" class="text-teal-600 hover:text-teal-800 font-medium"
                   :disabled="allDisplayedEmployeesSelected">
                   Select All ({{ displayedEmployees.length }})
                 </button>
                 <button v-if="selectedEmployees.length > 0" type="button" @click="clearAllEmployees"
-                  class="text-blue-600 hover:text-blue-800 font-medium">
+                  class="text-teal-600 hover:text-teal-800 font-medium">
                   Clear All
                 </button>
               </div>
@@ -102,7 +102,7 @@
                 class="max-h-60 overflow-y-auto border border-gray-200 rounded-lg">
                 <div v-for="employee in displayedEmployees" :key="employee.id"
                   class="flex items-center p-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 cursor-pointer transition-colors"
-                  :class="{ 'bg-blue-50 border-blue-200': form.employee_ids.includes(employee.id) }"
+                  :class="{ 'bg-teal-50 border-teal-200': form.employee_ids.includes(employee.id) }"
                   @click="selectEmployee(employee)">
                   <div class="flex items-center space-x-3 flex-1">
                     <div
@@ -119,7 +119,7 @@
                   </div>
                   <div class="flex-shrink-0">
                     <div class="w-4 h-4 rounded border-2 flex items-center justify-center" :class="form.employee_ids.includes(employee.id) 
-                        ? 'bg-blue-600 border-blue-600' 
+                        ? 'bg-teal-600 border-teal-600' 
                         : 'border-gray-300'">
                       <CheckIcon v-if="form.employee_ids.includes(employee.id)" class="w-3 h-3 text-white" />
                     </div>
@@ -132,7 +132,7 @@
             <div class="space-y-4">
               <div class="flex items-center justify-between">
                 <h3 class="text-lg font-semibold text-gray-900">Select Competencies</h3>
-                <div v-if="selectedCompetencies.length > 0" class="text-sm text-blue-600 font-medium">
+                <div v-if="selectedCompetencies.length > 0" class="text-sm text-teal-600 font-medium">
                   {{ selectedCompetencies.length }} selected
                 </div>
               </div>
@@ -140,7 +140,7 @@
               <!-- Category Selection -->
               <div>
                 <select v-model="selectedCategory"
-                  class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
+                  class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white">
                   <option value="">Choose a competency category...</option>
                   <option v-for="category in competencyCategories" :key="category" :value="category">
                     {{ category }}
@@ -152,11 +152,11 @@
               <div v-if="selectedCategory && competenciesByCategory.length > 0"
                 class="flex items-center justify-between text-sm">
                 <button type="button" @click="selectAllCompetencies"
-                  class="text-blue-600 hover:text-blue-800 font-medium" :disabled="allCategoryCompetenciesSelected">
+                  class="text-teal-600 hover:text-teal-800 font-medium" :disabled="allCategoryCompetenciesSelected">
                   Select All ({{ competenciesByCategory.length }})
                 </button>
                 <button v-if="selectedCompetencies.length > 0" type="button" @click="clearAllCompetencies"
-                  class="text-blue-600 hover:text-blue-800 font-medium">
+                  class="text-teal-600 hover:text-teal-800 font-medium">
                   Clear All
                 </button>
               </div>
@@ -166,7 +166,7 @@
                 class="max-h-60 overflow-y-auto border border-gray-200 rounded-lg">
                 <div v-for="competency in competenciesByCategory" :key="competency.id"
                   class="flex items-start p-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 cursor-pointer transition-colors"
-                  :class="{ 'bg-blue-50 border-blue-200': form.competency_ids.includes(competency.id) }"
+                  :class="{ 'bg-teal-50 border-teal-200': form.competency_ids.includes(competency.id) }"
                   @click="selectCompetency(competency)">
                   <div class="flex-1 min-w-0 pr-3">
                     <p class="text-sm font-medium text-gray-900">{{ competency.name }}</p>
@@ -174,7 +174,7 @@
                   </div>
                   <div class="flex-shrink-0">
                     <div class="w-4 h-4 rounded border-2 flex items-center justify-center" :class="form.competency_ids.includes(competency.id) 
-                        ? 'bg-blue-600 border-blue-600' 
+                        ? 'bg-teal-600 border-teal-600' 
                         : 'border-gray-300'">
                       <CheckIcon v-if="form.competency_ids.includes(competency.id)" class="w-3 h-3 text-white" />
                     </div>
@@ -193,7 +193,7 @@
                 </SecondaryButton>
                 <!-- Add Assessment Button - Navigate directly to assessment form -->
                 <SecondaryButton v-if="canSubmit && totalAssessments === 1" @click="navigateToAssessment" type="button"
-                  class="bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100">
+                  class="bg-teal-50 text-teal-700 border-teal-200 hover:bg-teal-100">
                   <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                   </svg>
@@ -221,18 +221,13 @@
 
 <script setup>
   import { computed, ref } from 'vue';
-  import { useForm, router, Link } from '@inertiajs/vue3';
+  import { useForm, router } from '@inertiajs/vue3';
   import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
   import PageLayout from '@/Components/Layout/PageLayout.vue';
-  import PrimaryButton from '@/Components/PrimaryButton.vue';
   import SecondaryButton from '@/Components/SecondaryButton.vue';
   import {
-    ArrowLeftIcon,
     CheckIcon,
-    MagnifyingGlassIcon,
-    UsersIcon,
-    XMarkIcon,
-    PlusIcon
+    MagnifyingGlassIcon
   } from '@heroicons/vue/24/outline';
 
   const props = defineProps({
@@ -265,7 +260,6 @@
   // Filter state
   const employeeSearch = ref('');
   const selectedDepartment = ref('');
-  const competencySearch = ref('');
   const selectedCategory = ref('');
 
   // Computed properties for filtering

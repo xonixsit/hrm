@@ -28,17 +28,17 @@
           </div>
 
           <!-- Work Report Context (only for timesheets) -->
-          <div v-if="approval?.work_report && !approval?.leave_type" class="bg-blue-50 p-4 rounded-lg">
-            <h4 class="text-sm font-medium text-blue-900 mb-2">Work Report Context</h4>
+          <div v-if="approval?.work_report && !approval?.leave_type" class="bg-teal-50 p-4 rounded-lg">
+            <h4 class="text-sm font-medium text-teal-900 mb-2">Work Report Context</h4>
             <div class="grid grid-cols-3 gap-4 text-xs">
               <div>
-                <span class="text-blue-700">Calls:</span> {{ approval.work_report.successful_calls }}/{{ approval.work_report.calls }}
+                <span class="text-teal-700">Calls:</span> {{ approval.work_report.successful_calls }}/{{ approval.work_report.calls }}
               </div>
               <div>
-                <span class="text-blue-700">Emails:</span> {{ approval.work_report.emails }}
+                <span class="text-teal-700">Emails:</span> {{ approval.work_report.emails }}
               </div>
               <div>
-                <span class="text-blue-700">WhatsApp:</span> {{ approval.work_report.whatsapp }}
+                <span class="text-teal-700">WhatsApp:</span> {{ approval.work_report.whatsapp }}
               </div>
             </div>
           </div>

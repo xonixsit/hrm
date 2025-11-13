@@ -18,7 +18,7 @@
               <Link
                 v-if="cycle.status === 'planned'"
                 :href="route('assessment-cycles.edit', cycle.id)"
-                class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                class="inline-flex items-center px-4 py-2 bg-teal-600 text-white text-sm font-medium rounded-md hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
               >
                 <PencilIcon class="w-4 h-4 mr-2" />
                 Edit Cycle
@@ -48,7 +48,7 @@
                       <div class="flex items-center">
                         <div class="flex-1 bg-gray-200 rounded-full h-2 mr-3">
                           <div
-                            class="bg-blue-600 h-2 rounded-full"
+                            class="bg-teal-600 h-2 rounded-full"
                             :style="{ width: `${cycle.completion_percentage || 0}%` }"
                           ></div>
                         </div>
@@ -151,7 +151,7 @@
                           <Link
                             v-if="assessment.status === 'draft'"
                             :href="route('competency-assessments.evaluate', assessment.id)"
-                            class="inline-flex items-center px-3 py-1 bg-blue-600 text-white text-xs font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                            class="inline-flex items-center px-3 py-1 bg-teal-600 text-white text-xs font-medium rounded-md hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
                           >
                             <PencilIcon class="w-3 h-3 mr-1" />
                             Assess
@@ -159,7 +159,7 @@
                           <Link
                             v-else
                             :href="route('competency-assessments.show', assessment.id)"
-                            class="text-blue-600 hover:text-blue-900 text-sm"
+                            class="text-teal-600 hover:text-teal-900 text-sm"
                           >
                             View
                           </Link>
@@ -184,7 +184,7 @@
                       :class="[
                         'px-3 py-2 text-sm font-medium rounded-md',
                         link.active
-                          ? 'bg-blue-600 text-white'
+                          ? 'bg-teal-600 text-white'
                           : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
                       ]"
                       v-html="link.label"
@@ -242,7 +242,7 @@
                 <button
                   @click="completeCycle"
                   :disabled="processing"
-                  class="w-full inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                  class="w-full inline-flex items-center justify-center px-4 py-2 bg-teal-600 text-white text-sm font-medium rounded-md hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:opacity-50"
                 >
                   <CheckIcon class="w-4 h-4 mr-2" />
                   Complete Cycle
@@ -260,7 +260,7 @@
                   <span
                     v-for="type in cycle.assessment_types"
                     :key="type"
-                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mr-2 mb-2"
+                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-teal-100 text-teal-800 mr-2 mb-2"
                   >
                     {{ formatAssessmentType(type) }}
                   </span>
@@ -406,7 +406,7 @@ const getStatusClasses = (status) => {
   const classes = {
     'planned': 'bg-gray-100 text-gray-800',
     'active': 'bg-green-100 text-green-800',
-    'completed': 'bg-blue-100 text-blue-800',
+    'completed': 'bg-teal-100 text-teal-800',
     'cancelled': 'bg-red-100 text-red-800'
   };
   return classes[status] || 'bg-gray-100 text-gray-800';

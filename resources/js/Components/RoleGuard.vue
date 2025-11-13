@@ -427,7 +427,7 @@ const handleContact = () => {
 }
 
 .login-btn {
-  @apply bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500;
+  @apply bg-teal-600 text-white hover:bg-teal-700 focus:ring-teal-500;
 }
 
 .contact-btn {

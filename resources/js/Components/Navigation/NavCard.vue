@@ -11,7 +11,7 @@
     <div class="flex items-center space-x-4">
       <div :class="[
         'flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center',
-        isDark ? 'bg-blue-900/20 text-blue-400' : 'bg-blue-100 text-blue-600'
+        isDark ? 'bg-teal-900/20 text-teal-400' : 'bg-teal-100 text-teal-600'
       ]">
         <component :is="iconComponent" class="w-6 h-6" />
       </div>

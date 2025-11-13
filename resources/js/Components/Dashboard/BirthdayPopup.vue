@@ -57,12 +57,12 @@
           </div>
 
           <!-- Birthday Message from Xonobics -->
-          <div class="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-4 mb-6 border border-blue-100">
-            <div class="flex items-center justify-center space-x-2 text-blue-700 mb-2">
+          <div class="bg-gradient-to-r from-teal-50 to-purple-50 rounded-lg p-4 mb-6 border border-teal-100">
+            <div class="flex items-center justify-center space-x-2 text-teal-700 mb-2">
               <span class="text-lg">🎊</span>
               <span class="font-semibold text-sm">From all of us at Xonobics</span>
             </div>
-            <p class="text-xs text-blue-600 text-center">
+            <p class="text-xs text-teal-600 text-center">
               May this new year of your life bring you joy, success, and wonderful memories!
             </p>
           </div>

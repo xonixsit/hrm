@@ -18,7 +18,7 @@
       <!-- Icon -->
       <div :class="[
           'flex items-center justify-center w-12 h-12 rounded-xl flex-shrink-0 shadow-sm',
-          variant === 'primary' && (isDark ? 'bg-blue-600/20 text-blue-400' : 'bg-blue-500 text-white shadow-blue-100'),
+          variant === 'primary' && (isDark ? 'bg-teal-600/20 text-teal-400' : 'bg-teal-500 text-white shadow-teal-100'),
           variant === 'success' && (isDark ? 'bg-green-600/20 text-green-400' : 'bg-green-500 text-white shadow-green-100'),
           variant === 'warning' && (isDark ? 'bg-orange-600/20 text-orange-400' : 'bg-orange-500 text-white shadow-orange-100'),
           variant === 'info' && (isDark ? 'bg-purple-600/20 text-purple-400' : 'bg-purple-500 text-white shadow-purple-100'),
@@ -51,8 +51,8 @@
             ? 'bg-green-600/20 text-green-400'
             : 'bg-green-50 text-green-700 border border-green-100'),
           status === 'good' && (isDark
-            ? 'bg-blue-600/20 text-blue-400'
-            : 'bg-blue-50 text-blue-700 border border-blue-100'),
+            ? 'bg-teal-600/20 text-teal-400'
+            : 'bg-teal-50 text-teal-700 border border-teal-100'),
           status === 'warning' && (isDark
             ? 'bg-orange-600/20 text-orange-400'
             : 'bg-orange-50 text-orange-700 border border-orange-100'),
@@ -63,7 +63,7 @@
         <span :class="[
             'w-1.5 h-1.5 rounded-full',
             status === 'excellent' && 'bg-green-500',
-            status === 'good' && 'bg-blue-500',
+            status === 'good' && 'bg-teal-500',
             status === 'warning' && 'bg-orange-500',
             status === 'critical' && 'bg-red-500',
           ]"></span>

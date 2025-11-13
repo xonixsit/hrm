@@ -104,7 +104,7 @@
                     type="button"
                     @click="form.rating = i"
                     :class="[
-                      'p-1 rounded focus:outline-none focus:ring-2 focus:ring-blue-500',
+                      'p-1 rounded focus:outline-none focus:ring-2 focus:ring-teal-500',
                       i <= form.rating ? 'text-yellow-400' : 'text-gray-300 hover:text-yellow-300'
                     ]"
                   >
@@ -130,7 +130,7 @@
                 v-model="form.comments"
                 :required="requiresComments"
                 rows="4"
-                class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                class="w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"
                 placeholder="Provide detailed feedback and observations..."
               ></textarea>
               <p class="mt-1 text-sm text-gray-500">
@@ -147,7 +147,7 @@
               <textarea
                 v-model="form.development_notes"
                 rows="3"
-                class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                class="w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"
                 placeholder="Suggestions for improvement or development opportunities..."
               ></textarea>
               <div v-if="errors.development_notes" class="mt-1 text-sm text-red-600">
@@ -162,7 +162,7 @@
                 type="file"
                 multiple
                 @change="handleFileUpload"
-                class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100"
               />
               <p class="mt-1 text-sm text-gray-500">
                 Upload supporting documents or evidence (optional).
@@ -219,7 +219,7 @@
               
               <Link
                 :href="route('competency-assessments.show', assessment.id)"
-                class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+                class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-colors duration-200"
               >
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -234,7 +234,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { ref, computed } from 'vue';
 import { router, Link } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import PageLayout from '@/Components/Layout/PageLayout.vue';
@@ -290,7 +290,7 @@ const updateAssessment = () => {
   processing.value = true;
   
   router.put(route('competency-assessments.update', props.assessment.id), form.value, {
-    onSuccess: (page) => {
+    onSuccess: () => {
       // Success - controller will redirect to show page with success message
       console.log('Assessment updated successfully');
     },

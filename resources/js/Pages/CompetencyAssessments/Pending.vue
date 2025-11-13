@@ -16,7 +16,7 @@
                 <select
                   v-model="filters.employee_id"
                   @change="applyFilters"
-                  class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  class="w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"
                 >
                   <option value="">All Employees</option>
                   <option v-for="employee in employees" :key="employee.id" :value="employee.id">
@@ -30,7 +30,7 @@
                 <select
                   v-model="filters.competency_id"
                   @change="applyFilters"
-                  class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  class="w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"
                 >
                   <option value="">All Competencies</option>
                   <option v-for="competency in competencies" :key="competency.id" :value="competency.id">
@@ -42,7 +42,7 @@
               <div class="flex items-end">
                 <button
                   @click="clearFilters"
-                  class="w-full px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  class="w-full px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
                 >
                   Clear Filters
                 </button>
@@ -75,8 +75,8 @@
                 <div class="flex items-center space-x-4">
                   <!-- Employee Avatar -->
                   <div class="flex-shrink-0">
-                    <div class="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
-                      <span class="text-sm font-medium text-blue-600">
+                    <div class="h-12 w-12 rounded-full bg-teal-100 flex items-center justify-center">
+                      <span class="text-sm font-medium text-teal-600">
                         {{ getInitials(assessment.employee?.user?.name || 'Unknown') }}
                       </span>
                     </div>
@@ -110,7 +110,7 @@
                 <div class="flex items-center space-x-3">
                   <Link
                     :href="route('competency-assessments.show', assessment.id)"
-                    class="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    class="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
                   >
                     <EyeIcon class="w-4 h-4 mr-2" />
                     View

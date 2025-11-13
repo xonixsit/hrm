@@ -37,7 +37,7 @@ defineEmits(['toggle-task', 'view-task']);
 }
 
 .task-count {
-  @apply inline-flex items-center justify-center w-6 h-6 bg-blue-100 text-blue-800 text-sm font-bold rounded-full;
+  @apply inline-flex items-center justify-center w-6 h-6 bg-teal-100 text-teal-800 text-sm font-bold rounded-full;
 }
 
 .tasks-placeholder {

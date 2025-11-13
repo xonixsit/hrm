@@ -31,10 +31,10 @@
                   <ClockIcon class="w-4 h-4 mr-2" />
                   Schedule Report
                 </SecondaryButton>
-                <PrimaryButton @click="showCustomReportModal = true">
+                <button class="inline-flex items-center px-4 py-2 bg-teal-500 text-white text-sm font-medium rounded-lg hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-colors" @click="showCustomReportModal = true">
                   <PlusIcon class="w-4 h-4 mr-2" />
                   Custom Report
-                </PrimaryButton>
+                </button>
               </div>
             </div>
           </div>
@@ -49,7 +49,7 @@
           <!-- Total Employees -->
           <div class="bg-white rounded-2xl p-6 border border-gray-100 hover:shadow-lg transition-all duration-300">
             <div class="flex items-center justify-between mb-4">
-              <div class="p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl">
+              <div class="p-3 bg-gradient-to-br from-teal-500 to-teal-600 rounded-xl">
                 <UsersIcon class="w-6 h-6 text-white" />
               </div>
               <div class="text-right">
@@ -108,10 +108,10 @@
           
           <!-- HR & Employee Reports -->
           <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-            <div class="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-blue-100">
+            <div class="bg-gradient-to-r from-teal-50 to-indigo-50 px-6 py-4 border-b border-teal-100">
               <div class="flex items-center space-x-3">
-                <div class="p-2 bg-blue-100 rounded-lg">
-                  <UsersIcon class="w-5 h-5 text-blue-600" />
+                <div class="p-2 bg-teal-100 rounded-lg">
+                  <UsersIcon class="w-5 h-5 text-teal-600" />
                 </div>
                 <h3 class="text-lg font-semibold text-gray-900">HR & Employee Reports</h3>
               </div>

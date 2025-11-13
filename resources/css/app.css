@@ -78,8 +78,8 @@
   color: var(--color-success) !important;
 }
 
-.high-contrast .text-blue-500,
-.high-contrast .text-blue-600 {
+.high-contrast .text-teal-500,
+.high-contrast .text-teal-600 {
   color: var(--color-info) !important;
 }
 
@@ -271,8 +271,8 @@ a:focus-visible,
   color: var(--color-success) !important;
 }
 
-.high-contrast .text-blue-500,
-.high-contrast .text-blue-600 {
+.high-contrast .text-teal-500,
+.high-contrast .text-teal-600 {
   color: var(--color-info) !important;
 }
 

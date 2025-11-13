@@ -50,8 +50,8 @@
                         <div class="p-6">
                             <div class="flex items-center">
                                 <div class="flex-shrink-0">
-                                    <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                                        <svg class="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                                    <div class="w-8 h-8 bg-teal-100 rounded-full flex items-center justify-center">
+                                        <svg class="w-5 h-5 text-teal-600" fill="currentColor" viewBox="0 0 20 20">
                                             <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                         </svg>
                                     </div>
@@ -216,7 +216,7 @@
                                             <span>changed status from</span>
                                             <span class="px-2 py-1 text-xs rounded-full bg-gray-100">{{ log.old_status }}</span>
                                             <span>to</span>
-                                            <span class="px-2 py-1 text-xs rounded-full bg-blue-100">{{ log.new_status }}</span>
+                                            <span class="px-2 py-1 text-xs rounded-full bg-teal-100">{{ log.new_status }}</span>
                                             <span v-if="log.reason" class="text-gray-500">- {{ log.reason }}</span>
                                         </div>
                                     </div>

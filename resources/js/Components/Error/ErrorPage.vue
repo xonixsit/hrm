@@ -580,7 +580,7 @@ onMounted(() => {
 }
 
 .error-additional-info {
-  @apply bg-blue-50 border border-blue-200 rounded-lg p-4;
+  @apply bg-teal-50 border border-teal-200 rounded-lg p-4;
 }
 
 .info-content {
@@ -588,11 +588,11 @@ onMounted(() => {
 }
 
 .info-icon {
-  @apply text-blue-500 mt-0.5 flex-shrink-0;
+  @apply text-teal-500 mt-0.5 flex-shrink-0;
 }
 
 .info-text {
-  @apply text-sm text-blue-800;
+  @apply text-sm text-teal-800;
 }
 
 .error-actions {
@@ -677,11 +677,11 @@ onMounted(() => {
 }
 
 .theme-dark .error-additional-info {
-  @apply bg-blue-900 border-blue-800;
+  @apply bg-teal-900 border-teal-800;
 }
 
 .theme-dark .info-text {
-  @apply text-blue-200;
+  @apply text-teal-200;
 }
 
 .theme-dark .error-action--secondary {

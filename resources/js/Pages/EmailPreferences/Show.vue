@@ -128,7 +128,7 @@
                                     >
                                 </div>
                                 
-                                <div v-if="form.daily_digest" class="ml-4 p-4 bg-blue-50 rounded-lg">
+                                <div v-if="form.daily_digest" class="ml-4 p-4 bg-teal-50 rounded-lg">
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Daily Digest Time</label>
                                     <input 
                                         type="time" 
@@ -149,7 +149,7 @@
                                     >
                                 </div>
                                 
-                                <div v-if="form.weekly_digest" class="ml-4 p-4 bg-blue-50 rounded-lg">
+                                <div v-if="form.weekly_digest" class="ml-4 p-4 bg-teal-50 rounded-lg">
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Weekly Digest Day</label>
                                     <select 
                                         v-model="form.digest_day"

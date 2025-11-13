@@ -98,7 +98,7 @@ defineProps({
 }
 
 .metric-fill {
-  @apply h-full bg-gradient-to-r from-blue-400 to-blue-600 transition-all duration-300;
+  @apply h-full bg-gradient-to-r from-teal-400 to-teal-600 transition-all duration-300;
 }
 
 .metric-value {

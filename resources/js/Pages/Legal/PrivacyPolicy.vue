@@ -152,7 +152,7 @@
                         <!-- Footer Actions -->
                         <div class="mt-8 pt-6 border-t border-gray-200">
                             <div class="flex items-center justify-between">
-                                <Link :href="route('dashboard')" class="text-blue-600 hover:text-blue-800">
+                                <Link :href="route('dashboard')" class="text-teal-600 hover:text-teal-800">
                                     ← Back to Dashboard
                                 </Link>
                                 <div class="flex space-x-4">

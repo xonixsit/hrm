@@ -25,8 +25,8 @@
                 @click="selectIntelligentPeriod(period)"
                 class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 border"
                 :class="activePeriod === period.key 
-                  ? 'bg-blue-500 text-white border-blue-500 shadow-sm' 
-                  : 'bg-white text-gray-700 border-gray-300 hover:border-blue-300 hover:bg-blue-50'"
+                  ? 'bg-teal-500 text-white border-teal-500 shadow-sm' 
+                  : 'bg-white text-gray-700 border-gray-300 hover:border-teal-300 hover:bg-teal-50'"
               >
                 <span>{{ period.icon }}</span>
                 <span>{{ period.label }}</span>
@@ -45,7 +45,7 @@
                   <input
                     v-model="localFilters.date_from"
                     type="date"
-                    class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                     @change="handleDateFromChange"
                   />
                 </div>
@@ -54,7 +54,7 @@
                   <input
                     v-model="localFilters.date_to"
                     type="date"
-                    class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                     @change="handleDateToChange"
                   />
                 </div>
@@ -72,7 +72,7 @@
               <select
                 v-model="localFilters.department_id"
                 @change="handleDepartmentChange"
-                class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white"
               >
                 <option value="">All Departments</option>
                 <option 
@@ -101,8 +101,8 @@
               <button
                 @click="leaderboardType = 'score'"
                 :class="leaderboardType === 'score' 
-                  ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white border-blue-500 shadow-lg' 
-                  : 'bg-white text-gray-700 border-gray-300 hover:border-blue-300 hover:bg-blue-50'"
+                  ? 'bg-gradient-to-r from-teal-500 to-teal-600 text-white border-teal-500 shadow-lg' 
+                  : 'bg-white text-gray-700 border-gray-300 hover:border-teal-300 hover:bg-teal-50'"
                 class="relative p-4 rounded-lg border-2 transition-all duration-200 text-left group"
               >
                 <div class="flex items-center gap-3 mb-2">

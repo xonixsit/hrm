@@ -115,7 +115,7 @@
     <div class="stats-overview">
       <div class="stat-card">
         <div class="stat-icon">
-          <CalendarDaysIcon class="w-6 h-6 text-blue-600" />
+          <CalendarDaysIcon class="w-6 h-6 text-teal-600" />
         </div>
         <div class="stat-content">
           <div class="stat-value">{{ Math.floor(stats.daysWithCompany || 0) }}</div>
@@ -1143,13 +1143,13 @@ onUnmounted(() => {
 }
 
 .time-position-dot {
-  @apply w-2 h-2 bg-blue-600 rounded-full shadow-lg absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2;
+  @apply w-2 h-2 bg-teal-600 rounded-full shadow-lg absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2;
   animation: timePulse 2s infinite ease-in-out;
 }
 
 .time-position-dot::before {
   content: '';
-  @apply absolute top-1/2 left-1/2 w-px h-full bg-blue-600 transform -translate-x-1/2 -translate-y-1/2;
+  @apply absolute top-1/2 left-1/2 w-px h-full bg-teal-600 transform -translate-x-1/2 -translate-y-1/2;
   opacity: 0.3;
 }
 
@@ -1159,7 +1159,7 @@ onUnmounted(() => {
 }
 
 .time-dot {
-  @apply w-3 h-3 bg-blue-500 rounded-full shadow-lg;
+  @apply w-3 h-3 bg-teal-500 rounded-full shadow-lg;
   animation: timePulse 2s infinite ease-in-out;
 }
 
@@ -1338,11 +1338,11 @@ onUnmounted(() => {
 
 /* Work Reports - Blue Theme */
 .action-work-reports {
-  @apply bg-blue-50 border-blue-200 hover:bg-blue-100 hover:border-blue-300;
+  @apply bg-teal-50 border-teal-200 hover:bg-teal-100 hover:border-teal-300;
 }
 
 .action-work-reports span {
-  @apply text-blue-700;
+  @apply text-teal-700;
 }
 
 /* Leaderboard - Orange/Gold Theme */
@@ -1376,7 +1376,7 @@ onUnmounted(() => {
 }
 
 .debug-button {
-  @apply px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors;
+  @apply px-3 py-1 bg-teal-600 text-white text-sm rounded hover:bg-teal-700 transition-colors;
 }
 
 /* Birthday Section */

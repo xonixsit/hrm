@@ -63,7 +63,7 @@
             <div class="mt-4 flex items-center space-x-4">
               <button
                 @click="resetFilters"
-                class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
               >
                 <XMarkIcon class="w-4 h-4 mr-2" />
                 Reset Filters
@@ -193,7 +193,7 @@
               <button
                 @click="refreshReports"
                 :disabled="isRefreshing"
-                class="text-sm text-blue-600 hover:text-blue-500 disabled:opacity-50"
+                class="text-sm text-teal-600 hover:text-teal-500 disabled:opacity-50"
               >
                 <ArrowPathIcon v-if="isRefreshing" class="w-4 h-4 animate-spin inline mr-1" />
                 {{ isRefreshing ? 'Refreshing...' : 'Refresh' }}
@@ -262,7 +262,7 @@
                       <button
                         v-if="report.status === 'completed'"
                         @click="downloadReport(report)"
-                        class="text-blue-600 hover:text-blue-900 mr-3"
+                        class="text-teal-600 hover:text-teal-900 mr-3"
                       >
                         <ArrowDownTrayIcon class="w-4 h-4 inline mr-1" />
                         Download

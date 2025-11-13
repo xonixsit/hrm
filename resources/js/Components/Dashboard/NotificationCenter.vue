@@ -709,7 +709,7 @@ watch(() => props.refreshInterval, () => {
 }
 
 .notification-item--unread {
-  @apply bg-blue-50;
+  @apply bg-teal-50;
 }
 
 .notification-item--important {
@@ -869,7 +869,7 @@ watch(() => props.refreshInterval, () => {
 }
 
 .theme-dark .notification-item--unread {
-  @apply bg-blue-900;
+  @apply bg-teal-900;
 }
 
 .theme-dark .notification-title {
@@ -958,7 +958,7 @@ watch(() => props.refreshInterval, () => {
   }
   
   .notification-item--unread {
-    @apply border-l-4 border-blue-600;
+    @apply border-l-4 border-teal-600;
   }
 }
 </style>

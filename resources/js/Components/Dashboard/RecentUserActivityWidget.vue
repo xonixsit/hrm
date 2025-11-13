@@ -62,7 +62,7 @@ const formatTimeAgo = (date) => {
 }
 
 .user-avatar {
-  @apply w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-medium;
+  @apply w-8 h-8 bg-teal-100 text-teal-600 rounded-full flex items-center justify-center text-sm font-medium;
 }
 
 .activity-content {

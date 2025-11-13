@@ -90,12 +90,12 @@
                 </span>
               </div>
               
-              <div class="flex justify-between items-center py-3 px-4 bg-blue-50 rounded-lg border-2 border-blue-200">
+              <div class="flex justify-between items-center py-3 px-4 bg-teal-50 rounded-lg border-2 border-teal-200">
                 <div class="flex items-center space-x-2">
-                  <ClockIcon class="w-4 h-4 text-blue-600" />
-                  <span class="text-sm font-medium text-blue-700">Total Work Time</span>
+                  <ClockIcon class="w-4 h-4 text-teal-600" />
+                  <span class="text-sm font-medium text-teal-700">Total Work Time</span>
                 </div>
-                <span class="text-lg font-bold text-blue-900">{{ workDuration || '0h 0m' }}</span>
+                <span class="text-lg font-bold text-teal-900">{{ workDuration || '0h 0m' }}</span>
               </div>
             </div>
           </ContentCard>
@@ -129,7 +129,7 @@
                     type="datetime-local" 
                     :min="getMinDateTime()" 
                     :max="getMaxDateTime()"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 sm:text-sm"
                     required 
                   />
                   <p class="mt-1 text-xs text-gray-500">
@@ -145,7 +145,7 @@
                     v-model="clockOutReason" 
                     rows="3"
                     placeholder="Please provide a reason for the manual clock out (e.g., forgot to clock out, system issue, etc.)"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm resize-none"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 sm:text-sm resize-none"
                     required
                   ></textarea>
                 </div>
@@ -153,7 +153,7 @@
                 <div class="flex items-center justify-end space-x-3">
                   <button
                     @click="resetClockOutForm"
-                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-colors"
                   >
                     Reset
                   </button>

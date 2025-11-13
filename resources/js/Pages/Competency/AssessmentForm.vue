@@ -62,7 +62,7 @@
           <!-- Loading State -->
           <div v-if="loading" class="loading-container">
             <div class="loading-spinner">
-              <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+              <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
             </div>
             <p class="loading-text">Loading assessment data...</p>
           </div>
@@ -699,7 +699,7 @@ onBeforeUnmount(() => {
 }
 
 .step-item.active::after {
-  @apply bg-blue-300;
+  @apply bg-teal-300;
 }
 
 .step-indicator {
@@ -711,7 +711,7 @@ onBeforeUnmount(() => {
 }
 
 .step-item.active .step-indicator {
-  @apply border-blue-500 bg-blue-500 text-white;
+  @apply border-teal-500 bg-teal-500 text-white;
 }
 
 .step-item.completed .step-indicator {
@@ -815,7 +815,7 @@ onBeforeUnmount(() => {
 }
 
 .employee-avatar .avatar-circle {
-  @apply w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-medium;
+  @apply w-12 h-12 bg-teal-100 text-teal-600 rounded-full flex items-center justify-center text-sm font-medium;
 }
 
 .employee-name {
@@ -836,7 +836,7 @@ onBeforeUnmount(() => {
 }
 
 .competency-category {
-  @apply px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium;
+  @apply px-2 py-1 bg-teal-100 text-teal-800 rounded-full text-xs font-medium;
 }
 
 .competency-weight {
@@ -959,7 +959,7 @@ onBeforeUnmount(() => {
 }
 
 .help-link {
-  @apply text-sm text-blue-600 hover:text-blue-800 transition-colors duration-200;
+  @apply text-sm text-teal-600 hover:text-teal-800 transition-colors duration-200;
 }
 
 /* Notifications */
@@ -984,7 +984,7 @@ onBeforeUnmount(() => {
 }
 
 .notification-info {
-  @apply bg-blue-50 border border-blue-200 text-blue-800;
+  @apply bg-teal-50 border border-teal-200 text-teal-800;
 }
 
 .notification-close {

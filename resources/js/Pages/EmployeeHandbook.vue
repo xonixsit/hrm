@@ -509,12 +509,12 @@
     }
 
     .nav-card {
-        @apply flex flex-col items-center p-4 bg-gray-50 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer border border-transparent hover:border-blue-200;
+        @apply flex flex-col items-center p-4 bg-gray-50 hover:bg-teal-50 rounded-lg transition-colors cursor-pointer border border-transparent hover:border-teal-200;
         min-height: 80px;
     }
 
     .nav-icon {
-        @apply w-8 h-8 text-blue-600 mb-2;
+        @apply w-8 h-8 text-teal-600 mb-2;
     }
 
     .nav-card span {
@@ -531,7 +531,7 @@
     }
 
     .section-icon {
-        @apply w-8 h-8 text-blue-600 mr-3;
+        @apply w-8 h-8 text-teal-600 mr-3;
     }
 
     .section-header h2 {
@@ -568,7 +568,7 @@
     }
 
     .feature-icon.info {
-        @apply bg-blue-100 text-blue-600;
+        @apply bg-teal-100 text-teal-600;
     }
 
     .feature-header h3 {
@@ -589,7 +589,7 @@
     }
 
     .step-number {
-        @apply w-6 h-6 bg-blue-600 text-white text-sm font-bold rounded-full flex items-center justify-center mr-3 flex-shrink-0 mt-0.5;
+        @apply w-6 h-6 bg-teal-600 text-white text-sm font-bold rounded-full flex items-center justify-center mr-3 flex-shrink-0 mt-0.5;
     }
 
     .step-content {
@@ -607,7 +607,7 @@
     }
 
     .info-box {
-        @apply bg-blue-50 border border-blue-200;
+        @apply bg-teal-50 border border-teal-200;
     }
 
     .tip-icon,
@@ -620,7 +620,7 @@
     }
 
     .info-icon {
-        @apply text-blue-600;
+        @apply text-teal-600;
     }
 
     /* Timeline Guide */
@@ -726,7 +726,7 @@
     }
 
     .faq-list li::before {
-        @apply content-['?'] text-blue-600 font-bold mr-2;
+        @apply content-['?'] text-teal-600 font-bold mr-2;
     }
 
     .tips-list li::before {
@@ -743,7 +743,7 @@
     }
 
     .support-icon {
-        @apply w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4;
+        @apply w-16 h-16 bg-teal-100 text-teal-600 rounded-full flex items-center justify-center mx-auto mb-4;
     }
 
     .support-card h3 {
@@ -755,12 +755,12 @@
     }
 
     .support-button {
-        @apply px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors;
+        @apply px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors;
     }
 
     /* Quick Actions Footer */
     .quick-actions-footer {
-        @apply bg-gradient-to-r from-blue-50 to-green-50 rounded-xl p-6 text-center;
+        @apply bg-gradient-to-r from-teal-50 to-green-50 rounded-xl p-6 text-center;
     }
 
     .quick-actions-footer h3 {
@@ -777,7 +777,7 @@
     }
 
     .action-btn.primary {
-        @apply bg-blue-600 text-white hover:bg-blue-700;
+        @apply bg-teal-600 text-white hover:bg-teal-700;
     }
 
     .action-btn.secondary {
@@ -815,11 +815,11 @@
 
     /* Navigation Hints */
     .navigation-hint {
-        @apply flex items-center mt-2 p-2 bg-blue-50 rounded-lg border-l-4 border-blue-400;
+        @apply flex items-center mt-2 p-2 bg-teal-50 rounded-lg border-l-4 border-teal-400;
     }
 
     .hint-arrow {
-        @apply w-4 h-4 text-blue-600 mr-2 flex-shrink-0;
+        @apply w-4 h-4 text-teal-600 mr-2 flex-shrink-0;
     }
 
     .click-target {
@@ -835,7 +835,7 @@
     }
 
     .click-target.blue {
-        @apply bg-blue-600;
+        @apply bg-teal-600;
     }
 
     .click-target.orange {
@@ -866,6 +866,6 @@
     .nav-card:focus-visible,
     .action-btn:focus-visible,
     .support-button:focus-visible {
-        @apply ring-2 ring-blue-500 ring-offset-2;
+        @apply ring-2 ring-teal-500 ring-offset-2;
     }
 </style>

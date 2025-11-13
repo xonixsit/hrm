@@ -32,18 +32,18 @@
         </div>
 
         <!-- Upcoming Birthdays -->
-        <div v-if="upcomingBirthdays.length > 0" class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
+        <div v-if="upcomingBirthdays.length > 0" class="bg-gradient-to-r from-teal-50 to-indigo-50 border border-teal-200 rounded-lg p-4">
             <div class="flex items-center justify-between mb-3">
                 <div class="flex items-center space-x-3">
                     <div class="text-2xl">🎂</div>
                     <div>
-                        <h3 class="text-lg font-semibold text-blue-800">Upcoming Birthdays</h3>
-                        <p class="text-sm text-blue-600">Don't forget to wish them well!</p>
+                        <h3 class="text-lg font-semibold text-teal-800">Upcoming Birthdays</h3>
+                        <p class="text-sm text-teal-600">Don't forget to wish them well!</p>
                     </div>
                 </div>
                 <button 
                     @click="showAllUpcoming = !showAllUpcoming"
-                    class="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                    class="text-sm text-teal-600 hover:text-teal-800 font-medium"
                 >
                     {{ showAllUpcoming ? 'Show Less' : 'Show All' }}
                 </button>
@@ -56,8 +56,8 @@
                     class="flex items-center justify-between bg-white rounded-lg p-3 shadow-sm"
                 >
                     <div class="flex items-center space-x-3">
-                        <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                            <span class="text-sm font-semibold text-blue-700">
+                        <div class="w-10 h-10 bg-teal-100 rounded-full flex items-center justify-center">
+                            <span class="text-sm font-semibold text-teal-700">
                                 {{ getInitials(birthday.employee.user.name) }}
                             </span>
                         </div>
@@ -77,12 +77,12 @@
 
 
         <!-- No Birthdays Today Message -->
-        <div v-if="todaysBirthdays.length === 0 && upcomingBirthdays.length === 0 && stats && stats.this_month === 0" class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
+        <div v-if="todaysBirthdays.length === 0 && upcomingBirthdays.length === 0 && stats && stats.this_month === 0" class="bg-gradient-to-r from-teal-50 to-indigo-50 border border-teal-200 rounded-lg p-4">
             <div class="flex items-center space-x-3">
                 <div class="text-2xl">🎂</div>
                 <div>
-                    <h3 class="text-lg font-semibold text-blue-800">No Birthdays This Month</h3>
-                    <p class="text-sm text-blue-600">No team birthdays to celebrate right now, but stay tuned!</p>
+                    <h3 class="text-lg font-semibold text-teal-800">No Birthdays This Month</h3>
+                    <p class="text-sm text-teal-600">No team birthdays to celebrate right now, but stay tuned!</p>
                 </div>
             </div>
         </div>

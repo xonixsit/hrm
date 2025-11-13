@@ -240,7 +240,7 @@ const handleContinue = () => {
 }
 
 .btn-primary {
-  @apply px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+  @apply px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
 }
 
 .btn-secondary {
@@ -252,7 +252,7 @@ const handleContinue = () => {
 }
 
 .details-toggle {
-  @apply text-sm text-blue-600 hover:text-blue-800 underline;
+  @apply text-sm text-teal-600 hover:text-teal-800 underline;
 }
 
 .details-content {

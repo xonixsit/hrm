@@ -7,7 +7,7 @@
       <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
         <div class="relative">
           <!-- Cover Background -->
-          <div class="h-32 bg-gradient-to-r from-blue-500 via-purple-600 to-indigo-600"></div>
+          <div class="h-32 bg-gradient-to-r from-teal-500 via-purple-600 to-indigo-600"></div>
 
           <!-- Employee Info Overlay -->
           <div class="relative px-6 pb-6">
@@ -16,7 +16,7 @@
               <div class="flex-shrink-0">
                 <div class="h-24 w-24 rounded-full bg-white p-1 shadow-lg">
                   <div
-                    class="h-full w-full rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
+                    class="h-full w-full rounded-full bg-gradient-to-r from-teal-500 to-purple-600 flex items-center justify-center">
                     <span class="text-2xl font-bold text-white">
                       {{ getInitials(employee.user.name) }}
                     </span>
@@ -32,7 +32,7 @@
                     <p class="text-lg text-gray-600">{{ employee.job_title }}</p>
                     <div class="flex items-center mt-2 space-x-4">
                       <span
-                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-teal-100 text-teal-800">
                         {{ employee.employee_code }}
                       </span>
                       <span :class="getStatusClasses(employee.status)"
@@ -53,7 +53,7 @@
         <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
           <div class="flex items-center">
             <div class="flex-shrink-0">
-              <CalendarIcon class="h-8 w-8 text-blue-600" />
+              <CalendarIcon class="h-8 w-8 text-teal-600" />
             </div>
             <div class="ml-4">
               <p class="text-sm font-medium text-gray-600">Years of Service</p>
@@ -316,7 +316,7 @@
                   <dd class="text-sm text-gray-900">
                     <div class="flex flex-wrap gap-2">
                       <span v-for="skill in parseSkills(employee.skills)" :key="skill"
-                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-teal-100 text-teal-800">
                         {{ skill }}
                       </span>
                     </div>
@@ -898,7 +898,7 @@
       case 'Part-time':
         return `${baseClasses} bg-yellow-100 text-yellow-800`;
       case 'Contract':
-        return `${baseClasses} bg-blue-100 text-blue-800`;
+        return `${baseClasses} bg-teal-100 text-teal-800`;
       case 'Intern':
         return `${baseClasses} bg-purple-100 text-purple-800`;
       default:
@@ -1036,7 +1036,7 @@
       case 'part_time':
         return `${baseClasses} bg-yellow-100 text-yellow-800`
       case 'contract':
-        return `${baseClasses} bg-blue-100 text-blue-800`
+        return `${baseClasses} bg-teal-100 text-teal-800`
       case 'intern':
         return `${baseClasses} bg-purple-100 text-purple-800`
       case 'consultant':

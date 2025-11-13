@@ -28,7 +28,7 @@
                   v-model="form.name"
                   type="text"
                   required
-                  class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  class="w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"
                   placeholder="e.g., Q1 2024 Performance Review"
                 />
                 <div v-if="errors.name" class="mt-1 text-sm text-red-600">
@@ -40,7 +40,7 @@
                 <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
                 <select
                   v-model="form.status"
-                  class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  class="w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"
                 >
                   <option value="planned">Planned</option>
                   <option value="active">Active</option>
@@ -57,7 +57,7 @@
               <textarea
                 v-model="form.description"
                 rows="3"
-                class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                class="w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"
                 placeholder="Describe the purpose and scope of this assessment cycle..."
               ></textarea>
               <div v-if="errors.description" class="mt-1 text-sm text-red-600">
@@ -73,7 +73,7 @@
                   v-model="form.start_date"
                   type="date"
                   required
-                  class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  class="w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"
                 />
                 <div v-if="errors.start_date" class="mt-1 text-sm text-red-600">
                   {{ errors.start_date }}
@@ -86,7 +86,7 @@
                   v-model="form.end_date"
                   type="date"
                   required
-                  class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  class="w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"
                 />
                 <div v-if="errors.end_date" class="mt-1 text-sm text-red-600">
                   {{ errors.end_date }}
@@ -97,16 +97,16 @@
             <!-- Assessment Types -->
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-3">Assessment Types *</label>
-              <div class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-md">
+              <div class="mb-4 p-4 bg-teal-50 border border-teal-200 rounded-md">
                 <div class="flex items-start">
                   <div class="flex-shrink-0">
-                    <svg class="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                    <svg class="h-5 w-5 text-teal-400" fill="currentColor" viewBox="0 0 20 20">
                       <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
                     </svg>
                   </div>
                   <div class="ml-3">
-                    <h4 class="text-sm font-medium text-blue-800">Why Multiple Assessment Types?</h4>
-                    <p class="text-sm text-blue-700 mt-1">
+                    <h4 class="text-sm font-medium text-teal-800">Why Multiple Assessment Types?</h4>
+                    <p class="text-sm text-teal-700 mt-1">
                       Select multiple types to get comprehensive feedback from different perspectives. Each type creates separate assessments with targeted notifications.
                     </p>
                   </div>
@@ -114,13 +114,13 @@
               </div>
               
               <div class="space-y-4">
-                <div v-for="type in assessmentTypes" :key="type" class="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors">
+                <div v-for="type in assessmentTypes" :key="type" class="border border-gray-200 rounded-lg p-4 hover:border-teal-300 transition-colors">
                   <label class="flex items-start cursor-pointer">
                     <input
                       v-model="form.assessment_types"
                       :value="type"
                       type="checkbox"
-                      class="mt-1 rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                      class="mt-1 rounded border-gray-300 text-teal-600 shadow-sm focus:border-teal-500 focus:ring-teal-500"
                     />
                     <div class="ml-3 flex-1">
                       <div class="flex items-center">
@@ -165,16 +165,16 @@
             </div>
 
             <!-- Assessment Scope -->
-            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div class="bg-teal-50 border border-teal-200 rounded-lg p-4">
               <div class="flex items-start">
                 <div class="flex-shrink-0">
-                  <svg class="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                  <svg class="h-5 w-5 text-teal-400" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
                   </svg>
                 </div>
                 <div class="ml-3">
-                  <h4 class="text-sm font-medium text-blue-800">Assessment Cycle Scope</h4>
-                  <p class="text-sm text-blue-700 mt-1">
+                  <h4 class="text-sm font-medium text-teal-800">Assessment Cycle Scope</h4>
+                  <p class="text-sm text-teal-700 mt-1">
                     This cycle defines the time period, competencies, and assessment types. Employee selection happens when creating individual assessments within this cycle.
                   </p>
                 </div>
@@ -191,7 +191,7 @@
                       v-model="form.competency_ids"
                       :value="competency.id"
                       type="checkbox"
-                      class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                      class="rounded border-gray-300 text-teal-600 shadow-sm focus:border-teal-500 focus:ring-teal-500"
                     />
                     <span class="ml-2 text-sm text-gray-700">
                       {{ competency.name }} <span class="text-gray-500">({{ competency.category }})</span>
@@ -212,7 +212,7 @@
                   <input
                     v-model="form.notification_settings.send_start_notifications"
                     type="checkbox"
-                    class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    class="rounded border-gray-300 text-teal-600 shadow-sm focus:border-teal-500 focus:ring-teal-500"
                   />
                   <span class="ml-2 text-sm text-gray-700">Send notifications when cycle starts</span>
                 </label>
@@ -220,7 +220,7 @@
                   <input
                     v-model="form.notification_settings.send_reminder_notifications"
                     type="checkbox"
-                    class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    class="rounded border-gray-300 text-teal-600 shadow-sm focus:border-teal-500 focus:ring-teal-500"
                   />
                   <span class="ml-2 text-sm text-gray-700">Send reminder notifications</span>
                 </label>
@@ -228,7 +228,7 @@
                   <input
                     v-model="form.notification_settings.send_completion_notifications"
                     type="checkbox"
-                    class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    class="rounded border-gray-300 text-teal-600 shadow-sm focus:border-teal-500 focus:ring-teal-500"
                   />
                   <span class="ml-2 text-sm text-gray-700">Send notifications when cycle completes</span>
                 </label>
@@ -249,14 +249,14 @@
             <div class="flex items-center justify-end space-x-3 pt-6 border-t border-gray-200">
               <Link
                 :href="route('assessment-cycle-manager')"
-                class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
               >
                 Cancel
               </Link>
               <button
                 type="submit"
                 :disabled="processing"
-                class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                class="inline-flex items-center px-4 py-2 bg-teal-500 text-white text-sm font-medium rounded-lg hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-colors"
               >
                 <span v-if="processing">Creating...</span>
                 <span v-else>Create Assessment Cycle</span>
@@ -314,7 +314,6 @@ const form = ref({
   }
 });
 
-const employeeSelection = ref('all');
 const processing = ref(false);
 
 const createCycle = () => {

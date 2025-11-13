@@ -261,7 +261,7 @@ const clearErrors = () => {
 }
 
 .test-btn.info {
-  @apply bg-blue-100 text-blue-800 hover:bg-blue-200 focus:ring-blue-500;
+  @apply bg-teal-100 text-teal-800 hover:bg-teal-200 focus:ring-teal-500;
 }
 
 .error-summary {

@@ -55,7 +55,7 @@
               <!-- Show More Filters Button -->
               <button
                 @click="showFilters = !showFilters"
-                class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
               >
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.707V4z" />
@@ -67,10 +67,10 @@
 
           <!-- Feedback Statistics Cards -->
           <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-            <div class="bg-blue-50 rounded-lg p-4">
+            <div class="bg-teal-50 rounded-lg p-4">
               <div class="flex items-center">
                 <div class="flex-shrink-0">
-                  <svg class="h-8 w-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg class="h-8 w-8 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                   </svg>
                 </div>
@@ -140,7 +140,7 @@
                     v-model="localFilters.search"
                     type="text"
                     placeholder="Search..."
-                    class="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-md text-sm bg-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                    class="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-md text-sm bg-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500"
                     @input="debouncedApplyFilters"
                   />
                 </div>
@@ -150,7 +150,7 @@
                 <label class="block text-sm font-medium text-gray-700 mb-1">Rating</label>
                 <select
                   v-model="localFilters.rating"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500 sm:text-sm"
                   @change="applyFilters"
                 >
                   <option value="">All ratings</option>
@@ -167,7 +167,7 @@
                 <label class="block text-sm font-medium text-gray-700 mb-1">Period</label>
                 <select
                   v-model="localFilters.period"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500 sm:text-sm"
                   @change="applyFilters"
                 >
                   <option value="">All periods</option>
@@ -184,7 +184,7 @@
                 <input
                   v-model="localFilters.date_from"
                   type="date"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500 sm:text-sm"
                   @change="applyFilters"
                 />
               </div>
@@ -195,7 +195,7 @@
                 <input
                   v-model="localFilters.date_to"
                   type="date"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500 sm:text-sm"
                   @change="applyFilters"
                 />
               </div>
@@ -224,12 +224,12 @@
 
               <span 
                 v-if="localFilters.rating"
-                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-teal-100 text-teal-800"
               >
                 Rating: {{ localFilters.rating }} Stars
                 <button 
                   @click="clearFilter('rating')"
-                  class="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full text-blue-400 hover:bg-blue-200 hover:text-blue-500 focus:outline-none"
+                  class="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full text-teal-400 hover:bg-teal-200 hover:text-teal-500 focus:outline-none"
                 >
                   <span class="sr-only">Remove rating filter</span>
                   <svg class="w-2 h-2" fill="currentColor" viewBox="0 0 8 8">
@@ -308,7 +308,7 @@
 
               <button 
                 @click="resetFilters"
-                class="text-sm text-blue-600 hover:text-blue-800"
+                class="text-sm text-teal-600 hover:text-teal-800"
               >
                 Clear all
               </button>
@@ -480,7 +480,7 @@
             <div v-if="hasActiveFilters && hasAnyRole(['Admin', 'HR', 'Manager'])" class="mt-6">
               <Link 
                 :href="route('feedbacks.create')" 
-                class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+                class="inline-flex items-center px-4 py-2 bg-teal-600 text-white text-sm font-medium rounded-lg hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 transition-colors"
               >
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -540,7 +540,7 @@
                       :class="[
                         'relative inline-flex items-center px-4 py-2 text-sm font-semibold',
                         link.active 
-                          ? 'z-10 bg-blue-600 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600' 
+                          ? 'z-10 bg-teal-600 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600' 
                           : 'text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0'
                       ]"
                     >
@@ -601,7 +601,7 @@
               <button 
                 @click="showDeleteModal = false" 
                 type="button" 
-                class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
               >
                 Cancel
               </button>

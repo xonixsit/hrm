@@ -38,7 +38,7 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.207A1 1 0 013 6.5V4z"></path>
                 </svg>
                 {{ showFilters ? 'Hide Filters' : 'Show Filters' }}
-                <span v-if="activeFiltersCount > 0" class="ml-2 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-blue-100 bg-blue-600 rounded-full">
+                <span v-if="activeFiltersCount > 0" class="ml-2 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-teal-100 bg-teal-600 rounded-full">
                   {{ activeFiltersCount }}
                 </span>
               </button>
@@ -112,10 +112,10 @@
             <span class="text-sm font-medium text-gray-700">Active filters:</span>
             <span
               v-if="activeStatusFilter"
-              class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+              class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-teal-100 text-teal-800"
             >
               Status: {{ getStatusLabel(localFilters.status) }}
-              <button @click="clearFilter('status')" class="ml-1 text-blue-600 hover:text-blue-800">
+              <button @click="clearFilter('status')" class="ml-1 text-teal-600 hover:text-teal-800">
                 <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                   <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
                 </svg>

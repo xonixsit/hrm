@@ -63,7 +63,7 @@
                 <select 
                   id="employee_id"
                   v-model="form.employee_id" 
-                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm"
                   :class="{ 'border-red-300': form.errors.employee_id }"
                 >
                   <option value="">Select an employee</option>
@@ -87,7 +87,7 @@
                 <select 
                   id="project_id"
                   v-model="form.project_id" 
-                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm"
                   :class="{ 'border-red-300': form.errors.project_id }"
                 >
                   <option value="">Select a project</option>
@@ -108,7 +108,7 @@
                 <select 
                   id="task_id"
                   v-model="form.task_id" 
-                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm"
                   :class="{ 'border-red-300': form.errors.task_id }"
                 >
                   <option value="">No specific task</option>
@@ -130,7 +130,7 @@
                   id="date"
                   v-model="form.date" 
                   type="date" 
-                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm"
                   :class="{ 'border-red-300': form.errors.date }"
                 />
                 <div v-if="form.errors.date" class="mt-1 text-sm text-red-600">
@@ -150,7 +150,7 @@
                   step="0.25" 
                   min="0" 
                   max="24"
-                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm"
                   :class="{ 'border-red-300': form.errors.hours }"
                   placeholder="e.g., 8.5"
                 />
@@ -171,7 +171,7 @@
                   id="description"
                   v-model="form.description" 
                   rows="4"
-                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm"
                   :class="{ 'border-red-300': form.errors.description }"
                   placeholder="Describe the work performed..."
                 ></textarea>
@@ -184,13 +184,13 @@
               <div class="flex items-center justify-end space-x-3 pt-6 border-t border-gray-200">
                 <Link 
                   :href="route('timesheets.index')" 
-                  class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
                 >
                   Cancel
                 </Link>
                 <button 
                   type="submit" 
-                  class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:opacity-50 disabled:cursor-not-allowed"
                   :disabled="form.processing"
                 >
                   <svg v-if="form.processing" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">

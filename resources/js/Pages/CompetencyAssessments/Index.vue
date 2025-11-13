@@ -17,7 +17,7 @@
                 <select
                   v-model="filters.employee_id"
                   @change="applyFilters"
-                  class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  class="w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"
                 >
                   <option value="">All Employees</option>
                   <option v-for="employee in employees" :key="employee.id" :value="employee.id">
@@ -31,7 +31,7 @@
                 <select
                   v-model="filters.status"
                   @change="applyFilters"
-                  class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  class="w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"
                 >
                   <option value="">All Statuses</option>
                   <option v-for="status in statusOptions" :key="status" :value="status">
@@ -45,7 +45,7 @@
                 <select
                   v-model="filters.assessment_type"
                   @change="applyFilters"
-                  class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  class="w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"
                 >
                   <option value="">All Types</option>
                   <option v-for="type in assessmentTypes" :key="type" :value="type">
@@ -61,14 +61,14 @@
                   @input="debounceSearch"
                   type="text"
                   placeholder="Search assessments..."
-                  class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  class="w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"
                 />
               </div>
               
               <div class="flex items-end">
                 <button
                   @click="clearFilters"
-                  class="w-full px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  class="w-full px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
                 >
                   Clear Filters
                 </button>
@@ -111,8 +111,8 @@
                   <td class="px-6 py-4 whitespace-nowrap">
                     <div class="flex items-center">
                       <div class="flex-shrink-0 h-10 w-10">
-                        <div class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                          <span class="text-sm font-medium text-blue-600">
+                        <div class="h-10 w-10 rounded-full bg-teal-100 flex items-center justify-center">
+                          <span class="text-sm font-medium text-teal-600">
                             {{ getInitials(assessment.employee?.user?.name || 'Unknown') }}
                           </span>
                         </div>
@@ -120,7 +120,7 @@
                       <div class="ml-4">
                         <Link
                           :href="route('competency-assessments.by-employee', assessment.employee?.id)"
-                          class="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline"
+                          class="text-sm font-medium text-teal-600 hover:text-teal-800 hover:underline"
                         >
                           {{ assessment.employee?.user?.name || 'Unknown' }}
                         </Link>
@@ -163,7 +163,7 @@
                     <div class="flex items-center justify-end space-x-2">
                       <Link
                         :href="route('competency-assessments.show', assessment.id)"
-                        class="text-blue-600 hover:text-blue-900"
+                        class="text-teal-600 hover:text-teal-900"
                       >
                         View
                       </Link>

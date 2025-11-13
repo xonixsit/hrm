@@ -96,8 +96,8 @@
           <!-- Project Details Section -->
           <div class="px-6 py-6 border-b border-gray-200">
             <div class="flex items-center mb-6">
-              <div class="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                <Icon name="cog" class="w-5 h-5 text-blue-600" />
+              <div class="flex-shrink-0 w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center">
+                <Icon name="cog" class="w-5 h-5 text-teal-600" />
               </div>
               <div class="ml-4">
                 <h3 class="text-lg font-medium text-gray-900">Project Details</h3>
@@ -373,19 +373,19 @@
                 
                 <!-- Selected Manager Display -->
                 <div v-if="selectedManager" class="mb-3">
-                  <div class="inline-flex items-center px-3 py-2 rounded-lg bg-blue-50 border border-blue-200">
-                    <div class="w-8 h-8 bg-blue-200 rounded-full flex items-center justify-center mr-3 text-sm font-medium text-blue-800">
+                  <div class="inline-flex items-center px-3 py-2 rounded-lg bg-teal-50 border border-teal-200">
+                    <div class="w-8 h-8 bg-teal-200 rounded-full flex items-center justify-center mr-3 text-sm font-medium text-teal-800">
                       {{ selectedManager.label.charAt(0).toUpperCase() }}
                     </div>
                     <div>
-                      <div class="font-medium text-blue-900">{{ selectedManager.label }}</div>
-                      <div class="text-sm text-blue-700">{{ selectedManager.description }}</div>
+                      <div class="font-medium text-teal-900">{{ selectedManager.label }}</div>
+                      <div class="text-sm text-teal-700">{{ selectedManager.description }}</div>
                     </div>
                     <button
                       type="button"
                       @click="form.manager_id = ''"
                       :disabled="form.processing"
-                      class="ml-3 inline-flex items-center justify-center w-5 h-5 rounded-full text-blue-600 hover:bg-blue-200 focus:outline-none focus:bg-blue-200"
+                      class="ml-3 inline-flex items-center justify-center w-5 h-5 rounded-full text-teal-600 hover:bg-teal-200 focus:outline-none focus:bg-teal-200"
                     >
                       <Icon name="x" class="w-3 h-3" />
                     </button>
@@ -448,7 +448,7 @@
                       @click="selectManager(option)"
                       class="cursor-pointer select-none relative py-3 pl-3 pr-12 hover:bg-gray-50 flex items-center"
                     >
-                      <div class="w-8 h-8 bg-blue-200 rounded-full flex items-center justify-center mr-3 text-sm font-medium text-blue-800 flex-shrink-0">
+                      <div class="w-8 h-8 bg-teal-200 rounded-full flex items-center justify-center mr-3 text-sm font-medium text-teal-800 flex-shrink-0">
                         {{ option.label.charAt(0).toUpperCase() }}
                       </div>
                       <div class="flex-1 min-w-0">
@@ -570,7 +570,7 @@ const getProgressStatusClasses = (progress) => {
   if (value === 0) return 'bg-gray-400';
   if (value < 25) return 'bg-red-400';
   if (value < 50) return 'bg-yellow-400';
-  if (value < 75) return 'bg-blue-400';
+  if (value < 75) return 'bg-teal-400';
   if (value < 100) return 'bg-indigo-400';
   return 'bg-green-400';
 };
@@ -580,7 +580,7 @@ const getProgressTextClasses = (progress) => {
   if (value === 0) return 'text-gray-600';
   if (value < 25) return 'text-red-600';
   if (value < 50) return 'text-yellow-600';
-  if (value < 75) return 'text-blue-600';
+  if (value < 75) return 'text-teal-600';
   if (value < 100) return 'text-indigo-600';
   return 'text-green-600';
 };
@@ -777,7 +777,7 @@ const filteredManagerOptions = computed(() => {
 // Status helper functions
 const getStatusBannerClasses = (status) => {
   const statusClasses = {
-    planning: 'bg-blue-50 border-blue-400 text-blue-800',
+    planning: 'bg-teal-50 border-teal-400 text-teal-800',
     active: 'bg-green-50 border-green-400 text-green-800',
     on_hold: 'bg-yellow-50 border-yellow-400 text-yellow-800',
     completed: 'bg-indigo-50 border-indigo-400 text-indigo-800',

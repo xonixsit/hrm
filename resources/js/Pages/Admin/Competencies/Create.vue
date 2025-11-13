@@ -326,7 +326,7 @@ const previewCompetency = computed(() => {
                                     <div>
                                         <h3 class="text-lg font-medium text-gray-900">{{ previewCompetency.name }}</h3>
                                         <div class="mt-2 flex items-center space-x-4">
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-teal-100 text-teal-800">
                                                 {{ previewCompetency.category }}
                                             </span>
                                             <span class="text-sm text-gray-500">Weight: {{ previewCompetency.weight }}</span>

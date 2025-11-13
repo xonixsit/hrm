@@ -28,7 +28,7 @@
                   v-model="localFilters.search"
                   type="text"
                   placeholder="Search by employee name or notes..."
-                  class="block w-80 pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  class="block w-80 pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-teal-500 focus:border-teal-500 sm:text-sm"
                   @input="debouncedApplyFilters"
                 />
               </div>
@@ -36,7 +36,7 @@
               <!-- Show Filters Button -->
               <button
                 @click="showFilters = !showFilters"
-                class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
               >
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.707V4z" />
@@ -54,7 +54,7 @@
                 <label class="block text-sm font-medium text-gray-700 mb-1">Employee</label>
                 <select
                   v-model="localFilters.employee_id"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500 sm:text-sm"
                   @change="applyFilters"
                 >
                   <option value="">All employees</option>
@@ -69,7 +69,7 @@
                 <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
                 <select
                   v-model="localFilters.status"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500 sm:text-sm"
                   @change="applyFilters"
                 >
                   <option value="">All statuses</option>
@@ -85,7 +85,7 @@
                 <input
                   v-model="localFilters.date_from"
                   type="date"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500 sm:text-sm"
                   @change="applyFilters"
                 />
               </div>
@@ -96,7 +96,7 @@
                 <input
                   v-model="localFilters.date_to"
                   type="date"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500 sm:text-sm"
                   @change="applyFilters"
                 />
               </div>
@@ -110,12 +110,12 @@
               
               <span 
                 v-if="localFilters.employee_id"
-                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-teal-100 text-teal-800"
               >
                 Employee: {{ getEmployeeName(localFilters.employee_id) }}
                 <button 
                   @click="clearFilter('employee_id')"
-                  class="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full text-blue-400 hover:bg-blue-200 hover:text-blue-500 focus:outline-none"
+                  class="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full text-teal-400 hover:bg-teal-200 hover:text-teal-500 focus:outline-none"
                 >
                   <span class="sr-only">Remove employee filter</span>
                   <svg class="w-2 h-2" fill="currentColor" viewBox="0 0 8 8">
@@ -174,7 +174,7 @@
 
               <button 
                 @click="resetFilters"
-                class="text-sm text-blue-600 hover:text-blue-800"
+                class="text-sm text-teal-600 hover:text-teal-800"
               >
                 Clear all
               </button>
@@ -216,8 +216,8 @@
                   <td v-if="isAdminOrHR" class="px-6 py-4 whitespace-nowrap">
                     <div class="flex items-center">
                       <div class="flex-shrink-0 h-8 w-8">
-                        <div class="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
-                          <span class="text-sm font-medium text-blue-700">
+                        <div class="h-8 w-8 rounded-full bg-teal-100 flex items-center justify-center">
+                          <span class="text-sm font-medium text-teal-700">
                             {{ getEmployeeInitials(attendance.employee?.user?.name) }}
                           </span>
                         </div>
@@ -265,7 +265,7 @@
                     <div class="flex items-center justify-end space-x-2">
                       <Link
                         :href="route('attendances.show', attendance.id)"
-                        class="text-blue-600 hover:text-blue-900"
+                        class="text-teal-600 hover:text-teal-900"
                       >
                         View
                       </Link>
@@ -335,7 +335,7 @@
                       :class="[
                         'relative inline-flex items-center px-4 py-2 border text-sm font-medium',
                         link.active 
-                          ? 'z-10 bg-blue-50 border-blue-500 text-blue-600' 
+                          ? 'z-10 bg-teal-50 border-teal-500 text-teal-600' 
                           : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
                       ]"
                     >
@@ -527,7 +527,7 @@ const formatStatus = (status) => {
 const getStatusBadgeClasses = (status) => {
   const classes = {
     'clocked_in': 'bg-green-100 text-green-800',
-    'clocked_out': 'bg-blue-100 text-blue-800',
+    'clocked_out': 'bg-teal-100 text-teal-800',
     'on_break': 'bg-yellow-100 text-yellow-800'
   };
   return classes[status] || 'bg-gray-100 text-gray-800';

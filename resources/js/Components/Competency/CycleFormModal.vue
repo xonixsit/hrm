@@ -899,7 +899,7 @@ onMounted(() => {
 }
 
 .step-item.active::after {
-  @apply bg-blue-300;
+  @apply bg-teal-300;
 }
 
 .step-number {
@@ -911,7 +911,7 @@ onMounted(() => {
 }
 
 .step-item.active .step-number {
-  @apply border-blue-500 bg-blue-500 text-white;
+  @apply border-teal-500 bg-teal-500 text-white;
 }
 
 .step-item.completed .step-number {
@@ -1048,7 +1048,7 @@ onMounted(() => {
 }
 
 .search-field {
-  @apply w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200;
+  @apply w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors duration-200;
 }
 
 .employee-list {
@@ -1068,7 +1068,7 @@ onMounted(() => {
 }
 
 .employee-avatar .avatar-circle {
-  @apply w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs font-medium;
+  @apply w-8 h-8 bg-teal-100 text-teal-600 rounded-full flex items-center justify-center text-xs font-medium;
 }
 
 .employee-info {
@@ -1089,7 +1089,7 @@ onMounted(() => {
 }
 
 .summary-card {
-  @apply bg-blue-50 border border-blue-200 rounded-lg p-4;
+  @apply bg-teal-50 border border-teal-200 rounded-lg p-4;
 }
 
 .summary-header {
@@ -1097,11 +1097,11 @@ onMounted(() => {
 }
 
 .summary-icon {
-  @apply w-5 h-5 text-blue-600;
+  @apply w-5 h-5 text-teal-600;
 }
 
 .summary-title {
-  @apply font-medium text-blue-900;
+  @apply font-medium text-teal-900;
 }
 
 .summary-content {
@@ -1109,11 +1109,11 @@ onMounted(() => {
 }
 
 .summary-count {
-  @apply text-2xl font-bold text-blue-900;
+  @apply text-2xl font-bold text-teal-900;
 }
 
 .summary-label {
-  @apply text-sm text-blue-700;
+  @apply text-sm text-teal-700;
 }
 
 /* Competency Assignment */
@@ -1142,7 +1142,7 @@ onMounted(() => {
 }
 
 .category-toggle {
-  @apply text-sm text-blue-600 hover:text-blue-800 transition-colors duration-200;
+  @apply text-sm text-teal-600 hover:text-teal-800 transition-colors duration-200;
 }
 
 .competency-grid {
@@ -1220,7 +1220,7 @@ onMounted(() => {
 }
 
 .reminder-select {
-  @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200;
+  @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors duration-200;
 }
 
 /* Form Navigation */

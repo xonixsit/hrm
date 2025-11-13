@@ -24,7 +24,7 @@
                 v-model="localFilters.search"
                 type="text"
                 placeholder="Name, code, manager..."
-                class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-teal-500 focus:border-teal-500 sm:text-sm"
                 @input="debouncedApplyFilters"
               />
             </div>
@@ -32,14 +32,14 @@
             <!-- Show More Filters Button -->
             <button
               @click="showFilters = !showFilters"
-              class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 whitespace-nowrap"
+              class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 whitespace-nowrap"
             >
               <svg class="w-4 h-4 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.707V4z" />
               </svg>
               <span class="hidden sm:inline">{{ showFilters ? 'Hide Filters' : 'Show Filters' }}</span>
               <span class="sm:hidden">Filters</span>
-              <span v-if="activeFiltersCount > 0" class="ml-2 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-blue-100 bg-blue-600 rounded-full">
+              <span v-if="activeFiltersCount > 0" class="ml-2 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-teal-100 bg-teal-600 rounded-full">
                 {{ activeFiltersCount }}
               </span>
             </button>
@@ -55,7 +55,7 @@
               <select
                 v-model="localFilters.status"
                 @change="applyFilters"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500 sm:text-sm"
               >
                 <option value="">All statuses</option>
                 <option v-for="status in filterOptions.statuses" :key="status" :value="status">
@@ -70,7 +70,7 @@
               <select
                 v-model="localFilters.manager"
                 @change="applyFilters"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500 sm:text-sm"
               >
                 <option value="">All managers</option>
                 <option v-for="manager in filterOptions.managers" :key="manager.id" :value="manager.id">
@@ -85,7 +85,7 @@
               <select
                 v-model="localFilters.parent"
                 @change="applyFilters"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500 sm:text-sm"
               >
                 <option value="">All departments</option>
                 <option value="none">Top-level only</option>
@@ -101,7 +101,7 @@
               <select
                 v-model="localFilters.employee_count"
                 @change="applyFilters"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500 sm:text-sm"
               >
                 <option value="">All sizes</option>
                 <option value="none">No employees</option>
@@ -118,7 +118,7 @@
                 v-model="localFilters.date_from"
                 type="date"
                 @change="applyFilters"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500 sm:text-sm"
               />
             </div>
 
@@ -129,7 +129,7 @@
                 v-model="localFilters.date_to"
                 type="date"
                 @change="applyFilters"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500 sm:text-sm"
               />
             </div>
 
@@ -139,7 +139,7 @@
               <select
                 v-model="localFilters.sort_by"
                 @change="applyFilters"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500 sm:text-sm"
               >
                 <option value="name">Name</option>
                 <option value="employees_count">Employee Count</option>
@@ -155,7 +155,7 @@
               <select
                 v-model="localFilters.sort_order"
                 @change="applyFilters"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500 sm:text-sm"
               >
                 <option value="asc">Ascending</option>
                 <option value="desc">Descending</option>
@@ -176,9 +176,9 @@
             </span>
 
             <!-- Status Filter -->
-            <span v-if="localFilters.status" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+            <span v-if="localFilters.status" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-teal-100 text-teal-800">
               Status: {{ localFilters.status }}
-              <button @click="clearFilter('status')" class="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full text-blue-400 hover:bg-blue-200 hover:text-blue-500">
+              <button @click="clearFilter('status')" class="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full text-teal-400 hover:bg-teal-200 hover:text-teal-500">
                 <Icon name="x-mark" class="w-2 h-2" />
               </button>
             </span>

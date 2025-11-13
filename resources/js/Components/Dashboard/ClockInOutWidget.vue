@@ -442,7 +442,7 @@ const connectionStatusText = computed(() => {
 const progressBarClasses = computed(() => {
   const percentage = attendance.workProgress.value.percentage
   if (percentage >= 100) return 'bg-green-500'
-  if (percentage >= 75) return 'bg-blue-500'
+  if (percentage >= 75) return 'bg-teal-500'
   if (percentage >= 50) return 'bg-yellow-500'
   return 'bg-neutral-400'
 })
@@ -1078,7 +1078,7 @@ onUnmounted(() => {
 
 /* Status Info Section - Simplified Status Display */
 .status-info-section {
-  @apply text-center py-4 px-4 bg-gradient-to-b from-blue-50 to-white border-b border-gray-100;
+  @apply text-center py-4 px-4 bg-gradient-to-b from-teal-50 to-white border-b border-gray-100;
 }
 
 .status-message {
@@ -1168,7 +1168,7 @@ onUnmounted(() => {
 }
 
 .progress-percent {
-  @apply text-sm font-bold text-blue-600;
+  @apply text-sm font-bold text-teal-600;
 }
 
 .progress-bar {
@@ -1176,7 +1176,7 @@ onUnmounted(() => {
 }
 
 .progress-fill {
-  @apply h-full bg-blue-500 rounded-full transition-all duration-300;
+  @apply h-full bg-teal-500 rounded-full transition-all duration-300;
 }
 
 .progress-details {
@@ -1217,7 +1217,7 @@ onUnmounted(() => {
 }
 
 .setting-item input[type="number"] {
-  @apply w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500;
+  @apply w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500;
 }
 
 .toggle-label {
@@ -1233,7 +1233,7 @@ onUnmounted(() => {
 }
 
 .toggle-label input:checked + .toggle {
-  @apply bg-blue-600;
+  @apply bg-teal-600;
 }
 
 .toggle::before {
@@ -1283,7 +1283,7 @@ onUnmounted(() => {
 .primary-action:focus-visible,
 .secondary-action:focus-visible,
 .settings-btn:focus-visible {
-  @apply ring-2 ring-blue-500 ring-offset-2;
+  @apply ring-2 ring-teal-500 ring-offset-2;
 }
 
 /* Loading States */
@@ -1297,7 +1297,7 @@ onUnmounted(() => {
 
 /* Primary Section - F-Pattern Layout (Top Priority) */
 .primary-section {
-  @apply p-6 bg-gradient-to-r from-blue-50 to-green-50 border-b border-neutral-200;
+  @apply p-6 bg-gradient-to-r from-teal-50 to-green-50 border-b border-neutral-200;
 }
 
 /* Status Header - Clear Visual Hierarchy */
@@ -1419,7 +1419,7 @@ onUnmounted(() => {
 
 /* Progress Card - Visual Progress Indicator */
 .progress-card {
-  @apply bg-blue-50 rounded-lg p-4 border border-blue-200;
+  @apply bg-teal-50 rounded-lg p-4 border border-teal-200;
 }
 
 .progress-header {
@@ -1431,7 +1431,7 @@ onUnmounted(() => {
 }
 
 .progress-value {
-  @apply text-sm font-bold text-blue-600;
+  @apply text-sm font-bold text-teal-600;
 }
 
 .progress-track {
@@ -1452,7 +1452,7 @@ onUnmounted(() => {
 
 /* Productivity Card - Contextual Information */
 .productivity-card {
-  @apply bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg p-4 border border-purple-200;
+  @apply bg-gradient-to-r from-purple-50 to-teal-50 rounded-lg p-4 border border-purple-200;
 }
 
 .productivity-header {
@@ -1566,7 +1566,7 @@ onUnmounted(() => {
 }
 
 .setting-input {
-  @apply w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors;
+  @apply w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors;
 }
 
 .setting-help {
@@ -1586,7 +1586,7 @@ onUnmounted(() => {
 }
 
 .toggle-input:checked + .toggle-slider {
-  @apply bg-blue-600;
+  @apply bg-teal-600;
 }
 
 .toggle-slider::before {
@@ -1604,7 +1604,7 @@ onUnmounted(() => {
 
 /* Settings Trigger - Accessible */
 .settings-trigger {
-  @apply absolute top-4 right-4 p-2 text-neutral-500 hover:text-neutral-700 hover:bg-neutral-100 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500;
+  @apply absolute top-4 right-4 p-2 text-neutral-500 hover:text-neutral-700 hover:bg-neutral-100 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500;
 }
 
 .settings-icon {
@@ -1701,7 +1701,7 @@ onUnmounted(() => {
 .secondary-button:focus-visible,
 .settings-trigger:focus-visible,
 .modal-close:focus-visible {
-  @apply ring-2 ring-blue-500 ring-offset-2;
+  @apply ring-2 ring-teal-500 ring-offset-2;
 }
 
 /* Loading States */
@@ -1769,7 +1769,7 @@ onUnmounted(() => {
 
 /* Large Work Duration Display */
 .work-duration-display {
-  @apply text-center p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border border-green-200 mb-4;
+  @apply text-center p-4 bg-gradient-to-r from-green-50 to-teal-50 rounded-lg border border-green-200 mb-4;
 }
 
 .duration-label {
@@ -1957,7 +1957,7 @@ onUnmounted(() => {
 
 /* Productivity Section */
 .productivity-section {
-  @apply mt-4 p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-100;
+  @apply mt-4 p-3 bg-gradient-to-r from-teal-50 to-purple-50 rounded-lg border border-teal-100;
 }
 
 .productivity-header {
@@ -1969,7 +1969,7 @@ onUnmounted(() => {
 }
 
 .productivity-score {
-  @apply text-sm font-bold text-blue-600;
+  @apply text-sm font-bold text-teal-600;
 }
 
 .productivity-insights {
@@ -2045,7 +2045,7 @@ onUnmounted(() => {
 
 /* Enhanced Summary Grid */
 .todays-summary {
-  @apply grid grid-cols-3 gap-4 p-4 bg-gradient-to-r from-neutral-50 to-blue-50 rounded-lg border border-neutral-200;
+  @apply grid grid-cols-3 gap-4 p-4 bg-gradient-to-r from-neutral-50 to-teal-50 rounded-lg border border-neutral-200;
 }
 
 /* Responsive adjustments */

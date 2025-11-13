@@ -149,7 +149,7 @@ const cardClasses = computed(() => {
   };
   const variantClasses = {
     default: 'bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md',
-    primary: 'bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-xl shadow-sm hover:shadow-md',
+    primary: 'bg-gradient-to-br from-teal-50 to-teal-100 border border-teal-200 rounded-xl shadow-sm hover:shadow-md',
     secondary: 'bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 rounded-xl shadow-sm hover:shadow-md',
     success: 'bg-gradient-to-br from-green-50 to-green-100 border border-green-200 rounded-xl shadow-sm hover:shadow-md',
     warning: 'bg-gradient-to-br from-yellow-50 to-yellow-100 border border-yellow-200 rounded-xl shadow-sm hover:shadow-md',
@@ -172,7 +172,7 @@ const cardClasses = computed(() => {
 const iconClasses = computed(() => {
   const variantClasses = {
     default: 'bg-gray-100 text-gray-600',
-    primary: 'bg-blue-100 text-blue-600',
+    primary: 'bg-teal-100 text-teal-600',
     secondary: 'bg-gray-100 text-gray-600',
     success: 'bg-green-100 text-green-600',
     warning: 'bg-yellow-100 text-yellow-600',
@@ -270,7 +270,7 @@ const handleClick = () => {
 
 .border-glow {
   @apply absolute inset-0 rounded-xl opacity-0 transition-opacity duration-300;
-  @apply ring-2 ring-blue-200/50 ring-offset-1;
+  @apply ring-2 ring-teal-200/50 ring-offset-1;
 }
 
 .group:hover .border-glow {

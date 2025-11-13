@@ -71,7 +71,7 @@ describe('Leave Management User Experience', () => {
       const vm = wrapper.vm;
       
       // Test color consistency
-      expect(vm.getLeaveTypeIconClasses('Annual Leave')).toContain('bg-blue-100 text-blue-600');
+      expect(vm.getLeaveTypeIconClasses('Annual Leave')).toContain('bg-teal-100 text-teal-600');
       expect(vm.getLeaveTypeIconClasses('Sick Leave')).toContain('bg-red-100 text-red-600');
       expect(vm.getLeaveTypeIconClasses('Personal Leave')).toContain('bg-green-100 text-green-600');
       expect(vm.getLeaveTypeIconClasses('Study Leave')).toContain('bg-purple-100 text-purple-600');

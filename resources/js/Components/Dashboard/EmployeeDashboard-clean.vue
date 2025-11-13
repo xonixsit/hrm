@@ -155,7 +155,7 @@
       <div class="stats-grid">
         <div class="stat-item">
           <div class="stat-icon">
-            <ClockIcon class="w-6 h-6 text-blue-600" />
+            <ClockIcon class="w-6 h-6 text-teal-600" />
           </div>
           <div class="stat-content">
             <div class="stat-value">{{ realTimeWorkDuration }}</div>
@@ -864,7 +864,7 @@ onUnmounted(() => {
 
 /* Real-time Clock Display */
 .real-time-clock {
-  @apply flex items-center justify-between p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-neutral-200;
+  @apply flex items-center justify-between p-6 bg-gradient-to-r from-teal-50 to-indigo-50 border-b border-neutral-200;
 }
 
 .clock-display {
@@ -900,7 +900,7 @@ onUnmounted(() => {
 }
 
 .status-indicator.text-primary-700 .status-dot {
-  @apply bg-blue-500;
+  @apply bg-teal-500;
 }
 
 .status-indicator.text-warning-700 .status-dot {
@@ -1054,7 +1054,7 @@ onUnmounted(() => {
 }
 
 .time-dot {
-  @apply w-3 h-3 bg-blue-500 rounded-full shadow-lg;
+  @apply w-3 h-3 bg-teal-500 rounded-full shadow-lg;
   animation: timePulse 2s infinite ease-in-out;
 }
 

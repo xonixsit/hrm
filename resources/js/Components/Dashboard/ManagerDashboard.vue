@@ -611,7 +611,7 @@ const getApprovalTypeClasses = (type) => {
   const baseClasses = 'inline-flex items-center px-2 py-1 rounded-full text-xs font-medium';
   
   const typeStyles = {
-    leave: 'bg-blue-100 text-blue-800',
+    leave: 'bg-teal-100 text-teal-800',
     timesheet: 'bg-green-100 text-green-800',
     expense: 'bg-purple-100 text-purple-800',
     project: 'bg-orange-100 text-orange-800',

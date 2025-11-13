@@ -52,7 +52,7 @@
                 'flex items-center rounded-lg transition-colors group',
                 isCollapsed ? 'p-3 justify-center' : 'px-3 py-2',
                 isActive(item.route)
-                  ? (isDark ? 'bg-blue-900 text-blue-200' : 'bg-blue-100 text-blue-700')
+                  ? (isDark ? 'bg-teal-900 text-teal-200' : 'bg-teal-100 text-teal-700')
                   : (isDark ? 'text-gray-300 hover:bg-gray-700 hover:text-white' : 'text-gray-700 hover:bg-gray-100')
               ]"
               :title="isCollapsed ? item.label : ''"
@@ -128,7 +128,7 @@
           <div class="flex items-center space-x-3">
             <div :class="[
               'w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium',
-              isDark ? 'bg-blue-600 text-white' : 'bg-blue-500 text-white'
+              isDark ? 'bg-teal-600 text-white' : 'bg-teal-500 text-white'
             ]">
               {{ userInitials }}
             </div>

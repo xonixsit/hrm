@@ -68,8 +68,8 @@
                   <span class="text-sm text-green-600">+{{ kpis.employeeGrowth }}% this month</span>
                 </div>
               </div>
-              <div class="p-3 bg-blue-100 rounded-xl">
-                <UsersIcon class="w-8 h-8 text-blue-600" />
+              <div class="p-3 bg-teal-100 rounded-xl">
+                <UsersIcon class="w-8 h-8 text-teal-600" />
               </div>
             </div>
           </div>
@@ -131,7 +131,7 @@
               <h3 class="text-lg font-semibold text-gray-900">Employee Growth Trend</h3>
               <div class="flex items-center space-x-2">
                 <div class="flex items-center">
-                  <div class="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
+                  <div class="w-3 h-3 bg-teal-500 rounded-full mr-2"></div>
                   <span class="text-sm text-gray-600">Headcount</span>
                 </div>
                 <div class="flex items-center">
@@ -144,7 +144,7 @@
             <!-- Stats Summary -->
             <div class="grid grid-cols-3 gap-4 mb-4 p-4 bg-gray-50 rounded-lg">
               <div class="text-center">
-                <div class="text-2xl font-bold text-blue-600">{{ employeeGrowthStats.currentTotal }}</div>
+                <div class="text-2xl font-bold text-teal-600">{{ employeeGrowthStats.currentTotal }}</div>
                 <div class="text-xs text-gray-600">Current Total</div>
               </div>
               <div class="text-center">
@@ -161,7 +161,7 @@
               <div v-for="(month, index) in employeeGrowthData" :key="index" class="flex-1 flex flex-col items-center">
                 <div class="w-full bg-gray-200 rounded-t relative" :style="{ height: '160px' }">
                   <div 
-                    class="bg-blue-500 rounded-t absolute bottom-0 w-full transition-all duration-500"
+                    class="bg-teal-500 rounded-t absolute bottom-0 w-full transition-all duration-500"
                     :style="{ height: `${(month.total_employees / Math.max(...employeeGrowthData.map(m => m.total_employees))) * 100}%` }"
                   ></div>
                   <div 
@@ -194,9 +194,9 @@
                 <div class="text-xs text-green-700">Excellent</div>
                 <div class="text-xs text-gray-500">90-100%</div>
               </div>
-              <div class="text-center p-3 bg-blue-50 rounded-lg">
-                <div class="text-lg font-bold text-blue-600">{{ performanceData.good }}</div>
-                <div class="text-xs text-blue-700">Good</div>
+              <div class="text-center p-3 bg-teal-50 rounded-lg">
+                <div class="text-lg font-bold text-teal-600">{{ performanceData.good }}</div>
+                <div class="text-xs text-teal-700">Good</div>
                 <div class="text-xs text-gray-500">80-89%</div>
               </div>
               <div class="text-center p-3 bg-yellow-50 rounded-lg">
@@ -242,7 +242,7 @@
             <!-- Attendance Stats -->
             <div class="grid grid-cols-4 gap-3 mb-4 p-3 bg-gray-50 rounded-lg">
               <div class="text-center">
-                <div class="text-lg font-bold text-blue-600">{{ attendanceStats.totalRecords }}</div>
+                <div class="text-lg font-bold text-teal-600">{{ attendanceStats.totalRecords }}</div>
                 <div class="text-xs text-gray-600">Total Records</div>
               </div>
               <div class="text-center">
@@ -299,9 +299,9 @@
                 <div class="text-xl font-bold text-red-600">{{ attritionStats.totalDepartures }}</div>
                 <div class="text-xs text-red-700">Total Departures</div>
               </div>
-              <div class="text-center p-3 bg-blue-50 rounded-lg">
-                <div class="text-xl font-bold text-blue-600">{{ kpis.attritionRate }}%</div>
-                <div class="text-xs text-blue-700">Attrition Rate</div>
+              <div class="text-center p-3 bg-teal-50 rounded-lg">
+                <div class="text-xl font-bold text-teal-600">{{ kpis.attritionRate }}%</div>
+                <div class="text-xs text-teal-700">Attrition Rate</div>
               </div>
             </div>
             
@@ -374,7 +374,7 @@
                   <div class="flex-1 mx-4">
                     <div class="w-full bg-gray-200 rounded-full h-4 relative">
                       <div 
-                        class="bg-blue-500 h-4 rounded-full transition-all duration-500"
+                        class="bg-teal-500 h-4 rounded-full transition-all duration-500"
                         :style="{ width: `${dept.score}%` }"
                       ></div>
                       <span class="absolute right-2 top-0 text-xs text-white font-medium leading-4">{{ dept.score }}%</span>
@@ -405,7 +405,7 @@
                 <p class="text-sm text-gray-600">Success Rate</p>
               </div>
               <div class="text-center">
-                <p class="text-2xl font-bold text-blue-600">{{ onboardingData.avg_days }}</p>
+                <p class="text-2xl font-bold text-teal-600">{{ onboardingData.avg_days }}</p>
                 <p class="text-sm text-gray-600">Avg Days</p>
               </div>
             </div>
@@ -441,7 +441,7 @@
               <div class="text-xs text-gray-600">Need Development</div>
             </div>
             <div class="text-center">
-              <div class="text-2xl font-bold text-blue-600">{{ skillsStats.avgCompetencyScore }}%</div>
+              <div class="text-2xl font-bold text-teal-600">{{ skillsStats.avgCompetencyScore }}%</div>
               <div class="text-xs text-gray-600">Avg Score</div>
             </div>
           </div>
@@ -497,7 +497,7 @@
                 <div class="w-full bg-gray-200 rounded-t relative" style="height: 200px;">
                   <div 
                     class="rounded-t absolute bottom-0 w-full transition-all duration-500"
-                    :class="index < 6 ? 'bg-blue-500' : 'bg-purple-500 opacity-70'"
+                    :class="index < 6 ? 'bg-teal-500' : 'bg-purple-500 opacity-70'"
                     :style="{ height: `${(month.count / Math.max(...forecastMonths.map(m => m.count))) * 100}%` }"
                   ></div>
                 </div>
@@ -505,8 +505,8 @@
                 <span v-if="index >= 6" class="text-xs text-purple-600 font-medium">Predicted</span>
               </div>
             </div>
-            <div class="mt-4 p-4 bg-blue-50 rounded-lg">
-              <p class="text-sm text-blue-800">
+            <div class="mt-4 p-4 bg-teal-50 rounded-lg">
+              <p class="text-sm text-teal-800">
                 <strong>Prediction:</strong> Based on current trends, expect {{ forecastData.growth_rate }}% workforce growth in the next quarter.
               </p>
             </div>
@@ -530,12 +530,12 @@
                 </div>
                 <ExclamationTriangleIcon class="w-8 h-8 text-yellow-500" />
               </div>
-              <div class="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
+              <div class="flex items-center justify-between p-4 bg-teal-50 rounded-lg">
                 <div>
-                  <p class="font-medium text-blue-800">Skill Gaps</p>
-                  <p class="text-sm text-blue-600">{{ riskData.skill_gaps }} critical areas</p>
+                  <p class="font-medium text-teal-800">Skill Gaps</p>
+                  <p class="text-sm text-teal-600">{{ riskData.skill_gaps }} critical areas</p>
                 </div>
-                <AcademicCapIcon class="w-8 h-8 text-blue-500" />
+                <AcademicCapIcon class="w-8 h-8 text-teal-500" />
               </div>
             </div>
           </div>

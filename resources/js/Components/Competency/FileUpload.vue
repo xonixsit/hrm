@@ -368,7 +368,7 @@ const getFileItemClasses = (file) => [
 const getFileStatusClasses = (status) => [
   'file-status',
   {
-    'text-blue-600': status === 'uploading',
+    'text-teal-600': status === 'uploading',
     'text-error-600': status === 'error',
     'text-success-600': status === 'success'
   }
@@ -700,7 +700,7 @@ watch(() => props.modelValue, (newValue) => {
 }
 
 .file-item--uploading {
-  @apply bg-blue-50 border-blue-200;
+  @apply bg-teal-50 border-teal-200;
 }
 
 .file-item--error {
@@ -716,7 +716,7 @@ watch(() => props.modelValue, (newValue) => {
 }
 
 .file-item--uploading .file-icon {
-  @apply text-blue-500;
+  @apply text-teal-500;
 }
 
 .file-item--error .file-icon {
@@ -762,7 +762,7 @@ watch(() => props.modelValue, (newValue) => {
 
 /* File progress */
 .file-progress {
-  @apply absolute bottom-0 left-0 right-0 flex items-center space-x-2 p-2 bg-white border-t border-blue-200;
+  @apply absolute bottom-0 left-0 right-0 flex items-center space-x-2 p-2 bg-white border-t border-teal-200;
 }
 
 .progress-bar {
@@ -770,11 +770,11 @@ watch(() => props.modelValue, (newValue) => {
 }
 
 .progress-fill {
-  @apply h-full bg-blue-500 transition-all duration-300;
+  @apply h-full bg-teal-500 transition-all duration-300;
 }
 
 .progress-text {
-  @apply text-xs text-blue-600 font-medium flex-shrink-0;
+  @apply text-xs text-teal-600 font-medium flex-shrink-0;
 }
 
 /* Upload errors */

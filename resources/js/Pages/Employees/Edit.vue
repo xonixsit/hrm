@@ -183,14 +183,14 @@
 
           <!-- Salary Information (Admin/HR Only) -->
           <div v-if="canViewSalaryInfo" class="mt-6">
-            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+            <div class="bg-teal-50 border border-teal-200 rounded-lg p-4 mb-4">
               <div class="flex items-start space-x-3">
-                <div class="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center mt-0.5">
+                <div class="w-5 h-5 bg-teal-500 rounded-full flex items-center justify-center mt-0.5">
                   <span class="text-xs text-white font-bold">$</span>
                 </div>
                 <div>
-                  <h4 class="text-sm font-medium text-blue-800">Salary Information</h4>
-                  <p class="text-sm text-blue-700 mt-1">
+                  <h4 class="text-sm font-medium text-teal-800">Salary Information</h4>
+                  <p class="text-sm text-teal-700 mt-1">
                     This information is confidential and only visible to authorized personnel.
                   </p>
                 </div>

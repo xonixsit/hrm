@@ -197,7 +197,7 @@ export default {
                 case 'extend_deadline':
                     return 'bg-yellow-600 hover:bg-yellow-700 focus:ring-yellow-500'
                 case 'reassign':
-                    return 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500'
+                    return 'bg-teal-600 hover:bg-teal-700 focus:ring-teal-500'
                 default:
                     return 'bg-indigo-600 hover:bg-indigo-700 focus:ring-indigo-500'
             }

@@ -28,11 +28,11 @@
                   <label class="block text-sm font-medium text-gray-700 mb-2">Date Range</label>
                   <div class="flex items-center gap-2">
                     <input v-model="localFilters.date_from" type="date"
-                      class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 flex-1 min-w-0"
+                      class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 flex-1 min-w-0"
                       @change="handleDateFromChange" />
                     <span class="text-gray-400 text-sm px-1">to</span>
                     <input v-model="localFilters.date_to" type="date"
-                      class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 flex-1 min-w-0"
+                      class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 flex-1 min-w-0"
                       @change="handleDateToChange" />
                   </div>
                 </div>
@@ -91,10 +91,10 @@
             <span class="text-sm font-medium text-gray-700">Filters:</span>
 
             <span v-if="activeEmployeeFilter"
-              class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+              class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-teal-100 text-teal-800">
               {{ activeEmployeeFilter }}
               <button @click="clearEmployeeFilter"
-                class="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full text-blue-400 hover:bg-blue-200 hover:text-blue-500 focus:outline-none">
+                class="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full text-teal-400 hover:bg-teal-200 hover:text-teal-500 focus:outline-none">
                 <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                   <path fill-rule="evenodd"
                     d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
@@ -116,7 +116,7 @@
               </button>
             </span>
 
-            <button @click="clearAllFilters" class="text-xs text-blue-600 hover:text-blue-800 font-medium">
+            <button @click="clearAllFilters" class="text-xs text-teal-600 hover:text-teal-800 font-medium">
               Clear all
             </button>
           </div>
@@ -131,9 +131,9 @@
           <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
             <label v-for="employee in employees" :key="employee.value"
               class="flex items-center space-x-2 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
-              :class="selectedEmployeesForComparison.includes(employee.value) ? 'bg-blue-50 border-blue-300' : ''">
+              :class="selectedEmployeesForComparison.includes(employee.value) ? 'bg-teal-50 border-teal-300' : ''">
               <input type="checkbox" :value="employee.value" v-model="selectedEmployeesForComparison"
-                @change="loadComparisonData" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                @change="loadComparisonData" class="rounded border-gray-300 text-teal-600 focus:ring-teal-500" />
               <span class="text-sm font-medium text-gray-700">{{ employee.label }}</span>
             </label>
           </div>
@@ -149,7 +149,7 @@
                 <div class="flex items-center space-x-3">
                   <span class="text-sm font-semibold text-gray-900">{{ employee.total_calls }}</span>
                   <div class="w-32 bg-gray-200 rounded-full h-2">
-                    <div class="bg-blue-500 h-2 rounded-full"
+                    <div class="bg-teal-500 h-2 rounded-full"
                       :style="{ width: `${(employee.total_calls / Math.max(...comparisonData.map(e => e.total_calls))) * 100}%` }">
                     </div>
                   </div>
@@ -190,8 +190,8 @@
                 vs previous period
               </p>
             </div>
-            <div class="p-3 bg-blue-50 rounded-lg">
-              <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="p-3 bg-teal-50 rounded-lg">
+              <svg class="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
               </svg>
@@ -315,14 +315,14 @@
             <!-- Follow-up -->
             <div class="flex items-center justify-between">
               <div class="flex items-center">
-                <div class="w-3 h-3 bg-blue-500 rounded-full mr-3"></div>
+                <div class="w-3 h-3 bg-teal-500 rounded-full mr-3"></div>
                 <span class="text-sm font-medium text-gray-700">Follow-up</span>
               </div>
               <div class="flex items-center">
                 <span class="text-sm font-semibold text-gray-900 mr-2">{{ performanceStats.follow_up_calls || 0
                   }}</span>
                 <div class="w-24 bg-gray-200 rounded-full h-2">
-                  <div class="bg-blue-500 h-2 rounded-full"></div>
+                  <div class="bg-teal-500 h-2 rounded-full"></div>
                 </div>
               </div>
             </div>
@@ -348,13 +348,13 @@
             <!-- Calls -->
             <div class="flex items-center justify-between">
               <div class="flex items-center">
-                <div class="w-3 h-3 bg-blue-500 rounded-full mr-3"></div>
+                <div class="w-3 h-3 bg-teal-500 rounded-full mr-3"></div>
                 <span class="text-sm font-medium text-gray-700">Phone Calls</span>
               </div>
               <div class="flex items-center">
                 <span class="text-sm font-semibold text-gray-900 mr-2">{{ performanceStats.total_calls || 0 }}</span>
                 <div class="w-24 bg-gray-200 rounded-full h-2">
-                  <div class="bg-blue-500 h-2 rounded-full"></div>
+                  <div class="bg-teal-500 h-2 rounded-full"></div>
                 </div>
               </div>
             </div>
@@ -418,7 +418,7 @@
           <div class="flex items-center justify-between">
             <h3 class="text-lg font-semibold text-gray-900">Recent Reports</h3>
             <button @click="toggleDetailedView"
-              class="inline-flex items-center px-3 py-1.5 border border-blue-300 shadow-sm text-sm font-medium rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100 hover:border-blue-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200">
+              class="inline-flex items-center px-3 py-1.5 border border-teal-300 shadow-sm text-sm font-medium rounded-md text-teal-700 bg-teal-50 hover:bg-teal-100 hover:border-teal-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-all duration-200">
               {{ showDetailedView ? 'Show Summary' : 'Show Details' }}
             </button>
           </div>
@@ -454,7 +454,7 @@
                       {{ report.successful_calls || 0 }} successful
                     </span>
                     <span class="flex items-center">
-                      <svg class="w-4 h-4 mr-1 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                      <svg class="w-4 h-4 mr-1 text-teal-500" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
                         <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
                       </svg>
@@ -473,7 +473,7 @@
 
                 <div class="ml-4 flex items-center space-x-2">
                   <Link :href="`/work-reports/${report.id}`"
-                    class="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    class="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500">
                   View
                   </Link>
                 </div>

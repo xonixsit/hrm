@@ -28,8 +28,8 @@
               <!-- Header -->
               <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
                 <div class="sm:flex sm:items-start">
-                  <div class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
-                    <DocumentIcon class="h-6 w-6 text-blue-600" aria-hidden="true" />
+                  <div class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-teal-100 sm:mx-0 sm:h-10 sm:w-10">
+                    <DocumentIcon class="h-6 w-6 text-teal-600" aria-hidden="true" />
                   </div>
                   <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left flex-1">
                     <DialogTitle as="h3" class="text-base font-semibold leading-6 text-gray-900">
@@ -44,7 +44,7 @@
                   <div class="mt-3 sm:mt-0 sm:ml-4">
                     <button
                       @click="closeModal"
-                      class="rounded-md bg-white text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      class="rounded-md bg-white text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-teal-500"
                     >
                       <XMarkIcon class="h-6 w-6" />
                     </button>
@@ -67,7 +67,7 @@
                         <a 
                           :href="fileUrl" 
                           target="_blank"
-                          class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                          class="inline-flex items-center px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
                         >
                           <ArrowTopRightOnSquareIcon class="mr-2 h-4 w-4" />
                           Open in New Tab
@@ -102,7 +102,7 @@
                     <a
                       :href="fileUrl"
                       download
-                      class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                      class="inline-flex items-center px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
                     >
                       <ArrowDownTrayIcon class="mr-2 h-4 w-4" />
                       Download File
@@ -116,7 +116,7 @@
                 <a
                   :href="fileUrl"
                   download
-                  class="inline-flex w-full justify-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 sm:ml-3 sm:w-auto"
+                  class="inline-flex w-full justify-center rounded-md bg-teal-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-teal-500 sm:ml-3 sm:w-auto"
                 >
                   <ArrowDownTrayIcon class="mr-2 h-4 w-4" />
                   Download

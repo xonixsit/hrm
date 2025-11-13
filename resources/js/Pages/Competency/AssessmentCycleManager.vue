@@ -65,7 +65,7 @@
                     v-model="filters.search"
                     type="text"
                     placeholder="Search cycles..."
-                    class="pl-10 pr-4 py-2.5 w-full sm:w-64 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    class="pl-10 pr-4 py-2.5 w-full sm:w-64 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors"
                     @input="debouncedSearch"
                   />
                 </div>
@@ -75,7 +75,7 @@
                   <select 
                     v-model="filters.status" 
                     @change="applyFilters" 
-                    class="appearance-none pl-10 pr-10 py-2.5 min-w-40 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white text-gray-900 hover:border-gray-400 cursor-pointer"
+                    class="appearance-none pl-10 pr-10 py-2.5 min-w-40 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 bg-white text-gray-900 hover:border-gray-400 cursor-pointer"
                   >
                     <option value="">All Statuses</option>
                     <option value="planned">Planned</option>
@@ -102,7 +102,7 @@
                   <select 
                     v-model="filters.dateRange" 
                     @change="applyFilters" 
-                    class="appearance-none pl-10 pr-10 py-2.5 min-w-40 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white text-gray-900 hover:border-gray-400 cursor-pointer"
+                    class="appearance-none pl-10 pr-10 py-2.5 min-w-40 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 bg-white text-gray-900 hover:border-gray-400 cursor-pointer"
                   >
                     <option value="">All Dates</option>
                     <option value="current">Current Month</option>
@@ -138,7 +138,7 @@
                     :class="[
                       'flex items-center px-4 py-2 rounded-md text-sm font-medium transition-all duration-200',
                       viewMode === 'grid' 
-                        ? 'bg-white text-blue-600 shadow-sm border border-blue-200' 
+                        ? ' bg-teal-500 text-white' 
                         : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                     ]"
                   >
@@ -150,7 +150,7 @@
                     :class="[
                       'flex items-center px-4 py-2 rounded-md text-sm font-medium transition-all duration-200',
                       viewMode === 'list' 
-                        ? 'bg-white text-blue-600 shadow-sm border border-blue-200' 
+                        ?  'bg-teal-500 text-white' 
                         : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                     ]"
                   >
@@ -166,10 +166,10 @@
               <div class="flex flex-wrap items-center gap-3">
                 <span class="text-sm font-medium text-gray-700">Active filters:</span>
                 <div class="flex flex-wrap gap-2">
-                  <span v-if="filters.search" class="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium bg-blue-50 text-blue-700 border border-blue-200">
+                  <span v-if="filters.search" class="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium bg-teal-50 text-teal-700 border border-teal-200">
                     <MagnifyingGlassIcon class="w-4 h-4 mr-1.5" />
                     "{{ filters.search }}"
-                    <button @click="filters.search = ''" class="ml-2 inline-flex items-center justify-center w-5 h-5 rounded-full hover:bg-blue-200 transition-colors">
+                    <button @click="filters.search = ''" class="ml-2 inline-flex items-center justify-center w-5 h-5 rounded-full hover:bg-teal-200 transition-colors">
                       <XMarkIcon class="w-3 h-3" />
                     </button>
                   </span>
@@ -247,10 +247,10 @@
                  : 'Get started by creating your first assessment cycle to begin systematic competency evaluation.' }}
             </p>
             <div class="flex flex-col sm:flex-row items-center justify-center space-y-3 sm:space-y-0 sm:space-x-3">
-              <PrimaryButton v-if="!hasActiveFilters" @click="createNewCycle">
+              <button class="inline-flex items-center px-4 py-2 bg-teal-500 text-white text-sm font-medium rounded-lg hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-colors" v-if="!hasActiveFilters" @click="createNewCycle">
                 <PlusIcon class="w-4 h-4 mr-2" />
                 Create Assessment Cycle
-              </PrimaryButton>
+              </button>
               <SecondaryButton v-if="hasActiveFilters" @click="clearFilters">
                 Clear Filters
               </SecondaryButton>
@@ -267,14 +267,14 @@
           <div
             v-for="cycle in filteredCycles"
             :key="cycle.id"
-            class="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md hover:border-gray-300 transition-all duration-200 cursor-pointer group"
+            class="bg-white roundedt-white rounded-lg shadrder-gray-200 hover:shadow-md hover:border-gray-300 transition-all duration-200 cursor-pointer group"
             @click="viewCycle(cycle)"
           >
             <!-- Card Header -->
             <div class="p-6 pb-4">
               <div class="flex items-start justify-between mb-3">
                 <div class="flex-1 min-w-0">
-                  <h3 class="text-lg font-semibold text-gray-900 truncate group-hover:text-blue-600 transition-colors">
+                  <h3 class="text-lg font-semibold text-gray-900 truncate group-hover:text-teal-600 transition-colors">
                     {{ cycle.name }}
                   </h3>
                   <p class="text-sm text-gray-600 mt-1 line-clamp-2">
@@ -336,7 +336,7 @@
                     :class="[
                       'inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md transition-colors',
                       cycle.status === 'active'
-                        ? 'bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100'
+                        ? ' bg-teal-500 text-white'
                         : 'bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed'
                     ]"
                   >
@@ -416,7 +416,7 @@
                 <!-- Name & Description -->
                 <div class="col-span-5">
                   <div class="min-w-0">
-                    <h4 class="text-sm font-semibold text-gray-900 truncate group-hover:text-blue-600 transition-colors">
+                    <h4 class="text-sm font-semibold text-gray-900 truncate group-hover:text-teal-600 transition-colors">
                       {{ cycle.name }}
                     </h4>
                     <p class="text-sm text-gray-600 mt-1 line-clamp-2">
@@ -483,7 +483,7 @@
                 <!-- Header -->
                 <div class="flex items-start justify-between">
                   <div class="flex-1 min-w-0">
-                    <h4 class="text-sm font-semibold text-gray-900 truncate group-hover:text-blue-600 transition-colors">
+                    <h4 class="text-sm font-semibold text-gray-900 truncate group-hover:text-teal-600 transition-colors">
                       {{ cycle.name }}
                     </h4>
                     <p class="text-sm text-gray-600 mt-1">
@@ -677,7 +677,7 @@
           </button>
         </div>
       </div>
-      </div>
+    </div>
   </AuthenticatedLayout>
 </template>
 
@@ -686,8 +686,7 @@ import { computed, ref, onMounted, onUnmounted } from 'vue';
 import { router, Link } from '@inertiajs/vue3';
 import { debounce } from 'lodash';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import PageLayout from '@/Components/Layout/PageLayout.vue';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
+
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import ConfirmationModal from '@/Components/Modals/ConfirmationModal.vue';
 import CycleFormModal from '@/Components/Competency/CycleFormModal.vue';
@@ -740,6 +739,7 @@ const hasActiveFilters = computed(() => {
 const loading = ref(false);
 const viewMode = ref('grid');
 const notifications = ref([]);
+const showCycleModal = ref(false);
 
 // Filters
 const filters = ref({
@@ -974,7 +974,7 @@ const hideContextMenu = () => {
   contextMenu.value.show = false;
 };
 
-// Modal handlers
+// Modal state
 const closeCycleModal = () => {
   showCycleModal.value = false;
   selectedCycle.value = null;
@@ -1031,7 +1031,7 @@ const getStatusClasses = (status) => {
   const classes = {
     planned: 'bg-gray-100 text-gray-800',
     active: 'bg-green-100 text-green-800',
-    completed: 'bg-blue-100 text-blue-800',
+    completed: 'bg-teal-100 text-teal-800',
     cancelled: 'bg-red-100 text-red-800'
   };
   return classes[status] || 'bg-gray-100 text-gray-800';
@@ -1055,7 +1055,7 @@ const formatDateRangeFilter = (dateRange) => {
 const getProgressBarColor = (status) => {
   const colors = {
     planned: 'bg-gray-400',
-    active: 'bg-blue-500',
+    active: 'bg-teal-500',
     completed: 'bg-green-500',
     cancelled: 'bg-red-500'
   };
@@ -1243,7 +1243,7 @@ select option:checked {
 }
 
 .notification-info {
-  @apply border-blue-200 bg-blue-50;
+  @apply border-teal-200 bg-teal-50;
 }
 
 .notification-icon {
@@ -1263,7 +1263,7 @@ select option:checked {
 }
 
 .notification-info .notification-icon {
-  @apply text-blue-500;
+  @apply text-teal-500;
 }
 
 .notification-text {
@@ -1364,7 +1364,7 @@ select option:checked {
 }
 
 .progress-fill {
-  @apply h-full bg-blue-500 transition-all duration-300;
+  @apply h-full bg-teal-500 transition-all duration-300;
 }
 
 .cycle-stats {
@@ -1533,7 +1533,7 @@ select option:checked {
 }
 
 .notification-info {
-  @apply bg-blue-50 border border-blue-200 text-blue-800;
+  @apply bg-teal-50 border border-teal-200 text-teal-800;
 }
 
 .notification-close {

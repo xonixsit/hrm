@@ -623,7 +623,7 @@ const getCycleStatusClasses = (status) => {
   const classes = {
     'planned': 'bg-gray-100 text-gray-800',
     'active': 'bg-green-100 text-green-800',
-    'completed': 'bg-blue-100 text-blue-800',
+    'completed': 'bg-teal-100 text-teal-800',
     'cancelled': 'bg-red-100 text-red-800'
   };
   return classes[status] || 'bg-gray-100 text-gray-800';
@@ -965,7 +965,7 @@ onMounted(() => {
 }
 
 .notification-info {
-  @apply bg-blue-50 border border-blue-200 text-blue-800;
+  @apply bg-teal-50 border border-teal-200 text-teal-800;
 }
 
 .notification-close {

@@ -174,7 +174,7 @@
                                         </label>
                                         <input type="text" v-model="form.name" id="name" required
                                             placeholder="Enter competency name"
-                                            class="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                            class="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors"
                                             :class="{ 'border-red-500 focus:ring-red-500 focus:border-red-500': form.errors.name }" />
                                         <div v-if="form.errors.name" class="mt-2 text-sm text-red-600">{{
                                             form.errors.name }}</div>
@@ -187,7 +187,7 @@
                                         </label>
                                         <input type="number" v-model.number="form.weight" id="weight" step="0.1"
                                             min="0.1" max="5.0" required placeholder="1.0"
-                                            class="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                            class="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors"
                                             :class="{ 'border-red-500 focus:ring-red-500 focus:border-red-500': form.errors.weight }" />
                                         <div v-if="form.errors.weight" class="mt-2 text-sm text-red-600">{{
                                             form.errors.weight }}</div>
@@ -201,7 +201,7 @@
                                             Category *
                                         </label>
                                         <select v-model="form.category" id="category" required
-                                            class="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
+                                            class="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors bg-white"
                                             :class="{ 'border-red-500 focus:ring-red-500 focus:border-red-500': form.errors.category }">
                                             <option value="">Select a category</option>
                                             <option v-for="category in categories" :key="category" :value="category">
@@ -218,7 +218,7 @@
                                             Department
                                         </label>
                                         <select v-model="form.department_id" id="department_id"
-                                            class="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
+                                            class="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors bg-white"
                                             :class="{ 'border-red-500 focus:ring-red-500 focus:border-red-500': form.errors.department_id }">
                                             <option value="">All Departments</option>
                                             <option v-for="department in departments" :key="department.id"
@@ -237,7 +237,7 @@
                                         </label>
                                         <textarea v-model="form.description" id="description" rows="4"
                                             placeholder="Describe what this competency measures and why it's important..."
-                                            class="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-none"
+                                            class="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors resize-none"
                                             :class="{ 'border-red-500 focus:ring-red-500 focus:border-red-500': form.errors.description }"></textarea>
                                         <div v-if="form.errors.description" class="mt-2 text-sm text-red-600">{{
                                             form.errors.description }}</div>
@@ -249,7 +249,7 @@
                                         <div class="space-y-4">
                                             <div class="flex items-center p-4 bg-gray-50 rounded-lg">
                                                 <input v-model="form.role_specific" id="role_specific" type="checkbox"
-                                                    class="h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                                                    class="h-5 w-5 rounded border-gray-300 text-teal-600 focus:ring-teal-500" />
                                                 <div class="ml-3">
                                                     <label for="role_specific"
                                                         class="text-sm font-medium text-gray-900">Role Specific</label>
@@ -259,7 +259,7 @@
                                             </div>
                                             <div class="flex items-center p-4 bg-gray-50 rounded-lg">
                                                 <input v-model="form.is_active" id="is_active" type="checkbox"
-                                                    class="h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                                                    class="h-5 w-5 rounded border-gray-300 text-teal-600 focus:ring-teal-500" />
                                                 <div class="ml-3">
                                                     <label for="is_active"
                                                         class="text-sm font-medium text-gray-900">Active</label>
@@ -285,13 +285,13 @@
                                     <div v-for="(indicator, index) in form.measurement_indicators" :key="index"
                                         class="flex items-center space-x-4 p-6 bg-gray-50 rounded-lg border border-gray-200">
                                         <div
-                                            class="flex-shrink-0 w-8 h-8 bg-blue-100 text-blue-800 rounded-full flex items-center justify-center text-sm font-medium">
+                                            class="flex-shrink-0 w-8 h-8 bg-teal-100 text-teal-800 rounded-full flex items-center justify-center text-sm font-medium">
                                             {{ index + 1 }}
                                         </div>
                                         <div class="flex-1">
                                             <input type="text" v-model="form.measurement_indicators[index]"
                                                 :placeholder="`Enter measurement indicator ${index + 1}`"
-                                                class="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white" />
+                                                class="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors bg-white" />
                                         </div>
                                         <button type="button" @click="removeMeasurementIndicator(index)"
                                             :disabled="form.measurement_indicators.length === 1"
@@ -300,7 +300,7 @@
                                         </button>
                                     </div>
                                     <button type="button" @click="addMeasurementIndicator"
-                                        class="inline-flex items-center px-4 py-3 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors">
+                                        class="inline-flex items-center px-4 py-3 text-sm font-medium text-teal-600 bg-teal-50 border border-teal-200 rounded-lg hover:bg-teal-100 transition-colors">
                                         <PlusIcon class="h-5 w-5 mr-2" />
                                         Add Measurement Indicator
                                     </button>
@@ -325,7 +325,7 @@
                                                      'bg-orange-500': guideline.rating === 2,
                                                      'bg-yellow-500': guideline.rating === 3,
                                                      'bg-green-500': guideline.rating === 4,
-                                                     'bg-blue-500': guideline.rating === 5
+                                                     'bg-teal-500': guideline.rating === 5
                                                  }">
                                                 {{ guideline.rating }}
                                             </div>
@@ -339,7 +339,7 @@
                                                         'text-orange-600': guideline.rating === 2,
                                                         'text-yellow-600': guideline.rating === 3,
                                                         'text-green-600': guideline.rating === 4,
-                                                        'text-blue-600': guideline.rating === 5
+                                                        'text-teal-600': guideline.rating === 5
                                                     }">
                                                         {{ guideline.rating === 1 ? 'Poor' :
                                                         guideline.rating === 2 ? 'Needs Improvement' :
@@ -352,7 +352,7 @@
                                             <textarea v-model="form.rating_guidelines[index].description"
                                                 :placeholder="`Describe what constitutes a rating of ${guideline.rating} for this competency...`"
                                                 rows="3"
-                                                class="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-none"></textarea>
+                                                class="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors resize-none"></textarea>
                                         </div>
                                         <button type="button" @click="removeRatingGuideline(index)"
                                             :disabled="form.rating_guidelines.length === 1"
@@ -362,7 +362,7 @@
                                     </div>
                                     <button type="button" @click="addRatingGuideline"
                                         :disabled="form.rating_guidelines.length >= 5"
-                                        class="inline-flex items-center px-4 py-3 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors disabled:text-gray-400 disabled:border-gray-300 disabled:cursor-not-allowed disabled:hover:bg-blue-50">
+                                        class="inline-flex items-center px-4 py-3 text-sm font-medium text-teal-600 bg-teal-50 border border-teal-200 rounded-lg hover:bg-teal-100 transition-colors disabled:text-gray-400 disabled:border-gray-300 disabled:cursor-not-allowed disabled:hover:bg-teal-50">
                                         <PlusIcon class="h-5 w-5 mr-2" />
                                         Add Rating Level
                                     </button>
@@ -384,7 +384,7 @@
                                 </div>
 
                                 <div v-if="showPreview"
-                                    class="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-8">
+                                    class="bg-gradient-to-br from-teal-50 to-indigo-50 border border-teal-200 rounded-xl p-8">
                                     <div class="space-y-6">
                                         <!-- Header -->
                                         <div class="text-center">
@@ -392,7 +392,7 @@
                                             </h3>
                                             <div class="mt-3 flex items-center justify-center space-x-4">
                                                 <span
-                                                    class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                                                    class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-teal-100 text-teal-800">
                                                     {{ previewCompetency.category }}
                                                 </span>
                                                 <span
@@ -408,7 +408,7 @@
 
                                         <!-- Description -->
                                         <div v-if="previewCompetency.description"
-                                            class="bg-white rounded-lg p-4 border border-blue-200">
+                                            class="bg-white rounded-lg p-4 border border-teal-200">
                                             <h4 class="text-sm font-semibold text-gray-900 mb-2">Description</h4>
                                             <p class="text-sm text-gray-700 leading-relaxed">{{
                                                 previewCompetency.description }}</p>
@@ -416,14 +416,14 @@
 
                                         <!-- Measurement Indicators -->
                                         <div v-if="previewCompetency.measurement_indicators.length > 0"
-                                            class="bg-white rounded-lg p-4 border border-blue-200">
+                                            class="bg-white rounded-lg p-4 border border-teal-200">
                                             <h4 class="text-sm font-semibold text-gray-900 mb-3">Measurement Indicators
                                             </h4>
                                             <ul class="space-y-2">
                                                 <li v-for="(indicator, index) in previewCompetency.measurement_indicators"
                                                     :key="indicator" class="flex items-start space-x-3">
                                                     <div
-                                                        class="flex-shrink-0 w-6 h-6 bg-blue-100 text-blue-800 rounded-full flex items-center justify-center text-xs font-medium">
+                                                        class="flex-shrink-0 w-6 h-6 bg-teal-100 text-teal-800 rounded-full flex items-center justify-center text-xs font-medium">
                                                         {{ index + 1 }}
                                                     </div>
                                                     <span class="text-sm text-gray-700">{{ indicator }}</span>
@@ -433,7 +433,7 @@
 
                                         <!-- Rating Guidelines -->
                                         <div v-if="previewCompetency.rating_guidelines.length > 0"
-                                            class="bg-white rounded-lg p-4 border border-blue-200">
+                                            class="bg-white rounded-lg p-4 border border-teal-200">
                                             <h4 class="text-sm font-semibold text-gray-900 mb-3">Rating Guidelines</h4>
                                             <div class="space-y-3">
                                                 <div v-for="guideline in previewCompetency.rating_guidelines"
@@ -443,7 +443,7 @@
                                                          'bg-orange-50 border border-orange-200': guideline.rating === 2,
                                                          'bg-yellow-50 border border-yellow-200': guideline.rating === 3,
                                                          'bg-green-50 border border-green-200': guideline.rating === 4,
-                                                         'bg-blue-50 border border-blue-200': guideline.rating === 5
+                                                         'bg-teal-50 border border-teal-200': guideline.rating === 5
                                                      }">
                                                     <div class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white"
                                                         :class="{
@@ -451,7 +451,7 @@
                                                              'bg-orange-500': guideline.rating === 2,
                                                              'bg-yellow-500': guideline.rating === 3,
                                                              'bg-green-500': guideline.rating === 4,
-                                                             'bg-blue-500': guideline.rating === 5
+                                                             'bg-teal-500': guideline.rating === 5
                                                          }">
                                                         {{ guideline.rating }}
                                                     </div>
@@ -461,7 +461,7 @@
                                                                  'text-orange-800': guideline.rating === 2,
                                                                  'text-yellow-800': guideline.rating === 3,
                                                                  'text-green-800': guideline.rating === 4,
-                                                                 'text-blue-800': guideline.rating === 5
+                                                                 'text-teal-800': guideline.rating === 5
                                                              }">
                                                             {{ guideline.rating === 1 ? 'Poor' :
                                                             guideline.rating === 2 ? 'Needs Improvement' :
@@ -493,7 +493,7 @@
                                     </Link>
                                 </div>
                                 <button type="submit" :disabled="form.processing"
-                                    class="inline-flex items-center px-6 py-3 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                                    class="inline-flex items-center px-6 py-3 text-sm font-medium text-white bg-teal-600 border border-transparent rounded-lg hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
                                     <span v-if="form.processing" class="flex items-center">
                                         <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
                                             xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -538,12 +538,12 @@
     input:focus,
     select:focus,
     textarea:focus {
-        @apply ring-2 ring-blue-500 border-blue-500;
+        @apply ring-2 ring-teal-500 border-teal-500;
     }
 
     /* Checkbox styling */
     input[type="checkbox"]:checked {
-        @apply bg-blue-600 border-blue-600;
+        @apply bg-teal-600 border-teal-600;
     }
 
     /* Button hover effects */

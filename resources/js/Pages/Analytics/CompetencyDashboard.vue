@@ -11,7 +11,7 @@
             </div>
             <Link
               :href="route('assessment-dashboard')"
-              class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
             >
               <ArrowLeftIcon class="w-4 h-4 mr-2" />
               Back to Dashboard
@@ -24,7 +24,7 @@
           <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div class="flex items-center">
               <div class="flex-shrink-0">
-                <ChartBarIcon class="h-8 w-8 text-blue-600" />
+                <ChartBarIcon class="h-8 w-8 text-teal-600" />
               </div>
               <div class="ml-4">
                 <p class="text-sm font-medium text-gray-500">Total Assessments</p>
@@ -87,7 +87,7 @@
                   <div class="flex-1 mx-4">
                     <div class="w-full bg-gray-200 rounded-full h-2">
                       <div
-                        class="bg-blue-600 h-2 rounded-full"
+                        class="bg-teal-600 h-2 rounded-full"
                         :style="{ width: `${getRatingPercentage(count, metrics?.totalAssessments)}%` }"
                       ></div>
                     </div>
@@ -171,8 +171,8 @@
               <div v-if="topPerformers?.employees?.length" class="space-y-4">
                 <div v-for="employee in topPerformers.employees" :key="employee.id" class="flex items-center justify-between">
                   <div class="flex items-center">
-                    <div class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                      <span class="text-sm font-medium text-blue-600">
+                    <div class="h-10 w-10 rounded-full bg-teal-100 flex items-center justify-center">
+                      <span class="text-sm font-medium text-teal-600">
                         {{ getInitials(employee.name) }}
                       </span>
                     </div>

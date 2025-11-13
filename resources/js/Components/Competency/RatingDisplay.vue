@@ -145,7 +145,7 @@ const getStarClasses = (starNumber) => {
       } else if (numericRating.value <= 3) {
         colorClasses = ['text-yellow-500']
       } else if (numericRating.value <= 4) {
-        colorClasses = ['text-blue-500']
+        colorClasses = ['text-teal-500']
       } else {
         colorClasses = ['text-green-500']
       }
@@ -333,7 +333,7 @@ const getRatingLabel = () => {
   }
   
   .rating-display--colorful .rating-star--active {
-    @apply text-blue-700;
+    @apply text-teal-700;
   }
 }
 </style>

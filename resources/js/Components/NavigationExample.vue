@@ -32,7 +32,7 @@
           :key="navItem.key"
           @click="handleNavigation(navItem.path)"
           :disabled="isNavigating"
-          class="flex items-center px-3 py-2 text-sm bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-md transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          class="flex items-center px-3 py-2 text-sm bg-teal-50 hover:bg-teal-100 text-teal-700 rounded-md transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <span class="mr-2">{{ getIcon(navItem.icon) }}</span>
           {{ navItem.label }}
@@ -143,7 +143,7 @@
           </div>
           <button
             @click="toggleGuard(guard.name, !guard.enabled)"
-            class="text-blue-600 hover:text-blue-800"
+            class="text-teal-600 hover:text-teal-800"
           >
             {{ guard.enabled ? 'Disable' : 'Enable' }}
           </button>
@@ -161,7 +161,7 @@
       </button>
       <button
         @click="debugNavigation"
-        class="px-3 py-2 text-sm bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-md transition-colors duration-200"
+        class="px-3 py-2 text-sm bg-teal-100 hover:bg-teal-200 text-teal-700 rounded-md transition-colors duration-200"
       >
         Debug Navigation
       </button>

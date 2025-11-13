@@ -27,14 +27,14 @@
           <div class="lg:col-span-2 space-y-6">
             <!-- Employee & Competency Overview -->
             <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-              <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
+              <div class="bg-gradient-to-r from-teal-600 to-teal-700 px-6 py-4">
                 <h2 class="text-xl font-semibold text-white">Assessment Overview</h2>
               </div>
               <div class="p-6">
                 <div class="flex items-center space-x-6">
                   <div class="flex-shrink-0">
-                    <div class="h-16 w-16 rounded-full bg-blue-100 flex items-center justify-center">
-                      <span class="text-xl font-bold text-blue-600">
+                    <div class="h-16 w-16 rounded-full bg-teal-100 flex items-center justify-center">
+                      <span class="text-xl font-bold text-teal-600">
                         {{ getInitials(assessment.employee?.user?.name) }}
                       </span>
                     </div>
@@ -60,7 +60,7 @@
                     <div>
                       <h4 class="font-medium text-gray-900">{{ assessment.competency?.name }}</h4>
                       <p class="text-sm text-gray-600 mt-1">{{ assessment.competency?.description }}</p>
-                      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mt-2">
+                      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-teal-100 text-teal-800 mt-2">
                         {{ assessment.competency?.category }}
                       </span>
                     </div>
@@ -230,7 +230,7 @@
                       >
                         <div class="flex items-center cursor-pointer" @click="viewFile(file.name)">
                           <DocumentIcon class="w-5 h-5 text-gray-400 mr-3" />
-                          <span class="text-sm text-gray-900 hover:text-blue-600">{{ file.name }}</span>
+                          <span class="text-sm text-gray-900 hover:text-teal-600">{{ file.name }}</span>
                           <span v-if="file.size !== null" class="text-xs text-gray-500 ml-2">({{ formatFileSize(file.size) }})</span>
                           <span v-else-if="file.isExisting" class="text-xs text-gray-500 ml-2">(Existing file)</span>
                           <EyeIcon class="w-4 h-4 text-gray-400 ml-2" />
@@ -287,7 +287,7 @@
                 <button
                   @click="saveDraft"
                   :disabled="processing"
-                  class="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                  class="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:opacity-50"
                 >
                   <DocumentIcon class="w-4 h-4 mr-2" />
                   Save as Draft
@@ -343,8 +343,8 @@
                     </div>
                   </div>
                   <div class="flex items-start">
-                    <div class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center mr-3">
-                      <span class="text-xs font-bold text-blue-600">4</span>
+                    <div class="flex-shrink-0 w-6 h-6 rounded-full bg-teal-100 flex items-center justify-center mr-3">
+                      <span class="text-xs font-bold text-teal-600">4</span>
                     </div>
                     <div>
                       <div class="font-medium text-gray-900">Exceeds Expectations</div>
@@ -380,11 +380,10 @@
 
 <script setup>
 import { ref, computed } from 'vue';
-import { router, Link } from '@inertiajs/vue3';
+import { router } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import PageLayout from '@/Components/Layout/PageLayout.vue';
 import {
-  ArrowLeftIcon,
   StarIcon,
   BuildingOfficeIcon,
   CalendarIcon,

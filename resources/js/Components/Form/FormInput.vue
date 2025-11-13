@@ -94,7 +94,7 @@ const inputClasses = computed(() => {
     return `${baseClasses} border-gray-300 bg-gray-50 text-gray-500 cursor-not-allowed`;
   }
   
-  return `${baseClasses} border-gray-300 placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500`;
+  return `${baseClasses} border-gray-300 placeholder-gray-400 focus:ring-teal-500 focus:border-teal-500`;
 });
 </script>
 

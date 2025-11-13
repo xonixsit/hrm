@@ -16,13 +16,13 @@
                                             class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Search</label>
                                         <input v-model="filters.search" type="text"
                                             placeholder="Search by subject or description..."
-                                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+                                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500" />
                                     </div>
                                     <div>
                                         <label
                                             class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
                                         <select v-model="filters.status"
-                                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
                                             <option value="">All Statuses</option>
                                             <option v-for="(label, value) in statuses" :key="value" :value="value">{{
                                                 label }}</option>
@@ -32,7 +32,7 @@
                                         <label
                                             class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Priority</label>
                                         <select v-model="filters.priority"
-                                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
                                             <option value="">All Priorities</option>
                                             <option v-for="(label, value) in priorities" :key="value" :value="value">{{
                                                 label }}</option>
@@ -42,7 +42,7 @@
                                         <label
                                             class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category</label>
                                         <select v-model="filters.category"
-                                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
                                             <option value="">All Categories</option>
                                             <option v-for="(label, value) in categories" :key="value" :value="value">{{
                                                 label }}</option>
@@ -62,7 +62,7 @@
                                         <label class="text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">Sort
                                             by:</label>
                                         <select v-model="sortBy"
-                                            class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-[140px]">
+                                            class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 min-w-[140px]">
                                             <option value="created_at">Date Created</option>
                                             <option value="priority">Priority</option>
                                             <option value="status">Status</option>
@@ -85,8 +85,8 @@
                                 <div
                                     class="bg-white dark:bg-gray-700 rounded-lg shadow-sm border border-gray-200 dark:border-gray-600 p-4">
                                     <div class="flex items-center">
-                                        <div class="p-2 bg-blue-100 rounded-lg">
-                                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor"
+                                        <div class="p-2 bg-teal-100 rounded-lg">
+                                            <svg class="w-5 h-5 text-teal-600" fill="none" stroke="currentColor"
                                                 viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                     d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
@@ -267,7 +267,7 @@
                                                         </span>
                                                     </div>
                                                     <Link :href="route('support.show', request.id)"
-                                                        class="inline-flex items-center px-3 py-2 text-sm font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors">
+                                                        class="inline-flex items-center px-3 py-2 text-sm font-medium text-teal-600 hover:text-teal-800 hover:bg-teal-50 rounded-md transition-colors">
                                                     View Details
                                                     <svg class="ml-1 h-4 w-4" fill="none" stroke="currentColor"
                                                         viewBox="0 0 24 24">
@@ -317,7 +317,7 @@
                                             </button>
                                             <button v-for="page in visiblePages" :key="page" @click="currentPage = page"
                                                 :class="[
-                                            page === currentPage ? 'bg-blue-50 dark:bg-blue-900/50 border-blue-500 text-blue-600 dark:text-blue-400' : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700',
+                                            page === currentPage ? 'bg-teal-50 dark:bg-teal-900/50 border-teal-500 text-teal-600 dark:text-teal-400' : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700',
                                             'relative inline-flex items-center px-4 py-2 text-sm font-medium ring-1 ring-inset ring-gray-300 dark:ring-gray-600'
                                         ]">
                                                 {{ page }}
@@ -361,7 +361,7 @@
                                             aria-label="Pagination">
                                             <template v-for="link in supportRequests.links" :key="link.label">
                                                 <Link v-if="link.url" :href="link.url" :class="[
-                                                link.active ? 'bg-blue-50 dark:bg-blue-900/50 border-blue-500 text-blue-600 dark:text-blue-400' : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700',
+                                                link.active ? 'bg-teal-50 dark:bg-teal-900/50 border-teal-500 text-teal-600 dark:text-teal-400' : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700',
                                                 'relative inline-flex items-center px-4 py-2 border text-sm font-medium'
                                             ]" v-html="link.label">
                                                 </Link>
@@ -398,7 +398,7 @@
 
     const getStatusBadgeClass = (status) => {
         const classes = {
-            open: 'bg-blue-100 text-blue-800',
+            open: 'bg-teal-100 text-teal-800',
             in_progress: 'bg-yellow-100 text-yellow-800',
             resolved: 'bg-green-100 text-green-800',
             closed: 'bg-gray-100 text-gray-800',

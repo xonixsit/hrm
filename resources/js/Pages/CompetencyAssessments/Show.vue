@@ -31,13 +31,13 @@
         <!-- Main Content -->
         <div class="lg:col-span-2 space-y-8">
           <!-- Hero Section with Assessment Overview -->
-          <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200 overflow-hidden">
+          <div class="bg-gradient-to-r from-teal-50 to-indigo-50 rounded-xl border border-teal-200 overflow-hidden">
             <div class="px-8 py-6">
               <div class="flex items-start justify-between">
                 <div class="flex-1">
                   <div class="flex items-center space-x-3 mb-4">
-                    <div class="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
-                      <span class="text-lg font-semibold text-blue-600">
+                    <div class="h-12 w-12 rounded-full bg-teal-100 flex items-center justify-center">
+                      <span class="text-lg font-semibold text-teal-600">
                         {{ getInitials(assessment.employee?.user?.name) }}
                       </span>
                     </div>
@@ -141,11 +141,11 @@
         <div class="space-y-6">
           <!-- Supporting Evidence Files -->
           <div v-if="assessment.evidence_files && assessment.evidence_files.length > 0" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <div class="bg-gradient-to-r from-blue-50 to-cyan-50 px-6 py-4 border-b border-blue-200">
+            <div class="bg-gradient-to-r from-teal-50 to-cyan-50 px-6 py-4 border-b border-teal-200">
               <h3 class="text-lg font-semibold text-gray-900 flex items-center">
-                <DocumentIcon class="w-5 h-5 text-blue-600 mr-2" />
+                <DocumentIcon class="w-5 h-5 text-teal-600 mr-2" />
                 Supporting Evidence
-                <span class="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                <span class="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-teal-100 text-teal-800">
                   {{ assessment.evidence_files.length }}
                 </span>
               </h3>
@@ -155,11 +155,11 @@
                 <div 
                   v-for="(fileName, index) in assessment.evidence_files" 
                   :key="index"
-                  class="group flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-blue-50 transition-all duration-200 border border-transparent hover:border-blue-200"
+                  class="group flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-teal-50 transition-all duration-200 border border-transparent hover:border-teal-200"
                 >
                   <div class="flex items-center min-w-0 flex-1">
                     <div class="flex-shrink-0">
-                      <DocumentIcon class="w-5 h-5 text-gray-400 group-hover:text-blue-500" />
+                      <DocumentIcon class="w-5 h-5 text-gray-400 group-hover:text-teal-500" />
                     </div>
                     <div class="ml-3 min-w-0 flex-1">
                       <p class="text-sm font-medium text-gray-900 truncate">{{ getFileName(fileName) }}</p>
@@ -168,7 +168,7 @@
                   </div>
                   <button
                     @click="viewFile(fileName)"
-                    class="ml-3 inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                    class="ml-3 inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-teal-700 bg-teal-100 hover:bg-teal-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-colors"
                   >
                     <EyeIcon class="w-4 h-4 mr-1" />
                     View
@@ -277,7 +277,7 @@
                     </div>
                     <Link
                       :href="route('competency-assessments.show', related.id)"
-                      class="inline-flex items-center px-2 py-1 text-xs font-medium rounded text-blue-700 bg-blue-100 hover:bg-blue-200 transition-colors"
+                      class="inline-flex items-center px-2 py-1 text-xs font-medium rounded text-teal-700 bg-teal-100 hover:bg-teal-200 transition-colors"
                     >
                       View
                     </Link>

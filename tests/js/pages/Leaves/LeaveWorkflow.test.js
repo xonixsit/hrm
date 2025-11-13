@@ -663,7 +663,7 @@ describe('Leave Management Workflow', () => {
       });
 
       const vm = wrapper.vm;
-      expect(vm.getLeaveTypeIconClasses('Annual Leave')).toContain('bg-blue-100');
+      expect(vm.getLeaveTypeIconClasses('Annual Leave')).toContain('bg-teal-100');
       expect(vm.getLeaveTypeIconClasses('Sick Leave')).toContain('bg-red-100');
       expect(vm.getLeaveTypeIconClasses('Personal Leave')).toContain('bg-green-100');
     });

@@ -12,7 +12,7 @@
           <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div class="flex items-center">
               <div class="flex-shrink-0">
-                <ChartBarIcon class="h-8 w-8 text-blue-600" />
+                <ChartBarIcon class="h-8 w-8 text-teal-600" />
               </div>
               <div class="ml-4">
                 <p class="text-sm font-medium text-gray-500">Total Assigned</p>
@@ -57,7 +57,7 @@
                 <select
                   v-model="filters.status"
                   @change="applyFilters"
-                  class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  class="w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"
                 >
                   <option value="">All Statuses</option>
                   <option v-for="status in statusOptions" :key="status" :value="status">
@@ -71,7 +71,7 @@
                 <select
                   v-model="filters.assessment_cycle_id"
                   @change="applyFilters"
-                  class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  class="w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"
                 >
                   <option value="">All Cycles</option>
                   <option v-for="cycle in assessmentCycles" :key="cycle.id" :value="cycle.id">
@@ -83,7 +83,7 @@
               <div class="flex items-end">
                 <button
                   @click="clearFilters"
-                  class="w-full px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  class="w-full px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
                 >
                   Clear Filters
                 </button>
@@ -116,15 +116,15 @@
                 <div class="flex-1">
                   <div class="flex items-center space-x-3 mb-2">
                     <div class="flex items-center">
-                      <div class="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center mr-3">
-                        <span class="text-xs font-medium text-blue-600">
+                      <div class="h-8 w-8 rounded-full bg-teal-100 flex items-center justify-center mr-3">
+                        <span class="text-xs font-medium text-teal-600">
                           {{ getInitials(assessment.employee?.user?.name || 'Unknown') }}
                         </span>
                       </div>
                       <div>
                         <Link
                           :href="safeRoute('competency-assessments.by-employee', assessment.employee?.id)"
-                          class="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline"
+                          class="text-sm font-medium text-teal-600 hover:text-teal-800 hover:underline"
                         >
                           {{ assessment.employee?.user?.name || 'Unknown' }}
                         </Link>
@@ -179,7 +179,7 @@
                 <div class="flex items-center space-x-3 ml-6">
                   <Link
                     :href="safeRoute('competency-assessments.show', assessment.id)"
-                    class="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    class="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
                   >
                     <EyeIcon class="w-4 h-4 mr-2" />
                     View

@@ -13,7 +13,7 @@
                 <pre class="text-sm bg-white p-2 rounded border overflow-auto">{{ JSON.stringify(props, null, 2) }}</pre>
               </div>
               
-              <div class="bg-blue-50 p-4 rounded-lg">
+              <div class="bg-teal-50 p-4 rounded-lg">
                 <h2 class="text-lg font-semibold mb-2">Assessments Data</h2>
                 <p><strong>Total:</strong> {{ assessments?.total || 'N/A' }}</p>
                 <p><strong>Count:</strong> {{ assessments?.data?.length || 0 }}</p>
@@ -61,7 +61,7 @@
                 <div class="space-x-4">
                   <Link 
                     :href="safeRoute('competency-assessments.my-assessments')"
-                    class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                    class="inline-flex items-center px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700"
                   >
                     Reload My Assessments
                   </Link>

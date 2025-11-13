@@ -16,7 +16,7 @@
                 <select
                   v-model="filters.status"
                   @change="applyFilters"
-                  class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  class="w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"
                 >
                   <option value="">All Statuses</option>
                   <option v-for="status in statusOptions" :key="status" :value="status">
@@ -32,7 +32,7 @@
                   @input="debounceSearch"
                   type="text"
                   placeholder="Search cycles..."
-                  class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  class="w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"
                 />
               </div>
               
@@ -42,14 +42,14 @@
                   v-model="filters.date_from"
                   @change="applyFilters"
                   type="date"
-                  class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  class="w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"
                 />
               </div>
               
               <div class="flex items-end">
                 <button
                   @click="clearFilters"
-                  class="w-full px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  class="w-full px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
                 >
                   Clear Filters
                 </button>
@@ -89,7 +89,7 @@
                 </div>
                 <div class="w-full bg-gray-200 rounded-full h-2">
                   <div
-                    class="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                    class="bg-teal-600 h-2 rounded-full transition-all duration-300"
                     :style="{ width: `${cycle.completion_percentage}%` }"
                   ></div>
                 </div>
@@ -123,7 +123,7 @@
               <div class="flex items-center justify-between pt-4 border-t border-gray-200">
                 <Link
                   :href="route('assessment-cycles.show', cycle.id)"
-                  class="text-sm text-blue-600 hover:text-blue-900 font-medium"
+                  class="text-sm text-teal-600 hover:text-teal-900 font-medium"
                 >
                   View Details
                 </Link>
@@ -145,7 +145,7 @@
                   <button
                     v-if="cycle.status === 'active'"
                     @click="completeCycle(cycle)"
-                    class="text-sm text-blue-600 hover:text-blue-900 font-medium"
+                    class="text-sm text-teal-600 hover:text-teal-900 font-medium"
                   >
                     Complete
                   </button>
@@ -162,7 +162,7 @@
           <p class="text-gray-500 mb-6">Get started by creating your first assessment cycle.</p>
           <Link
             :href="route('assessment-cycles.create')"
-            class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            class="inline-flex items-center px-4 py-2 bg-teal-600 text-white text-sm font-medium rounded-md hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
           >
             <PlusIcon class="w-4 h-4 mr-2" />
             Create Assessment Cycle
@@ -183,7 +183,7 @@
                 :class="[
                   'px-3 py-2 text-sm font-medium rounded-md',
                   link.active
-                    ? 'bg-blue-600 text-white'
+                    ? 'bg-teal-600 text-white'
                     : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
                 ]"
                 v-html="link.label"
@@ -291,7 +291,7 @@ const getStatusClasses = (status) => {
   const classes = {
     'planned': 'bg-gray-100 text-gray-800',
     'active': 'bg-green-100 text-green-800',
-    'completed': 'bg-blue-100 text-blue-800',
+    'completed': 'bg-teal-100 text-teal-800',
     'cancelled': 'bg-red-100 text-red-800'
   };
   return classes[status] || 'bg-gray-100 text-gray-800';

@@ -43,7 +43,7 @@
                 <div>
                   <dt class="text-sm font-medium text-gray-500">Category</dt>
                   <dd class="mt-1">
-                    <span v-if="competency.category" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    <span v-if="competency.category" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-teal-100 text-teal-800">
                       {{ competency.category }}
                     </span>
                     <span v-else class="text-sm text-gray-400">No category</span>
@@ -90,7 +90,7 @@
                   <div class="text-sm text-gray-500">Total Assessments</div>
                 </div>
                 <div class="text-center">
-                  <div class="text-2xl font-bold text-blue-600">{{ stats.average_rating || 'N/A' }}</div>
+                  <div class="text-2xl font-bold text-teal-600">{{ stats.average_rating || 'N/A' }}</div>
                   <div class="text-sm text-gray-500">Average Rating</div>
                 </div>
                 <div class="text-center">
@@ -112,7 +112,7 @@
             <div class="p-6 space-y-3">
               <Link
                 :href="route('competencies.edit', competency.id)"
-                class="w-full inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                class="w-full inline-flex items-center justify-center px-4 py-2 bg-teal-600 text-white text-sm font-medium rounded-md hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
               >
                 <PencilIcon class="w-4 h-4 mr-2" />
                 Edit Competency

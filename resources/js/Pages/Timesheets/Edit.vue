@@ -93,7 +93,7 @@
                 <select 
                   id="employee_id"
                   v-model="form.employee_id" 
-                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm"
                   :class="{ 'border-red-300': form.errors.employee_id }"
                   :disabled="!canEdit"
                 >
@@ -118,7 +118,7 @@
                 <select 
                   id="project_id"
                   v-model="form.project_id" 
-                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm"
                   :class="{ 'border-red-300': form.errors.project_id }"
                   :disabled="!canEdit"
                 >
@@ -140,7 +140,7 @@
                 <select 
                   id="task_id"
                   v-model="form.task_id" 
-                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm"
                   :class="{ 'border-red-300': form.errors.task_id }"
                   :disabled="!canEdit"
                 >
@@ -163,7 +163,7 @@
                   id="date"
                   v-model="form.date" 
                   type="date" 
-                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm"
                   :class="{ 'border-red-300': form.errors.date }"
                   :disabled="!canEdit"
                   :placeholder="!form.date ? 'Select date' : ''"
@@ -188,7 +188,7 @@
                   step="0.25" 
                   min="0" 
                   max="24"
-                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm"
                   :class="{ 'border-red-300': form.errors.hours }"
                   placeholder="e.g., 8.5"
                   :disabled="!canEdit"
@@ -210,7 +210,7 @@
                   id="description"
                   v-model="form.description" 
                   rows="4"
-                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm"
                   :class="{ 'border-red-300': form.errors.description }"
                   placeholder="Describe the work performed..."
                   :disabled="!canEdit"
@@ -228,7 +228,7 @@
                 <select 
                   id="status"
                   v-model="form.status" 
-                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm"
                 >
                   <option value="pending">Pending</option>
                   <option value="approved">Approved</option>
@@ -246,7 +246,7 @@
                   <button
                     @click="loadAttendanceData"
                     type="button"
-                    class="inline-flex items-center px-3 py-1 text-xs font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 transition-colors"
+                    class="inline-flex items-center px-3 py-1 text-xs font-medium text-teal-600 bg-teal-50 border border-teal-200 rounded-md hover:bg-teal-100 transition-colors"
                   >
                     <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -255,16 +255,16 @@
                   </button>
                 </div>
 
-                <div v-if="attendanceData.has_attendance" class="bg-blue-50 p-4 rounded-md">
+                <div v-if="attendanceData.has_attendance" class="bg-teal-50 p-4 rounded-md">
                   <div class="flex items-start">
                     <div class="flex-shrink-0">
-                      <svg class="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                      <svg class="h-5 w-5 text-teal-400" fill="currentColor" viewBox="0 0 20 20">
                         <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
                       </svg>
                     </div>
                     <div class="ml-3 flex-1">
-                      <h5 class="text-sm font-medium text-blue-800">Attendance Record Found</h5>
-                      <div class="mt-2 text-sm text-blue-700">
+                      <h5 class="text-sm font-medium text-teal-800">Attendance Record Found</h5>
+                      <div class="mt-2 text-sm text-teal-700">
                         <p><strong>Clock In:</strong> {{ attendanceData.attendance.clock_in || 'Not clocked in' }}</p>
                         <p><strong>Clock Out:</strong> {{ attendanceData.attendance.clock_out || 'Not clocked out' }}</p>
                         <p><strong>Work Duration:</strong> {{ attendanceData.attendance.work_duration }}</p>
@@ -286,7 +286,7 @@
                             @click="syncWithAttendance"
                             type="button"
                             :disabled="syncingAttendance"
-                            class="inline-flex items-center px-3 py-1 text-xs font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                            class="inline-flex items-center px-3 py-1 text-xs font-medium text-white bg-teal-600 border border-transparent rounded-md hover:bg-teal-700 disabled:opacity-50 transition-colors"
                           >
                             <svg v-if="syncingAttendance" class="animate-spin -ml-1 mr-1 h-3 w-3 text-white" fill="none" viewBox="0 0 24 24">
                               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -344,13 +344,13 @@
                 <div class="flex items-center space-x-3">
                   <Link 
                     :href="route('timesheets.index')" 
-                    class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
                   >
                     Back to List
                   </Link>
                   <Link 
                     :href="route('timesheets.show', timesheet.id)" 
-                    class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
                   >
                     View Details
                   </Link>
@@ -368,7 +368,7 @@
                   <button 
                     v-if="canEdit || canApprove"
                     type="submit" 
-                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:opacity-50 disabled:cursor-not-allowed"
                     :disabled="form.processing"
                   >
                     <svg v-if="form.processing" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">

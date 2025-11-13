@@ -62,7 +62,7 @@ const formatDate = (date) => {
 }
 
 .feedback-item {
-  @apply p-4 bg-blue-50 rounded-lg;
+  @apply p-4 bg-teal-50 rounded-lg;
 }
 
 .feedback-text {

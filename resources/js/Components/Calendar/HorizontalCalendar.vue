@@ -103,7 +103,7 @@ const leaveTypeName = computed(() => props.leaveType);
 const leaveTypeClasses = computed(() => {
   const baseClasses = 'inline-flex items-center space-x-2 px-3 py-1.5 rounded-full text-sm font-medium';
   const typeClasses = {
-    'Annual Leave': 'bg-blue-100 text-blue-800',
+    'Annual Leave': 'bg-teal-100 text-teal-800',
     'Sick Leave': 'bg-red-100 text-red-800',
     'Personal Leave': 'bg-green-100 text-green-800',
     'Study Leave': 'bg-purple-100 text-purple-800',
@@ -175,7 +175,7 @@ const getDayClasses = (day) => {
   }
   
   if (day.isToday) {
-    return `${baseClasses} bg-blue-50 text-blue-600 border border-blue-200`;
+    return `${baseClasses} bg-teal-50 text-teal-600 border border-teal-200`;
   }
   
   if (day.isWeekend) {

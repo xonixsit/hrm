@@ -47,8 +47,8 @@
         <p class="text-neutral-600 mb-4">
           This is an elevated section with loose spacing and a footer.
         </p>
-        <div class="bg-blue-50 p-4 rounded-lg">
-          <p class="text-blue-800">This is a highlighted content area within the section.</p>
+        <div class="bg-teal-50 p-4 rounded-lg">
+          <p class="text-teal-800">This is a highlighted content area within the section.</p>
         </div>
         
         <template #footer>
@@ -113,7 +113,7 @@
           variant="elevated"
         >
           <template #media>
-            <div class="h-32 bg-gradient-to-r from-blue-400 to-purple-500 flex items-center justify-center">
+            <div class="h-32 bg-gradient-to-r from-teal-400 to-purple-500 flex items-center justify-center">
               <span class="text-white font-medium">Media Content</span>
             </div>
           </template>
@@ -236,7 +236,7 @@
                 </div>
               </div>
               <div class="flex items-start space-x-3">
-                <div class="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+                <div class="w-2 h-2 bg-teal-500 rounded-full mt-2"></div>
                 <div class="flex-1 min-w-0">
                   <p class="text-sm text-neutral-900">Payment processed</p>
                   <p class="text-xs text-neutral-500">5 minutes ago</p>

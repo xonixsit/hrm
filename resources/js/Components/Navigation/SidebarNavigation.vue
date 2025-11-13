@@ -80,8 +80,8 @@
                   'p-2.5': isCollapsed,
                   'px-3 py-2': !isCollapsed,
                   // Active state
-                  'bg-blue-50 text-blue-700': hasActiveChild(item) && !isDark,
-                  'bg-blue-900/20 text-blue-400': hasActiveChild(item) && isDark,
+                  'bg-teal-50 text-teal-700': hasActiveChild(item) && !isDark,
+                  'bg-teal-900/20 text-teal-400': hasActiveChild(item) && isDark,
                   // Hover state
                   'hover:bg-gray-50': !hasActiveChild(item) && !isDark,
                   'hover:bg-gray-800': !hasActiveChild(item) && isDark,
@@ -152,8 +152,8 @@
                     'w-full flex items-center px-4 py-2 text-sm transition-colors duration-150',
                     {
                       // Active state
-                      'bg-blue-50 text-blue-700': isActiveItem(child) && !isDark,
-                      'bg-blue-900/20 text-blue-400': isActiveItem(child) && isDark,
+                      'bg-teal-50 text-teal-700': isActiveItem(child) && !isDark,
+                      'bg-teal-900/20 text-teal-400': isActiveItem(child) && isDark,
                       // Hover state
                       'hover:bg-gray-50': !isActiveItem(child) && !isDark,
                       'hover:bg-gray-700': !isActiveItem(child) && isDark,
@@ -226,8 +226,8 @@
                 'p-2.5 justify-center': isCollapsed,
                 'px-3 py-2': !isCollapsed,
                 // Active state
-                'bg-blue-50 text-blue-700': isActiveItem(item) && !isDark,
-                'bg-blue-900/20 text-blue-400': isActiveItem(item) && isDark,
+                'bg-teal-50 text-teal-700': isActiveItem(item) && !isDark,
+                'bg-teal-900/20 text-teal-400': isActiveItem(item) && isDark,
                 // Hover state
                 'hover:bg-gray-50': !isActiveItem(item) && !isDark,
                 'hover:bg-gray-800': !isActiveItem(item) && isDark,

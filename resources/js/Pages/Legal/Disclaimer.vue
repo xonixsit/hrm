@@ -54,7 +54,7 @@
                                     <h2 class="text-xl font-semibold text-gray-900 mb-4">System Usage</h2>
                                     <ul class="space-y-3 text-gray-700">
                                         <li class="flex items-start">
-                                            <svg class="w-5 h-5 text-blue-500 mt-0.5 mr-3 flex-shrink-0"
+                                            <svg class="w-5 h-5 text-teal-500 mt-0.5 mr-3 flex-shrink-0"
                                                 fill="currentColor" viewBox="0 0 20 20">
                                                 <path fill-rule="evenodd"
                                                     d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
@@ -64,7 +64,7 @@
                                             accordance with company policies.
                                         </li>
                                         <li class="flex items-start">
-                                            <svg class="w-5 h-5 text-blue-500 mt-0.5 mr-3 flex-shrink-0"
+                                            <svg class="w-5 h-5 text-teal-500 mt-0.5 mr-3 flex-shrink-0"
                                                 fill="currentColor" viewBox="0 0 20 20">
                                                 <path fill-rule="evenodd"
                                                     d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
@@ -74,7 +74,7 @@
                                             credentials.
                                         </li>
                                         <li class="flex items-start">
-                                            <svg class="w-5 h-5 text-blue-500 mt-0.5 mr-3 flex-shrink-0"
+                                            <svg class="w-5 h-5 text-teal-500 mt-0.5 mr-3 flex-shrink-0"
                                                 fill="currentColor" viewBox="0 0 20 20">
                                                 <path fill-rule="evenodd"
                                                     d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
@@ -89,7 +89,7 @@
                                 <!-- Data Accuracy -->
                                 <section>
                                     <h2 class="text-xl font-semibold text-gray-900 mb-4">Data Accuracy</h2>
-                                    <div class="bg-blue-50 border-l-4 border-blue-400 p-6">
+                                    <div class="bg-teal-50 border-l-4 border-teal-400 p-6">
                                         <p class="text-gray-700 leading-relaxed">
                                             While we strive to ensure the accuracy of all data within the system, users
                                             are responsible for
@@ -183,14 +183,14 @@
                                 <!-- Contact Information -->
                                 <section>
                                     <h2 class="text-xl font-semibold text-gray-900 mb-4">Questions or Concerns</h2>
-                                    <div class="bg-blue-50 p-6 rounded-lg">
+                                    <div class="bg-teal-50 p-6 rounded-lg">
                                         <p class="text-gray-700 leading-relaxed mb-4">
                                             If you have any questions about this disclaimer or the use of the HRMS
                                             system, please contact:
                                         </p>
                                         <div class="space-y-2 text-gray-700">
                                             <div class="flex items-center">
-                                                <svg class="w-5 h-5 text-blue-500 mr-3" fill="none"
+                                                <svg class="w-5 h-5 text-teal-500 mr-3" fill="none"
                                                     stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round"
                                                         stroke-width="2"
@@ -200,7 +200,7 @@
                                                 <span>HR Department: hr@xonobics.com</span>
                                             </div>
                                             <div class="flex items-center">
-                                                <svg class="w-5 h-5 text-blue-500 mr-3" fill="none"
+                                                <svg class="w-5 h-5 text-teal-500 mr-3" fill="none"
                                                     stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round"
                                                         stroke-width="2"
@@ -237,11 +237,11 @@
                             Back to Dashboard
                             </Link>
                             <div class="flex space-x-4">
-                                <Link :href="route('legal.privacy')" class="text-blue-600 hover:text-blue-800">
+                                <Link :href="route('legal.privacy')" class="text-teal-600 hover:text-teal-800">
                                 Privacy Policy
                                 </Link>
                                 <Link :href="route('support.create')"
-                                    class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700">
+                                    class="inline-flex items-center px-4 py-2 bg-teal-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-teal-700">
                                 Contact Support
                                 </Link>
                             </div>

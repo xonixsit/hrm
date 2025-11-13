@@ -174,7 +174,7 @@ const getContractTypeClasses = (contractType) => {
     case 'Part-time':
       return `${baseClasses} bg-yellow-100 text-yellow-800`
     case 'Contract':
-      return `${baseClasses} bg-blue-100 text-blue-800`
+      return `${baseClasses} bg-teal-100 text-teal-800`
     case 'Temporary':
       return `${baseClasses} bg-purple-100 text-purple-800`
     default:
@@ -235,7 +235,7 @@ const getTimeAgo = (dateString) => {
 
 const getPerformanceColor = (score) => {
   if (score >= 90) return 'bg-green-500'
-  if (score >= 80) return 'bg-blue-500'
+  if (score >= 80) return 'bg-teal-500'
   if (score >= 70) return 'bg-yellow-500'
   if (score >= 60) return 'bg-orange-500'
   return 'bg-red-500'

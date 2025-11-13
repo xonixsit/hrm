@@ -112,8 +112,8 @@
                   'leave').length }}</div>
                 <div class="text-sm text-gray-600">Leave Requests</div>
               </div>
-              <div class="p-4 bg-blue-50 rounded-lg">
-                <div class="text-2xl font-bold text-blue-600">{{ pendingApprovals.filter(a => a.type ===
+              <div class="p-4 bg-teal-50 rounded-lg">
+                <div class="text-2xl font-bold text-teal-600">{{ pendingApprovals.filter(a => a.type ===
                   'timesheet').length }}</div>
                 <div class="text-sm text-gray-600">Timesheets</div>
               </div>
@@ -150,8 +150,8 @@
                 <div class="text-2xl font-bold text-purple-600">{{ adminStats.activeAssessmentCycles || 0 }}</div>
                 <div class="text-xs text-gray-600 mt-1">Active Cycles</div>
               </div>
-              <div class="text-center p-4 bg-blue-50 rounded-xl border border-blue-100">
-                <div class="text-2xl font-bold text-blue-600">{{ adminStats.averageRating || '-' }}</div>
+              <div class="text-center p-4 bg-teal-50 rounded-xl border border-teal-100">
+                <div class="text-2xl font-bold text-teal-600">{{ adminStats.averageRating || '-' }}</div>
                 <div class="text-xs text-gray-600 mt-1">Avg Rating</div>
               </div>
             </div>
@@ -169,7 +169,7 @@
                 </div>
                 <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div class="flex items-center space-x-3">
-                    <div class="w-2 h-2 bg-blue-400 rounded-full"></div>
+                    <div class="w-2 h-2 bg-teal-400 rounded-full"></div>
                     <span class="text-sm text-gray-700">5 new assessments submitted</span>
                   </div>
                   <span class="text-xs text-gray-500">4 hours ago</span>

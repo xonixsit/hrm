@@ -181,7 +181,7 @@ describe('Employee and Department Management', () => {
             case 'Part-time':
               return `${baseClasses} bg-yellow-100 text-yellow-800`
             case 'Contract':
-              return `${baseClasses} bg-blue-100 text-blue-800`
+              return `${baseClasses} bg-teal-100 text-teal-800`
             case 'Temporary':
               return `${baseClasses} bg-purple-100 text-purple-800`
             default:
@@ -191,7 +191,7 @@ describe('Employee and Department Management', () => {
 
         expect(getContractTypeClasses('Full-time')).toContain('bg-green-100')
         expect(getContractTypeClasses('Part-time')).toContain('bg-yellow-100')
-        expect(getContractTypeClasses('Contract')).toContain('bg-blue-100')
+        expect(getContractTypeClasses('Contract')).toContain('bg-teal-100')
         expect(getContractTypeClasses('Unknown')).toContain('bg-neutral-100')
       })
     })

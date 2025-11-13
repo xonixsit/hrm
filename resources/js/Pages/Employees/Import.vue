@@ -36,7 +36,7 @@
                 <span>{{ importStatus.processed }} / {{ importStatus.total }} records</span>
               </div>
               <div class="w-full bg-gray-200 rounded-full h-2">
-                <div class="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                <div class="bg-teal-600 h-2 rounded-full transition-all duration-300"
                   :style="{ width: importStatus.progress + '%' }"></div>
               </div>
               <div class="flex justify-between text-xs text-gray-500 mt-1">
@@ -74,13 +74,13 @@
             <!-- File Drop Zone -->
             <div @drop="handleDrop" @dragover.prevent @dragenter.prevent :class="[
                 'border-2 border-dashed rounded-lg p-8 text-center transition-colors',
-                dragOver ? 'border-blue-400 bg-blue-50' : 'border-gray-300 hover:border-gray-400'
+                dragOver ? 'border-teal-400 bg-teal-50' : 'border-gray-300 hover:border-gray-400'
               ]">
               <DocumentArrowUpIcon class="mx-auto h-12 w-12 text-gray-400" />
               <div class="mt-4">
                 <p class="text-lg font-medium text-gray-900">
                   Drop your file here, or
-                  <button @click="$refs.fileInput.click()" class="text-blue-600 hover:text-blue-500 font-medium">
+                  <button @click="$refs.fileInput.click()" class="text-teal-600 hover:text-teal-500 font-medium">
                     browse
                   </button>
                 </p>
@@ -128,7 +128,7 @@
                     {{ field.label }} {{ field.required ? '*' : '' }}
                   </label>
                   <select v-model="columnMapping[field.key]"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm">
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500 text-sm">
                     <option value="">Select column...</option>
                     <option v-for="column in detectedColumns" :key="column" :value="column">
                       {{ column }}
@@ -145,7 +145,7 @@
                   Batch Size
                 </label>
                 <select v-model="importOptions.batchSize"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500">
                   <option value="10">10 records per batch</option>
                   <option value="25">25 records per batch</option>
                   <option value="50">50 records per batch</option>
@@ -161,7 +161,7 @@
                   Error Handling
                 </label>
                 <select v-model="importOptions.errorHandling"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500">
                   <option value="continue">Continue on errors</option>
                   <option value="stop">Stop on first error</option>
                 </select>
@@ -172,19 +172,19 @@
             <div class="space-y-3">
               <label class="flex items-center">
                 <input v-model="importOptions.skipFirstRow" type="checkbox"
-                  class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50" />
+                  class="rounded border-gray-300 text-teal-600 shadow-sm focus:border-teal-300 focus:ring focus:ring-teal-200 focus:ring-opacity-50" />
                 <span class="ml-2 text-sm text-gray-700">Skip first row (headers)</span>
               </label>
 
               <label class="flex items-center">
                 <input v-model="importOptions.updateExisting" type="checkbox"
-                  class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50" />
+                  class="rounded border-gray-300 text-teal-600 shadow-sm focus:border-teal-300 focus:ring focus:ring-teal-200 focus:ring-opacity-50" />
                 <span class="ml-2 text-sm text-gray-700">Update existing employees (match by email)</span>
               </label>
 
               <label class="flex items-center">
                 <input v-model="importOptions.sendWelcomeEmails" type="checkbox"
-                  class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50" />
+                  class="rounded border-gray-300 text-teal-600 shadow-sm focus:border-teal-300 focus:ring focus:ring-teal-200 focus:ring-opacity-50" />
                 <span class="ml-2 text-sm text-gray-700">Send welcome emails to new employees</span>
               </label>
             </div>
@@ -192,7 +192,7 @@
             <!-- Start Import Button -->
             <div class="flex justify-end pt-4">
               <button @click="startImport" :disabled="!canStartImport"
-                class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:opacity-50 disabled:cursor-not-allowed">
                 <ArrowUpTrayIcon class="w-5 h-5 mr-2" />
                 Start Import
               </button>
@@ -241,8 +241,8 @@
                 <div class="text-2xl font-bold text-red-600">{{ importResults.failed }}</div>
                 <div class="text-sm text-gray-600">Failed</div>
               </div>
-              <div class="text-center p-4 bg-blue-50 rounded-lg">
-                <div class="text-2xl font-bold text-blue-600">{{ importResults.total }}</div>
+              <div class="text-center p-4 bg-teal-50 rounded-lg">
+                <div class="text-2xl font-bold text-teal-600">{{ importResults.total }}</div>
                 <div class="text-sm text-gray-600">Total Processed</div>
               </div>
             </div>
@@ -264,7 +264,7 @@
                 Download Error Report
               </button>
               <button @click="resetImport"
-                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700">
+                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-teal-600 hover:bg-teal-700">
                 Import Another File
               </button>
             </div>

@@ -27,7 +27,7 @@
                 <td class="border px-4 py-2">{{ task.project ? task.project.name : 'N/A' }}</td>
                 <td class="border px-4 py-2">{{ task.description }}</td>
                 <td class="border px-4 py-2">
-                  <Link :href="route('tasks.show', task.id)" class="text-blue-500 mr-2">View</Link>
+                  <Link :href="route('tasks.show', task.id)" class="text-teal-500 mr-2">View</Link>
                   <Link v-if="canEdit(task)" :href="route('tasks.edit', task.id)" class="text-green-500 mr-2">Edit</Link>
                   <button v-if="canDelete(task)" @click="destroy(task.id)" class="text-red-500">Delete</button>
                 </td>

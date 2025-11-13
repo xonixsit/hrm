@@ -147,7 +147,7 @@ const getStatusClasses = (isActive) => {
 
 const getCategoryClasses = (category) => {
     const classes = {
-        'Attendance & Punctuality': 'bg-blue-100 text-blue-800',
+        'Attendance & Punctuality': 'bg-teal-100 text-teal-800',
         'Performance in Sales/Targets': 'bg-green-100 text-green-800',
         'File Handling & Accuracy': 'bg-purple-100 text-purple-800',
         'Calling & Call Backs': 'bg-yellow-100 text-yellow-800',
@@ -204,14 +204,14 @@ const exportCompetencies = () => {
                         <div class="flex items-center space-x-3">
                             <button
                                 @click="exportCompetencies"
-                                class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
                             >
                                 <ArrowDownTrayIcon class="w-4 h-4 mr-2" />
                                 Export
                             </button>
                             <button
                                 @click="showFilters = !showFilters"
-                                class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
                             >
                                 <FunnelIcon class="w-4 h-4 mr-2" />
                                 Filters
@@ -232,7 +232,7 @@ const exportCompetencies = () => {
                     <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                         <div class="flex items-center">
                             <div class="flex-shrink-0">
-                                <TagIcon class="h-8 w-8 text-blue-600" />
+                                <TagIcon class="h-8 w-8 text-teal-600" />
                             </div>
                             <div class="ml-4">
                                 <p class="text-sm font-medium text-gray-500">Total Competencies</p>
@@ -292,7 +292,7 @@ const exportCompetencies = () => {
                                     @keyup.enter="search"
                                     type="text"
                                     placeholder="Search competencies..."
-                                    class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                    class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-teal-500 focus:border-teal-500"
                                 />
                             </div>
                         </div>
@@ -304,7 +304,7 @@ const exportCompetencies = () => {
                                 <select
                                     v-model="filters.category"
                                     @change="applyFilters"
-                                    class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                    class="w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"
                                 >
                                     <option value="">All Categories</option>
                                     <option v-for="category in categories" :key="category" :value="category">
@@ -318,7 +318,7 @@ const exportCompetencies = () => {
                                 <select
                                     v-model="filters.department_id"
                                     @change="applyFilters"
-                                    class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                    class="w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"
                                 >
                                     <option value="">All Departments</option>
                                     <option v-for="department in departments" :key="department.id" :value="department.id">
@@ -332,7 +332,7 @@ const exportCompetencies = () => {
                                 <select
                                     v-model="filters.is_active"
                                     @change="applyFilters"
-                                    class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                    class="w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"
                                 >
                                     <option value="">All Statuses</option>
                                     <option value="1">Active</option>
@@ -343,7 +343,7 @@ const exportCompetencies = () => {
                             <div class="flex items-end">
                                 <button
                                     @click="clearFilters"
-                                    class="w-full px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                    class="w-full px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
                                 >
                                     Clear Filters
                                 </button>
@@ -353,10 +353,10 @@ const exportCompetencies = () => {
                 </div>
 
                 <!-- Bulk Actions -->
-                <div v-if="selectedCompetencies.length > 0" class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                <div v-if="selectedCompetencies.length > 0" class="bg-teal-50 border border-teal-200 rounded-lg p-4 mb-6">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center">
-                            <span class="text-sm font-medium text-blue-900">
+                            <span class="text-sm font-medium text-teal-900">
                                 {{ selectedCompetencies.length }} competencies selected
                             </span>
                         </div>
@@ -396,7 +396,7 @@ const exportCompetencies = () => {
                                         <input
                                             v-model="selectAll"
                                             type="checkbox"
-                                            class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                                            class="rounded border-gray-300 text-teal-600 shadow-sm focus:border-teal-300 focus:ring focus:ring-teal-200 focus:ring-opacity-50"
                                         />
                                     </th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -429,7 +429,7 @@ const exportCompetencies = () => {
                                             v-model="selectedCompetencies"
                                             :value="competency.id"
                                             type="checkbox"
-                                            class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                                            class="rounded border-gray-300 text-teal-600 shadow-sm focus:border-teal-300 focus:ring focus:ring-teal-200 focus:ring-opacity-50"
                                         />
                                     </td>
                                     <td class="px-6 py-4">
@@ -489,7 +489,7 @@ const exportCompetencies = () => {
                                             <Link
                                                 :href="route('competencies.show', competency.id)"
                                                 @click="console.log('View competency clicked:', competency.id)"
-                                                class="inline-flex items-center justify-center w-8 h-8 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-md transition-colors duration-200"
+                                                class="inline-flex items-center justify-center w-8 h-8 text-teal-600 hover:text-teal-900 hover:bg-teal-50 rounded-md transition-colors duration-200"
                                                 title="View Competency"
                                             >
                                                 <EyeIcon class="w-4 h-4" />
@@ -497,7 +497,7 @@ const exportCompetencies = () => {
                                             <Link
                                                 :href="route('competencies.edit', competency.id)"
                                                 @click="console.log('Edit competency clicked:', competency.id)"
-                                                class="inline-flex items-center justify-center w-8 h-8 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-md transition-colors duration-200"
+                                                class="inline-flex items-center justify-center w-8 h-8 text-teal-600 hover:text-teal-900 hover:bg-teal-50 rounded-md transition-colors duration-200"
                                                 title="Edit Competency"
                                             >
                                                 <PencilIcon class="w-4 h-4" />
@@ -559,8 +559,8 @@ const exportCompetencies = () => {
                 <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
                     <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                         <div class="sm:flex sm:items-start">
-                            <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
-                                <ChartBarIcon class="h-6 w-6 text-blue-600" aria-hidden="true" />
+                            <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-teal-100 sm:mx-0 sm:h-10 sm:w-10">
+                                <ChartBarIcon class="h-6 w-6 text-teal-600" aria-hidden="true" />
                             </div>
                             <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
                                 <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">

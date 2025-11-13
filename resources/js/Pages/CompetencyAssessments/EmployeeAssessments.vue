@@ -12,7 +12,7 @@
           <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div class="flex items-center">
               <div class="flex-shrink-0">
-                <ChartBarIcon class="h-8 w-8 text-blue-600" />
+                <ChartBarIcon class="h-8 w-8 text-teal-600" />
               </div>
               <div class="ml-4">
                 <p class="text-sm font-medium text-gray-500">Total Assessments</p>
@@ -67,7 +67,7 @@
                 <select
                   v-model="filters.competency_id"
                   @change="applyFilters"
-                  class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  class="w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"
                 >
                   <option value="">All Competencies</option>
                   <option v-for="competency in competencies" :key="competency.id" :value="competency.id">
@@ -81,7 +81,7 @@
                 <select
                   v-model="filters.status"
                   @change="applyFilters"
-                  class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  class="w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"
                 >
                   <option value="">All Statuses</option>
                   <option v-for="status in statusOptions" :key="status" :value="status">
@@ -95,7 +95,7 @@
                 <select
                   v-model="filters.assessment_type"
                   @change="applyFilters"
-                  class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  class="w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"
                 >
                   <option value="">All Types</option>
                   <option v-for="type in assessmentTypes" :key="type" :value="type">
@@ -110,14 +110,14 @@
                   v-model="filters.date_from"
                   @change="applyFilters"
                   type="date"
-                  class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  class="w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"
                 />
               </div>
               
               <div class="flex items-end">
                 <button
                   @click="clearFilters"
-                  class="w-full px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  class="w-full px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
                 >
                   Clear Filters
                 </button>
@@ -135,15 +135,15 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
               <button
                 @click="createAssessmentForCompetency"
-                class="flex items-center justify-center px-4 py-3 border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                class="flex items-center justify-center px-4 py-3 border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-teal-500"
               >
-                <DocumentPlusIcon class="w-5 h-5 text-blue-600 mr-2" />
+                <DocumentPlusIcon class="w-5 h-5 text-teal-600 mr-2" />
                 <span class="text-sm font-medium text-gray-700">Create Assessment</span>
               </button>
               
               <button
                 @click="viewCompetencyGaps"
-                class="flex items-center justify-center px-4 py-3 border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                class="flex items-center justify-center px-4 py-3 border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-teal-500"
               >
                 <ChartBarIcon class="w-5 h-5 text-purple-600 mr-2" />
                 <span class="text-sm font-medium text-gray-700">Competency Gaps</span>
@@ -151,7 +151,7 @@
               
               <button
                 @click="generateReport"
-                class="flex items-center justify-center px-4 py-3 border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                class="flex items-center justify-center px-4 py-3 border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-teal-500"
               >
                 <DocumentArrowDownIcon class="w-5 h-5 text-green-600 mr-2" />
                 <span class="text-sm font-medium text-gray-700">Generate Report</span>
@@ -245,7 +245,7 @@
                 <div class="flex items-center space-x-3 ml-6">
                   <Link
                     :href="route('competency-assessments.show', assessment.id)"
-                    class="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    class="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
                   >
                     <EyeIcon class="w-4 h-4 mr-2" />
                     View
@@ -397,7 +397,7 @@
                     </div>
                     <div class="w-full bg-gray-200 rounded-full h-2">
                       <div
-                        class="bg-blue-600 h-2 rounded-full"
+                        class="bg-teal-600 h-2 rounded-full"
                         :style="{ width: `${plan.progress_percentage || 0}%` }"
                       ></div>
                     </div>
@@ -437,7 +437,7 @@
                     <div class="flex space-x-2">
                       <button
                         @click="viewDevelopmentPlan(plan)"
-                        class="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                        class="text-teal-600 hover:text-teal-800 text-sm font-medium"
                       >
                         View Details
                       </button>
@@ -501,7 +501,7 @@
                   </div>
                   <p v-if="feedback.comments" class="text-sm text-gray-700 line-clamp-3">{{ feedback.comments }}</p>
                   <div v-if="feedback.assessment_type" class="mt-2">
-                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-teal-100 text-teal-800">
                       {{ formatAssessmentType(feedback.assessment_type) }}
                     </span>
                   </div>
@@ -510,7 +510,7 @@
                 <div v-if="feedbackHistory.length > 5" class="text-center">
                   <button
                     @click="viewAllFeedback"
-                    class="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                    class="text-teal-600 hover:text-teal-800 text-sm font-medium"
                   >
                     View All Feedback ({{ feedbackHistory.length }})
                   </button>
@@ -540,7 +540,7 @@
                   <div class="flex items-center space-x-3">
                     <div class="flex-1 bg-gray-200 rounded-full h-2">
                       <div
-                        class="bg-blue-600 h-2 rounded-full"
+                        class="bg-teal-600 h-2 rounded-full"
                         :style="{ width: `${Math.min(100, (peerComparisons.employee_average / peerComparisons.department_average) * 100)}%` }"
                       ></div>
                     </div>
@@ -846,7 +846,7 @@ const formatDevelopmentPlanStatus = (status) => {
 const getDevelopmentPlanStatusClasses = (status) => {
   const classes = {
     'active': 'bg-green-100 text-green-800',
-    'completed': 'bg-blue-100 text-blue-800',
+    'completed': 'bg-teal-100 text-teal-800',
     'paused': 'bg-yellow-100 text-yellow-800',
     'cancelled': 'bg-red-100 text-red-800'
   };

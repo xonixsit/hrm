@@ -359,7 +359,7 @@ import { HomeIcon } from '@heroicons/vue/24/outline';
 </script>
 
 <template>
-  <HomeIcon class="w-5 h-5 text-blue-500" />
+  <HomeIcon class="w-5 h-5 text-teal-500" />
 </template>
 
 <!-- After -->

@@ -407,7 +407,7 @@ const getContractTypeClasses = (contractType) => {
     case 'Part-time':
       return `${baseClasses} bg-yellow-100 text-yellow-800`
     case 'Contract':
-      return `${baseClasses} bg-blue-100 text-blue-800`
+      return `${baseClasses} bg-teal-100 text-teal-800`
     default:
       return `${baseClasses} bg-neutral-100 text-neutral-800`
   }

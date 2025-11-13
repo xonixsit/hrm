@@ -71,7 +71,7 @@
       <div class="summary-grid">
         <div class="summary-item">
           <div class="summary-icon">
-            <ClockIcon class="w-4 h-4 text-blue-600" />
+            <ClockIcon class="w-4 h-4 text-teal-600" />
           </div>
           <div class="summary-content">
             <span class="summary-label">Total Hours</span>
@@ -271,8 +271,8 @@ const getPrimaryButtonText = () => {
 
 <style scoped>
 .time-tracking-widget {
-  @apply bg-gradient-to-br from-blue-50 to-indigo-100 rounded-2xl p-8 space-y-8;
-  @apply border border-blue-200 shadow-lg;
+  @apply bg-gradient-to-br from-teal-50 to-indigo-100 rounded-2xl p-8 space-y-8;
+  @apply border border-teal-200 shadow-lg;
 }
 
 /* Hero Time Display */
@@ -372,7 +372,7 @@ const getPrimaryButtonText = () => {
 }
 
 .primary-action-button:focus {
-  @apply ring-blue-500;
+  @apply ring-teal-500;
 }
 
 .button-text {

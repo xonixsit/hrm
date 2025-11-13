@@ -6,7 +6,7 @@
         class="relative bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 overflow-hidden transform transition-all duration-300"
         @click.stop>
         <!-- Header -->
-        <div class="bg-gradient-to-r from-blue-500 to-indigo-600 px-6 py-4">
+        <div class="bg-gradient-to-r from-teal-500 to-indigo-600 px-6 py-4">
           <div class="flex items-center justify-between">
             <div class="flex items-center space-x-3">
               <div class="flex-shrink-0">
@@ -31,8 +31,8 @@
           <div class="mb-6">
             <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
               <div class="flex-shrink-0">
-                <div class="h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
-                  <span class="text-sm font-medium text-blue-700">
+                <div class="h-10 w-10 bg-teal-100 rounded-full flex items-center justify-center">
+                  <span class="text-sm font-medium text-teal-700">
                     {{ getEmployeeInitials(attendance.employee?.user?.name) }}
                   </span>
                 </div>
@@ -54,7 +54,7 @@
               Clock Out Time2
             </label>
             <input v-model="clockOutTime" type="datetime-local" 
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 sm:text-sm"
               required />
             <p class="mt-1 text-xs text-gray-500">
               Must be after clock-in time. Defaults to attendance date but can be adjusted up to current time.
@@ -68,7 +68,7 @@
             </label>
             <textarea v-model="reason" rows="3"
               placeholder="Please provide a reason for the manual clock out (e.g., forgot to clock out, system issue, etc.)"
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm resize-none"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 sm:text-sm resize-none"
               required></textarea>
           </div>
 
@@ -93,11 +93,11 @@
           <!-- Actions -->
           <div class="flex items-center justify-end space-x-3">
             <button @click="close"
-              class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+              class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-colors">
               Cancel
             </button>
             <button @click="handleClockOut" :disabled="!isFormValid || processing"
-              class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+              class="px-4 py-2 text-sm font-medium text-white bg-teal-600 border border-transparent rounded-lg hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
               <span v-if="processing" class="flex items-center">
                 <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>

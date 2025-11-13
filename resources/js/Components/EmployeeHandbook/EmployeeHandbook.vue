@@ -8,7 +8,7 @@
           <p class="handbook-subtitle">Your guide to assessments, performance tracking, and professional development</p>
         </div>
         <div class="header-icon">
-          <BookOpenIcon class="w-12 h-12 text-blue-600" />
+          <BookOpenIcon class="w-12 h-12 text-teal-600" />
         </div>
       </div>
     </div>
@@ -407,7 +407,7 @@ const formatRelativeTime = (dateString) => {
 
 /* Header Section */
 .handbook-header {
-  @apply bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-8 border border-blue-200;
+  @apply bg-gradient-to-r from-teal-50 to-indigo-50 rounded-xl p-8 border border-teal-200;
 }
 
 .header-content {
@@ -448,7 +448,7 @@ const formatRelativeTime = (dateString) => {
 }
 
 .assessments-icon {
-  @apply bg-blue-100 text-blue-600;
+  @apply bg-teal-100 text-teal-600;
 }
 
 .leaderboard-icon {
@@ -476,7 +476,7 @@ const formatRelativeTime = (dateString) => {
 }
 
 .assessments-card .card-badge {
-  @apply bg-blue-100 text-blue-700;
+  @apply bg-teal-100 text-teal-700;
 }
 
 .leaderboard-card .card-badge {
@@ -548,11 +548,11 @@ const formatRelativeTime = (dateString) => {
 }
 
 .card-footer {
-  @apply flex items-center justify-between text-blue-600 font-medium;
+  @apply flex items-center justify-between text-teal-600 font-medium;
 }
 
 .nav-link {
-  @apply hover:text-blue-700 transition-colors;
+  @apply hover:text-teal-700 transition-colors;
 }
 
 /* Quick Access Section */
@@ -590,7 +590,7 @@ const formatRelativeTime = (dateString) => {
 }
 
 .assessment-activity {
-  @apply bg-blue-100 text-blue-600;
+  @apply bg-teal-100 text-teal-600;
 }
 
 .feedback-activity {

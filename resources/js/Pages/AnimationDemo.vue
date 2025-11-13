@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+  <div class="min-h-screen bg-gradient-to-br from-teal-50 to-indigo-100">
     <!-- Header -->
     <div class="container mx-auto px-4 py-8">
       <div class="text-center mb-12">
@@ -54,7 +54,7 @@
               :key="transition.name"
               variant="secondary"
               @click="currentTransition = transition.name"
-              :class="{ 'bg-blue-100 border-blue-300': currentTransition === transition.name }"
+              :class="{ 'bg-teal-100 border-teal-300': currentTransition === transition.name }"
             >
               {{ transition.label }}
             </BaseButton>
@@ -63,7 +63,7 @@
           <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 min-h-[200px]">
             <PageTransition :name="currentTransition" :key="transitionKey">
               <div class="text-center">
-                <div class="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full mx-auto mb-4"></div>
+                <div class="w-16 h-16 bg-gradient-to-r from-teal-500 to-purple-600 rounded-full mx-auto mb-4"></div>
                 <h3 class="text-xl font-semibold text-gray-800 mb-2">{{ currentTransition }} Transition</h3>
                 <p class="text-gray-600">This content animates with the {{ currentTransition }} transition effect.</p>
               </div>
@@ -204,7 +204,7 @@
               class="bg-gray-50 p-4 rounded-lg mb-3 border border-gray-200"
             >
               <div class="flex items-center">
-                <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full mr-4"></div>
+                <div class="w-10 h-10 bg-gradient-to-r from-teal-500 to-purple-600 rounded-full mr-4"></div>
                 <div>
                   <h4 class="font-medium text-gray-900">{{ item.title }}</h4>
                   <p class="text-sm text-gray-600">{{ item.description }}</p>
@@ -232,7 +232,7 @@
           </div>
           
           <div class="space-y-8">
-            <div id="scroll-target-1" class="bg-blue-50 p-6 rounded-lg">
+            <div id="scroll-target-1" class="bg-teal-50 p-6 rounded-lg">
               <h3 class="text-lg font-semibold mb-2">Section 1</h3>
               <p class="text-gray-600">This is the first scroll target section with smooth scrolling animation.</p>
             </div>

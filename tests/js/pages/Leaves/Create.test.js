@@ -180,7 +180,7 @@ describe('Leaves Create Page Tests', () => {
         it('should provide correct leave type styling', () => {
             const getLeaveTypeIconClasses = (leaveType) => {
                 const classMap = {
-                    'Annual Leave': 'w-8 h-8 p-1.5 bg-blue-100 text-blue-600 rounded-lg',
+                    'Annual Leave': 'w-8 h-8 p-1.5 bg-teal-100 text-teal-600 rounded-lg',
                     'Sick Leave': 'w-8 h-8 p-1.5 bg-red-100 text-red-600 rounded-lg',
                     'Personal Leave': 'w-8 h-8 p-1.5 bg-green-100 text-green-600 rounded-lg',
                     'Study Leave': 'w-8 h-8 p-1.5 bg-purple-100 text-purple-600 rounded-lg',
@@ -190,7 +190,7 @@ describe('Leaves Create Page Tests', () => {
                 return classMap[leaveType] || 'w-8 h-8 p-1.5 bg-neutral-100 text-neutral-600 rounded-lg';
             };
 
-            expect(getLeaveTypeIconClasses('Annual Leave')).toContain('bg-blue-100 text-blue-600');
+            expect(getLeaveTypeIconClasses('Annual Leave')).toContain('bg-teal-100 text-teal-600');
             expect(getLeaveTypeIconClasses('Sick Leave')).toContain('bg-red-100 text-red-600');
             expect(getLeaveTypeIconClasses('Personal Leave')).toContain('bg-green-100 text-green-600');
             expect(getLeaveTypeIconClasses('Study Leave')).toContain('bg-purple-100 text-purple-600');

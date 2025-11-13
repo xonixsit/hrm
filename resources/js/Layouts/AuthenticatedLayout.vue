@@ -46,7 +46,7 @@
     // Unified background system with subtle gradients
     isDark 
       ? 'bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800' 
-      : 'bg-gradient-to-br from-gray-50 via-white to-blue-50/30'
+      : 'bg-gradient-to-br from-gray-50 via-white to-teal-50/30'
   ]">
         <!-- Skip Links for Accessibility -->
         <!-- <SkipLinks /> -->

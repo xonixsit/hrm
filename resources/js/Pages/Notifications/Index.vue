@@ -4,7 +4,7 @@
     <div v-for="notification in notifications.data" :key="notification.id" class="mb-4 p-4 border rounded">
       <p>{{ notification.message }}</p>
       <p class="text-sm text-gray-500">{{ notification.created_at }}</p>
-      <button v-if="!notification.read_at" @click="markAsRead(notification)" class="text-blue-500">Mark as Read</button>
+      <button v-if="!notification.read_at" @click="markAsRead(notification)" class="text-teal-500">Mark as Read</button>
     </div>
     <div v-if="notifications.last_page > 1">
       <Pagination 

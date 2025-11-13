@@ -373,7 +373,7 @@ const getAssessmentTypeLabel = () => {
 const getAssessmentTypeBadgeClasses = () => {
   const baseClasses = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium'
   const variants = {
-    self: 'bg-blue-100 text-blue-800',
+    self: 'bg-teal-100 text-teal-800',
     manager: 'bg-green-100 text-green-800',
     peer: 'bg-purple-100 text-purple-800',
     '360': 'bg-orange-100 text-orange-800'

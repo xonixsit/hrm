@@ -33,7 +33,7 @@
                 'px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center space-x-1.5 whitespace-nowrap',
                 isActive(item.route)
                   ? (isDark 
-                      ? 'bg-blue-600/20 text-blue-300' 
+                      ? 'bg-teal-600/20 text-teal-300' 
                       : 'bg-white/25 text-white border border-white/40 shadow-lg backdrop-blur-sm font-semibold')
                   : (isDark 
                       ? 'text-gray-300 hover:text-white hover:bg-gray-700/50' 
@@ -102,8 +102,8 @@
                           'flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
                           isActive(item.route)
                             ? (isDark 
-                                ? 'bg-blue-600/20 text-blue-300 border border-blue-500/30' 
-                                : 'bg-blue-50 text-blue-700 border border-blue-200/50')
+                                ? 'bg-teal-600/20 text-teal-300 border border-teal-500/30' 
+                                : 'bg-teal-50 text-teal-700 border border-teal-200/50')
                             : (isDark 
                                 ? 'text-gray-300 hover:text-white hover:bg-gray-700/50' 
                                 : 'text-gray-700 hover:text-gray-900 hover:bg-gray-50')
@@ -137,8 +137,8 @@
                             'flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
                             isActive(item.route)
                               ? (isDark 
-                                  ? 'bg-blue-600/20 text-blue-300 border border-blue-500/30' 
-                                  : 'bg-blue-50 text-blue-700 border border-blue-200/50')
+                                  ? 'bg-teal-600/20 text-teal-300 border border-teal-500/30' 
+                                  : 'bg-teal-50 text-teal-700 border border-teal-200/50')
                               : (isDark 
                                   ? 'text-gray-300 hover:text-white hover:bg-gray-700/50' 
                                   : 'text-gray-700 hover:text-gray-900 hover:bg-gray-50')
@@ -332,8 +332,8 @@
             'block px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200',
             isActive(item.route)
               ? (isDark 
-                  ? 'bg-blue-600/20 text-blue-300 border border-blue-500/30' 
-                  : 'bg-blue-50 text-blue-700 border border-blue-200/50')
+                  ? 'bg-teal-600/20 text-teal-300 border border-teal-500/30' 
+                  : 'bg-teal-50 text-teal-700 border border-teal-200/50')
               : (isDark 
                   ? 'text-gray-300 hover:text-white hover:bg-gray-700/50' 
                   : 'text-gray-700 hover:text-gray-900 hover:bg-white/60')

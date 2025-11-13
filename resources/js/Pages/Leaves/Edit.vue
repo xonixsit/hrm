@@ -7,14 +7,14 @@
       :actions="headerActions"
     >
       <!-- Admin Notice -->
-      <div v-if="isEditingAsAdmin" class="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+      <div v-if="isEditingAsAdmin" class="mb-6 bg-teal-50 border border-teal-200 rounded-lg p-4">
         <div class="flex items-center">
-          <svg class="w-5 h-5 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-5 h-5 text-teal-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           <div>
-            <h3 class="text-sm font-medium text-blue-800">Admin Edit Mode</h3>
-            <p class="text-sm text-blue-700 mt-1">
+            <h3 class="text-sm font-medium text-teal-800">Admin Edit Mode</h3>
+            <p class="text-sm text-teal-700 mt-1">
               You are editing {{ props.leave.employee?.user?.name || 'an employee' }}'s leave request. 
               You can modify the details and approve it in one action.
             </p>
@@ -28,7 +28,7 @@
           <h3 class="text-lg font-medium text-gray-900 mb-4">Employee Information</h3>
           <div class="flex items-center space-x-4">
             <div class="flex-shrink-0">
-              <div class="h-16 w-16 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
+              <div class="h-16 w-16 rounded-full bg-gradient-to-r from-teal-500 to-purple-600 flex items-center justify-center">
                 <span class="text-xl font-bold text-white">
                   {{ getInitials(props.leave.employee.user.name) }}
                 </span>
@@ -41,7 +41,7 @@
                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
                   Employee ID: {{ props.leave.employee.employee_code || 'N/A' }}
                 </span>
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-teal-100 text-teal-800">
                   Department: {{ props.leave.employee.department || 'N/A' }}
                 </span>
               </div>
@@ -326,7 +326,7 @@ const getLeaveTypeIcon = (leaveType) => {
 
 const getLeaveTypeIconClasses = (leaveType) => {
   const classMap = {
-    'Annual Leave': 'w-8 h-8 p-1.5 bg-blue-100 text-blue-600 rounded-lg',
+    'Annual Leave': 'w-8 h-8 p-1.5 bg-teal-100 text-teal-600 rounded-lg',
     'Sick Leave': 'w-8 h-8 p-1.5 bg-red-100 text-red-600 rounded-lg',
     'Personal Leave': 'w-8 h-8 p-1.5 bg-green-100 text-green-600 rounded-lg',
     'Study Leave': 'w-8 h-8 p-1.5 bg-purple-100 text-purple-600 rounded-lg',

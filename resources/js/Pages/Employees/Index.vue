@@ -96,12 +96,12 @@
             <span class="text-sm font-medium text-gray-700">Active filters:</span>
             <span
               v-if="activeDepartmentFilter"
-              class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+              class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-teal-100 text-teal-800"
             >
               Department: {{ activeDepartmentFilter }}
               <button
                 @click="clearDepartmentFilter"
-                class="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full text-blue-400 hover:bg-blue-200 hover:text-blue-500 focus:outline-none"
+                class="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full text-teal-400 hover:bg-teal-200 hover:text-teal-500 focus:outline-none"
               >
                 <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                   <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
@@ -519,7 +519,7 @@ const getDepartmentClasses = (departmentName) => {
   
   // Generate consistent colors based on department name
   const departmentColors = {
-    'HR': 'bg-blue-100 text-blue-800',
+    'HR': 'bg-teal-100 text-teal-800',
     'Finance': 'bg-green-100 text-green-800',
     'Marketing': 'bg-purple-100 text-purple-800',
     'Sales': 'bg-orange-100 text-orange-800',

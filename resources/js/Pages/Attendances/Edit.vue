@@ -32,9 +32,9 @@
       <!-- Employee Information -->
       <div v-if="attendance.employee?.user" class="mb-8">
         <div class="bg-white shadow-xl rounded-2xl border border-gray-200 overflow-hidden">
-          <div class="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-gray-200">
+          <div class="bg-gradient-to-r from-teal-50 to-indigo-50 px-6 py-4 border-b border-gray-200">
             <h3 class="text-xl font-semibold text-gray-900 flex items-center">
-              <svg class="w-6 h-6 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-6 h-6 mr-2 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
               </svg>
               Employee Information
@@ -43,7 +43,7 @@
           <div class="p-6">
             <div class="flex items-center space-x-6">
               <div class="flex-shrink-0">
-                <div class="h-20 w-20 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg">
+                <div class="h-20 w-20 rounded-2xl bg-gradient-to-br from-teal-500 to-indigo-600 flex items-center justify-center shadow-lg">
                   <span class="text-2xl font-bold text-white">
                     {{ getInitials(attendance.employee.user.name) }}
                   </span>
@@ -59,7 +59,7 @@
                     </svg>
                     ID: {{ attendance.employee.employee_code || 'N/A' }}
                   </span>
-                  <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 border border-blue-300">
+                  <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold bg-gradient-to-r from-teal-100 to-teal-200 text-teal-800 border border-teal-300">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                     </svg>
@@ -91,14 +91,14 @@
           </div>
           <div class="p-6">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div class="text-center p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl border border-blue-200 transform hover:scale-105 transition-transform duration-200">
-                <div class="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center mx-auto mb-3">
+              <div class="text-center p-6 bg-gradient-to-br from-teal-50 to-teal-100 rounded-2xl border border-teal-200 transform hover:scale-105 transition-transform duration-200">
+                <div class="w-12 h-12 bg-teal-500 rounded-xl flex items-center justify-center mx-auto mb-3">
                   <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                   </svg>
                 </div>
-                <div class="text-2xl font-bold text-blue-600">{{ workDuration }}</div>
-                <div class="text-sm font-medium text-blue-800 mt-1">Work Duration</div>
+                <div class="text-2xl font-bold text-teal-600">{{ workDuration }}</div>
+                <div class="text-sm font-medium text-teal-800 mt-1">Work Duration</div>
               </div>
               <div class="text-center p-6 bg-gradient-to-br from-green-50 to-green-100 rounded-2xl border border-green-200 transform hover:scale-105 transition-transform duration-200">
                 <div class="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center mx-auto mb-3">

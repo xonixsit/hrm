@@ -114,7 +114,7 @@ const getBadgeClasses = (type) => {
     case 'error':
       return `${baseClasses} bg-red-100 text-red-800`;
     case 'info':
-      return `${baseClasses} bg-blue-100 text-blue-800`;
+      return `${baseClasses} bg-teal-100 text-teal-800`;
     default:
       return `${baseClasses} bg-neutral-100 text-neutral-800`;
   }

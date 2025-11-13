@@ -731,11 +731,11 @@ const getTabIndex = (item, index) => {
 
 /* Focus styles for keyboard navigation */
 .breadcrumb-link:focus {
-  @apply outline-none ring-2 ring-blue-500 ring-offset-2;
+  @apply outline-none ring-2 ring-teal-500 ring-offset-2;
 }
 
 .breadcrumb-link--focused {
-  @apply ring-2 ring-blue-500 ring-offset-2;
+  @apply ring-2 ring-teal-500 ring-offset-2;
 }
 
 .breadcrumb-link--clickable:focus {
@@ -749,7 +749,7 @@ const getTabIndex = (item, index) => {
 
 .breadcrumb-back-button {
   @apply p-1 rounded-md hover:bg-neutral-100 transition-colors;
-  @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2;
+  @apply focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2;
 }
 
 .breadcrumb-current-label {
@@ -763,7 +763,7 @@ const getTabIndex = (item, index) => {
 
 .breadcrumb-history-toggle {
   @apply p-1 rounded-md hover:bg-neutral-100 transition-colors;
-  @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2;
+  @apply focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2;
   @apply text-neutral-500 hover:text-neutral-700;
 }
 
@@ -839,11 +839,11 @@ const getTabIndex = (item, index) => {
 }
 
 .theme-dark .breadcrumb-link:focus {
-  @apply ring-blue-400;
+  @apply ring-teal-400;
 }
 
 .theme-dark .breadcrumb-link--focused {
-  @apply ring-blue-400;
+  @apply ring-teal-400;
 }
 
 .theme-dark .breadcrumb-back-button {

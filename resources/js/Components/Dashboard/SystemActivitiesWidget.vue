@@ -57,7 +57,7 @@ const getActivityIcon = (type) => {
 const getActivityIconClasses = (type) => {
   const classMap = {
     create: 'bg-green-100 text-green-600',
-    approve: 'bg-blue-100 text-blue-600',
+    approve: 'bg-teal-100 text-teal-600',
     reject: 'bg-red-100 text-red-600',
     update: 'bg-yellow-100 text-yellow-600',
     department: 'bg-purple-100 text-purple-600'

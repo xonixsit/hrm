@@ -31,8 +31,8 @@
         size === 'small' ? 'w-10 h-10 p-2' : 'w-12 h-12 p-3',
         // Icon background colors based on variant
         iconVariant === 'primary' && (isDark 
-          ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30' 
-          : 'bg-blue-50 text-blue-600 border border-blue-200/50'),
+          ? 'bg-teal-600/20 text-teal-400 border border-teal-500/30' 
+          : 'bg-teal-50 text-teal-600 border border-teal-200/50'),
         iconVariant === 'success' && (isDark 
           ? 'bg-green-600/20 text-green-400 border border-green-500/30' 
           : 'bg-green-50 text-green-600 border border-green-200/50'),
@@ -137,15 +137,15 @@
       ? 'bg-red-600/20 text-red-400 border border-red-500/30' 
       : 'bg-red-50 text-red-700 border border-red-200'),
     status === 'info' && (isDark 
-      ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30' 
-      : 'bg-blue-50 text-blue-700 border border-blue-200')
+      ? 'bg-teal-600/20 text-teal-400 border border-teal-500/30' 
+      : 'bg-teal-50 text-teal-700 border border-teal-200')
   ]">
     <div :class="[
       'w-1.5 h-1.5 rounded-full',
       status === 'success' && 'bg-green-400',
       status === 'warning' && 'bg-orange-400',
       status === 'error' && 'bg-red-400',
-      status === 'info' && 'bg-blue-400'
+      status === 'info' && 'bg-teal-400'
     ]"></div>
     <span>{{ statusText || status }}</span>
   </div>
