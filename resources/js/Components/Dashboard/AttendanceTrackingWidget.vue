@@ -289,7 +289,7 @@ const sendReminder = async () => {
 };
 const exportReport = async () => {
   try {
-    const response = await axios.get('/api/attendance/export-report', {
+    const response = await window.axios.get('/api/attendance/export-report', {
       responseType: 'blob',
       headers: {
         'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'

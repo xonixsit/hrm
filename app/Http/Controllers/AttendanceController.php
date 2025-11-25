@@ -1344,74 +1344,89 @@ class AttendanceController extends Controller
                 }
             }
 
-            // Create Excel file using Laravel Excel
-            $filename = "attendance_report_{$today}.xlsx";
+            $filename = "attendance_report_{$today}.
             
-            // Use PhpSpreadsheet to create Excel file
-            $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
-            $sheet = $spreadsheet->getActiveSheet();
+            Excel
+            return \Maatwebsite\Excel\Facades\Excel::dload(
+                new class($exportData, $employeeRoleEmployees->count(), {
+                    private $data;
+            es;
+                    privatdInCount;
+                    
+                    public function __construct($datnt) {
+             $data;
+                        $thi
+                        $this->clockedInCount = $clockedInCount;
+                    }
+                    
+                    public function array(): array {
+                        // Add summary rows at the top
+                        $summary = [
+             Y')],
+                       )],
+                     y row
+                        ];
+                        
+                       s
+             ta));
+                  }
+                    
+                    public function headings(): array {
+                        return [
+             s
             
-            // Set headers
-            $headers = array_keys($exportData[0] ?? []);
-            $sheet->fromArray($headers, null, 'A1');
-            
-            // Style headers
-            $headerRange = 'A1:' . \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex(count($headers)) . '1';
-            $sheet->getStyle($headerRange)->getFont()->setBold(true);
-            $sheet->getStyle($headerRange)->getFill()
-                ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
-                ->getStartColor()->setARGB('FF4F81BD');
-            $sheet->getStyle($headerRange)->getFont()->getColor()->setARGB('FFFFFFFF');
-            
-            // Add data
-            $row = 2;
-            foreach ($exportData as $data) {
-                $sheet->fromArray(array_values($data), null, 'A' . $row);
-                $row++;
-            }
-            
-            // Auto-size columns
-            foreach (range('A', \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex(count($headers))) as $col) {
-                $sheet->getColumnDimension($col)->setAutoSize(true);
-            }
-            
-            // Add summary at the top
-            $sheet->insertNewRowBefore(1, 3);
-            $sheet->setCellValue('A1', 'Attendance Report - ' . now()->format('F j, Y'));
-            $sheet->setCellValue('A2', 'Total Employees: ' . $employeeRoleEmployees->count() . 
-                                      ' | Clocked In: ' . $todaysAttendances->count() . 
-                                      ' | Missed Clock-in: ' . ($employeeRoleEmployees->count() - $todaysAttendances->count()));
-            
-            // Style summary
-            $sheet->getStyle('A1:A2')->getFont()->setBold(true);
-            $sheet->getStyle('A1')->getFont()->setSize(14);
-            
-            // Create writer and output
-            $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
-            
-            // Set headers for download
-            $headers = [
-                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
-                'Cache-Control' => 'max-age=0',
-            ];
-            
-            // Create temporary file
-            $tempFile = tempnam(sys_get_temp_dir(), 'attendance_report');
-            $writer->save($tempFile);
-            
-            $this->logAudit('Attendance Report Export', "Exported attendance report for {$today} with {$employeeRoleEmployees->count()} employees");
-            
-            return response()->download($tempFile, $filename, $headers)->deleteFileAfterSend(true);
-            
-        } catch (\Exception $e) {
-            Log::error('Failed to export attendance report: ' . $e->getMessage());
-            
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to export attendance report. Please try again.',
-                'error' => $e->getMessage()
-            ], 500);
-        }
+                            '',
+                            'Employee Name',
+                            'Employee Code', 
+                            'Department',
+                            'Job Title',
+                            'Status',
+            Time',
+                            ,
+                            'Work Duration',
+                            'Break Duration',
+            s',
+                            'On Break',
+                            'Location',
+            tes'
+                        ];
+                    }
+                    
+                    public function styles(\PhpOffice\PhpSpreadsheet\Worksheet\Works
+                        // Style summary rows
+              4);
+            ;
+                        
+                        // Style headers (row 4)
+                        $sheet->getSt);
+            ()
+                            ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+            4F81BD');
+                        $sheet->getStyle('A4:P4')->getFont()->getColor()->setARGB('FFFFFFFF');
+               
+                        // Auto-slumns
+                        foreach (range('A', 'P') as $col) {
+            rue);
+                        }
+                        
+                        return [];
+                    }
+                    
+         
+     rt';
+   }
+
     }
+        }   ], 500);    ge()
+     >getMessaror' => $e-  'er         n.',
+      try agaiport. Pleasere attendance exportd to  => 'Faileage'      'mess   se,
+        => fal 'success'              on([
+ ponse()->jsturn res      re            
+
+      essage());>getM' . $e-report: ance nd atte to exported('Fail:error      Log:{
+      ) xception $e\E (tch     } ca   
+         
+       );
+        ilename         $f
+         },                               Repondance turn 'Atte  re                 
 }
