@@ -158,6 +158,9 @@ class DashboardController extends Controller
 
             // Get attendance tracking data
             $attendanceTracking = $this->getAttendanceTrackingData();
+            
+            // Get break violations data
+            $breakViolations = $this->getBreakViolations();
 
             $data['adminStats'] = [
                 'totalEmployees' => $totalEmployees,
@@ -195,6 +198,7 @@ class DashboardController extends Controller
             $data['systemHealth'] = $this->getSystemHealth();
             $data['recentUserActivity'] = $this->getRecentUserActivity();
             $data['attendanceTracking'] = $attendanceTracking;
+            $data['breakViolations'] = $breakViolations;
 
             // Legacy props for backward compatibility
             $data['totalEmployees'] = $totalEmployees;
@@ -1544,6 +1548,67 @@ class DashboardController extends Controller
         ]);
 
         return $result;
+    }
+
+    private function getBreakViolations()
+    {
+        try {
+            $violations = [];
+            
+            // Get today's attendances with active breaks
+            $attendances = Attendance::whereDate('date', today())
+                ->where('on_break', true)
+                ->whereNotNull('current_break_start')
+                ->with(['employee.user', 'employee.department'])
+                ->get();
+
+            foreach ($attendances as $attendance) {
+                if (!$attendance->employee || !$attendance->employee->user) continue;
+                
+                $breakSessions = $attendance->break_sessions ?? [];
+                $currentBreakStart = $attendance->current_break_start;
+                
+                if ($currentBreakStart) {
+                    $currentBreakDuration = now()->diffInMinutes($currentBreakStart);
+                    $breakNumber = count($breakSessions) + 1;
+                    
+                    // Define break limits
+                    $limits = [1 => 15, 2 => 30, 3 => 15]; // minutes
+                    $limit = $limits[$breakNumber] ?? 15;
+                    
+                    if ($currentBreakDuration > $limit) {
+                        $violations[] = [
+                            'employee_id' => $attendance->employee_id,
+                            'employee_name' => $attendance->employee->user->name,
+                            'job_title' => $attendance->employee->job_title,
+                            'department' => $attendance->employee->department->name ?? 'General',
+                            'break_number' => $breakNumber,
+                            'duration' => $this->formatDuration($currentBreakDuration),
+                            'limit' => $this->formatDuration($limit),
+                            'overtime' => $this->formatDuration($currentBreakDuration - $limit),
+                            'break_start' => $currentBreakStart->format('H:i'),
+                        ];
+                    }
+                }
+            }
+            
+            return $violations;
+        } catch (\Exception $e) {
+            Log::error('Error getting break violations: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    private function formatDuration($minutes)
+    {
+        if ($minutes < 60) {
+            return $minutes . 'm';
+        }
+        
+        $hours = floor($minutes / 60);
+        $remainingMinutes = $minutes % 60;
+        
+        return $hours . 'h ' . $remainingMinutes . 'm';
     }
 
     private function getTodaysSummary($employeeId)

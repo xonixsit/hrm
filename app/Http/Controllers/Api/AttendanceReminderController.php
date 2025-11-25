@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Employee;
 use App\Mail\ClockInReminder;
+use App\Mail\AdminReminderConfirmation;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 
@@ -34,6 +35,16 @@ class AttendanceReminderController extends Controller
                     Mail::to($employee->user->email)->send(new ClockInReminder($employee));
                     $sentCount++;
                 }
+            }
+
+            // Send confirmation email to admin
+            Mail::to(auth()->user()->email)->send(new \App\Mail\AdminReminderConfirmation($sentCount, auth()->user()->name));
+
+            // Send confirmation email to admin
+            if ($sentCount > 0 && auth()->user()->email) {
+                Mail::to(auth()->user()->email)->send(
+                    new AdminReminderConfirmation($sentCount, auth()->user()->name)
+                );
             }
 
             Log::info("Manual clock-in reminders sent by admin", [

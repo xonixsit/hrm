@@ -1267,4 +1267,151 @@ class AttendanceController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Export attendance report for admin dashboard widget
+     */
+    public function exportAttendanceReport(Request $request)
+    {
+        try {
+            // Only Admin/HR can export attendance reports
+            if (!Auth::user()->hasRole(['Admin', 'HR'])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized to export attendance reports.'
+                ], 403);
+            }
+
+            $today = now()->format('Y-m-d');
+            
+            // Get all active employees with Employee role
+            $employeeRoleEmployees = Employee::active()
+                ->whereHas('user', function($query) {
+                    $query->whereHas('roles', function($roleQuery) {
+                        $roleQuery->where('name', 'Employee');
+                    });
+                })
+                ->with(['user', 'department'])
+                ->get();
+
+            // Get today's attendance records for these employees
+            $todaysAttendances = Attendance::whereDate('date', $today)
+                ->whereIn('employee_id', $employeeRoleEmployees->pluck('id'))
+                ->with(['employee.user', 'employee.department'])
+                ->get()
+                ->keyBy('employee_id');
+
+            // Prepare data for export
+            $exportData = [];
+            
+            foreach ($employeeRoleEmployees as $employee) {
+                $attendance = $todaysAttendances->get($employee->id);
+                
+                if ($attendance) {
+                    // Employee has clocked in
+                    $exportData[] = [
+                        'Employee Name' => $employee->user->name,
+                        'Employee Code' => $employee->employee_code,
+                        'Department' => $employee->department ? $employee->department->name : 'No Department',
+                        'Job Title' => $employee->job_title,
+                        'Status' => $attendance->clock_out ? 'Clocked Out' : 'Clocked In',
+                        'Clock In Time' => $attendance->clock_in ? $attendance->clock_in->format('H:i:s') : 'N/A',
+                        'Clock Out Time' => $attendance->clock_out ? $attendance->clock_out->format('H:i:s') : 'Still Working',
+                        'Work Duration' => $attendance->work_duration,
+                        'Break Duration' => $attendance->break_duration,
+                        'Break Sessions' => count($attendance->break_sessions ?? []),
+                        'On Break' => $attendance->on_break ? 'Yes' : 'No',
+                        'Location' => $attendance->location ?? 'N/A',
+                        'Notes' => $attendance->notes ?? 'N/A'
+                    ];
+                } else {
+                    // Employee hasn't clocked in
+                    $exportData[] = [
+                        'Employee Name' => $employee->user->name,
+                        'Employee Code' => $employee->employee_code,
+                        'Department' => $employee->department ? $employee->department->name : 'No Department',
+                        'Job Title' => $employee->job_title,
+                        'Status' => 'Not Clocked In',
+                        'Clock In Time' => 'N/A',
+                        'Clock Out Time' => 'N/A',
+                        'Work Duration' => '0h 0m',
+                        'Break Duration' => '0h 0m',
+                        'Break Sessions' => 0,
+                        'On Break' => 'No',
+                        'Location' => 'N/A',
+                        'Notes' => 'Employee has not clocked in today'
+                    ];
+                }
+            }
+
+            // Create Excel file using Laravel Excel
+            $filename = "attendance_report_{$today}.xlsx";
+            
+            // Use PhpSpreadsheet to create Excel file
+            $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+            $sheet = $spreadsheet->getActiveSheet();
+            
+            // Set headers
+            $headers = array_keys($exportData[0] ?? []);
+            $sheet->fromArray($headers, null, 'A1');
+            
+            // Style headers
+            $headerRange = 'A1:' . \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex(count($headers)) . '1';
+            $sheet->getStyle($headerRange)->getFont()->setBold(true);
+            $sheet->getStyle($headerRange)->getFill()
+                ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+                ->getStartColor()->setARGB('FF4F81BD');
+            $sheet->getStyle($headerRange)->getFont()->getColor()->setARGB('FFFFFFFF');
+            
+            // Add data
+            $row = 2;
+            foreach ($exportData as $data) {
+                $sheet->fromArray(array_values($data), null, 'A' . $row);
+                $row++;
+            }
+            
+            // Auto-size columns
+            foreach (range('A', \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex(count($headers))) as $col) {
+                $sheet->getColumnDimension($col)->setAutoSize(true);
+            }
+            
+            // Add summary at the top
+            $sheet->insertNewRowBefore(1, 3);
+            $sheet->setCellValue('A1', 'Attendance Report - ' . now()->format('F j, Y'));
+            $sheet->setCellValue('A2', 'Total Employees: ' . $employeeRoleEmployees->count() . 
+                                      ' | Clocked In: ' . $todaysAttendances->count() . 
+                                      ' | Missed Clock-in: ' . ($employeeRoleEmployees->count() - $todaysAttendances->count()));
+            
+            // Style summary
+            $sheet->getStyle('A1:A2')->getFont()->setBold(true);
+            $sheet->getStyle('A1')->getFont()->setSize(14);
+            
+            // Create writer and output
+            $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+            
+            // Set headers for download
+            $headers = [
+                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+                'Cache-Control' => 'max-age=0',
+            ];
+            
+            // Create temporary file
+            $tempFile = tempnam(sys_get_temp_dir(), 'attendance_report');
+            $writer->save($tempFile);
+            
+            $this->logAudit('Attendance Report Export', "Exported attendance report for {$today} with {$employeeRoleEmployees->count()} employees");
+            
+            return response()->download($tempFile, $filename, $headers)->deleteFileAfterSend(true);
+            
+        } catch (\Exception $e) {
+            Log::error('Failed to export attendance report: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to export attendance report. Please try again.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

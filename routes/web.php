@@ -107,6 +107,10 @@ Route::middleware('auth')->group(function () {
         Route::post('break-end', [AttendanceController::class, 'endBreak']);
         Route::get('current', [AttendanceController::class, 'getCurrentStatus']);
         Route::post('send-clock-in-reminders', [App\Http\Controllers\Api\AttendanceReminderController::class, 'sendClockInReminders']);
+        Route::post('send-break-reminders', [App\Http\Controllers\Api\BreakReminderController::class, 'sendBreakReminders']);
+        Route::get('export-report', [App\Http\Controllers\Api\ReportExportController::class, 'exportAttendanceReport']);
+        Route::get('export-break-report', [App\Http\Controllers\Api\ReportExportController::class, 'exportBreakReport']);
+        Route::get('export-report', [AttendanceController::class, 'exportAttendanceReport']);
     });
 
     // Birthday API routes (for future use)

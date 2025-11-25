@@ -137,6 +137,9 @@
             <AttendanceTrackingWidget :attendance-data="attendanceTracking" />
           </div>
 
+          <!-- Break Monitoring Dashboard -->
+          <BreakMonitoringWidget :break-violations="breakViolations" />
+
           <!-- Competency Management Dashboard -->
           <UnifiedCard title="Competency Management" description="Track and manage employee competencies"
             :icon="AcademicCapIcon" iconVariant="primary" variant="elevated">
@@ -405,6 +408,7 @@
   import BirthdayNotifications from '@/Components/Dashboard/BirthdayNotifications.vue';
   import BirthdayPopup from '@/Components/Dashboard/BirthdayPopup.vue';
   import AttendanceTrackingWidget from '@/Components/Dashboard/AttendanceTrackingWidget.vue';
+  import BreakMonitoringWidget from '@/Components/Dashboard/BreakMonitoringWidget.vue';
 
   // Icons
   import {
@@ -491,6 +495,10 @@
         missedClockInEmployees: [],
         attendanceRate: 0,
       })
+    },
+    breakViolations: {
+      type: Array,
+      default: () => []
     }
   });
 

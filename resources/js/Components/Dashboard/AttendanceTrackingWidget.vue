@@ -161,11 +161,19 @@
       <div class="flex space-x-2">
         <button
           @click="sendReminder"
-          :disabled="attendanceData.missedClockInCount === 0 || loading"
-          class="flex-1 inline-flex items-center justify-center px-3 py-2 bg-orange-50 text-orange-700 text-sm font-medium rounded-lg hover:bg-orange-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          :disabled="attendanceData.missedClockInCount === 0 || loading || reminderSent"
+          :class="[
+            'flex-1 inline-flex items-center justify-center px-3 py-2 text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed',
+            reminderSent 
+              ? 'bg-green-50 text-green-700 border border-green-200' 
+              : 'bg-orange-50 text-orange-700 hover:bg-orange-100'
+          ]"
         >
-          <BellIcon class="w-4 h-4 mr-2" />
-          Send Reminder
+          <BellIcon v-if="!reminderSent" class="w-4 h-4 mr-2" />
+          <svg v-else class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+          </svg>
+          {{ reminderSent ? 'Reminders Sent' : 'Send Reminder' }}
         </button>
         <button
           @click="exportReport"
@@ -211,6 +219,7 @@ const loading = ref(false);
 const scrollContainer = ref(null);
 const showTopFade = ref(false);
 const showBottomFade = ref(false);
+const reminderSent = ref(false);
 
 const getAttendanceRateColor = (rate) => {
   if (rate >= 90) return 'bg-green-500';
@@ -235,11 +244,11 @@ const refreshData = () => {
 };
 
 const sendReminder = async () => {
-  if (props.attendanceData.missedClockInCount === 0) return;
+  if (props.attendanceData.missedClockInCount === 0 || reminderSent.value) return;
   
   loading.value = true;
   try {
-    const response = await axios.post('/api/attendance/send-clock-in-reminders', {}, {
+    const response = await window.axios.post('/api/attendance/send-clock-in-reminders', {}, {
       headers: {
         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
         'Accept': 'application/json',
@@ -248,19 +257,57 @@ const sendReminder = async () => {
     });
     
     if (response.data.success) {
-      alert(`Clock-in reminders sent to ${response.data.count} employees`);
+      reminderSent.value = true;
+      // Show success message
+      const message = `✅ Clock-in reminders sent to ${response.data.count} employees. Admin confirmation email sent.`;
+      
+      // Create and show toast notification
+      const toast = document.createElement('div');
+      toast.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 transition-all duration-300';
+      toast.textContent = message;
+      document.body.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.remove();
+      }, 5000);
     }
   } catch (error) {
     console.error('Failed to send reminder:', error);
-    alert('Failed to send reminders. Please try again.');
+    
+    // Show error toast
+    const toast = document.createElement('div');
+    toast.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 transition-all duration-300';
+    toast.textContent = '❌ Failed to send reminders. Please try again.';
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+      toast.remove();
+    }, 5000);
   } finally {
     loading.value = false;
   }
 };
-const exportReport = () => {
-  // TODO: Implement export functionality
-  console.log('Exporting attendance report');
-  // You can add an API call here to generate and download a report
+const exportReport = async () => {
+  try {
+    const response = await axios.get('/api/attendance/export-report', {
+      responseType: 'blob',
+      headers: {
+        'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      }
+    });
+    
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `attendance-report-${new Date().toISOString().split('T')[0]}.xlsx`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error('Failed to export attendance report:', error);
+    alert('Failed to export report. Please try again.');
+  }
 };
 
 const handleScroll = () => {
