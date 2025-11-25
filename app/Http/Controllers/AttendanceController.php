@@ -1276,6 +1276,54 @@ class AttendanceController extends Controller
     }
 
     /**
+     * Get current attendance status for a specific employee (used by DashboardController)
+     */
+    public function getCurrentAttendanceStatus($employeeId)
+    {
+        $today = now()->format('Y-m-d');
+        
+        $attendance = Attendance::where('employee_id', $employeeId)
+            ->whereDate('date', $today)
+            ->first();
+
+        if (!$attendance) {
+            return [
+                'clocked_in' => false,
+                'on_break' => false,
+                'clock_in_time' => null,
+                'break_start_time' => null,
+                'current_session' => null,
+                'todays_summary' => [
+                    'total_hours' => '0h 0m',
+                    'break_time' => '0h 0m',
+                    'sessions' => 0,
+                    'clock_ins' => 0
+                ],
+                'recent_activities' => [],
+                'stats' => [
+                    'weekly_hours' => '0h 0m',
+                    'monthly_hours' => '0h 0m',
+                    'average_daily' => '0h 0m'
+                ]
+            ];
+        }
+
+        $clockedIn = $attendance->isClockedIn();
+
+        return [
+            'clocked_in' => $clockedIn,
+            'on_break' => $attendance->on_break ?? false,
+            'clock_in_time' => $attendance->clock_in?->toISOString(),
+            'break_start_time' => $attendance->current_break_start?->toISOString(),
+            'break_sessions' => $attendance->break_sessions ?? [],
+            'current_session' => $attendance,
+            'todays_summary' => $this->getTodaysSummary($employeeId),
+            'recent_activities' => $this->getRecentActivities($employeeId),
+            'stats' => $this->getAttendanceStats($employeeId)
+        ];
+    }
+
+    /**
      * Export attendance report for admin dashboard widget
      */
     public function exportAttendanceReport(Request $request)

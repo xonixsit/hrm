@@ -104,6 +104,11 @@ class Employee extends Model
         return $this->hasMany(CompetencyAssessment::class);
     }
 
+    public function attendances()
+    {
+        return $this->hasMany(Attendance::class);
+    }
+
     // Helper methods
     public function isActive()
     {
