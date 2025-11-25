@@ -12,6 +12,13 @@ use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Log;
 use App\Traits\AuditLogTrait;
+use Maatwebsite\Excel\Facades\Excel;
+use Maatwebsite\Excel\Concerns\FromArray;
+use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\WithStyles;
+use Maatwebsite\Excel\Concerns\WithTitle;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
 
 class AttendanceController extends Controller
 {
@@ -1344,89 +1351,97 @@ class AttendanceController extends Controller
                 }
             }
 
-            $filename = "attendance_report_{$today}.
+            $filename = "attendance_report_{$today}.xlsx";
             
-            Excel
-            return \Maatwebsite\Excel\Facades\Excel::dload(
-                new class($exportData, $employeeRoleEmployees->count(), {
-                    private $data;
-            es;
-                    privatdInCount;
-                    
-                    public function __construct($datnt) {
-             $data;
-                        $thi
-                        $this->clockedInCount = $clockedInCount;
-                    }
-                    
-                    public function array(): array {
-                        // Add summary rows at the top
-                        $summary = [
-             Y')],
-                       )],
-                     y row
-                        ];
-                        
-                       s
-             ta));
-                  }
-                    
-                    public function headings(): array {
-                        return [
-             s
+            // Create Excel export using Laravel Excel
+            return Excel::download(
+                new AttendanceReportExport($exportData, $employeeRoleEmployees->count(), $todaysAttendances->count()),
+                $filename
+            );
             
-                            '',
-                            'Employee Name',
-                            'Employee Code', 
-                            'Department',
-                            'Job Title',
-                            'Status',
-            Time',
-                            ,
-                            'Work Duration',
-                            'Break Duration',
-            s',
-                            'On Break',
-                            'Location',
-            tes'
-                        ];
-                    }
-                    
-                    public function styles(\PhpOffice\PhpSpreadsheet\Worksheet\Works
-                        // Style summary rows
-              4);
-            ;
-                        
-                        // Style headers (row 4)
-                        $sheet->getSt);
-            ()
-                            ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
-            4F81BD');
-                        $sheet->getStyle('A4:P4')->getFont()->getColor()->setARGB('FFFFFFFF');
-               
-                        // Auto-slumns
-                        foreach (range('A', 'P') as $col) {
-            rue);
-                        }
-                        
-                        return [];
-                    }
-                    
-         
-     rt';
-   }
-
+        } catch (\Exception $e) {
+            Log::error('Failed to export attendance report: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to export attendance report. Please try again.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
-        }   ], 500);    ge()
-     >getMessaror' => $e-  'er         n.',
-      try agaiport. Pleasere attendance exportd to  => 'Faileage'      'mess   se,
-        => fal 'success'              on([
- ponse()->jsturn res      re            
+}
 
-      essage());>getM' . $e-report: ance nd atte to exported('Fail:error      Log:{
-      ) xception $e\E (tch     } ca   
-         
-       );
-        ilename         $f
-         },                               Repondance turn 'Atte  re                 
+class AttendanceReportExport implements FromArray, WithHeadings, WithStyles, WithTitle
+{
+    private $data;
+    private $totalEmployees;
+    private $clockedInCount;
+    
+    public function __construct($data, $totalEmployees, $clockedInCount) 
+    {
+        $this->data = $data;
+        $this->totalEmployees = $totalEmployees;
+        $this->clockedInCount = $clockedInCount;
+    }
+    
+    public function array(): array 
+    {
+        // Add summary rows at the top
+        $summary = [
+            ['Attendance Report - ' . now()->format('F j, Y')],
+            ['Total Employees: ' . $this->totalEmployees . ' | Clocked In: ' . $this->clockedInCount . ' | Missed Clock-in: ' . ($this->totalEmployees - $this->clockedInCount)],
+            [''], // Empty row
+        ];
+        
+        // Add data rows
+        return array_merge($summary, array_map('array_values', $this->data));
+    }
+    
+    public function headings(): array 
+    {
+        return [
+            '', // Empty for summary rows
+            '',
+            '',
+            'Employee Name',
+            'Employee Code', 
+            'Department',
+            'Job Title',
+            'Status',
+            'Clock In Time',
+            'Clock Out Time',
+            'Work Duration',
+            'Break Duration',
+            'Break Sessions',
+            'On Break',
+            'Location',
+            'Notes'
+        ];
+    }
+    
+    public function styles(Worksheet $sheet) 
+    {
+        // Style summary rows
+        $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
+        $sheet->getStyle('A2')->getFont()->setBold(true);
+        
+        // Style headers (row 4)
+        $sheet->getStyle('A4:P4')->getFont()->setBold(true);
+        $sheet->getStyle('A4:P4')->getFill()
+            ->setFillType(Fill::FILL_SOLID)
+            ->getStartColor()->setARGB('FF4F81BD');
+        $sheet->getStyle('A4:P4')->getFont()->getColor()->setARGB('FFFFFFFF');
+        
+        // Auto-size columns
+        foreach (range('A', 'P') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+        
+        return [];
+    }
+    
+    public function title(): string 
+    {
+        return 'Attendance Report';
+    }
 }

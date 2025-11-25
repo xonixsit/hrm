@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Employee;
 use App\Models\Attendance;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
@@ -17,34 +18,32 @@ class ReportExportController extends Controller
     public function exportAttendanceReport()
     {
         try {
-            // Get attendance data
-            $employeesWithoutClockIn = Employee::active()
+            // Only Admin/HR can export attendance reports
+            if (!Auth::user()->hasRole(['Admin', 'HR'])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized to export attendance reports.'
+                ], 403);
+            }
+
+            $today = now()->format('Y-m-d');
+
+            // Get all active employees with Employee role
+            $employeeRoleEmployees = Employee::active()
                 ->whereHas('user', function($query) {
                     $query->whereHas('roles', function($roleQuery) {
                         $roleQuery->where('name', 'Employee');
                     });
-                })
-                ->whereDoesntHave('attendances', function($query) {
-                    $query->whereDate('date', today());
                 })
                 ->with(['user', 'department'])
                 ->get();
 
-            $clockedInEmployees = Employee::active()
-                ->whereHas('user', function($query) {
-                    $query->whereHas('roles', function($roleQuery) {
-                        $roleQuery->where('name', 'Employee');
-                    });
-                })
-                ->whereHas('attendances', function($query) {
-                    $query->whereDate('date', today())
-                          ->whereNotNull('clock_in')
-                          ->whereNull('clock_out');
-                })
-                ->with(['user', 'department', 'attendances' => function($query) {
-                    $query->whereDate('date', today());
-                }])
-                ->get();
+            // Get today's attendance records for these employees
+            $todaysAttendances = Attendance::whereDate('date', $today)
+                ->whereIn('employee_id', $employeeRoleEmployees->pluck('id'))
+                ->with(['employee.user', 'employee.department'])
+                ->get()
+                ->keyBy('employee_id');
 
             // Create spreadsheet
             $spreadsheet = new Spreadsheet();
@@ -52,7 +51,11 @@ class ReportExportController extends Controller
             $sheet->setTitle('Attendance Report');
 
             // Set headers
-            $headers = ['Employee Name', 'Email', 'Job Title', 'Department', 'Status', 'Clock In Time', 'Work Duration'];
+            $headers = [
+                'Employee Name', 'Employee Code', 'Department', 'Job Title', 'Status', 
+                'Clock In Time', 'Clock Out Time', 'Work Duration', 'Break Duration', 
+                'Break Sessions', 'On Break', 'Location', 'Notes'
+            ];
             $sheet->fromArray($headers, null, 'A1');
 
             // Style headers
@@ -61,64 +64,86 @@ class ReportExportController extends Controller
                 'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '0D9488']],
                 'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER]
             ];
-            $sheet->getStyle('A1:G1')->applyFromArray($headerStyle);
+            $sheet->getStyle('A1:M1')->applyFromArray($headerStyle);
 
             $row = 2;
+            $clockedInCount = 0;
 
-            // Add clocked in employees
-            foreach ($clockedInEmployees as $employee) {
-                $attendance = $employee->attendances->first();
-                $sheet->fromArray([
-                    $employee->user->name,
-                    $employee->user->email,
-                    $employee->job_title,
-                    $employee->department->name ?? 'N/A',
-                    'Clocked In',
-                    $attendance->clock_in->format('H:i'),
-                    $attendance->getCurrentSessionDuration()
-                ], null, 'A' . $row);
+            // Prepare data for export
+            foreach ($employeeRoleEmployees as $employee) {
+                $attendance = $todaysAttendances->get($employee->id);
                 
-                // Green background for clocked in
-                $sheet->getStyle('A' . $row . ':G' . $row)->applyFromArray([
-                    'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'F0FDF4']]
-                ]);
-                $row++;
-            }
+                if ($attendance) {
+                    // Employee has clocked in
+                    $clockedInCount++;
+                    $data = [
+                        $employee->user->name,
+                        $employee->employee_code,
+                        $employee->department ? $employee->department->name : 'No Department',
+                        $employee->job_title,
+                        $attendance->clock_out ? 'Clocked Out' : 'Clocked In',
+                        $attendance->clock_in ? $attendance->clock_in->format('H:i:s') : 'N/A',
+                        $attendance->clock_out ? $attendance->clock_out->format('H:i:s') : 'Still Working',
+                        $attendance->work_duration ?? '0h 0m',
+                        $attendance->break_duration ?? '0h 0m',
+                        count($attendance->break_sessions ?? []),
+                        $attendance->on_break ? 'Yes' : 'No',
+                        $attendance->location ?? 'N/A',
+                        $attendance->notes ?? 'N/A'
+                    ];
+                    
+                    // Green background for clocked in
+                    $fillColor = 'F0FDF4';
+                } else {
+                    // Employee hasn't clocked in
+                    $data = [
+                        $employee->user->name,
+                        $employee->employee_code,
+                        $employee->department ? $employee->department->name : 'No Department',
+                        $employee->job_title,
+                        'Not Clocked In',
+                        'N/A',
+                        'N/A',
+                        '0h 0m',
+                        '0h 0m',
+                        0,
+                        'No',
+                        'N/A',
+                        'Employee has not clocked in today'
+                    ];
+                    
+                    // Red background for missed
+                    $fillColor = 'FEF2F2';
+                }
 
-            // Add missed clock-in employees
-            foreach ($employeesWithoutClockIn as $employee) {
-                $sheet->fromArray([
-                    $employee->user->name,
-                    $employee->user->email,
-                    $employee->job_title,
-                    $employee->department->name ?? 'N/A',
-                    'Missed Clock-in',
-                    'N/A',
-                    'N/A'
-                ], null, 'A' . $row);
-                
-                // Red background for missed
-                $sheet->getStyle('A' . $row . ':G' . $row)->applyFromArray([
-                    'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'FEF2F2']]
+                $sheet->fromArray($data, null, 'A' . $row);
+                $sheet->getStyle('A' . $row . ':M' . $row)->applyFromArray([
+                    'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => $fillColor]]
                 ]);
                 $row++;
             }
 
             // Auto-size columns
-            foreach (range('A', 'G') as $col) {
+            foreach (range('A', 'M') as $col) {
                 $sheet->getColumnDimension($col)->setAutoSize(true);
             }
 
             // Add summary
-            $sheet->setCellValue('A' . ($row + 2), 'Summary:');
-            $sheet->setCellValue('A' . ($row + 3), 'Total Employees: ' . ($clockedInEmployees->count() + $employeesWithoutClockIn->count()));
-            $sheet->setCellValue('A' . ($row + 4), 'Clocked In: ' . $clockedInEmployees->count());
-            $sheet->setCellValue('A' . ($row + 5), 'Missed Clock-in: ' . $employeesWithoutClockIn->count());
-            $sheet->setCellValue('A' . ($row + 6), 'Generated: ' . now()->format('Y-m-d H:i:s'));
+            $sheet->setCellValue('A' . ($row + 2), 'SUMMARY');
+            $sheet->setCellValue('A' . ($row + 3), 'Report Date: ' . $today);
+            $sheet->setCellValue('A' . ($row + 4), 'Total Employees: ' . $employeeRoleEmployees->count());
+            $sheet->setCellValue('A' . ($row + 5), 'Clocked In: ' . $clockedInCount);
+            $sheet->setCellValue('A' . ($row + 6), 'Missed Clock-in: ' . ($employeeRoleEmployees->count() - $clockedInCount));
+            $sheet->setCellValue('A' . ($row + 7), 'Generated: ' . now()->format('Y-m-d H:i:s'));
+
+            // Style summary
+            $sheet->getStyle('A' . ($row + 2))->applyFromArray([
+                'font' => ['bold' => true, 'size' => 14]
+            ]);
 
             // Create writer and output
             $writer = new Xlsx($spreadsheet);
-            $filename = 'attendance-report-' . today()->format('Y-m-d') . '.xlsx';
+            $filename = "attendance_report_{$today}.xlsx";
 
             header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
             header('Content-Disposition: attachment;filename="' . $filename . '"');
@@ -129,13 +154,24 @@ class ReportExportController extends Controller
 
         } catch (\Exception $e) {
             Log::error('Failed to export attendance report: ' . $e->getMessage());
-            return response()->json(['error' => 'Failed to export report'], 500);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to export attendance report. Please try again.'
+            ], 500);
         }
     }
 
     public function exportBreakReport()
     {
         try {
+            // Only Admin/HR can export break reports
+            if (!Auth::user()->hasRole(['Admin', 'HR'])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized to export break reports.'
+                ], 403);
+            }
+
             // Get break violations
             $violations = $this->getBreakViolations();
 
@@ -145,7 +181,10 @@ class ReportExportController extends Controller
             $sheet->setTitle('Break Violations Report');
 
             // Set headers
-            $headers = ['Employee Name', 'Email', 'Job Title', 'Department', 'Break Number', 'Duration', 'Limit', 'Overtime', 'Break Start'];
+            $headers = [
+                'Employee Name', 'Employee Code', 'Job Title', 'Department', 
+                'Break Number', 'Duration', 'Limit', 'Overtime', 'Break Start'
+            ];
             $sheet->fromArray($headers, null, 'A1');
 
             // Style headers
@@ -160,9 +199,9 @@ class ReportExportController extends Controller
 
             // Add violations
             foreach ($violations as $violation) {
-                $sheet->fromArray([
+                $data = [
                     $violation['employee_name'],
-                    '', // Email will be fetched separately if needed
+                    $violation['employee_code'] ?? 'N/A',
                     $violation['job_title'],
                     $violation['department'],
                     $violation['break_number'],
@@ -170,10 +209,14 @@ class ReportExportController extends Controller
                     $violation['limit'],
                     $violation['overtime'],
                     $violation['break_start']
-                ], null, 'A' . $row);
+                ];
+
+                $sheet->fromArray($data, null, 'A' . $row);
                 
                 // Color code by break number
-                $color = $violation['break_number'] == 1 ? 'FEF3C7' : ($violation['break_number'] == 2 ? 'FED7AA' : 'FEE2E2');
+                $color = $violation['break_number'] == 1 ? 'FEF3C7' : 
+                        ($violation['break_number'] == 2 ? 'FED7AA' : 'FEE2E2');
+                        
                 $sheet->getStyle('A' . $row . ':I' . $row)->applyFromArray([
                     'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => $color]]
                 ]);
@@ -186,16 +229,22 @@ class ReportExportController extends Controller
             }
 
             // Add summary
-            $sheet->setCellValue('A' . ($row + 2), 'Summary:');
-            $sheet->setCellValue('A' . ($row + 3), 'Total Violations: ' . count($violations));
-            $sheet->setCellValue('A' . ($row + 4), '1st Break Violations: ' . collect($violations)->where('break_number', 1)->count());
-            $sheet->setCellValue('A' . ($row + 5), '2nd Break Violations: ' . collect($violations)->where('break_number', 2)->count());
-            $sheet->setCellValue('A' . ($row + 6), '3rd Break Violations: ' . collect($violations)->where('break_number', 3)->count());
-            $sheet->setCellValue('A' . ($row + 7), 'Generated: ' . now()->format('Y-m-d H:i:s'));
+            $sheet->setCellValue('A' . ($row + 2), 'SUMMARY');
+            $sheet->setCellValue('A' . ($row + 3), 'Report Date: ' . now()->format('Y-m-d'));
+            $sheet->setCellValue('A' . ($row + 4), 'Total Violations: ' . count($violations));
+            $sheet->setCellValue('A' . ($row + 5), '1st Break Violations: ' . collect($violations)->where('break_number', 1)->count());
+            $sheet->setCellValue('A' . ($row + 6), '2nd Break Violations: ' . collect($violations)->where('break_number', 2)->count());
+            $sheet->setCellValue('A' . ($row + 7), '3rd Break Violations: ' . collect($violations)->where('break_number', 3)->count());
+            $sheet->setCellValue('A' . ($row + 8), 'Generated: ' . now()->format('Y-m-d H:i:s'));
+
+            // Style summary
+            $sheet->getStyle('A' . ($row + 2))->applyFromArray([
+                'font' => ['bold' => true, 'size' => 14]
+            ]);
 
             // Create writer and output
             $writer = new Xlsx($spreadsheet);
-            $filename = 'break-violations-report-' . today()->format('Y-m-d') . '.xlsx';
+            $filename = "break_violations_report_" . now()->format('Y-m-d') . ".xlsx";
 
             header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
             header('Content-Disposition: attachment;filename="' . $filename . '"');
@@ -206,7 +255,10 @@ class ReportExportController extends Controller
 
         } catch (\Exception $e) {
             Log::error('Failed to export break report: ' . $e->getMessage());
-            return response()->json(['error' => 'Failed to export report'], 500);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to export break report. Please try again.'
+            ], 500);
         }
     }
 
@@ -236,6 +288,7 @@ class ReportExportController extends Controller
                 if ($currentBreakDuration > $limit) {
                     $violations[] = [
                         'employee_name' => $attendance->employee->user->name,
+                        'employee_code' => $attendance->employee->employee_code,
                         'job_title' => $attendance->employee->job_title,
                         'department' => $attendance->employee->department->name ?? 'General',
                         'break_number' => $breakNumber,
