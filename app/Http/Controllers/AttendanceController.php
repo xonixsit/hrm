@@ -1200,4 +1200,71 @@ class AttendanceController extends Controller
 
         return $defaultProject;
     }
+
+    /**
+     * Send clock-in reminders to employees who haven't clocked in today
+     */
+    public function sendClockInReminders(Request $request)
+    {
+        try {
+            // Only Admin/HR can send reminders
+            if (!Auth::user()->hasRole(['Admin', 'HR'])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized to send reminders.'
+                ], 403);
+            }
+
+            $today = now()->format('Y-m-d');
+            
+            // Get all active employees with Employee role who haven't clocked in today
+            $employeesWithoutClockIn = Employee::active()
+                ->whereHas('user', function($query) {
+                    $query->whereHas('roles', function($roleQuery) {
+                        $roleQuery->where('name', 'Employee');
+                    });
+                })
+                ->whereDoesntHave('attendances', function($query) use ($today) {
+                    $query->whereDate('date', $today);
+                })
+                ->with(['user'])
+                ->get();
+
+            $sentCount = 0;
+            $failedCount = 0;
+
+            foreach ($employeesWithoutClockIn as $employee) {
+                try {
+                    if ($employee->user && $employee->user->email) {
+                        \Mail::to($employee->user->email)->send(new \App\Mail\ClockInReminder($employee));
+                        $sentCount++;
+                    } else {
+                        $failedCount++;
+                    }
+                } catch (\Exception $e) {
+                    \Log::error("Failed to send clock-in reminder to employee {$employee->id}: {$e->getMessage()}");
+                    $failedCount++;
+                }
+            }
+
+            $this->logAudit('Clock-in Reminders Sent', "Sent {$sentCount} reminders, {$failedCount} failed");
+
+            return response()->json([
+                'success' => true,
+                'message' => "Clock-in reminders sent successfully to {$sentCount} employees.",
+                'count' => $sentCount,
+                'failed' => $failedCount,
+                'total_employees_without_clockin' => $employeesWithoutClockIn->count()
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Failed to send clock-in reminders: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to send reminders. Please try again.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

@@ -106,6 +106,7 @@ Route::middleware('auth')->group(function () {
         Route::post('break-start', [AttendanceController::class, 'startBreak']);
         Route::post('break-end', [AttendanceController::class, 'endBreak']);
         Route::get('current', [AttendanceController::class, 'getCurrentStatus']);
+        Route::post('send-clock-in-reminders', [App\Http\Controllers\Api\AttendanceReminderController::class, 'sendClockInReminders']);
     });
 
     // Birthday API routes (for future use)

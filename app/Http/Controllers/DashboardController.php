@@ -156,6 +156,9 @@ class DashboardController extends Controller
             $workReportsData = $this->getWorkReportsMetrics();
             $performanceData = $this->getPerformanceMetrics();
 
+            // Get attendance tracking data
+            $attendanceTracking = $this->getAttendanceTrackingData();
+
             $data['adminStats'] = [
                 'totalEmployees' => $totalEmployees,
                 'pendingLeaves' => $pendingLeaves,
@@ -181,12 +184,17 @@ class DashboardController extends Controller
                 'successfulCallsTrend' => $workReportsData['callsTrend'],
                 'avgPerformanceScore' => $performanceData['avgScore'],
                 'performanceTrend' => $performanceData['trend'],
+                // Attendance tracking
+                'clockedInCount' => $attendanceTracking['clockedInCount'],
+                'missedClockInCount' => $attendanceTracking['missedClockInCount'],
+                'totalEmployeeCount' => $attendanceTracking['totalEmployeeCount'],
             ];
 
             $data['systemActivities'] = $this->getSystemActivities();
             $data['pendingApprovals'] = $this->getPendingApprovals();
             $data['systemHealth'] = $this->getSystemHealth();
             $data['recentUserActivity'] = $this->getRecentUserActivity();
+            $data['attendanceTracking'] = $attendanceTracking;
 
             // Legacy props for backward compatibility
             $data['totalEmployees'] = $totalEmployees;
@@ -399,6 +407,88 @@ class DashboardController extends Controller
                     'productivityTrend' => 0,
                 ]
             ]);
+        }
+    }
+
+    private function getAttendanceTrackingData()
+    {
+        try {
+            // Get all active employees with Employee role
+            $employeeRoleEmployees = Employee::active()
+                ->whereHas('user', function($query) {
+                    $query->whereHas('roles', function($roleQuery) {
+                        $roleQuery->where('name', 'Employee');
+                    });
+                })
+                ->with(['user', 'department'])
+                ->get();
+
+            $totalEmployeeCount = $employeeRoleEmployees->count();
+
+            // Get today's attendance records for these employees
+            $todaysAttendances = Attendance::whereDate('date', today())
+                ->whereIn('employee_id', $employeeRoleEmployees->pluck('id'))
+                ->get()
+                ->keyBy('employee_id');
+
+            // Count clocked in employees (those with clock_in but no clock_out today)
+            $clockedInCount = $todaysAttendances->filter(function($attendance) {
+                return $attendance->clock_in && !$attendance->clock_out;
+            })->count();
+
+            // Get employees who missed clocking in today
+            $missedClockInEmployees = $employeeRoleEmployees->filter(function($employee) use ($todaysAttendances) {
+                return !$todaysAttendances->has($employee->id);
+            })->map(function($employee) {
+                return [
+                    'id' => $employee->id,
+                    'name' => $employee->user->name,
+                    'email' => $employee->user->email,
+                    'job_title' => $employee->job_title,
+                    'department' => $employee->department ? $employee->department->name : 'No Department',
+                    'employee_code' => $employee->employee_code,
+                ];
+            })->values();
+
+            // Get currently clocked in employees
+            $clockedInEmployees = $employeeRoleEmployees->filter(function($employee) use ($todaysAttendances) {
+                $attendance = $todaysAttendances->get($employee->id);
+                return $attendance && $attendance->clock_in && !$attendance->clock_out;
+            })->map(function($employee) use ($todaysAttendances) {
+                $attendance = $todaysAttendances->get($employee->id);
+                return [
+                    'id' => $employee->id,
+                    'name' => $employee->user->name,
+                    'email' => $employee->user->email,
+                    'job_title' => $employee->job_title,
+                    'department' => $employee->department ? $employee->department->name : 'No Department',
+                    'employee_code' => $employee->employee_code,
+                    'clock_in_time' => $attendance->clock_in->format('H:i'),
+                    'work_duration' => $attendance->getCurrentSessionDuration(),
+                    'on_break' => $attendance->on_break,
+                ];
+            })->values();
+
+            $missedClockInCount = $missedClockInEmployees->count();
+
+            return [
+                'totalEmployeeCount' => $totalEmployeeCount,
+                'clockedInCount' => $clockedInCount,
+                'missedClockInCount' => $missedClockInCount,
+                'clockedInEmployees' => $clockedInEmployees,
+                'missedClockInEmployees' => $missedClockInEmployees,
+                'attendanceRate' => $totalEmployeeCount > 0 ? round(($clockedInCount / $totalEmployeeCount) * 100, 1) : 0,
+            ];
+        } catch (\Exception $e) {
+            Log::error('Error getting attendance tracking data: ' . $e->getMessage());
+            return [
+                'totalEmployeeCount' => 0,
+                'clockedInCount' => 0,
+                'missedClockInCount' => 0,
+                'clockedInEmployees' => [],
+                'missedClockInEmployees' => [],
+                'attendanceRate' => 0,
+            ];
         }
     }
 

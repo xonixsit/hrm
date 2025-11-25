@@ -59,8 +59,62 @@
               <span class="hidden xl:inline">{{ item.label }}</span>
             </a>
 
+            <!-- Assessment Menu -->
+            <div class="relative assessment-menu">
+              <button 
+                @click="showAssessmentMenu = !showAssessmentMenu"
+                :class="[
+                  'px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center space-x-1.5',
+                  showAssessmentMenu
+                    ? (isDark 
+                        ? 'bg-gray-700/50 text-white' 
+                        : 'bg-white/25 text-white border border-white/40 shadow-lg backdrop-blur-sm font-semibold')
+                    : (isDark 
+                        ? 'text-gray-300 hover:text-white hover:bg-gray-700/50' 
+                        : 'text-white/90 hover:text-white hover:bg-white/15 backdrop-blur-sm hover:shadow-md')
+                ]">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <span class="hidden xl:inline">Assessments</span>
+                <svg :class="['w-4 h-4 transition-transform duration-200', { 'rotate-180': showAssessmentMenu }]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              
+              <div v-show="showAssessmentMenu" :class="[
+                'absolute left-0 mt-2 w-56 rounded-xl shadow-xl z-50 transition-all duration-200',
+                isDark 
+                  ? 'bg-gray-800 border border-gray-700 shadow-gray-900/50' 
+                  : 'bg-white border border-gray-200/60 shadow-gray-900/20 backdrop-blur-sm'
+              ]">
+                <div class="p-2 space-y-1">
+                  <a
+                    v-for="item in assessmentMenuItems"
+                    :key="item.route"
+                    :href="route(item.route)"
+                    :class="[
+                      'flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
+                      isActive(item.route)
+                        ? (isDark 
+                            ? 'bg-teal-600/20 text-teal-300 border border-teal-500/30' 
+                            : 'bg-teal-50 text-teal-700 border border-teal-200/50')
+                        : (isDark 
+                            ? 'text-gray-300 hover:text-white hover:bg-gray-700/50' 
+                            : 'text-gray-700 hover:text-gray-900 hover:bg-gray-50')
+                    ]"
+                  >
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="#0D9488" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <span>{{ item.label }}</span>
+                  </a>
+                </div>
+              </div>
+            </div>
+
             <!-- Enhanced More Menu -->
-            <div class="relative">
+            <div class="relative more-menu">
               <button 
                 @click="showMore = !showMore"
                 :class="[
@@ -153,46 +207,7 @@
                       </div>
                     </div>
 
-                    <!-- Admin Section -->
-                    <div v-if="adminItems.length > 0" :class="[
-                      'border-t pt-2 mt-2',
-                      isDark ? 'border-gray-700' : 'border-gray-200'
-                    ]">
-                      <div :class="[
-                        'px-3 py-1 text-xs font-semibold uppercase tracking-wider flex items-center space-x-1',
-                        isDark ? 'text-red-400' : 'text-red-600'
-                      ]">
-                        <!-- Admin Section Lock Icon - Red -->
-                        <svg class="w-3 h-3" fill="none" stroke="#DC2626" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                        </svg>
-                        <span>Admin</span>
-                      </div>
-                      <div class="space-y-1 mt-1">
-                        <a
-                          v-for="item in adminItems"
-                          :key="item.route"
-                          :href="route(item.route)"
-                          :class="[
-                            'flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
-                            isActive(item.route)
-                              ? (isDark 
-                                  ? 'bg-red-600/20 text-red-300 border border-red-500/30' 
-                                  : 'bg-red-50 text-red-700 border border-red-200/50')
-                              : (isDark 
-                                  ? 'text-gray-300 hover:text-white hover:bg-gray-700/50' 
-                                  : 'text-gray-700 hover:text-gray-900 hover:bg-gray-50')
-                          ]"
-                        >
-                          <!-- Admin Items Icon - Red -->
-                          <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="#DC2626" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                          </svg>
-                          <span>{{ item.label }}</span>
-                        </a>
-                      </div>
-                    </div>
+
                   </div>
                 </div>
               </div>
@@ -221,7 +236,7 @@
           </button> -->
 
           <!-- Enhanced User Menu -->
-          <div class="relative">
+          <div class="relative user-menu">
             <button 
               @click="showUserMenu = !showUserMenu"
               :class="[
@@ -288,16 +303,63 @@
                     </svg>
                     <span>Profile Settings</span>
                   </a>
-                  <button @click="handleLogout" :class="[
-                    'w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
-                    'text-red-600 hover:text-red-700 hover:bg-red-50'
+
+                  <!-- Admin Section in Profile Menu -->
+                  <div v-if="adminItems.length > 0" :class="[
+                    'border-t pt-2 mt-2',
+                    isDark ? 'border-gray-700' : 'border-gray-200'
                   ]">
-                    <!-- Sign Out Icon - Red -->
-                    <svg class="w-4 h-4" fill="none" stroke="#DC2626" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                    </svg>
-                    <span>Sign Out</span>
-                  </button>
+                    <div :class="[
+                      'px-3 py-1 text-xs font-semibold uppercase tracking-wider flex items-center space-x-1',
+                      isDark ? 'text-red-400' : 'text-red-600'
+                    ]">
+                      <!-- Admin Section Lock Icon - Red -->
+                      <svg class="w-3 h-3" fill="none" stroke="#DC2626" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                      </svg>
+                      <span>Admin</span>
+                    </div>
+                    <div class="space-y-1 mt-1">
+                      <a
+                        v-for="item in adminItems"
+                        :key="item.route"
+                        :href="route(item.route)"
+                        :class="[
+                          'flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
+                          isActive(item.route)
+                            ? (isDark 
+                                ? 'bg-red-600/20 text-red-300 border border-red-500/30' 
+                                : 'bg-red-50 text-red-700 border border-red-200/50')
+                            : (isDark 
+                                ? 'text-gray-300 hover:text-white hover:bg-gray-700/50' 
+                                : 'text-gray-700 hover:text-gray-900 hover:bg-gray-50')
+                        ]"
+                      >
+                        <!-- Admin Items Icon - Red -->
+                        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="#DC2626" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        <span>{{ item.label }}</span>
+                      </a>
+                    </div>
+                  </div>
+
+                  <div :class="[
+                    'border-t pt-2 mt-2',
+                    isDark ? 'border-gray-700' : 'border-gray-200'
+                  ]">
+                    <button @click="handleLogout" :class="[
+                      'w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
+                      'text-red-600 hover:text-red-700 hover:bg-red-50'
+                    ]">
+                      <!-- Sign Out Icon - Red -->
+                      <svg class="w-4 h-4" fill="none" stroke="#DC2626" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                      </svg>
+                      <span>Sign Out</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -307,7 +369,7 @@
     </div>
 
     <!-- Mobile Menu -->
-    <div class="md:hidden px-4 pb-3">
+    <div class="md:hidden px-4 pb-3 mobile-menu">
       <button
         @click="showMobileMenu = !showMobileMenu"
         :class="[
@@ -347,7 +409,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { router } from '@inertiajs/vue3'
 import { useAuth } from '@/composables/useAuth.js'
 import { useTheme } from '@/composables/useTheme.js'
@@ -363,6 +425,7 @@ const { user, roles: userRoles } = useAuth()
 const { isDark } = useTheme()
 
 const showMore = ref(false)
+const showAssessmentMenu = ref(false)
 const showUserMenu = ref(false)
 const showMobileMenu = ref(false)
 
@@ -381,9 +444,31 @@ const userInitials = computed(() => {
 const mainNavItems = computed(() => [
   { route: 'dashboard', label: 'Dashboard' },
   { route: 'attendances.index', label: 'Time Tracking' },
-  { route: 'leaves.index', label: 'Leave Applications' },
-  { route: 'competency-assessments.my-assessments', label: 'My Assessments' }
+  { route: 'leaves.index', label: 'Leave Applications' }
 ])
+
+// Assessment menu items for all users
+const assessmentMenuItems = computed(() => {
+  const roles = userRoles.value || []
+  const rolesArray = Array.isArray(roles) ? roles : []
+  const isManagement = rolesArray.includes('Admin') || rolesArray.includes('Manager') || rolesArray.includes('HR')
+  
+  const items = [
+    { route: 'competency-assessments.my-assessments', label: 'My Assessments' }
+  ]
+  
+  if (isManagement) {
+    items.push(
+      { route: 'competency-assessments.index', label: 'All Assessments' },
+      { route: 'assessment-dashboard', label: 'Assessment Dashboard' },
+      { route: 'competency-assessments.pending', label: 'Pending Assessments' },
+      { route: 'assessment-cycle-manager', label: 'Assessment Cycles' },
+      { route: 'competencies.index', label: 'Competency Setup' }
+    )
+  }
+  
+  return items
+})
 
 // Categorized navigation items
 const moreNavItems = computed(() => {
@@ -405,11 +490,6 @@ const moreNavItems = computed(() => {
     if (isManagement) {
       items.push(
         { route: 'employees.index', label: 'Employee Management', category: 'management' },
-        { route: 'competency-assessments.index', label: 'All Assessments', category: 'management' },
-        { route: 'assessment-dashboard', label: 'Assessment Dashboard', category: 'management' },
-        { route: 'competency-assessments.pending', label: 'Pending Assessments', category: 'management' },
-        { route: 'assessment-cycle-manager', label: 'Assessment Cycles', category: 'management' },
-        { route: 'competencies.index', label: 'Competency Setup', category: 'management' },
         { route: 'leave-types.index', label: 'Leave Policies', category: 'management' },
         { route: 'support.index', label: 'Support Management', category: 'management' }
       )
@@ -429,6 +509,7 @@ const moreNavItems = computed(() => {
         { route: 'admin.system-settings.index', label: 'System Settings', category: 'admin' },
         { route: 'leave-types.index', label: 'Leave Policies', category: 'admin' },
         { route: 'organizational-analytics.index', label: 'Analytics', category: 'admin' },
+        { route: 'reports.index', label: 'View Reports', category: 'admin' },
         { route: 'support.index', label: 'Support Management', category: 'admin' }
       )
     }
@@ -471,4 +552,37 @@ const isActive = (routeName) => {
 const handleLogout = () => {
   router.post(route('logout'))
 }
+
+// Close dropdowns when clicking outside
+const handleClickOutside = (event) => {
+  const target = event.target
+  
+  // Check if click is outside assessment menu
+  if (!target.closest('.assessment-menu')) {
+    showAssessmentMenu.value = false
+  }
+  
+  // Check if click is outside more menu
+  if (!target.closest('.more-menu')) {
+    showMore.value = false
+  }
+  
+  // Check if click is outside user menu
+  if (!target.closest('.user-menu')) {
+    showUserMenu.value = false
+  }
+  
+  // Check if click is outside mobile menu
+  if (!target.closest('.mobile-menu')) {
+    showMobileMenu.value = false
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside)
+})
 </script>

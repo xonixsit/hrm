@@ -44,6 +44,18 @@
           :icon="UsersIcon" variant="primary" :trend="adminStats.employeeTrend" route="employees.index"
           :loading="loading" />
 
+        <UnifiedStatsCard 
+          :value="`${adminStats.clockedInCount || 0}/${adminStats.totalEmployeeCount || 0}`" 
+          label="Today's Attendance" 
+          description="Clocked in employees"
+          :icon="ClockIcon" 
+          variant="info" 
+          :status="getAttendanceStatus(adminStats.clockedInCount, adminStats.totalEmployeeCount)"
+          :statusText="getAttendanceStatusText(adminStats.clockedInCount, adminStats.totalEmployeeCount)"
+          :clickable="false" 
+          :loading="loading" 
+        />
+
         <UnifiedStatsCard :value="adminStats.pendingLeaves" label="Pending Approvals" description="Requires attention"
           :icon="ExclamationTriangleIcon" variant="warning"
           :status="adminStats.pendingLeaves > 10 ? 'critical' : 'warning'"
@@ -54,12 +66,6 @@
           :icon="AcademicCapIcon" variant="info" :status="adminStats.pendingAssessments > 5 ? 'warning' : 'good'"
           :statusText="adminStats.pendingAssessments > 5 ? 'Review' : 'On Track'" route="assessment-dashboard"
           :loading="loading" />
-
-        <UnifiedStatsCard :value="adminStats.systemHealth + '%'" label="System Health" description="Uptime"
-          :icon="CheckCircleIcon" variant="success"
-          :status="adminStats.systemHealth > 95 ? 'excellent' : adminStats.systemHealth > 85 ? 'good' : 'warning'"
-          :statusText="adminStats.systemHealth > 95 ? 'Excellent' : adminStats.systemHealth > 85 ? 'Good' : 'Needs Attention'"
-          :clickable="false" :loading="loading" />
       </div>
 
       <!-- Performance Metrics -->
@@ -124,6 +130,12 @@
               </div>
             </div>
           </UnifiedCard>
+
+          <!-- Attendance Tracking Dashboard -->
+          <div>
+            <p class="text-sm text-gray-500 mb-2">Debug: Attendance Tracking Widget</p>
+            <AttendanceTrackingWidget :attendance-data="attendanceTracking" />
+          </div>
 
           <!-- Competency Management Dashboard -->
           <UnifiedCard title="Competency Management" description="Track and manage employee competencies"
@@ -392,6 +404,7 @@
   import CompetencyDashboardWidget from '@/Components/Dashboard/CompetencyDashboardWidget.vue';
   import BirthdayNotifications from '@/Components/Dashboard/BirthdayNotifications.vue';
   import BirthdayPopup from '@/Components/Dashboard/BirthdayPopup.vue';
+  import AttendanceTrackingWidget from '@/Components/Dashboard/AttendanceTrackingWidget.vue';
 
   // Icons
   import {
@@ -467,6 +480,17 @@
         upcomingBirthdays: [],
         stats: {}
       })
+    },
+    attendanceTracking: {
+      type: Object,
+      default: () => ({
+        totalEmployeeCount: 0,
+        clockedInCount: 0,
+        missedClockInCount: 0,
+        clockedInEmployees: [],
+        missedClockInEmployees: [],
+        attendanceRate: 0,
+      })
     }
   });
 
@@ -486,6 +510,8 @@
     console.log('Dashboard - User:', user.value);
     console.log('Dashboard - Roles:', userRoles.value);
     console.log('Dashboard - Is Admin:', result);
+    console.log('Dashboard - Admin Stats:', props.adminStats);
+    console.log('Dashboard - Attendance Tracking:', props.attendanceTracking);
     return result;
   });
 
@@ -532,6 +558,12 @@
           handler: () => navigateTo('admin.roles.index')
         },
         {
+          id: 'analytics',
+          label: 'Analytics',
+          icon: 'ChartBarIcon',
+          handler: () => navigateTo('organizational-analytics.index')
+        },
+        {
           id: 'reports',
           label: 'View Reports',
           icon: 'ChartBarIcon',
@@ -566,7 +598,7 @@
   const handleRefresh = async () => {
     loading.value = true;
     try {
-      await router.reload({ only: ['adminStats', 'managerStats', 'employeeStats', 'pendingApprovals'] });
+      await router.reload({ only: ['adminStats', 'managerStats', 'employeeStats', 'pendingApprovals', 'attendanceTracking'] });
     } catch (error) {
       console.error('Refresh error:', error);
     } finally {
@@ -735,6 +767,22 @@
 
   const closeBirthdayPopup = () => {
     showBirthdayPopup.value = false;
+  };
+
+  const getAttendanceStatus = (clockedIn, total) => {
+    if (total === 0) return 'warning';
+    const rate = (clockedIn / total) * 100;
+    if (rate >= 90) return 'excellent';
+    if (rate >= 75) return 'good';
+    return 'warning';
+  };
+
+  const getAttendanceStatusText = (clockedIn, total) => {
+    if (total === 0) return 'No Data';
+    const rate = (clockedIn / total) * 100;
+    if (rate >= 90) return 'Excellent';
+    if (rate >= 75) return 'Good';
+    return 'Needs Attention';
   };
 
 

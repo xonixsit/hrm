@@ -52,6 +52,12 @@ class Kernel extends ConsoleKernel
                  ->weeklyOn(1, '09:00')
                  ->withoutOverlapping()
                  ->runInBackground();
+
+        // Send daily clock-in reminders at 6:00 AM
+        $schedule->command('attendance:send-clock-in-reminders')
+                 ->dailyAt('06:00')
+                 ->withoutOverlapping()
+                 ->runInBackground();
     }
 
     /**
