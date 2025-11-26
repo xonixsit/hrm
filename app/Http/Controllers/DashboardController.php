@@ -467,7 +467,7 @@ class DashboardController extends Controller
                     'job_title' => $employee->job_title,
                     'department' => $employee->department ? $employee->department->name : 'No Department',
                     'employee_code' => $employee->employee_code,
-                    'clock_in_time' => $attendance->clock_in->format('H:i'),
+                    'clock_in_time' => $attendance->clock_in->utc()->format('H:i'),
                     'work_duration' => $attendance->getCurrentSessionDuration(),
                     'on_break' => $attendance->on_break,
                 ];
@@ -1558,7 +1558,7 @@ class DashboardController extends Controller
             // Get attendances with active breaks (including old ones that haven't been ended)
             $attendances = Attendance::where('on_break', true)
                 ->whereNotNull('current_break_start')
-                ->where('current_break_start', '>=', now()->subDays(2)) // Only check breaks from last 2 days
+                ->where('current_break_start', '>=', now()->subDays(7)) // Check breaks from last 7 days
                 ->with(['employee.user', 'employee.department'])
                 ->get();
 
