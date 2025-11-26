@@ -418,143 +418,32 @@ class DashboardController extends Controller
     private function getAttendanceTrackingData()
     {
         try {
-            // Get all active employees with Employee role
-            $employeeRoleEmployees = Employee::active()
-                ->whereHas('user', function($query) {
-                    $query->whereHas('roles', function($roleQuery) {
-                        $roleQuery->whereIn('name', ['Employee', 'employee']); // Case insensitive
-                    });
-                })
+            // Use the same logic as the attendance page that works correctly
+            // Get clocked in attendances (those with clock_in but no clock_out today)
+            $clockedInAttendances = Attendance::whereDate('date', today())
+                ->whereNotNull('clock_in')
+                ->whereNull('clock_out')
+                ->with(['employee.user', 'employee.department'])
+                ->get();
+
+            // Filter out attendances where employee or user is null
+            $clockedInAttendances = $clockedInAttendances->filter(function($attendance) {
+                return $attendance->employee && $attendance->employee->user;
+            });
+
+            $clockedInCount = $clockedInAttendances->count();
+
+            // Get all active employees to calculate missed clock-ins
+            $allActiveEmployees = Employee::active()
                 ->with(['user', 'department'])
                 ->get();
 
-            // If no employees found with Employee role, get all active employees
-            if ($employeeRoleEmployees->isEmpty()) {
-                $employeeRoleEmployees = Employee::active()
-                    ->with(['user', 'department'])
-                    ->get();
-                \Log::warning('No employees found with Employee role, using all active employees');
-            }
+            // Get employees who have clocked in today
+            $clockedInEmployeeIds = $clockedInAttendances->pluck('employee_id');
 
-            $totalEmployeeCount = $employeeRoleEmployees->count();
-
-            // Debug: Check for specific employee "Riyanshi"
-            $riyanshiEmployee = Employee::whereHas('user', function($query) {
-                $query->where('name', 'like', '%Riyanshi%');
-            })->with(['user', 'user.roles'])->first();
-
-            if ($riyanshiEmployee) {
-                \Log::info('Riyanshi Employee Debug', [
-                    'employee_id' => $riyanshiEmployee->id,
-                    'employee_name' => $riyanshiEmployee->user->name,
-                    'employee_status' => $riyanshiEmployee->status,
-                    'is_active' => $riyanshiEmployee->status === 'active',
-                    'user_roles' => $riyanshiEmployee->user->roles->pluck('name')->toArray(),
-                    'has_employee_role' => $riyanshiEmployee->user->hasRole(['Employee', 'employee']),
-                ]);
-            }
-
-            // Debug: Log employee role filtering
-            \Log::info('Attendance Tracking Debug', [
-                'total_active_employees' => Employee::active()->count(),
-                'employees_with_employee_role' => $totalEmployeeCount,
-                'employee_role_employee_ids' => $employeeRoleEmployees->pluck('id')->toArray(),
-                'employee_role_employee_names' => $employeeRoleEmployees->pluck('user.name')->toArray(),
-            ]);
-
-            // Get today's attendance records for these employees
-            $today = today();
-            $todaysAttendances = Attendance::whereDate('date', $today)
-                ->whereIn('employee_id', $employeeRoleEmployees->pluck('id'))
-                ->get()
-                ->keyBy('employee_id');
-
-            // Fallback: If no attendance found for today, check last 24 hours
-            if ($todaysAttendances->isEmpty()) {
-                $todaysAttendances = Attendance::where('created_at', '>=', now()->subHours(24))
-                    ->whereIn('employee_id', $employeeRoleEmployees->pluck('id'))
-                    ->get()
-                    ->keyBy('employee_id');
-                
-                \Log::info('Using 24-hour fallback for attendance', [
-                    'fallback_count' => $todaysAttendances->count()
-                ]);
-            }
-
-            // Debug: Log timezone and date information
-            \Log::info('Timezone and Date Debug', [
-                'app_timezone' => config('app.timezone'),
-                'server_timezone' => date_default_timezone_get(),
-                'today_date' => $today->toDateString(),
-                'today_datetime' => $today->toDateTimeString(),
-                'now_datetime' => now()->toDateTimeString(),
-                'carbon_now' => \Carbon\Carbon::now()->toDateTimeString(),
-                'php_date' => date('Y-m-d H:i:s'),
-            ]);
-
-            // Also check all recent attendance records (last 3 days) to understand the data
-            $recentAttendances = Attendance::where('date', '>=', now()->subDays(3)->toDateString())
-                ->with(['employee.user'])
-                ->get();
-            
-            \Log::info('Recent Attendance Analysis', [
-                'today_date' => $today->toDateString(),
-                'recent_attendance_count' => $recentAttendances->count(),
-                'recent_attendance_details' => $recentAttendances->map(function($att) {
-                    return [
-                        'id' => $att->id,
-                        'employee_id' => $att->employee_id,
-                        'employee_name' => $att->employee && $att->employee->user ? $att->employee->user->name : 'Unknown',
-                        'date' => $att->date,
-                        'date_matches_today' => $att->date === today()->toDateString(),
-                        'clock_in' => $att->clock_in ? $att->clock_in->toDateTimeString() : null,
-                        'clock_out' => $att->clock_out ? $att->clock_out->toDateTimeString() : null,
-                        'is_clocked_in' => $att->clock_in && !$att->clock_out,
-                    ];
-                })->toArray(),
-            ]);
-
-            // Debug: Log attendance records
-            \Log::info('Today\'s Attendance Records', [
-                'total_attendance_records' => $todaysAttendances->count(),
-                'attendance_employee_ids' => $todaysAttendances->keys()->toArray(),
-                'attendance_details' => $todaysAttendances->map(function($att) {
-                    return [
-                        'employee_id' => $att->employee_id,
-                        'clock_in' => $att->clock_in ? $att->clock_in->toDateTimeString() : null,
-                        'clock_out' => $att->clock_out ? $att->clock_out->toDateTimeString() : null,
-                        'has_clock_in' => !is_null($att->clock_in),
-                        'has_clock_out' => !is_null($att->clock_out),
-                    ];
-                })->toArray(),
-            ]);
-
-            // Count clocked in employees (those with clock_in but no clock_out today)
-            $clockedInCount = $todaysAttendances->filter(function($attendance) {
-                return $attendance->clock_in && !$attendance->clock_out;
-            })->count();
-
-            // Debug: Log attendance filtering details
-            \Log::info('Attendance Filtering Debug', [
-                'total_employees_with_role' => $employeeRoleEmployees->count(),
-                'total_todays_attendances' => $todaysAttendances->count(),
-                'clocked_in_count' => $clockedInCount,
-                'attendance_details' => $todaysAttendances->map(function($att) {
-                    return [
-                        'employee_id' => $att->employee_id,
-                        'date' => $att->date,
-                        'clock_in' => $att->clock_in ? $att->clock_in->toDateTimeString() : null,
-                        'clock_out' => $att->clock_out ? $att->clock_out->toDateTimeString() : null,
-                        'has_clock_in' => !is_null($att->clock_in),
-                        'has_clock_out' => !is_null($att->clock_out),
-                        'is_clocked_in' => $att->clock_in && !$att->clock_out,
-                    ];
-                })->toArray(),
-            ]);
-
-            // Get employees who missed clocking in today
-            $missedClockInEmployees = $employeeRoleEmployees->filter(function($employee) use ($todaysAttendances) {
-                return !$todaysAttendances->has($employee->id);
+            // Get employees who missed clocking in
+            $missedClockInEmployees = $allActiveEmployees->filter(function($employee) use ($clockedInEmployeeIds) {
+                return !$clockedInEmployeeIds->contains($employee->id);
             })->map(function($employee) {
                 return [
                     'id' => $employee->id,
@@ -566,27 +455,22 @@ class DashboardController extends Controller
                 ];
             })->values();
 
-            // Get currently clocked in employees
-            $clockedInEmployees = $employeeRoleEmployees->filter(function($employee) use ($todaysAttendances) {
-                $attendance = $todaysAttendances->get($employee->id);
-                return $attendance && $attendance->clock_in && !$attendance->clock_out;
-            })->map(function($employee) use ($todaysAttendances) {
-                $attendance = $todaysAttendances->get($employee->id);
-                $workDuration = $attendance->getCurrentSessionDuration();
-                
+            // Format clocked in employees
+            $clockedInEmployees = $clockedInAttendances->map(function($attendance) {
                 return [
-                    'id' => $employee->id,
-                    'name' => $employee->user->name,
-                    'email' => $employee->user->email,
-                    'job_title' => $employee->job_title,
-                    'department' => $employee->department ? $employee->department->name : 'No Department',
-                    'employee_code' => $employee->employee_code,
+                    'id' => $attendance->employee->id,
+                    'name' => $attendance->employee->user->name,
+                    'email' => $attendance->employee->user->email,
+                    'job_title' => $attendance->employee->job_title,
+                    'department' => $attendance->employee->department ? $attendance->employee->department->name : 'No Department',
+                    'employee_code' => $attendance->employee->employee_code,
                     'clock_in_time' => $attendance->clock_in ? $attendance->clock_in->toISOString() : null,
-                    'work_duration' => $workDuration,
+                    'work_duration' => $attendance->getCurrentSessionDuration(),
                     'on_break' => $attendance->on_break ?? false,
                 ];
             })->values();
 
+            $totalEmployeeCount = $allActiveEmployees->count();
             $missedClockInCount = $missedClockInEmployees->count();
 
             return [
@@ -1671,12 +1555,28 @@ class DashboardController extends Controller
             
 
 
-            // Get attendances with active breaks (including old ones that haven't been ended)
-            $attendances = Attendance::where('on_break', true)
+            // Get attendances with active breaks - use same logic as attendance API
+            $attendances = Attendance::where('status', 'on_break')
+                ->where('on_break', true)
                 ->whereNotNull('current_break_start')
-                ->where('current_break_start', '>=', now()->subDays(7)) // Check breaks from last 7 days
+                ->whereDate('date', today()) // Only check today's breaks
                 ->with(['employee.user', 'employee.department'])
                 ->get();
+
+            // Log for debugging
+            \Log::info('Break violations query', [
+                'total_on_break_attendances' => $attendances->count(),
+                'attendances' => $attendances->map(function($att) {
+                    return [
+                        'employee_id' => $att->employee_id,
+                        'employee_name' => $att->employee && $att->employee->user ? $att->employee->user->name : 'Unknown',
+                        'status' => $att->status,
+                        'on_break' => $att->on_break,
+                        'current_break_start' => $att->current_break_start ? $att->current_break_start->toDateTimeString() : null,
+                        'break_sessions_count' => count($att->break_sessions ?? []),
+                    ];
+                })->toArray(),
+            ]);
 
 
 
@@ -1829,5 +1729,24 @@ class DashboardController extends Controller
             'attendance_rate' => $attendanceRate,
             'perfect_days' => $monthlyAttendance // Simplified - could be more complex
         ];
+    }
+
+    /**
+     * API endpoint to get break violations for testing
+     */
+    public function getBreakViolationsApi()
+    {
+        $violations = $this->getBreakViolations();
+        
+        return response()->json([
+            'success' => true,
+            'violations' => $violations,
+            'summary' => [
+                'total_violations' => count($violations),
+                'first_break_violations' => count(array_filter($violations, fn($v) => $v['break_number'] === 1)),
+                'second_break_violations' => count(array_filter($violations, fn($v) => $v['break_number'] === 2)),
+                'third_break_violations' => count(array_filter($violations, fn($v) => $v['break_number'] === 3)),
+            ]
+        ]);
     }
 }
