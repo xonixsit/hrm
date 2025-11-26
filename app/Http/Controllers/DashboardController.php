@@ -467,7 +467,7 @@ class DashboardController extends Controller
                     'job_title' => $employee->job_title,
                     'department' => $employee->department ? $employee->department->name : 'No Department',
                     'employee_code' => $employee->employee_code,
-                    'clock_in_time' => $attendance->clock_in->utc()->format('H:i'),
+                    'clock_in_time' => $attendance->clock_in->utc()->format('h:i A'),
                     'work_duration' => $attendance->getCurrentSessionDuration(),
                     'on_break' => $attendance->on_break,
                 ];
