@@ -1530,7 +1530,7 @@ class DashboardController extends Controller
             'clocked_in' => $clockedIn,
             'on_break' => $attendance->on_break,
             'clock_in_time' => $attendance->clock_in?->toISOString(),
-            'current_break_start' => $attendance->current_break_start?->toISOString(),
+            'current_break_start' => $attendance->current_break_start?->setTimezone('Asia/Kolkata')->toISOString(),
             'break_sessions' => $attendance->break_sessions ?? [],
             'current_session' => $attendance,
             'todays_summary' => $this->getTodaysSummary($employeeId),
@@ -1555,10 +1555,10 @@ class DashboardController extends Controller
         try {
             $violations = [];
             
-            // Get today's attendances with active breaks
-            $attendances = Attendance::whereDate('date', today())
-                ->where('on_break', true)
+            // Get attendances with active breaks (including old ones that haven't been ended)
+            $attendances = Attendance::where('on_break', true)
                 ->whereNotNull('current_break_start')
+                ->where('current_break_start', '>=', now()->subDays(2)) // Only check breaks from last 2 days
                 ->with(['employee.user', 'employee.department'])
                 ->get();
 

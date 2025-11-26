@@ -93,6 +93,16 @@
             <li>You can monitor clock-in status from the admin dashboard</li>
         </ul>
 
+        <div style="background: #e0f2fe; border: 1px solid #0288d1; padding: 15px; border-radius: 6px; margin: 15px 0;">
+            <p><strong>📎 Attachment Included:</strong></p>
+            <ul style="margin: 10px 0; padding-left: 20px;">
+                <li><strong>File:</strong> missed-clock-ins-{{ now()->format('Y-m-d') }}.xlsx</li>
+                <li><strong>Contains:</strong> Complete list of employees who missed clock-in</li>
+                <li><strong>Data:</strong> Names, employee codes, emails, departments, job titles, phone numbers, and managers</li>
+                <li><strong>Use for:</strong> Follow-up actions, reporting, or HR records</li>
+            </ul>
+        </div>
+
         <div style="background: #fef3c7; border: 1px solid #f59e0b; border-radius: 6px; padding: 15px; margin: 20px 0;">
             <strong style="color: #92400e;">💡 Pro Tip:</strong>
             <p style="margin: 10px 0 0 0; color: #92400e;">
