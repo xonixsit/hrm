@@ -245,24 +245,29 @@ class Attendance extends Model
             return '0h 0m 0s';
         }
 
-        $now = now();
-        $totalSeconds = $this->clock_in->diffInSeconds($now);
-        
-        // Subtract break time in seconds
-        $breakSeconds = $this->total_break_minutes * 60;
-        
-        // Add current break if on break
-        if ($this->on_break && $this->current_break_start) {
-            $breakSeconds += now()->diffInSeconds($this->current_break_start);
-        }
+        try {
+            $now = now();
+            $totalSeconds = $this->clock_in->diffInSeconds($now);
+            
+            // Subtract break time in seconds (ensure it's not null)
+            $breakSeconds = ($this->total_break_minutes ?? 0) * 60;
+            
+            // Add current break if on break
+            if ($this->on_break && $this->current_break_start) {
+                $breakSeconds += $this->current_break_start->diffInSeconds($now);
+            }
 
-        $workSeconds = max(0, $totalSeconds - $breakSeconds);
-        
-        $hours = intval($workSeconds / 3600);
-        $minutes = intval(($workSeconds % 3600) / 60);
-        $seconds = $workSeconds % 60;
-        
-        return sprintf('%dh %dm %ds', $hours, $minutes, $seconds);
+            $workSeconds = max(0, $totalSeconds - $breakSeconds);
+            
+            $hours = intval($workSeconds / 3600);
+            $minutes = intval(($workSeconds % 3600) / 60);
+            $seconds = intval($workSeconds % 60);
+            
+            return sprintf('%dh %dm %ds', $hours, $minutes, $seconds);
+        } catch (\Exception $e) {
+            \Log::error('Error calculating current session duration: ' . $e->getMessage());
+            return '0h 0m 0s';
+        }
     }
 
     /**

@@ -103,21 +103,21 @@
         <div 
           v-for="employee in attendanceData.clockedInEmployees" 
           :key="employee.id"
-          class="employee-card flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-100"
+          class="employee-card flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-100 gap-4"
         >
-          <div class="flex items-center space-x-3">
-            <div class="w-2 h-2 bg-green-400 rounded-full"></div>
-            <div>
-              <div class="font-medium text-gray-900">{{ employee.name }}</div>
-              <div class="text-sm text-gray-600">
+          <div class="flex items-center space-x-3 flex-1 min-w-0">
+            <div class="w-2 h-2 bg-green-400 rounded-full flex-shrink-0"></div>
+            <div class="min-w-0 flex-1">
+              <div class="font-medium text-gray-900 truncate">{{ employee.name }}</div>
+              <div class="text-sm text-gray-600 truncate">
                 {{ employee.job_title }} • {{ employee.department }}
               </div>
             </div>
           </div>
-          <div class="text-right">
-            <div class="text-sm font-medium text-gray-900">{{ employee.clock_in_time }}</div>
-            <div class="text-xs text-gray-600">
-              {{ employee.work_duration }}
+          <div class="text-right flex-shrink-0 min-w-[100px]">
+            <div class="text-sm font-medium text-gray-900">Clock-In : {{ getFormattedTime(employee.clock_in_time) }}</div>
+            <div class="text-xs text-gray-600 whitespace-nowrap">
+              <!-- {{ employee.work_duration }} -->
               <span v-if="employee.on_break" class="text-orange-600 ml-1">(On Break)</span>
             </div>
           </div>
@@ -225,6 +225,24 @@ const getAttendanceRateColor = (rate) => {
   if (rate >= 90) return 'bg-green-500';
   if (rate >= 75) return 'bg-yellow-500';
   return 'bg-red-500';
+};
+
+const getFormattedTime = (timeString) => {
+  if (!timeString || timeString === 'Invalid Date') return '-';
+  
+  try {
+    const time = new Date(timeString);
+    if (isNaN(time.getTime())) return '-';
+    
+    return time.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
+  } catch (error) {
+    console.error('Error formatting time:', error);
+    return '-';
+  }
 };
 
 const refreshData = () => {
@@ -339,6 +357,8 @@ const handleTabChange = async (tab) => {
   activeTab.value = tab;
   await checkScrollable();
 };
+
+
 
 onMounted(() => {
   checkScrollable();

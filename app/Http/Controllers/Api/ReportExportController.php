@@ -279,7 +279,7 @@ class ReportExportController extends Controller
             $currentBreakStart = $attendance->current_break_start;
             
             if ($currentBreakStart) {
-                $currentBreakDuration = now()->diffInMinutes($currentBreakStart);
+                $currentBreakDuration = $currentBreakStart->diffInMinutes(now());
                 $breakNumber = count($breakSessions) + 1;
                 
                 $limits = [1 => 15, 2 => 30, 3 => 15];
