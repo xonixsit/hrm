@@ -161,6 +161,7 @@ class DashboardController extends Controller
             
             // Get break violations data
             $breakViolations = $this->getBreakViolations();
+            Log::info('Break violations found: ' . count($breakViolations));
 
             $data['adminStats'] = [
                 'totalEmployees' => $totalEmployees,
@@ -467,7 +468,7 @@ class DashboardController extends Controller
                     'job_title' => $employee->job_title,
                     'department' => $employee->department ? $employee->department->name : 'No Department',
                     'employee_code' => $employee->employee_code,
-                    'clock_in_time' => $attendance->clock_in->utc()->format('h:i A'),
+                    'clock_in_time' => $attendance->clock_in->format('h:i A'),
                     'work_duration' => $attendance->getCurrentSessionDuration(),
                     'on_break' => $attendance->on_break,
                 ];
@@ -1577,7 +1578,7 @@ class DashboardController extends Controller
                     $limit = $limits[$breakNumber] ?? 15;
                     
                     if ($currentBreakDuration > $limit) {
-                        $violations[] = [
+                        $violation = [
                             'employee_id' => $attendance->employee_id,
                             'employee_name' => $attendance->employee->user->name,
                             'job_title' => $attendance->employee->job_title,
@@ -1588,6 +1589,8 @@ class DashboardController extends Controller
                             'overtime' => $this->formatDuration($currentBreakDuration - $limit),
                             'break_start' => $currentBreakStart->format('H:i'),
                         ];
+                        $violations[] = $violation;
+                        Log::info('Break violation detected', $violation);
                     }
                 }
             }
