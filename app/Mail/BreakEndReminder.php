@@ -10,7 +10,7 @@ use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 use App\Models\Employee;
 
-class BreakEndReminder extends Mailable implements ShouldQueue
+class BreakEndReminder extends Mailable
 {
     use Queueable, SerializesModels;
 

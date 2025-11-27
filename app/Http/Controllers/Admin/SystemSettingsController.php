@@ -40,13 +40,18 @@ class SystemSettingsController extends Controller
         $validated = $request->validate([
             'app_name' => 'required|string|max:255',
             'app_timezone' => 'required|string',
-            'maintenance_mode' => 'boolean',
-            'registration_enabled' => 'boolean',
-            'email_notifications' => 'boolean',
+            'maintenance_mode' => 'sometimes|boolean',
+            'registration_enabled' => 'sometimes|boolean',
+            'email_notifications' => 'sometimes|boolean',
             'backup_frequency' => 'required|in:daily,weekly,monthly',
             'session_timeout' => 'required|integer|min:5|max:1440',
             'max_file_upload' => 'required|integer|min:1|max:100',
         ]);
+
+        // Ensure boolean fields are properly set
+        $validated['maintenance_mode'] = $request->has('maintenance_mode') ? (bool) $request->maintenance_mode : false;
+        $validated['registration_enabled'] = $request->has('registration_enabled') ? (bool) $request->registration_enabled : false;
+        $validated['email_notifications'] = $request->has('email_notifications') ? (bool) $request->email_notifications : false;
 
         // Store settings in cache/config
         foreach ($validated as $key => $value) {

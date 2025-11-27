@@ -51,22 +51,57 @@ class BreakReminderController extends Controller
             }
 
             $sentCount = 0;
+            
+            Log::info("Break reminder process started", [
+                'total_violations_found' => count($violations),
+                'violations_details' => array_map(function($v) {
+                    return [
+                        'employee_id' => $v['attendance']->employee_id,
+                        'employee_name' => $v['attendance']->employee ? $v['attendance']->employee->first_name . ' ' . $v['attendance']->employee->last_name : 'Unknown',
+                        'break_number' => $v['break_number'],
+                        'duration' => $v['duration'],
+                        'has_user' => $v['attendance']->employee && $v['attendance']->employee->user ? true : false,
+                        'has_email' => $v['attendance']->employee && $v['attendance']->employee->user && $v['attendance']->employee->user->email ? true : false
+                    ];
+                }, $violations)
+            ]);
 
             foreach ($violations as $violation) {
                 $employee = $violation['attendance']->employee;
-                if ($employee->user && $employee->user->email) {
-                    Mail::to($employee->user->email)->send(new BreakEndReminder($employee, $violation));
-                    $sentCount++;
+                if ($employee && $employee->user && $employee->user->email) {
+                    try {
+                        Mail::to($employee->user->email)->send(new BreakEndReminder($employee, $violation));
+                        $sentCount++;
+                        Log::info("Break reminder sent to employee", [
+                            'employee_id' => $employee->id,
+                            'employee_name' => $employee->first_name . ' ' . $employee->last_name,
+                            'email' => $employee->user->email,
+                            'break_number' => $violation['break_number'],
+                            'duration' => $violation['duration']
+                        ]);
+                    } catch (\Exception $e) {
+                        Log::error("Failed to send break reminder to employee", [
+                            'employee_id' => $employee->id,
+                            'error' => $e->getMessage()
+                        ]);
+                    }
                 }
             }
 
             // Send confirmation email to admin
             if ($sentCount > 0) {
                 Mail::to(auth()->user()->email)->send(new AdminBreakReminderConfirmation($sentCount, auth()->user()->name));
+                
+                Log::info("Admin confirmation email sent", [
+                    'sent_count' => $sentCount,
+                    'admin_email' => auth()->user()->email,
+                    'admin_name' => auth()->user()->name
+                ]);
             }
 
-            Log::info("Manual break reminders sent by admin", [
-                'sent_count' => $sentCount,
+            Log::info("Manual break reminders process completed", [
+                'total_violations_found' => count($violations),
+                'successfully_sent' => $sentCount,
                 'admin_user' => auth()->user()->email
             ]);
 

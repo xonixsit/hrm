@@ -317,22 +317,28 @@ const form = useForm({
 });
 
 const updateSettings = () => {
-  form.post(route('system-settings.update'), {
+  form.post(route('admin.system-settings.update'), {
     onStart: () => loading.value = true,
     onFinish: () => loading.value = false,
+    onSuccess: () => {
+      // Settings saved successfully
+    },
+    onError: (errors) => {
+      console.error('Settings save failed:', errors);
+    }
   });
 };
 
 const clearCache = () => {
   loading.value = true;
-  form.post(route('system-settings.clear-cache'), {
+  form.post(route('admin.system-settings.clear-cache'), {
     onFinish: () => loading.value = false,
   });
 };
 
 const optimizeSystem = () => {
   loading.value = true;
-  form.post(route('system-settings.optimize'), {
+  form.post(route('admin.system-settings.optimize'), {
     onFinish: () => loading.value = false,
   });
 };
