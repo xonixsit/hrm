@@ -160,7 +160,9 @@ const sendBreakReminders = async () => {
   
   loading.value = true;
   try {
-    const response = await window.axios.post('/api/attendance/send-break-reminders', {}, {
+    const response = await window.axios.post('/api/attendance/send-break-reminders', {
+      violations: props.breakViolations
+    }, {
       headers: {
         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
         'Accept': 'application/json',
