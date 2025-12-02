@@ -206,7 +206,7 @@
               <p class="text-sm font-medium text-gray-600">Success Rate</p>
               <p class="text-3xl font-bold text-gray-900">{{ performanceStats.success_rate || 0 }}%</p>
               <p class="text-sm text-gray-500 mt-1">
-                {{ performanceStats.successful_calls || 0 }} successful calls
+                {{ performanceStats.interested_calls || 0 }} interested responses
               </p>
             </div>
             <div class="p-3 bg-green-50 rounded-lg">
@@ -274,7 +274,7 @@
                 <span class="text-sm font-medium text-gray-700">Successful</span>
               </div>
               <div class="flex items-center">
-                <span class="text-sm font-semibold text-gray-900 mr-2">{{ performanceStats.successful_calls || 0
+                <span class="text-sm font-semibold text-gray-900 mr-2">{{ performanceStats.interested_calls || 0
                   }}</span>
                 <div class="w-24 bg-gray-200 rounded-full h-2">
                   <div class="bg-green-500 h-2 rounded-full"></div>
@@ -451,7 +451,7 @@
                           d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
                           clip-rule="evenodd" />
                       </svg>
-                      {{ report.successful_calls || 0 }} successful
+                      {{ report.interested_count || 0 }} interested
                     </span>
                     <span class="flex items-center">
                       <svg class="w-4 h-4 mr-1 text-teal-500" fill="currentColor" viewBox="0 0 20 20">
@@ -1006,11 +1006,11 @@
 
   const calculateSuccessRate = (report) => {
     const totalCalls = report.calls || 0;
-    const successfulCalls = report.successful_calls || 0;
+    const interestedCalls = report.interested_count || 0;
 
     if (totalCalls === 0) return 0;
 
-    return Math.round((successfulCalls / totalCalls) * 100);
+    return Math.round((interestedCalls / totalCalls) * 100);
   };
 
   // Employee comparison and leaderboard methods
@@ -1157,8 +1157,18 @@
         formatter: (value) => value || 0
       },
       {
-        key: 'successful_calls',
-        label: 'Successful',
+        key: 'interested_count',
+        label: 'Interested',
+        sortable: true,
+      },
+      {
+        key: 'not_interested_count',
+        label: 'Not Interested',
+        sortable: true,
+      },
+      {
+        key: 'voice_mails',
+        label: 'Voice Mails',
         sortable: true,
         formatter: (value) => value || 0
       },

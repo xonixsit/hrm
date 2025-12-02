@@ -56,12 +56,20 @@
                 <td class="py-3 text-sm text-gray-900">{{ workReport.disconnected_calls || 0 }}</td>
               </tr>
               <tr>
-                <td class="py-3 text-sm font-medium text-gray-500 w-1/4">Follow-up Calls</td>
+                <td class="py-3 text-sm font-medium text-gray-500 w-1/4">Callbacks</td>
                 <td class="py-3 text-sm text-gray-900">{{ workReport.follow_up_calls || 0 }}</td>
               </tr>
               <tr>
-                <td class="py-3 text-sm font-medium text-gray-500 w-1/4">Successful Calls</td>
-                <td class="py-3 text-sm text-gray-900">{{ workReport.successful_calls || 0 }}</td>
+                <td class="py-3 text-sm font-medium text-gray-500 w-1/4">Voice Mails</td>
+                <td class="py-3 text-sm text-gray-900">{{ workReport.voice_mails || 0 }}</td>
+              </tr>
+              <tr>
+                <td class="py-3 text-sm font-medium text-gray-500 w-1/4">Interested Count</td>
+                <td class="py-3 text-sm text-gray-900">{{ workReport.interested_count || 0 }}</td>
+              </tr>
+              <tr>
+                <td class="py-3 text-sm font-medium text-gray-500 w-1/4">Not Interested Count</td>
+                <td class="py-3 text-sm text-gray-900">{{ workReport.not_interested_count || 0 }}</td>
               </tr>
             </tbody>
           </table>

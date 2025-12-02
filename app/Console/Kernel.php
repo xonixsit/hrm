@@ -58,6 +58,24 @@ class Kernel extends ConsoleKernel
                  ->dailyAt('06:00')
                  ->withoutOverlapping()
                  ->runInBackground();
+
+        // Send daily work reports summary at 7:00 AM
+        $schedule->command('reports:send-daily-work-reports')
+                 ->dailyAt('07:00')
+                 ->withoutOverlapping()
+                 ->runInBackground();
+
+        // Send daily attendance summary at 7:30 AM
+        $schedule->command('reports:send-daily-attendance')
+                 ->dailyAt('07:30')
+                 ->withoutOverlapping()
+                 ->runInBackground();
+
+        // Send daily work reports summary at 8:00 AM
+        $schedule->command('reports:send-daily-work-reports')
+                 ->dailyAt('08:00')
+                 ->withoutOverlapping()
+                 ->runInBackground();
     }
 
     /**

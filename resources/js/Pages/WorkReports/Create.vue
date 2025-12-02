@@ -75,7 +75,7 @@
                 </div>
                 
                 <div>
-                  <FormLabel for="follow_up_calls" required>Follow-up Calls</FormLabel>
+                  <FormLabel for="follow_up_calls" required>Callbacks</FormLabel>
                   <FormInput
                     id="follow_up_calls"
                     v-model="form.follow_up_calls"
@@ -90,16 +90,44 @@
               
               <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
                 <div>
-                  <FormLabel for="successful_calls" required>Successful Calls</FormLabel>
+                  <FormLabel for="voice_mails" required>Voice Mails</FormLabel>
                   <FormInput
-                    id="successful_calls"
-                    v-model="form.successful_calls"
+                    id="voice_mails"
+                    v-model="form.voice_mails"
                     type="number"
                     min="0"
-                    :error="form.errors.successful_calls"
+                    :error="form.errors.voice_mails"
                     required
                   />
-                  <FormError :message="form.errors.successful_calls" />
+                  <FormError :message="form.errors.voice_mails" />
+                </div>
+                
+                <div>
+                  <FormLabel for="interested_count" required>Interested Count</FormLabel>
+                  <FormInput
+                    id="interested_count"
+                    v-model="form.interested_count"
+                    type="number"
+                    min="0"
+                    :error="form.errors.interested_count"
+                    required
+                  />
+                  <FormError :message="form.errors.interested_count" />
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                <div>
+                  <FormLabel for="not_interested_count" required>Not Interested Count</FormLabel>
+                  <FormInput
+                    id="not_interested_count"
+                    v-model="form.not_interested_count"
+                    type="number"
+                    min="0"
+                    :error="form.errors.not_interested_count"
+                    required
+                  />
+                  <FormError :message="form.errors.not_interested_count" />
                 </div>
               </div>
             </div>
@@ -207,7 +235,9 @@ const form = useForm({
   calls_not_received: 0,
   disconnected_calls: 0,
   follow_up_calls: 0,
-  successful_calls: 0,
+  voice_mails: 0,
+  interested_count: 0,
+  not_interested_count: 0,
   emails: 0,
   whatsapp: 0,
   sms: 0,
@@ -221,12 +251,13 @@ const breadcrumbs = computed(() => [
 ]);
 
 const submitForm = () => {
+  console.log('Submitting form with data:', form.data());
   form.post(route('work-reports.store'), {
     onSuccess: () => {
-      // Form submitted successfully
+      console.log('Form submitted successfully');
     },
-    onError: () => {
-      // Handle errors
+    onError: (errors) => {
+      console.error('Form submission errors:', errors);
     }
   });
 };

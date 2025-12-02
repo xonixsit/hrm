@@ -184,8 +184,10 @@ class DashboardController extends Controller
                 'attendanceTrend' => $attendanceRate['trend'],
                 'workReportsCount' => $workReportsData['count'],
                 'workReportsTrend' => $workReportsData['trend'],
-                'successfulCalls' => $workReportsData['successfulCalls'],
-                'successfulCallsTrend' => $workReportsData['callsTrend'],
+                'voiceMails' => $workReportsData['voiceMails'],
+                'interested' => $workReportsData['interested'],
+                'interestedTrend' => $workReportsData['interestedTrend'],
+                'notInterested' => $workReportsData['notInterested'],
                 'avgPerformanceScore' => $performanceData['avgScore'],
                 'performanceTrend' => $performanceData['trend'],
                 // Attendance tracking
@@ -271,11 +273,17 @@ class DashboardController extends Controller
                     ->whereMonth('created_at', now()->month)
                     ->count();
                 
-                // Calculate successful calls from work reports this month
-                $mySuccessfulCalls = DB::table('work_reports')
+                // Calculate metrics from work reports this month
+                $workReportMetrics = DB::table('work_reports')
                     ->where('employee_id', $employeeId)
                     ->whereMonth('created_at', now()->month)
-                    ->sum('successful_calls');
+                    ->selectRaw('SUM(calls) as total_calls, SUM(voice_mails) as voice_mails, SUM(interested_count) as interested, SUM(not_interested_count) as not_interested')
+                    ->first();
+
+                $myTotalCalls = $workReportMetrics->total_calls ?? 0;
+                $myVoiceMails = $workReportMetrics->voice_mails ?? 0;
+                $myInterested = $workReportMetrics->interested ?? 0;
+                $myNotInterested = $workReportMetrics->not_interested ?? 0;
 
                 // Journey & Growth metrics
                 $journeyMetrics = $this->getEmployeeJourneyMetrics($employeeId);
@@ -286,8 +294,11 @@ class DashboardController extends Controller
                     // Core Performance
                     'attendanceRate' => $this->calculateEmployeeAttendanceRate($employeeId),
                     'hoursToday' => $currentAttendance['todays_summary']['total_hours'] ?? '0h 0m',
-                    'myWorkReports' => $myWorkReports,
-                    'mySuccessfulCalls' => $mySuccessfulCalls,
+                    'myTotalCalls' => $myTotalCalls,
+                    'myTotalCalls' => $mySuccessfulCalls,
+                    'myVoiceMails' => $myVoiceMails,
+                    'myInterested' => $myInterested,
+                    'myNotInterested' => $myNotInterested,
                     
                     // Leave Management
                     'pendingLeaves' => $myPendingLeaves,
@@ -389,7 +400,10 @@ class DashboardController extends Controller
                     'attendanceRate' => 0,
                     'hoursToday' => '0h 0m',
                     'myWorkReports' => 0,
-                    'mySuccessfulCalls' => 0,
+                    'myTotalCalls' => 0,
+                    'myVoiceMails' => 0,
+                    'myInterested' => 0,
+                    'myNotInterested' => 0,
                     'pendingLeaves' => 0,
                     'approvedLeaves' => 0,
                     'leaveBalance' => 0,
@@ -659,35 +673,37 @@ class DashboardController extends Controller
             // Current month work reports
             $currentData = DB::table('work_reports')
                 ->whereRaw("DATE_FORMAT(created_at, '%Y-%m') = ?", [$currentMonth])
-                ->selectRaw('COUNT(*) as count, SUM(successful_calls) as successful_calls')
+                ->selectRaw('COUNT(*) as count, SUM(voice_mails) as voice_mails, SUM(interested_count) as interested, SUM(not_interested_count) as not_interested')
                 ->first();
             
             // Last month for trend calculation
             $lastMonth = now()->subMonth()->format('Y-m');
             $lastData = DB::table('work_reports')
                 ->whereRaw("DATE_FORMAT(created_at, '%Y-%m') = ?", [$lastMonth])
-                ->selectRaw('COUNT(*) as count, SUM(successful_calls) as successful_calls')
+                ->selectRaw('COUNT(*) as count, SUM(voice_mails) as voice_mails, SUM(interested_count) as interested, SUM(not_interested_count) as not_interested')
                 ->first();
             
             $countTrend = 0;
-            $callsTrend = 0;
+            $interestedTrend = 0;
             
             if ($lastData && $lastData->count > 0) {
                 $countTrend = (($currentData->count - $lastData->count) / $lastData->count) * 100;
             }
             
-            if ($lastData && $lastData->successful_calls > 0) {
-                $callsTrend = (($currentData->successful_calls - $lastData->successful_calls) / $lastData->successful_calls) * 100;
+            if ($lastData && $lastData->interested > 0) {
+                $interestedTrend = (($currentData->interested - $lastData->interested) / $lastData->interested) * 100;
             }
             
             return [
                 'count' => $currentData->count ?? 0,
                 'trend' => round($countTrend, 1),
-                'successfulCalls' => $currentData->successful_calls ?? 0,
-                'callsTrend' => round($callsTrend, 1)
+                'voiceMails' => $currentData->voice_mails ?? 0,
+                'interested' => $currentData->interested ?? 0,
+                'interestedTrend' => round($interestedTrend, 1),
+                'notInterested' => $currentData->not_interested ?? 0,
             ];
         } catch (\Exception $e) {
-            return ['count' => 0, 'trend' => 0, 'successfulCalls' => 0, 'callsTrend' => 0];
+            return ['count' => 0, 'trend' => 0, 'voiceMails' => 0, 'interested' => 0, 'interestedTrend' => 0, 'notInterested' => 0];
         }
     }
 

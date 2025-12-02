@@ -150,6 +150,11 @@ class WorkReportController extends Controller
 
     public function store(Request $request)
     {
+        \Log::info('WorkReport store method called', [
+            'user_id' => auth()->id(),
+            'request_data' => $request->all()
+        ]);
+        
         $this->authorize('create', WorkReport::class);
         
         $validated = $request->validate([
@@ -158,7 +163,9 @@ class WorkReportController extends Controller
             'calls_not_received' => 'required|integer|min:0',
             'disconnected_calls' => 'required|integer|min:0',
             'follow_up_calls' => 'required|integer|min:0',
-            'successful_calls' => 'required|integer|min:0',
+            'voice_mails' => 'required|integer|min:0',
+            'interested_count' => 'required|integer|min:0',
+            'not_interested_count' => 'required|integer|min:0',
             'emails' => 'required|integer|min:0',
             'whatsapp' => 'required|integer|min:0',
             'sms' => 'required|integer|min:0',
@@ -174,7 +181,17 @@ class WorkReportController extends Controller
         
         $validated['employee_id'] = $employee->id;
 
-        WorkReport::create($validated);
+        \Log::info('Creating WorkReport with validated data', [
+            'validated_data' => $validated,
+            'employee_id' => $employee->id
+        ]);
+
+        $workReport = WorkReport::create($validated);
+
+        \Log::info('WorkReport created successfully', [
+            'work_report_id' => $workReport->id,
+            'employee_id' => $employee->id
+        ]);
 
         $this->logAudit('Work Report Created', 'Created work report for date: ' . $validated['date']);
         return redirect()->route('work-reports.index')->with('success', 'Work report submitted.');
@@ -201,7 +218,9 @@ class WorkReportController extends Controller
             'calls_not_received' => 'required|integer|min:0',
             'disconnected_calls' => 'required|integer|min:0',
             'follow_up_calls' => 'required|integer|min:0',
-            'successful_calls' => 'required|integer|min:0',
+            'voice_mails' => 'required|integer|min:0',
+            'interested_count' => 'required|integer|min:0',
+            'not_interested_count' => 'required|integer|min:0',
             'emails' => 'required|integer|min:0',
             'whatsapp' => 'required|integer|min:0',
             'sms' => 'required|integer|min:0',
@@ -283,7 +302,9 @@ class WorkReportController extends Controller
         // Get aggregated statistics
         $stats = $query->selectRaw('
             SUM(calls) as total_calls,
-            SUM(successful_calls) as successful_calls,
+            SUM(voice_mails) as voice_mails,
+            SUM(interested_count) as interested_count,
+            SUM(not_interested_count) as not_interested_count,
             SUM(calls_not_received) as calls_not_received,
             SUM(disconnected_calls) as disconnected_calls,
             SUM(follow_up_calls) as follow_up_calls,
@@ -450,7 +471,9 @@ class WorkReportController extends Controller
                 
                 $stats = $query->selectRaw('
                     SUM(calls) as total_calls,
-                    SUM(successful_calls) as successful_calls,
+                    SUM(voice_mails) as voice_mails,
+                    SUM(interested_count) as interested_count,
+                    SUM(not_interested_count) as not_interested_count,
                     SUM(emails) as emails,
                     SUM(whatsapp) as whatsapp,
                     SUM(sms) as sms,
@@ -458,8 +481,8 @@ class WorkReportController extends Controller
                 ')->first();
                 
                 $totalCalls = $stats->total_calls ?? 0;
-                $successfulCalls = $stats->successful_calls ?? 0;
-                $successRate = $totalCalls > 0 ? round(($successfulCalls / $totalCalls) * 100, 1) : 0;
+                $interestedCalls = $stats->interested_count ?? 0;
+                $successRate = $totalCalls > 0 ? round(($interestedCalls / $totalCalls) * 100, 1) : 0;
                 
                 // Calculate performance score (weighted average)
                 $performanceScore = $this->calculatePerformanceScore($stats);
@@ -475,7 +498,7 @@ class WorkReportController extends Controller
                     'department' => $employee->department ? $employee->department->name : 'No Department',
                     'department_id' => $employee->department_id,
                     'total_calls' => (int) $totalCalls,
-                    'successful_calls' => (int) $successfulCalls,
+                    'interested_calls' => (int) $interestedCalls,
                     'success_rate' => $successRate,
                     'emails' => (int) ($stats->emails ?? 0),
                     'whatsapp' => (int) ($stats->whatsapp ?? 0),
@@ -498,7 +521,7 @@ class WorkReportController extends Controller
     private function calculatePerformanceScore($stats)
     {
         $totalCalls = $stats->total_calls ?? 0;
-        $successfulCalls = $stats->successful_calls ?? 0;
+        $interestedCalls = $stats->interested_count ?? 0;
         $emails = $stats->emails ?? 0;
         $whatsapp = $stats->whatsapp ?? 0;
         $sms = $stats->sms ?? 0;
@@ -507,7 +530,7 @@ class WorkReportController extends Controller
         if ($totalCalls == 0) return 0;
         
         // Success rate (40% weight)
-        $successRate = ($successfulCalls / $totalCalls) * 100;
+        $successRate = ($interestedCalls / $totalCalls) * 100;
         $successScore = min($successRate * 0.4, 40);
         
         // Activity level (30% weight) - calls per day

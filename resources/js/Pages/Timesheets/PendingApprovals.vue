@@ -295,7 +295,7 @@
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                       <div v-if="timesheet.work_report" class="text-xs">
-                        <div class="text-gray-900">{{ timesheet.work_report.successful_calls }} calls</div>
+                        <div class="text-gray-900">{{ timesheet.work_report.interested_count || 0 }} interested</div>
                         <div class="text-gray-500">{{ timesheet.work_report.emails }} emails</div>
                       </div>
                       <div v-else class="text-xs text-gray-400">No report</div>
@@ -367,7 +367,7 @@
                   <h4 class="text-sm font-medium text-teal-900 mb-2">Work Report Context</h4>
                   <div class="grid grid-cols-3 gap-4 text-xs">
                     <div>
-                      <span class="text-teal-700">Calls:</span> {{ selectedTimesheet.work_report.successful_calls }}/{{ selectedTimesheet.work_report.calls }}
+                      <span class="text-teal-700">Interested:</span> {{ selectedTimesheet.work_report.interested_count || 0 }}/{{ selectedTimesheet.work_report.calls }}
                     </div>
                     <div>
                       <span class="text-teal-700">Emails:</span> {{ selectedTimesheet.work_report.emails }}

@@ -32,7 +32,7 @@
             <h4 class="text-sm font-medium text-teal-900 mb-2">Work Report Context</h4>
             <div class="grid grid-cols-3 gap-4 text-xs">
               <div>
-                <span class="text-teal-700">Calls:</span> {{ approval.work_report.successful_calls }}/{{ approval.work_report.calls }}
+                <span class="text-teal-700">Interested:</span> {{ approval.work_report.interested_count || 0 }}/{{ approval.work_report.calls }}
               </div>
               <div>
                 <span class="text-teal-700">Emails:</span> {{ approval.work_report.emails }}
