@@ -1620,7 +1620,7 @@ class DashboardController extends Controller
                 $currentBreakStart = $attendance->current_break_start;
                 
                 if ($currentBreakStart) {
-                    $currentBreakDuration = $currentBreakStart->diffInMinutes(now());
+                    $currentBreakDuration = (int) $currentBreakStart->diffInMinutes(now());
                     $breakNumber = count($breakSessions) + 1;
                     
                     // Define break limits
@@ -1657,12 +1657,19 @@ class DashboardController extends Controller
 
     private function formatDuration($minutes)
     {
+        // Ensure we're working with integers
+        $minutes = (int) $minutes;
+        
         if ($minutes < 60) {
             return $minutes . 'm';
         }
         
         $hours = floor($minutes / 60);
         $remainingMinutes = $minutes % 60;
+        
+        if ($remainingMinutes == 0) {
+            return $hours . 'h';
+        }
         
         return $hours . 'h ' . $remainingMinutes . 'm';
     }

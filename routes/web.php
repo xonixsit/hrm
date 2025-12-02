@@ -111,6 +111,10 @@ Route::middleware('auth')->group(function () {
         Route::get('export-report', [App\Http\Controllers\Api\ReportExportController::class, 'exportAttendanceReport']);
         Route::get('export-break-report', [App\Http\Controllers\Api\ReportExportController::class, 'exportBreakReport']);
         Route::get('debug-break-violations', [App\Http\Controllers\DashboardController::class, 'getBreakViolationsApi']);
+        Route::get('test-break-reminders', function() {
+            $controller = new App\Http\Controllers\Api\BreakReminderController();
+            return $controller->sendBreakReminders(request());
+        });
         Route::get('break-violations', [App\Http\Controllers\DashboardController::class, 'getBreakViolationsApi']);
     });
 

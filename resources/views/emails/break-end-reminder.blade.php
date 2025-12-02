@@ -89,7 +89,7 @@
             <p>Please end your current break and return to work</p>
         </div>
 
-        <p>We notice="margind that your current break has exceeded the allowed time limit. Please end your break and return to work as soon as possible.</p>
+        <p>We noticed that your current break has exceeded the allowed time limit. Please end your break and return to work as soon as possible.</p>
 
         <div class="break-info">
             <p><strong>Break Details:</strong></p>
