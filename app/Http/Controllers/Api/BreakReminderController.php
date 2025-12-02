@@ -27,21 +27,59 @@ class BreakReminderController extends Controller
             
             // Process each violation from the frontend
             foreach ($requestViolations as $violationData) {
-                // Get the attendance record for this employee
+                Log::info("Processing violation for employee", [
+                    'employee_id' => $violationData['employee_id'],
+                    'employee_name' => $violationData['employee_name'] ?? 'Unknown'
+                ]);
+                
+                // Get the attendance record for this employee - try multiple approaches
                 $attendance = Attendance::where('employee_id', $violationData['employee_id'])
                     ->whereDate('date', today())
                     ->where('on_break', true)
                     ->with(['employee.user', 'employee.department'])
                     ->first();
+                
+                // If not found with on_break=true, try without that condition
+                if (!$attendance) {
+                    $attendance = Attendance::where('employee_id', $violationData['employee_id'])
+                        ->whereDate('date', today())
+                        ->with(['employee.user', 'employee.department'])
+                        ->first();
+                        
+                    Log::info("Attendance record found without on_break filter", [
+                        'employee_id' => $violationData['employee_id'],
+                        'attendance_found' => $attendance ? true : false,
+                        'on_break_status' => $attendance ? $attendance->on_break : null
+                    ]);
+                }
+                
+                if ($attendance) {
+                    Log::info("Attendance record details", [
+                        'employee_id' => $attendance->employee_id,
+                        'has_employee' => $attendance->employee ? true : false,
+                        'has_user' => $attendance->employee && $attendance->employee->user ? true : false,
+                        'user_email' => $attendance->employee && $attendance->employee->user ? $attendance->employee->user->email : null
+                    ]);
                     
-                if ($attendance && $attendance->employee && $attendance->employee->user) {
-                    $violations[] = [
-                        'attendance' => $attendance,
-                        'break_number' => $violationData['break_number'],
-                        'duration' => $this->parseDurationToMinutes($violationData['duration']),
-                        'limit' => $this->parseDurationToMinutes($violationData['limit']),
-                        'overtime' => $this->parseDurationToMinutes($violationData['overtime'])
-                    ];
+                    if ($attendance->employee && $attendance->employee->user) {
+                        $violations[] = [
+                            'attendance' => $attendance,
+                            'break_number' => $violationData['break_number'],
+                            'duration' => $this->parseDurationToMinutes($violationData['duration']),
+                            'limit' => $this->parseDurationToMinutes($violationData['limit']),
+                            'overtime' => $this->parseDurationToMinutes($violationData['overtime'])
+                        ];
+                    } else {
+                        Log::warning("Employee or user not found for attendance", [
+                            'employee_id' => $violationData['employee_id'],
+                            'attendance_id' => $attendance->id
+                        ]);
+                    }
+                } else {
+                    Log::warning("No attendance record found for employee", [
+                        'employee_id' => $violationData['employee_id'],
+                        'date' => today()->toDateString()
+                    ]);
                 }
             }
 
@@ -63,23 +101,40 @@ class BreakReminderController extends Controller
 
             foreach ($violations as $violation) {
                 $employee = $violation['attendance']->employee;
+                
+                Log::info("Attempting to send email to employee", [
+                    'employee_id' => $employee->id,
+                    'employee_name' => $employee->user->name,
+                    'email' => $employee->user->email,
+                    'break_number' => $violation['break_number']
+                ]);
+                
                 if ($employee && $employee->user && $employee->user->email) {
                     try {
                         Mail::to($employee->user->email)->send(new BreakEndReminder($employee, $violation));
                         $sentCount++;
-                        Log::info("Break reminder sent to employee", [
+                        Log::info("✅ Break reminder sent successfully", [
                             'employee_id' => $employee->id,
-                            'employee_name' => $employee->first_name . ' ' . $employee->last_name,
+                            'employee_name' => $employee->user->name,
                             'email' => $employee->user->email,
                             'break_number' => $violation['break_number'],
-                            'duration' => $violation['duration']
+                            'duration' => $violation['duration'] . ' minutes'
                         ]);
                     } catch (\Exception $e) {
-                        Log::error("Failed to send break reminder to employee", [
+                        Log::error("❌ Failed to send break reminder to employee", [
                             'employee_id' => $employee->id,
-                            'error' => $e->getMessage()
+                            'employee_name' => $employee->user->name,
+                            'email' => $employee->user->email,
+                            'error' => $e->getMessage(),
+                            'trace' => $e->getTraceAsString()
                         ]);
                     }
+                } else {
+                    Log::warning("⚠️ Cannot send email - missing employee/user/email", [
+                        'employee_id' => $employee ? $employee->id : null,
+                        'has_user' => $employee && $employee->user ? true : false,
+                        'has_email' => $employee && $employee->user && $employee->user->email ? true : false
+                    ]);
                 }
             }
 
