@@ -384,19 +384,19 @@ const workdayStatus = computed(() => {
   const now = currentTime.value;
   const hour = now.getHours();
   
-  // Extended work hours: 6 AM to 6 PM
-  if (hour < 6) return 'before-work';
-  if (hour >= 18) return 'after-work';
+  // Timeline hours: 7 AM to 7 PM (but work calculation is still 9 hours)
+  if (hour < 7) return 'before-work';
+  if (hour >= 19) return 'after-work';
   return 'during-work';
 });
 
-// Timeline markers for the horizontal clock (Extended Work Day: 6 AM to 6 PM)
+// Timeline markers for the horizontal clock (Full Timeline: 7 AM to 7 PM)
 const timelineMarkers = computed(() => {
   const markers = [];
   
-  // Extended work day: 6 AM to 6 PM (13 markers total)
-  // Hours: 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18
-  const workHours = [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18];
+  // Full timeline: 7 AM to 7 PM (13 markers total)
+  // Hours: 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19
+  const workHours = [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19];
   
   workHours.forEach((hour, index) => {
     let label;
@@ -412,6 +412,8 @@ const timelineMarkers = computed(() => {
       label = `${hour} AM`;
     } else if (hour === 18) {
       label = '6 PM';
+    } else if (hour === 19) {
+      label = '7 PM';
     } else {
       label = `${hour - 12} PM`;
     }
@@ -451,9 +453,9 @@ const workProgressPercentage = computed(() => {
 
   const workTimeElapsedMs = now.getTime() - clockIn.getTime();
   const workTimeElapsedHours = workTimeElapsedMs / (1000 * 60 * 60);
-  const extendedWorkDayHours = 12; // Extended work day: 6 AM to 6 PM = 12 hours
+  const standardWorkDayHours = 9; // Standard work day: 9 hours
 
-  return Math.min((workTimeElapsedHours / extendedWorkDayHours) * 100, 100);
+  return Math.min((workTimeElapsedHours / standardWorkDayHours) * 100, 100);
 });
 
 const preWorkWidth = computed(() => {
@@ -471,18 +473,18 @@ const progressStartPosition = computed(() => {
   const clockInHour = clockIn.getHours();
   const clockInMinute = clockIn.getMinutes();
   
-  // Extended work day timeline: 6 AM to 6 PM = 12 hours
-  if (clockInHour < 6) {
-    return 0; // Clocked in before 6 AM, start at beginning
-  } else if (clockInHour >= 18) {
-    return 100; // Clocked in after 6 PM, start at end
+  // Timeline: 7 AM to 7 PM = 12 hours (for visual positioning)
+  if (clockInHour < 7) {
+    return 0; // Clocked in before 7 AM, start at beginning
+  } else if (clockInHour >= 19) {
+    return 100; // Clocked in after 7 PM, start at end
   } else {
-    // Calculate position based on clock-in time
-    const workHour = clockInHour - 6; // Convert to 0-12 range
-    const workMinutes = workHour * 60 + clockInMinute;
-    const totalWorkMinutes = 12 * 60; // 720 minutes
+    // Calculate position based on clock-in time on 12-hour timeline
+    const timelineHour = clockInHour - 7; // Convert to 0-12 range
+    const timelineMinutes = timelineHour * 60 + clockInMinute;
+    const totalTimelineMinutes = 12 * 60; // 720 minutes
     
-    return (workMinutes / totalWorkMinutes) * 100;
+    return (timelineMinutes / totalTimelineMinutes) * 100;
   }
 });
 
@@ -500,7 +502,7 @@ const progressWidth = computed(() => {
   const workMinutes = minutesMatch ? parseInt(minutesMatch[1]) : 0;
   
   const totalWorkMinutes = workHours * 60 + workMinutes;
-  const totalWorkDayMinutes = 12 * 60; // 12-hour work day = 720 minutes
+  const totalWorkDayMinutes = 9 * 60; // 9-hour work day = 540 minutes
   
   // Calculate what percentage of the timeline this work duration represents
   const workPercentage = (totalWorkMinutes / totalWorkDayMinutes) * 100;
@@ -513,28 +515,28 @@ const progressLabel = computed(() => {
   return `${Math.round(workProgressPercentage.value)}% Complete`;
 });
 
-// Current time position on the timeline (0-100%) for Extended Work Day (6 AM to 6 PM)
+// Current time position on the timeline (0-100%) for Full Timeline (7 AM to 7 PM)
 const currentTimePosition = computed(() => {
   const now = currentTime.value;
   const hour = now.getHours();
   const minute = now.getMinutes();
   
-  // Extended work day timeline: 6 AM to 6 PM = 12 hours
-  // Timeline positions: 6 AM = 0%, 6 PM = 100%
+  // Full timeline: 7 AM to 7 PM = 12 hours
+  // Timeline positions: 7 AM = 0%, 7 PM = 100%
   
-  if (hour < 6) {
-    // Before work hours - show at beginning
+  if (hour < 7) {
+    // Before timeline - show at beginning
     return 0;
-  } else if (hour >= 18) {
-    // After work hours - show at end
+  } else if (hour >= 19) {
+    // After timeline - show at end
     return 100;
   } else {
-    // During work hours (6 AM to 6 PM)
-    const workHour = hour - 6; // Convert to 0-12 range
-    const workMinutes = workHour * 60 + minute;
-    const totalWorkMinutes = 12 * 60; // 720 minutes
+    // During timeline hours (7 AM to 7 PM)
+    const timelineHour = hour - 7; // Convert to 0-12 range
+    const timelineMinutes = timelineHour * 60 + minute;
+    const totalTimelineMinutes = 12 * 60; // 720 minutes
     
-    return (workMinutes / totalWorkMinutes) * 100;
+    return (timelineMinutes / totalTimelineMinutes) * 100;
   }
 });
 
@@ -549,21 +551,21 @@ const progressStatusClasses = computed(() => {
   }
 });
 
-// Break time fills for visualization (Extended Work Day: 6 AM to 6 PM)
+// Break time fills for visualization (Full Timeline: 7 AM to 7 PM)
 const breakTimeFills = computed(() => {
   const fills = [];
   
-  // Helper function to convert time to work day timeline position
-  const getWorkDayPosition = (hour, minute) => {
-    if (hour < 6 || hour >= 18) {
-      // Outside work hours - return null to skip
+  // Helper function to convert time to timeline position
+  const getTimelinePosition = (hour, minute) => {
+    if (hour < 7 || hour >= 19) {
+      // Outside timeline - return null to skip
       return null;
     }
     
-    const workHour = hour - 6; // Convert to 0-12 range
-    const workMinutes = workHour * 60 + minute;
-    const totalWorkMinutes = 12 * 60; // 720 minutes
-    return (workMinutes / totalWorkMinutes) * 100;
+    const timelineHour = hour - 7; // Convert to 0-12 range
+    const timelineMinutes = timelineHour * 60 + minute;
+    const totalTimelineMinutes = 12 * 60; // 720 minutes
+    return (timelineMinutes / totalTimelineMinutes) * 100;
   };
   
   // Add completed break sessions
@@ -573,8 +575,8 @@ const breakTimeFills = computed(() => {
         const startTime = new Date(session.start);
         const endTime = new Date(session.end);
         
-        const startPos = getWorkDayPosition(startTime.getHours(), startTime.getMinutes());
-        const endPos = getWorkDayPosition(endTime.getHours(), endTime.getMinutes());
+        const startPos = getTimelinePosition(startTime.getHours(), startTime.getMinutes());
+        const endPos = getTimelinePosition(endTime.getHours(), endTime.getMinutes());
         
         if (startPos !== null && endPos !== null && endPos > startPos) {
           fills.push({
@@ -592,8 +594,8 @@ const breakTimeFills = computed(() => {
     const breakStart = new Date(attendanceState.value.breakStartTime);
     const now = currentTime.value;
     
-    const startPos = getWorkDayPosition(breakStart.getHours(), breakStart.getMinutes());
-    const currentPos = getWorkDayPosition(now.getHours(), now.getMinutes());
+    const startPos = getTimelinePosition(breakStart.getHours(), breakStart.getMinutes());
+    const currentPos = getTimelinePosition(now.getHours(), now.getMinutes());
     
     if (startPos !== null && currentPos !== null && currentPos > startPos) {
       fills.push({
@@ -909,7 +911,7 @@ onMounted(async () => {
     }
   }, 1000);
   
-  // Subscribe to Laravel Echo attendance updates
+  // Real-time updates disabled - using legacy event listeners only
   if (window.Echo && user.value?.employee?.id) {
     const employeeId = user.value.employee.id;
     

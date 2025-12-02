@@ -32,11 +32,14 @@ class SendClockInReminders extends Command
         $this->info('Starting to send clock-in reminder emails...');
 
         try {
-            // Get all active employees with Employee role
+            // Get all active employees with Employee role only (exclude Admin, HR, Manager)
             $employees = Employee::active()
                 ->whereHas('user', function($query) {
                     $query->whereHas('roles', function($roleQuery) {
                         $roleQuery->where('name', 'Employee');
+                    })
+                    ->whereDoesntHave('roles', function($roleQuery) {
+                        $roleQuery->whereIn('name', ['Admin', 'HR', 'Manager']);
                     });
                 })
                 ->with(['user'])

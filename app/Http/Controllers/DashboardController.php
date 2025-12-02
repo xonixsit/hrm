@@ -426,22 +426,39 @@ class DashboardController extends Controller
                 ->with(['employee.user', 'employee.department'])
                 ->get();
 
-            // Filter out attendances where employee or user is null
+            // Filter out attendances where employee or user is null, and exclude Admin/HR/Manager roles
             $clockedInAttendances = $clockedInAttendances->filter(function($attendance) {
-                return $attendance->employee && $attendance->employee->user;
+                if (!$attendance->employee || !$attendance->employee->user) {
+                    return false;
+                }
+                
+                // Check if user has Employee role and doesn't have Admin/HR/Manager roles
+                $user = $attendance->employee->user;
+                $hasEmployeeRole = $user->hasRole('Employee');
+                $hasExcludedRole = $user->hasAnyRole(['Admin', 'HR', 'Manager']);
+                
+                return $hasEmployeeRole && !$hasExcludedRole;
             });
 
             $clockedInCount = $clockedInAttendances->count();
 
-            // Get all active employees to calculate missed clock-ins
+            // Get all active employees with Employee role only (exclude Admin, HR, Manager)
             $allActiveEmployees = Employee::active()
+                ->whereHas('user', function($query) {
+                    $query->whereHas('roles', function($roleQuery) {
+                        $roleQuery->where('name', 'Employee');
+                    })
+                    ->whereDoesntHave('roles', function($roleQuery) {
+                        $roleQuery->whereIn('name', ['Admin', 'HR', 'Manager']);
+                    });
+                })
                 ->with(['user', 'department'])
                 ->get();
 
             // Get employees who have clocked in today
             $clockedInEmployeeIds = $clockedInAttendances->pluck('employee_id');
 
-            // Get employees who missed clocking in
+            // Get employees who missed clocking in (only regular employees)
             $missedClockInEmployees = $allActiveEmployees->filter(function($employee) use ($clockedInEmployeeIds) {
                 return !$clockedInEmployeeIds->contains($employee->id);
             })->map(function($employee) {

@@ -15,38 +15,28 @@ class BreakReminderController extends Controller
     public function sendBreakReminders(Request $request)
     {
         try {
-            // Get employees currently on break exceeding limits
-            $attendances = Attendance::whereDate('date', today())
-                ->where('on_break', true)
-                ->whereNotNull('current_break_start')
-                ->with(['employee.user', 'employee.department'])
-                ->get();
-
-            $violations = [];
+            // Get break violations using the same method as dashboard
+            $dashboardController = new \App\Http\Controllers\DashboardController(app(\App\Services\BirthdayService::class));
+            $breakViolationsData = $dashboardController->getBreakViolationsApi();
+            $breakViolations = $breakViolationsData->getData()->violations ?? [];
             
-            foreach ($attendances as $attendance) {
-                if (!$attendance->employee || !$attendance->employee->user) continue;
-                
-                $breakSessions = $attendance->break_sessions ?? [];
-                $currentBreakStart = $attendance->current_break_start;
-                
-                if ($currentBreakStart) {
-                    $currentBreakDuration = now()->diffInMinutes($currentBreakStart);
-                    $breakNumber = count($breakSessions) + 1;
+            // Convert dashboard format to API format for email sending
+            $violations = [];
+            foreach ($breakViolations as $violation) {
+                // Get the attendance record for this employee
+                $attendance = Attendance::where('employee_id', $violation->employee_id)
+                    ->whereDate('date', today())
+                    ->where('on_break', true)
+                    ->first();
                     
-                    // Define break limits
-                    $limits = [1 => 15, 2 => 30, 3 => 15]; // minutes
-                    $limit = $limits[$breakNumber] ?? 15;
-                    
-                    if ($currentBreakDuration > $limit) {
-                        $violations[] = [
-                            'attendance' => $attendance,
-                            'break_number' => $breakNumber,
-                            'duration' => $currentBreakDuration,
-                            'limit' => $limit,
-                            'overtime' => $currentBreakDuration - $limit
-                        ];
-                    }
+                if ($attendance && $attendance->employee) {
+                    $violations[] = [
+                        'attendance' => $attendance,
+                        'break_number' => $violation->break_number,
+                        'duration' => $this->parseDurationToMinutes($violation->duration),
+                        'limit' => $this->parseDurationToMinutes($violation->limit),
+                        'overtime' => $this->parseDurationToMinutes($violation->overtime)
+                    ];
                 }
             }
 
@@ -119,5 +109,25 @@ class BreakReminderController extends Controller
                 'message' => 'Failed to send break reminders'
             ], 500);
         }
+    }
+    
+    /**
+     * Parse duration string (like "1h 30m" or "45m") back to minutes
+     */
+    private function parseDurationToMinutes($durationString)
+    {
+        $minutes = 0;
+        
+        // Match hours (e.g., "1h")
+        if (preg_match('/(\d+)h/', $durationString, $matches)) {
+            $minutes += intval($matches[1]) * 60;
+        }
+        
+        // Match minutes (e.g., "30m")
+        if (preg_match('/(\d+)m/', $durationString, $matches)) {
+            $minutes += intval($matches[1]);
+        }
+        
+        return $minutes;
     }
 }
