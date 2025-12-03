@@ -36,37 +36,36 @@ class BirthdayService
      */
     public function getUpcomingBirthdays(int $daysAhead = 7): Collection
     {
-        $today = now()->startOfDay();
+        // Use local timezone for date calculations to avoid timezone issues
+        $today = now()->setTimezone(config('app.timezone', 'UTC'))->startOfDay();
         $upcomingBirthdays = collect();
 
-        // Get employees with birthdays in the next X days (excluding today)
-        for ($i = 1; $i <= $daysAhead; $i++) {
-            $checkDate = $today->copy()->addDays($i);
-            
-            $employees = Employee::active()
-                ->with(['user', 'department'])
-                ->whereNotNull('date_of_birth')
-                ->whereRaw('MONTH(date_of_birth) = ? AND DAY(date_of_birth) = ?', [
-                    $checkDate->month,
-                    $checkDate->day
-                ])
-                ->get();
+        // Get all employees with birthdays and calculate their next birthday
+        $employees = Employee::active()
+            ->with(['user', 'department'])
+            ->whereNotNull('date_of_birth')
+            ->get();
 
-            foreach ($employees as $employee) {
-                $birthdayThisYear = Carbon::create(
-                    $today->year,
-                    $employee->date_of_birth->month,
-                    $employee->date_of_birth->day
-                )->startOfDay();
+        foreach ($employees as $employee) {
+            // Create birthday for this year
+            $birthdayThisYear = Carbon::create(
+                $today->year,
+                $employee->date_of_birth->month,
+                $employee->date_of_birth->day,
+                0, 0, 0,
+                config('app.timezone', 'UTC')
+            )->startOfDay();
 
-                // If birthday has passed this year, check next year
-                if ($birthdayThisYear->lt($today)) {
-                    $birthdayThisYear->addYear();
-                }
+            // If birthday has passed this year, check next year
+            if ($birthdayThisYear->lt($today)) {
+                $birthdayThisYear->addYear();
+            }
 
-                // Calculate days until birthday (whole days only)
-                $daysUntil = $today->diffInDays($birthdayThisYear, false);
+            // Calculate days until birthday
+            $daysUntil = $today->diffInDays($birthdayThisYear, false);
 
+            // Only include birthdays within the specified range (excluding today)
+            if ($daysUntil > 0 && $daysUntil <= $daysAhead) {
                 $upcomingBirthdays->push([
                     'employee' => $employee,
                     'birthday_date' => $birthdayThisYear,
