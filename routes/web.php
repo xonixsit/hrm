@@ -130,6 +130,24 @@ Route::middleware('auth')->group(function () {
             }
             return ['error' => 'Demo User not found'];
         });
+        Route::get('debug-work-reports', function() {
+            $reports = App\Models\WorkReport::with('employee.user')->latest()->take(3)->get();
+            return [
+                'app_timezone' => config('app.timezone'),
+                'server_timezone' => date_default_timezone_get(),
+                'system_timezone' => Cache::get('system_settings.app_timezone', 'Not Set'),
+                'reports' => $reports->map(function($report) {
+                    return [
+                        'id' => $report->id,
+                        'date_raw' => $report->date,
+                        'date_carbon' => $report->date,
+                        'date_string' => $report->date->toDateString(),
+                        'date_formatted' => $report->date->format('Y-m-d'),
+                        'employee' => $report->employee ? $report->employee->user->name : 'No Employee'
+                    ];
+                })
+            ];
+        });
         Route::get('break-violations', [App\Http\Controllers\DashboardController::class, 'getBreakViolationsApi']);
     });
 
