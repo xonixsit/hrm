@@ -23,9 +23,6 @@ class SetTimezone
         if ($timezone) {
             date_default_timezone_set($timezone);
             config(['app.timezone' => $timezone]);
-            
-            // Also set Carbon's default timezone
-            \Carbon\Carbon::setDefaultTimezone($timezone);
         }
 
         return $next($request);
