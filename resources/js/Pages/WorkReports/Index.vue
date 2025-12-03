@@ -1121,8 +1121,7 @@
       return date.toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'short',
-        day: 'numeric',
-        timeZone: props.systemTimezone || 'UTC'
+        day: 'numeric'
       });
     } catch (error) {
       console.error('Date formatting error:', error, 'for date:', dateString);

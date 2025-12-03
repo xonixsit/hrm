@@ -20,9 +20,12 @@ class SetTimezone
         $timezone = Cache::get('system_settings.app_timezone', config('app.timezone', 'UTC'));
         
         // Set the default timezone for the application
-        if ($timezone && $timezone !== 'UTC') {
+        if ($timezone) {
             date_default_timezone_set($timezone);
             config(['app.timezone' => $timezone]);
+            
+            // Also set Carbon's default timezone
+            \Carbon\Carbon::setDefaultTimezone($timezone);
         }
 
         return $next($request);

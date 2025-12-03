@@ -133,16 +133,19 @@ Route::middleware('auth')->group(function () {
         Route::get('debug-work-reports', function() {
             $reports = App\Models\WorkReport::with('employee.user')->latest()->take(3)->get();
             return [
+                'middleware_applied' => 'Yes - this route has middleware',
                 'app_timezone' => config('app.timezone'),
                 'server_timezone' => date_default_timezone_get(),
                 'system_timezone' => Cache::get('system_settings.app_timezone', 'Not Set'),
+                'carbon_timezone' => \Carbon\Carbon::now()->getTimezone()->getName(),
+                'now_formatted' => now()->format('Y-m-d H:i:s T'),
                 'reports' => $reports->map(function($report) {
                     return [
                         'id' => $report->id,
                         'date_raw' => $report->date,
                         'date_carbon' => $report->date,
                         'date_string' => $report->date->toDateString(),
-                        'date_formatted' => $report->date->format('Y-m-d'),
+                        'date_formatted' => $report->date->format('M j, Y'),
                         'employee' => $report->employee ? $report->employee->user->name : 'No Employee'
                     ];
                 })
