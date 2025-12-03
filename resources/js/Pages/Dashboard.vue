@@ -256,7 +256,8 @@
 
           <!-- Birthday Notifications -->
           <BirthdayNotifications :todays-birthdays="birthdayData.todaysBirthdays"
-            :upcoming-birthdays="birthdayData.upcomingBirthdays" :stats="birthdayData.stats" />
+            :upcoming-birthdays="birthdayData.upcomingBirthdays" :stats="birthdayData.stats" 
+            :system-timezone="systemTimezone" />
 
           <!-- System Status -->
           <UnifiedCard title="System Status" description="All systems operational" :icon="CheckCircleIcon"

@@ -133,6 +133,7 @@ class WorkReportController extends Controller
             'employees' => $employees,
             'performanceStats' => $performanceStats,
             'employeePerformanceList' => $employeePerformanceList,
+            'systemTimezone' => config('app.timezone'),
             'filters' => [
                 'search' => $request->search,
                 'user_id' => $request->user_id,

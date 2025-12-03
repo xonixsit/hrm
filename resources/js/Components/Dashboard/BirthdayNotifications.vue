@@ -104,6 +104,10 @@ const props = defineProps({
     stats: {
         type: Object,
         default: null
+    },
+    systemTimezone: {
+        type: String,
+        default: 'UTC'
     }
 })
 
@@ -136,7 +140,8 @@ const formatBirthdayDate = (date) => {
     
     return localDate.toLocaleDateString('en-US', {
         month: 'short',
-        day: 'numeric'
+        day: 'numeric',
+        timeZone: props.systemTimezone || 'UTC'
     })
 }
 

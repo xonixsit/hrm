@@ -202,6 +202,7 @@ class DashboardController extends Controller
             $data['recentUserActivity'] = $this->getRecentUserActivity();
             $data['attendanceTracking'] = $attendanceTracking;
             $data['breakViolations'] = $breakViolations;
+            $data['systemTimezone'] = config('app.timezone');
 
             // Legacy props for backward compatibility
             $data['totalEmployees'] = $totalEmployees;
@@ -294,10 +295,11 @@ class DashboardController extends Controller
                     // Core Performance
                     'attendanceRate' => $this->calculateEmployeeAttendanceRate($employeeId),
                     'hoursToday' => $currentAttendance['todays_summary']['total_hours'] ?? '0h 0m',
+                    'myWorkReports' => $myWorkReports,
                     'myTotalCalls' => $myTotalCalls,
-                    'myTotalCalls' => $mySuccessfulCalls,
                     'myVoiceMails' => $myVoiceMails,
                     'myInterested' => $myInterested,
+                    'myNotInterested' => $myNotInterested,
                     'myNotInterested' => $myNotInterested,
                     
                     // Leave Management

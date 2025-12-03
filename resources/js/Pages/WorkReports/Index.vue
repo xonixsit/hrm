@@ -604,6 +604,10 @@
     employeePerformanceList: {
       type: Array,
       default: () => []
+    },
+    systemTimezone: {
+      type: String,
+      default: 'UTC'
     }
   });
 
@@ -1084,6 +1088,20 @@
       if (dateString instanceof Date) {
         date = dateString;
       }
+      // If it's an ISO string (e.g., "2025-12-02T06:00:00.000000Z")
+      else if (typeof dateString === 'string' && dateString.includes('T')) {
+        // Parse ISO string and extract just the date part to avoid timezone issues
+        const isoDate = new Date(dateString);
+        if (!isNaN(isoDate.getTime())) {
+          // Create a new date using just the date components to avoid timezone conversion
+          date = new Date(isoDate.getFullYear(), isoDate.getMonth(), isoDate.getDate());
+        } else {
+          // Fallback: extract date part from ISO string
+          const datePart = dateString.split('T')[0];
+          const [year, month, day] = datePart.split('-');
+          date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+        }
+      }
       // If it's a string in YYYY-MM-DD format (from database)
       else if (typeof dateString === 'string' && dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
         const [year, month, day] = dateString.split('-');
@@ -1096,17 +1114,19 @@
       
       // Check if date is valid
       if (isNaN(date.getTime())) {
-        return dateString; // Return original string if can't parse
+        console.warn('Invalid date after parsing:', dateString);
+        return 'Invalid Date';
       }
       
       return date.toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'short',
-        day: 'numeric'
+        day: 'numeric',
+        timeZone: props.systemTimezone || 'UTC'
       });
     } catch (error) {
       console.error('Date formatting error:', error, 'for date:', dateString);
-      return dateString; // Return original string on error
+      return 'Invalid Date';
     }
   };
 

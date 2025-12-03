@@ -19,7 +19,7 @@ class BirthdayService
      */
     public function getTodaysBirthdays(): Collection
     {
-        $today = now()->startOfDay();
+        $today = now()->setTimezone(config('app.timezone'))->startOfDay();
         
         return Employee::active()
             ->with(['user', 'department'])
