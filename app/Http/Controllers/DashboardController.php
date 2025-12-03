@@ -104,7 +104,7 @@ class DashboardController extends Controller
                                 'job_title' => $birthday['employee']->job_title,
                                 'department' => $birthday['employee']->department ? $birthday['employee']->department->name : null,
                             ],
-                            'birthday_date' => $birthday['birthday_date']->toISOString(),
+                            'birthday_date' => $birthday['birthday_date']->format('Y-m-d'),
                             'days_until' => $birthday['days_until'],
                         ];
                     }),

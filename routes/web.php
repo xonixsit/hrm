@@ -115,6 +115,21 @@ Route::middleware('auth')->group(function () {
             $controller = new App\Http\Controllers\Api\BreakReminderController();
             return $controller->sendBreakReminders(request());
         });
+        Route::get('debug-birthday', function() {
+            $user = App\Models\User::where('name', 'Demo User')->first();
+            if ($user && $user->employee) {
+                return [
+                    'user_name' => $user->name,
+                    'date_of_birth_stored' => $user->employee->date_of_birth->toDateString(),
+                    'date_of_birth_carbon' => $user->employee->date_of_birth,
+                    'today' => now()->toDateString(),
+                    'today_carbon' => now(),
+                    'app_timezone' => config('app.timezone'),
+                    'server_timezone' => date_default_timezone_get(),
+                ];
+            }
+            return ['error' => 'Demo User not found'];
+        });
         Route::get('break-violations', [App\Http\Controllers\DashboardController::class, 'getBreakViolationsApi']);
     });
 

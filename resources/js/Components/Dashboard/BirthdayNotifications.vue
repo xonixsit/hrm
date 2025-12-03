@@ -130,7 +130,11 @@ const getInitials = (name) => {
 }
 
 const formatBirthdayDate = (date) => {
-    return new Date(date).toLocaleDateString('en-US', {
+    // Parse date as local date to avoid timezone issues
+    const [year, month, day] = date.split('-').map(Number);
+    const localDate = new Date(year, month - 1, day); // month is 0-indexed in JS
+    
+    return localDate.toLocaleDateString('en-US', {
         month: 'short',
         day: 'numeric'
     })
