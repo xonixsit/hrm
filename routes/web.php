@@ -34,6 +34,45 @@ Route::get('/', function () {
 
 Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
 
+// Test route for birthday functionality
+Route::get('/test-birthday', function () {
+    $user = Auth::user();
+    if (!$user || !$user->employee) {
+        return response()->json(['error' => 'No employee record found for current user']);
+    }
+    
+    // Set current user's birthday to today
+    $employee = $user->employee;
+    $employee->date_of_birth = \Carbon\Carbon::today()->subYears(25);
+    $employee->save();
+    
+    return response()->json([
+        'message' => 'Birthday set to today for testing',
+        'employee' => $employee->user->name,
+        'birthday' => $employee->date_of_birth->format('Y-m-d'),
+        'age' => $employee->getAge()
+    ]);
+})->middleware('auth')->name('test.birthday');
+
+// Reset birthday test route
+Route::get('/reset-birthday', function () {
+    $user = Auth::user();
+    if (!$user || !$user->employee) {
+        return response()->json(['error' => 'No employee record found for current user']);
+    }
+    
+    // Reset birthday to a different date
+    $employee = $user->employee;
+    $employee->date_of_birth = \Carbon\Carbon::create(1990, 6, 15);
+    $employee->save();
+    
+    return response()->json([
+        'message' => 'Birthday reset for testing',
+        'employee' => $employee->user->name,
+        'birthday' => $employee->date_of_birth->format('Y-m-d')
+    ]);
+})->middleware('auth')->name('reset.birthday');
+
 // Employee Handbook
 Route::get('/employee-handbook', function () {
     return Inertia::render('EmployeeHandbook');
@@ -149,6 +188,48 @@ Route::middleware('auth')->group(function () {
                         'employee' => $report->employee ? $report->employee->user->name : 'No Employee'
                     ];
                 })
+            ];
+        });
+        Route::get('test-birthday-wishes', function() {
+            $birthdayService = app(\App\Services\BirthdayService::class);
+            $sentCount = $birthdayService->sendBirthdayWishes();
+            return [
+                'success' => true,
+                'sent_count' => $sentCount,
+                'message' => "Birthday wishes sent to {$sentCount} employees"
+            ];
+        });
+        Route::get('debug-birthdays', function() {
+            $user = auth()->user();
+            $birthdayService = app(\App\Services\BirthdayService::class);
+            $todaysBirthdays = $birthdayService->getTodaysBirthdays();
+            
+            $currentUserBirthday = null;
+            if ($user->employee) {
+                $currentUserBirthday = $todaysBirthdays->first(function ($employee) use ($user) {
+                    return $employee->user_id === $user->id;
+                });
+            }
+            
+            return [
+                'current_user_id' => $user->id,
+                'current_user_employee_id' => $user->employee ? $user->employee->id : null,
+                'todays_birthdays_count' => $todaysBirthdays->count(),
+                'todays_birthdays' => $todaysBirthdays->map(function($emp) {
+                    return [
+                        'id' => $emp->id,
+                        'user_id' => $emp->user_id,
+                        'name' => $emp->user->name,
+                        'date_of_birth' => $emp->date_of_birth->toDateString(),
+                    ];
+                }),
+                'current_user_birthday' => $currentUserBirthday ? [
+                    'id' => $currentUserBirthday->id,
+                    'user_id' => $currentUserBirthday->user_id,
+                    'name' => $currentUserBirthday->user->name,
+                ] : null,
+                'today' => now()->format('Y-m-d'),
+                'timezone' => config('app.timezone')
             ];
         });
         Route::get('break-violations', [App\Http\Controllers\DashboardController::class, 'getBreakViolationsApi']);

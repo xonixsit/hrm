@@ -185,7 +185,7 @@ const currentNavigationComponent = computed(() => {
     
     // Log navigation type changes for debugging
     if (process.env.NODE_ENV === 'development' && currentNavigationType.value !== deviceType.value) {
-      console.log(`[NavigationController] Switching from ${currentNavigationType.value} to ${deviceType.value} navigation`);
+      //console.log(`[NavigationController] Switching from ${currentNavigationType.value} to ${deviceType.value} navigation`);
     }
     
     currentNavigationType.value = deviceType.value;
@@ -315,8 +315,8 @@ watch(deviceType, async (newType, oldType) => {
       
       // Log the change for debugging
       if (process.env.NODE_ENV === 'development') {
-        console.log(`[NavigationController] Navigation type changed: ${oldType} → ${newType} (width: ${windowWidth.value}px)`);
-        console.log('Breakpoint info:', getBreakpointInfo());
+        //console.log(`[NavigationController] Navigation type changed: ${oldType} → ${newType} (width: ${windowWidth.value}px)`);
+        //console.log('Breakpoint info:', getBreakpointInfo());
       }
     } catch (error) {
       console.error('[NavigationController] Error during navigation type change:', error);
@@ -341,17 +341,17 @@ const clearError = () => {
 const debugNavigationController = () => {
   if (process.env.NODE_ENV === 'development') {
     console.group('🧭 NavigationController Debug Info');
-    console.log('Current route:', props.currentRoute);
-    console.log('Window width:', windowWidth.value);
-    console.log('Device type:', deviceType.value);
-    console.log('Navigation type:', currentNavigationType.value);
-    console.log('Component:', currentNavigationComponent.value?.name || 'Unknown');
-    console.log('Is transitioning:', transitionState.value.isTransitioning || breakpointTransitioning.value);
-    console.log('Transition state:', transitionState.value);
-    console.log('User roles:', userRoles.value);
-    console.log('Navigation error:', navigationError.value);
-    console.log('Props:', navigationProps.value);
-    console.log('Breakpoint info:', getBreakpointInfo());
+    //console.log('Current route:', props.currentRoute);
+    //console.log('Window width:', windowWidth.value);
+    //console.log('Device type:', deviceType.value);
+    //console.log('Navigation type:', currentNavigationType.value);
+    //console.log('Component:', currentNavigationComponent.value?.name || 'Unknown');
+    //console.log('Is transitioning:', transitionState.value.isTransitioning || breakpointTransitioning.value);
+    //console.log('Transition state:', transitionState.value);
+    //console.log('User roles:', userRoles.value);
+    //console.log('Navigation error:', navigationError.value);
+    //console.log('Props:', navigationProps.value);
+    //console.log('Breakpoint info:', getBreakpointInfo());
     debugResponsive();
     debugBreakpointManager();
     console.groupEnd();
@@ -463,7 +463,7 @@ const deactivateFallback = () => {
   navigationMonitor.logFallback(false, 'recovery_successful');
   
   if (isDevelopment) {
-    console.log('[NavigationController] Fallback deactivated');
+    //console.log('[NavigationController] Fallback deactivated');
   }
 };
 
@@ -562,7 +562,7 @@ onMounted(() => {
   
   // Cleanup on unmount
   onUnmounted(() => {
-    console.log('Unregistering NavigationController:', { controllerId: controllerId.value, componentId: componentId.value });
+    //console.log('Unregistering NavigationController:', { controllerId: controllerId.value, componentId: componentId.value });
     clearInterval(conflictCheckInterval);
     clearInterval(devConflictCheckInterval); // Moved here for proper cleanup
     conflictDetector.unregisterComponent(controllerId.value);
@@ -572,9 +572,9 @@ onMounted(() => {
   
   // Log initialization
   if (process.env.NODE_ENV === 'development') {
-    console.log('[NavigationController] Initialized with navigation type:', deviceType.value);
-    console.log('[NavigationController] Controller ID:', controllerId.value);
-    console.log('[NavigationController] Component ID:', componentId.value);
+    //console.log('[NavigationController] Initialized with navigation type:', deviceType.value);
+    //console.log('[NavigationController] Controller ID:', controllerId.value);
+    //console.log('[NavigationController] Component ID:', componentId.value);
   }
 });
 

@@ -508,12 +508,12 @@ if (process.env.NODE_ENV === 'development') {
   errorHandlerService.addErrorReporter((errorInfo) => {
     console.group(`🚨 [ERROR HANDLER] ${errorInfo.type.toUpperCase()} Error`)
     console.error('Message:', errorInfo.message)
-    console.log('Type:', errorInfo.type)
-    console.log('Timestamp:', errorInfo.timestamp)
-    console.log('URL:', errorInfo.url)
-    console.log('Context:', errorInfo.context)
+    //console.log('Type:', errorInfo.type)
+    //console.log('Timestamp:', errorInfo.timestamp)
+    //console.log('URL:', errorInfo.url)
+    //console.log('Context:', errorInfo.context)
     if (errorInfo.stack) {
-      console.log('Stack:', errorInfo.stack)
+      //console.log('Stack:', errorInfo.stack)
     }
     console.groupEnd()
   })

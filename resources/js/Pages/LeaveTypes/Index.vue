@@ -265,7 +265,7 @@ const toggleStatus = async (leaveType) => {
       // Show success message
       const status = leaveType.is_active ? 'activated' : 'deactivated'
       // You can add a notification system here
-      console.log(`Leave type ${status} successfully`)
+      //console.log(`Leave type ${status} successfully`)
     }
   } catch (error) {
     console.error('Error toggling status:', error)
@@ -288,6 +288,6 @@ const deleteLeaveType = (leaveType) => {
 
 const exportPolicies = () => {
   // Export functionality - could be implemented to download CSV/PDF
-  console.log('Export policies functionality')
+  //console.log('Export policies functionality')
 }
 </script>

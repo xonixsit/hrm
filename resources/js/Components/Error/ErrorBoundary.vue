@@ -386,10 +386,10 @@ const handleError = (error, instance, errorInfo) => {
   if (isDevelopment) {
     console.group(`🚨 [ERROR BOUNDARY] ${props.componentName}`)
     console.error('Error:', error)
-    console.log('Error Type:', errorData.type)
-    console.log('Component:', props.componentName)
-    console.log('Error Info:', errorInfo)
-    console.log('Context:', errorContext.value)
+    //console.log('Error Type:', errorData.type)
+    //console.log('Component:', props.componentName)
+    //console.log('Error Info:', errorInfo)
+    //console.log('Context:', errorContext.value)
     console.groupEnd()
   }
   

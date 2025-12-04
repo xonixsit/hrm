@@ -129,23 +129,23 @@ const sidebarItems = [
     id: 'overview',
     label: 'Overview',
     active: true,
-    onClick: () => console.log('Overview clicked')
+    onClick: () => //console.log('Overview clicked')
   },
   {
     id: 'projects',
     label: 'Projects',
     badge: { text: '17', variant: 'primary' },
-    onClick: () => console.log('Projects clicked')
+    onClick: () => //console.log('Projects clicked')
   },
   {
     id: 'team',
     label: 'Team',
-    onClick: () => console.log('Team clicked')
+    onClick: () => //console.log('Team clicked')
   },
   {
     id: 'settings',
     label: 'Settings',
-    onClick: () => console.log('Settings clicked')
+    onClick: () => //console.log('Settings clicked')
   }
 ];
 

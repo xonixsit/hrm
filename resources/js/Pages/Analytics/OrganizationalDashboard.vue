@@ -590,8 +590,8 @@ const props = defineProps({
 })
 
 // Debug: Log all analytics data
-console.log('Analytics Props:', props.analytics)
-console.log('Last Updated:', props.lastUpdated)
+//console.log('Analytics Props:', props.analytics)
+//console.log('Last Updated:', props.lastUpdated)
 
 // Reactive data - Initialize from props to preserve URL state
 const selectedTimeRange = ref(props.timeRange || '30d')
@@ -602,7 +602,7 @@ const skillsFilter = ref(props.skillsFilter || 'all')
 // Computed data for CSS charts - REAL DATA
 const employeeGrowthData = computed(() => {
   const data = props.analytics.employeeGrowth || []
-  console.log('Real Employee Growth Data:', data) // Debug log
+  //console.log('Real Employee Growth Data:', data) // Debug log
   return data.length > 0 ? data.slice(-12) : [
     { month: 'Jan 2024', total_employees: 220, new_hires: 8 },
     { month: 'Feb 2024', total_employees: 225, new_hires: 5 },
@@ -619,7 +619,7 @@ const employeeGrowthData = computed(() => {
 
 const performanceData = computed(() => {
   const dist = props.analytics.performanceMetrics?.distribution || {}
-  console.log('Real Performance Data:', dist) // Debug log
+  //console.log('Real Performance Data:', dist) // Debug log
   return {
     excellent: dist.excellent || 35,
     good: dist.good || 45,
@@ -631,7 +631,7 @@ const performanceData = computed(() => {
 
 const attendanceData = computed(() => {
   const patterns = props.analytics.attendanceAnalytics?.weekly_patterns || {}
-  console.log('Real Attendance Data:', patterns) // Debug log
+  //console.log('Real Attendance Data:', patterns) // Debug log
   
   // Get the most recent week's data, or use fallback
   const latestWeek = patterns.week4 || patterns.week3 || patterns.week2 || patterns.week1 || [95, 97, 94, 96, 92]
@@ -842,7 +842,7 @@ const updateTimeRange = () => {
 }
 
 const refreshData = async () => {
-  console.log('Refreshing analytics data...')
+  //console.log('Refreshing analytics data...')
   router.reload({ 
     only: ['analytics'],
     data: {
@@ -855,7 +855,7 @@ const refreshData = async () => {
 
 const exportDashboard = async () => {
   try {
-    console.log('Exporting dashboard...')
+    //console.log('Exporting dashboard...')
     
     // Show loading state
     const exportButton = document.querySelector('[data-export-btn]')
@@ -895,7 +895,7 @@ const exportDashboard = async () => {
     }
     
     const result = await response.json()
-    console.log('Export result:', result)
+    //console.log('Export result:', result)
     
     if (result.success) {
       // Create download link

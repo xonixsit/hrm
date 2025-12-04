@@ -53,11 +53,11 @@ export function useAuthErrorBoundary() {
     if (process.env.NODE_ENV === 'development') {
       console.group(`🚨 [AUTH ERROR BOUNDARY] Error in ${componentName}`)
       console.error('Error:', error)
-      console.log('Component:', componentName)
-      console.log('Error Info:', errorInfo)
-      console.log('Auth State Error:', authError)
-      console.log('Error Count:', errorReport.errorCount)
-      console.log('Full Report:', errorReport)
+      //console.log('Component:', componentName)
+      //console.log('Error Info:', errorInfo)
+      //console.log('Auth State Error:', authError)
+      //console.log('Error Count:', errorReport.errorCount)
+      //console.log('Full Report:', errorReport)
       debugAuthState()
       console.groupEnd()
     }

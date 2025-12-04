@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
-use App\Services\BirthdayService;
 use Illuminate\Console\Command;
+use App\Services\BirthdayService;
 
 class SendBirthdayReminders extends Command
 {
@@ -12,67 +12,30 @@ class SendBirthdayReminders extends Command
      *
      * @var string
      */
-    protected $signature = 'birthday:send-reminders {--days=3 : Days ahead to check for birthdays} {--dry-run : Show what would be sent without actually sending}';
+    protected $signature = 'birthday:send-reminders';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Send birthday reminders to employees about upcoming birthdays';
-
-    protected BirthdayService $birthdayService;
-
-    public function __construct(BirthdayService $birthdayService)
-    {
-        parent::__construct();
-        $this->birthdayService = $birthdayService;
-    }
+    protected $description = 'Send birthday reminders to all employees about upcoming birthdays';
 
     /**
      * Execute the console command.
      */
-    public function handle()
+    public function handle(BirthdayService $birthdayService)
     {
-        $daysAhead = (int) $this->option('days');
-        
-        $this->info("🔔 Checking for birthdays in the next {$daysAhead} days...");
-
-        $upcomingBirthdays = $this->birthdayService->getUpcomingBirthdays($daysAhead);
-
-        if ($upcomingBirthdays->isEmpty()) {
-            $this->info('No upcoming birthdays found. 😊');
-            return Command::SUCCESS;
-        }
-
-        $this->info("Found {$upcomingBirthdays->count()} upcoming birthday(s):");
-
-        foreach ($upcomingBirthdays as $birthday) {
-            $employee = $birthday['employee'];
-            $daysUntil = $birthday['days_until'];
-            $dateStr = $birthday['birthday_date']->format('M j');
-            
-            $whenText = $daysUntil === 0 ? 'today' : 
-                       ($daysUntil === 1 ? 'tomorrow' : "in {$daysUntil} days");
-
-            $this->line("  🎂 {$employee->getFullName()} - {$dateStr} ({$whenText})");
-        }
-
-        if ($this->option('dry-run')) {
-            $this->warn('DRY RUN: No reminder emails were actually sent.');
-            return Command::SUCCESS;
-        }
-
         $this->info('Sending birthday reminders...');
-
-        $sentCount = $this->birthdayService->sendBirthdayReminders();
-
+        
+        $sentCount = $birthdayService->sendBirthdayReminders();
+        
         if ($sentCount > 0) {
-            $this->info("✅ Successfully sent {$sentCount} birthday reminder email(s)!");
+            $this->info("Birthday reminders sent to {$sentCount} employees.");
         } else {
-            $this->warn('No reminder emails were sent (possibly due to preferences or no recipients).');
+            $this->info('No birthday reminders to send.');
         }
-
+        
         return Command::SUCCESS;
     }
 }

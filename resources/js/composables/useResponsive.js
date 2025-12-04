@@ -231,20 +231,20 @@ export function useResponsive() {
   const debugResponsive = () => {
     if (process.env.NODE_ENV === 'development') {
       console.group('📱 Responsive Debug Info');
-      console.log('Window dimensions:', `${windowWidth.value}x${windowHeight.value}`);
-      console.log('Current breakpoint:', currentBreakpoint.value);
-      console.log('Device type:', deviceType.value);
-      console.log('Orientation:', orientation.value);
-      console.log('Touch device:', isTouchDevice.value);
-      console.log('Pixel ratio:', pixelRatio.value);
-      console.log('Breakpoint states:', {
-        isMobile: isMobile.value,
-        isTablet: isTablet.value,
-        isDesktop: isDesktop.value,
-        isSmUp: isSmUp.value,
-        isMdUp: isMdUp.value,
-        isLgUp: isLgUp.value
-      });
+      //console.log('Window dimensions:', `${windowWidth.value}x${windowHeight.value}`);
+      //console.log('Current breakpoint:', currentBreakpoint.value);
+      //console.log('Device type:', deviceType.value);
+      //console.log('Orientation:', orientation.value);
+      //console.log('Touch device:', isTouchDevice.value);
+      //console.log('Pixel ratio:', pixelRatio.value);
+      //console.log('Breakpoint states:', {
+      //  isMobile: isMobile.value,
+      //  isTablet: isTablet.value,
+      //  isDesktop: isDesktop.value,
+      //  isSmUp: isSmUp.value,
+      //  isMdUp: isMdUp.value,
+      //  isLgUp: isLgUp.value
+      //});
       console.groupEnd();
     }
   };

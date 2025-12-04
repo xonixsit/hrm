@@ -433,7 +433,7 @@
                 <div class="flex-1">
                   <div class="flex items-center justify-between mb-2">
                     <h4 class="text-sm font-medium text-gray-900">
-                      {{ formatDate(report.date) }}
+                      {{ formatDate(report.date_formatted || report.date) }}
                       <span v-if="hasAnyRole(['Admin', 'Manager']) && report.employee" class="text-gray-500">
                         - {{ report.employee.user?.name || 'Unknown' }}
                       </span>
@@ -633,13 +633,13 @@
     const result = isEmployee && hasEmployeeRecord;
 
     if (process.env.NODE_ENV === 'development') {
-      console.log('🔍 canCreate check:', {
-        isEmployee,
-        hasEmployeeRecord,
-        userEmployee: user.value?.employee,
-        result,
-        userRoles: roles.value
-      });
+      // //console.log('🔍 canCreate check:', {
+      //   isEmployee,
+      //   hasEmployeeRecord,
+      //   userEmployee: user.value?.employee,
+      //   result,
+      //   userRoles: roles.value
+      // });
     }
 
     return result;
@@ -746,15 +746,15 @@
       params.date_to = localFilters.value.date_to;
     }
 
-    console.log('Applying filters with params:', params);
-    console.log('Current localFilters:', localFilters.value);
+    //console.log('Applying filters with params:', params);
+    //console.log('Current localFilters:', localFilters.value);
 
     router.get(route('work-reports.index'), params, {
       preserveState: false, // Force fresh data load
       preserveScroll: true,
       onFinish: () => {
         loading.value = false;
-        console.log('Filter request completed');
+        //console.log('Filter request completed');
       },
       onError: (errors) => {
         console.error('Filter error:', errors);
@@ -862,20 +862,20 @@
     const dateFrom = start.toISOString().split('T')[0];
     const dateTo = end.toISOString().split('T')[0];
 
-    console.log(`Selected period: ${period.label}`, {
-      key: period.key,
-      dateFrom,
-      dateTo,
-      start,
-      end,
-      currentFilters: localFilters.value
-    });
+    // //console.log(`Selected period: ${period.label}`, {
+    //   key: period.key,
+    //   dateFrom,
+    //   dateTo,
+    //   start,
+    //   end,
+    //   currentFilters: localFilters.value
+    // });
 
     // Update the local filters
     localFilters.value.date_from = dateFrom;
     localFilters.value.date_to = dateTo;
 
-    console.log('Updated filters:', localFilters.value);
+    //console.log('Updated filters:', localFilters.value);
 
     // Apply the filters with a small delay to ensure state is updated
     nextTick(() => {
@@ -1081,44 +1081,33 @@
     if (!dateString) return '';
     
     try {
-      // Handle different date formats
-      let date;
+      let dateToFormat;
       
-      // If it's already a Date object
-      if (dateString instanceof Date) {
-        date = dateString;
-      }
-      // If it's an ISO string (e.g., "2025-12-02T06:00:00.000000Z")
-      else if (typeof dateString === 'string' && dateString.includes('T')) {
-        // Parse ISO string and extract just the date part to avoid timezone issues
-        const isoDate = new Date(dateString);
-        if (!isNaN(isoDate.getTime())) {
-          // Create a new date using just the date components to avoid timezone conversion
-          date = new Date(isoDate.getFullYear(), isoDate.getMonth(), isoDate.getDate());
+      // Always extract just the date part to avoid timezone issues
+      if (typeof dateString === 'string') {
+        // Handle ISO strings like "2025-12-02T00:00:00.000000Z" or simple dates like "2025-12-02"
+        const datePart = dateString.includes('T') ? dateString.split('T')[0] : dateString;
+        
+        // Validate date format
+        if (datePart.match(/^\d{4}-\d{2}-\d{2}$/)) {
+          const [year, month, day] = datePart.split('-').map(Number);
+          dateToFormat = new Date(year, month - 1, day); // month is 0-indexed
         } else {
-          // Fallback: extract date part from ISO string
-          const datePart = dateString.split('T')[0];
-          const [year, month, day] = datePart.split('-');
-          date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+          return 'Invalid Date';
         }
-      }
-      // If it's a string in YYYY-MM-DD format (from database)
-      else if (typeof dateString === 'string' && dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
-        const [year, month, day] = dateString.split('-');
-        date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-      }
-      // Try parsing as regular date string
-      else {
-        date = new Date(dateString);
-      }
-      
-      // Check if date is valid
-      if (isNaN(date.getTime())) {
-        console.warn('Invalid date after parsing:', dateString);
+      } else if (dateString instanceof Date) {
+        dateToFormat = dateString;
+      } else {
         return 'Invalid Date';
       }
       
-      return date.toLocaleDateString('en-US', {
+      // Check if date is valid
+      if (isNaN(dateToFormat.getTime())) {
+        console.warn('Invalid date:', dateString);
+        return 'Invalid Date';
+      }
+      
+      return dateToFormat.toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'short',
         day: 'numeric'

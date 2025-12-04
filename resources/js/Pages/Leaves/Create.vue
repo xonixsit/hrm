@@ -550,7 +550,7 @@ const handleSubmit = () => {
 
 const saveDraft = () => {
   // Implementation for saving draft
-  console.log('Save draft functionality would be implemented here');
+  //console.log('Save draft functionality would be implemented here');
 };
 
 // Set default date to tomorrow (to encourage advance planning)

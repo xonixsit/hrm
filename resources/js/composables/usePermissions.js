@@ -338,7 +338,7 @@ export function usePermissions() {
   const debugPermissions = () => {
     if (process.env.NODE_ENV === 'development') {
       console.group('🔐 Permission Debug Info')
-      console.log('Permission Summary:', getPermissionSummary())
+      //console.log('Permission Summary:', getPermissionSummary())
       console.groupEnd()
     }
   }

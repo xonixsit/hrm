@@ -255,12 +255,12 @@ const handleError = (error, instance, errorInfo) => {
   if (isDevelopment) {
     console.group(`🧭 [NAVIGATION ERROR BOUNDARY] ${props.navigationType.toUpperCase()}`)
     console.error('Error:', error)
-    console.log('Error Type:', errorType)
-    console.log('Component ID:', props.componentId)
-    console.log('Navigation Type:', props.navigationType)
-    console.log('Retry Count:', retryCount.value)
-    console.log('Error Report:', errorReport)
-    console.log('Conflict Status:', conflictDetector.getStatus())
+    //console.log('Error Type:', errorType)
+    //console.log('Component ID:', props.componentId)
+    //console.log('Navigation Type:', props.navigationType)
+    //console.log('Retry Count:', retryCount.value)
+    //console.log('Error Report:', errorReport)
+    //console.log('Conflict Status:', conflictDetector.getStatus())
     console.groupEnd()
   }
   
@@ -360,7 +360,7 @@ const handleRetry = async () => {
     })
     
     if (isDevelopment) {
-      console.log(`[NAVIGATION ERROR BOUNDARY] Recovery attempt ${retryCount.value}/${props.maxRetries}`)
+      //console.log(`[NAVIGATION ERROR BOUNDARY] Recovery attempt ${retryCount.value}/${props.maxRetries}`)
     }
     
   } catch (retryError) {
@@ -461,7 +461,7 @@ onMounted(() => {
   )
   
   if (isDevelopment) {
-    console.log(`[NAVIGATION ERROR BOUNDARY] Mounted: ${props.navigationType} (${props.componentId})`)
+    //console.log(`[NAVIGATION ERROR BOUNDARY] Mounted: ${props.navigationType} (${props.componentId})`)
   }
 })
 
@@ -470,7 +470,7 @@ onUnmounted(() => {
   conflictDetector.unregisterComponent(props.componentId)
   
   if (isDevelopment) {
-    console.log(`[NAVIGATION ERROR BOUNDARY] Unmounted: ${props.navigationType} (${props.componentId})`)
+    //console.log(`[NAVIGATION ERROR BOUNDARY] Unmounted: ${props.navigationType} (${props.componentId})`)
   }
 })
 

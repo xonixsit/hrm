@@ -646,7 +646,7 @@ const performApproval = async () => {
   const loadingId = showLoading(`${action.charAt(0).toUpperCase() + action.slice(1)} timesheet...`)
   
   try {
-    console.log('Making approval request to:', endpoint)
+    //console.log('Making approval request to:', endpoint)
     
     const response = await fetch(endpoint, {
       method: 'POST',
@@ -661,15 +661,15 @@ const performApproval = async () => {
       })
     })
     
-    console.log('Response status:', response.status)
-    console.log('Response headers:', response.headers)
+    //console.log('Response status:', response.status)
+    //console.log('Response headers:', response.headers)
     
     // Remove loading notification first
     removeNotification(loadingId)
     
     // Check if response is JSON
     const contentType = response.headers.get('content-type')
-    console.log('Content-Type:', contentType)
+    //console.log('Content-Type:', contentType)
     
     if (!contentType || !contentType.includes('application/json')) {
       const responseText = await response.text()
@@ -678,7 +678,7 @@ const performApproval = async () => {
     }
     
     const data = await response.json()
-    console.log('Response data:', data)
+    //console.log('Response data:', data)
     
     if (response.ok && data.success) {
       // Close modal first
@@ -688,7 +688,7 @@ const performApproval = async () => {
       
       // Show success message
       const actionPast = approvalAction.value === 'approve' ? 'approved' : 'rejected'
-      console.log('Showing success message:', `Timesheet ${actionPast} successfully!`)
+      //console.log('Showing success message:', `Timesheet ${actionPast} successfully!`)
       showSuccess(`Timesheet ${actionPast} successfully!`)
       
       // Refresh the page to get updated data

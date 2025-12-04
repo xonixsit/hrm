@@ -15,6 +15,7 @@ use App\Models\CompetencyAssessment;
 use App\Models\AssessmentCycle;
 use App\Services\BirthdayService;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
@@ -59,41 +60,25 @@ class DashboardController extends Controller
                 // Check if current user has birthday today
                 $currentUserBirthday = null;
                 if ($user->employee) {
-                    $currentUserBirthday = $todaysBirthdays->firstWhere('user_id', $user->id);
+                    $currentUserBirthday = $todaysBirthdays->first(function ($employee) use ($user) {
+                        return $employee->user_id === $user->id;
+                    });
                 }
-                
+                    
                 $data['birthdayData'] = [
                     'todaysBirthdays' => $todaysBirthdays->map(function ($employee) {
-                        try {
-                            return [
-                                'id' => $employee->id,
-                                'user' => [
-                                    'name' => $employee->user->name ?? 'Unknown',
-                                    'email' => $employee->user->email ?? 'unknown@example.com',
-                                ],
-                                'job_title' => $employee->job_title ?? 'N/A',
-                                'department' => $employee->department ? $employee->department->name : null,
-                                'age' => $employee->getAge(),
-                            ];
-                        } catch (\Exception $e) {
-                            Log::error('Error mapping birthday employee: ' . $e->getMessage());
-                            return [
-                                'id' => $employee->id ?? 0,
-                                'user' => ['name' => 'Unknown', 'email' => 'unknown@example.com'],
-                                'job_title' => 'N/A',
-                                'department' => null,
-                                'age' => null,
-                            ];
-                        }
-                    }),
-                    'upcomingBirthdays' => (function() {
-                        try {
-                            return $this->birthdayService->getUpcomingBirthdays(7);
-                        } catch (\Exception $e) {
-                            Log::error('Error getting upcoming birthdays: ' . $e->getMessage());
-                            return collect();
-                        }
-                    })()->map(function ($birthday) {
+                        return [
+                            'id' => $employee->id,
+                            'user' => [
+                                'name' => $employee->user->name,
+                                'email' => $employee->user->email,
+                            ],
+                            'job_title' => $employee->job_title,
+                            'department' => $employee->department ? $employee->department->name : null,
+                            'age' => $employee->getAge(),
+                        ];
+                    })->toArray(),
+                    'upcomingBirthdays' => $this->birthdayService->getUpcomingBirthdays(7)->map(function ($birthday) {
                         return [
                             'employee' => [
                                 'id' => $birthday['employee']->id,
@@ -107,15 +92,8 @@ class DashboardController extends Controller
                             'birthday_date' => $birthday['birthday_date']->format('Y-m-d'),
                             'days_until' => $birthday['days_until'],
                         ];
-                    }),
-                    'stats' => (function() {
-                        try {
-                            return $this->birthdayService->getBirthdayStats();
-                        } catch (\Exception $e) {
-                            Log::error('Error getting birthday stats: ' . $e->getMessage());
-                            return ['total' => 0, 'this_month' => 0, 'next_month' => 0];
-                        }
-                    })(),
+                    })->toArray(),
+                    'stats' => $this->birthdayService->getBirthdayStats(),
                     'currentUserBirthday' => $currentUserBirthday ? [
                         'id' => $currentUserBirthday->id,
                         'user' => [
@@ -127,8 +105,10 @@ class DashboardController extends Controller
                         'age' => $currentUserBirthday->getAge(),
                     ] : null,
                 ];
+                
+                Log::info('Birthday data prepared', ['count' => count($data['birthdayData']['todaysBirthdays'])]);
             } catch (\Exception $e) {
-                Log::error('Error getting birthday data: ' . $e->getMessage());
+                Log::error('Error preparing birthday data: ' . $e->getMessage());
             }
 
         if (in_array($role, ['Admin', 'HR'])) {
@@ -202,6 +182,10 @@ class DashboardController extends Controller
             $data['recentUserActivity'] = $this->getRecentUserActivity();
             $data['attendanceTracking'] = $attendanceTracking;
             $data['breakViolations'] = $breakViolations;
+            
+            // Add timezone and weather info
+            $data['systemTimezone'] = Cache::get('system_settings.app_timezone', config('app.timezone', 'UTC'));
+            $data['weatherApiKey'] = config('services.weather.api_key', null);
             $data['systemTimezone'] = config('app.timezone');
 
             // Legacy props for backward compatibility
@@ -946,7 +930,12 @@ class DashboardController extends Controller
             $months = 0;
             for ($i = 0; $i < 12; $i++) {
                 $month = now()->subMonths($i);
-                $workingDays = $month->daysInMonth - ($month->weekendsInMonth * 2);
+                $weekends = 0;
+                for ($day = 1; $day <= $month->daysInMonth; $day++) {
+                    $date = $month->copy()->setDay($day);
+                    if ($date->isWeekend()) $weekends++;
+                }
+                $workingDays = $month->daysInMonth - $weekends;
                 $attendedDays = DB::table('attendances')
                     ->where('employee_id', $employeeId)
                     ->whereYear('date', $month->year)
@@ -1055,7 +1044,12 @@ class DashboardController extends Controller
         $monthlyRates = [];
         for ($i = 0; $i < 6; $i++) {
             $month = now()->subMonths($i);
-            $workingDays = $month->daysInMonth - ($month->weekendsInMonth * 2);
+            $weekends = 0;
+            for ($day = 1; $day <= $month->daysInMonth; $day++) {
+                $date = $month->copy()->setDay($day);
+                if ($date->isWeekend()) $weekends++;
+            }
+            $workingDays = $month->daysInMonth - $weekends;
             $attendedDays = DB::table('attendances')
                 ->where('employee_id', $employeeId)
                 ->whereYear('date', $month->year)
@@ -1762,7 +1756,12 @@ class DashboardController extends Controller
             ->whereRaw("DATE_FORMAT(date, '%Y-%m') = ?", [$currentMonth])
             ->count();
 
-        $workingDaysThisMonth = now()->daysInMonth - (now()->weekendsInMonth * 2);
+        $weekends = 0;
+        for ($day = 1; $day <= now()->daysInMonth; $day++) {
+            $date = now()->copy()->setDay($day);
+            if ($date->isWeekend()) $weekends++;
+        }
+        $workingDaysThisMonth = now()->daysInMonth - $weekends;
         $attendanceRate = $workingDaysThisMonth > 0 ? round(($monthlyAttendance / $workingDaysThisMonth) * 100, 1) : 0;
 
         return [

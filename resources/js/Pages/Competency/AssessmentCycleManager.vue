@@ -1132,10 +1132,10 @@ onMounted(() => {
   document.addEventListener('click', handleClickOutside);
   
   // Debug route helper availability
-  console.log('AssessmentCycleManager mounted');
-  console.log('Route helper available:', typeof route !== 'undefined');
+  //console.log('AssessmentCycleManager mounted');
+  //console.log('Route helper available:', typeof route !== 'undefined');
   if (typeof route !== 'undefined') {
-    console.log('Test route generation:', route('assessment-cycles.create'));
+    //console.log('Test route generation:', route('assessment-cycles.create'));
   } else {
     console.warn('Route helper not available - using fallback URLs');
   }

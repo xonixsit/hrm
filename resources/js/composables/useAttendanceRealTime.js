@@ -148,7 +148,7 @@ export function useAttendanceRealTime(userId = null, options = {}) {
   const handleConnectionEstablished = () => {
     isConnected.value = true
     connectionStatus.value = 'connected'
-    console.log('Real-time attendance connection established')
+    //console.log('Real-time attendance connection established')
     
     // Request initial data refresh
     refreshRealTimeData()
@@ -157,7 +157,7 @@ export function useAttendanceRealTime(userId = null, options = {}) {
   const handleConnectionLost = () => {
     isConnected.value = false
     connectionStatus.value = 'disconnected'
-    console.log('Real-time attendance connection lost')
+    //console.log('Real-time attendance connection lost')
   }
   
   const handleConnectionError = (error) => {
@@ -167,7 +167,7 @@ export function useAttendanceRealTime(userId = null, options = {}) {
   }
   
   const handleRealTimeAttendanceUpdate = (data) => {
-    console.log('Real-time attendance update received:', data)
+    //console.log('Real-time attendance update received:', data)
     lastUpdate.value = new Date().toISOString()
     
     // The base attendance composable will handle the update
@@ -181,7 +181,7 @@ export function useAttendanceRealTime(userId = null, options = {}) {
   }
   
   const handleRealTimeStatsUpdate = (data) => {
-    console.log('Real-time stats update received:', data)
+    //console.log('Real-time stats update received:', data)
     lastUpdate.value = new Date().toISOString()
     
     // Update analytics based on new stats
@@ -191,7 +191,7 @@ export function useAttendanceRealTime(userId = null, options = {}) {
   const handleRealTimeNotification = (notification) => {
     if (!notificationsEnabled.value) return
     
-    console.log('Real-time notification received:', notification)
+    //console.log('Real-time notification received:', notification)
     
     // Handle different types of notifications
     switch (notification.type) {

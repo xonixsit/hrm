@@ -712,7 +712,7 @@ const filteredEmployees = computed(() => {
 // Methods
 const applyFilters = () => {
   // Apply filters and refresh data if needed
-  console.log('Applying filters:', filters)
+  //console.log('Applying filters:', filters)
 }
 
 const resetFilters = () => {

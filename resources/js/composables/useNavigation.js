@@ -115,7 +115,7 @@ export function useNavigation() {
     navigationGuards.value.push(guard)
     
     if (process.env.NODE_ENV === 'development') {
-      console.log(`[NAVIGATION GUARD] Registered guard (total: ${navigationGuards.value.length})`)
+      //console.log(`[NAVIGATION GUARD] Registered guard (total: ${navigationGuards.value.length})`)
     }
   }
   
@@ -128,7 +128,7 @@ export function useNavigation() {
       navigationGuards.value.splice(index, 1)
       
       if (process.env.NODE_ENV === 'development') {
-        console.log(`[NAVIGATION GUARD] Removed guard (total: ${navigationGuards.value.length})`)
+        //console.log(`[NAVIGATION GUARD] Removed guard (total: ${navigationGuards.value.length})`)
       }
     }
   }
@@ -288,7 +288,7 @@ export function useNavigation() {
     globalErrorHandler.value = handler
     
     if (process.env.NODE_ENV === 'development') {
-      console.log('[NAVIGATION] Global error handler registered')
+      //console.log('[NAVIGATION] Global error handler registered')
     }
   }
   
@@ -348,9 +348,9 @@ export function useNavigation() {
       if (process.env.NODE_ENV === 'development') {
         console.group('Navigation Error Details')
         console.error('Error:', error)
-        console.log('Path:', path)
-        console.log('Context:', context)
-        console.log('Full Error Info:', errorInfo)
+        //console.log('Path:', path)
+        //console.log('Context:', context)
+        //console.log('Full Error Info:', errorInfo)
         console.groupEnd()
       }
     }
@@ -378,7 +378,7 @@ export function useNavigation() {
     addNavigationGuard(permissionGuard)
     
     if (process.env.NODE_ENV === 'development') {
-      console.log('[NAVIGATION] Built-in guards initialized')
+      //console.log('[NAVIGATION] Built-in guards initialized')
     }
   }
   
@@ -438,7 +438,7 @@ export function useNavigation() {
         // If guard suggests a redirect, perform it
         if (guardResult.redirect) {
           if (process.env.NODE_ENV === 'development') {
-            console.log(`[NAVIGATION] Guard redirecting from ${path} to ${guardResult.redirect}`)
+            //console.log(`[NAVIGATION] Guard redirecting from ${path} to ${guardResult.redirect}`)
           }
           
           // Recursive call with redirect path (but skip guards to prevent loops)
@@ -478,12 +478,12 @@ export function useNavigation() {
         replace: options.replace || false,
         onStart: () => {
           if (process.env.NODE_ENV === 'development') {
-            console.log(`🧭 [NAVIGATION] Starting navigation to: ${path}`)
+            //console.log(`🧭 [NAVIGATION] Starting navigation to: ${path}`)
           }
         },
         onProgress: (progress) => {
           if (process.env.NODE_ENV === 'development') {
-            console.log(`🧭 [NAVIGATION] Progress: ${progress.percentage}%`)
+            //console.log(`🧭 [NAVIGATION] Progress: ${progress.percentage}%`)
           }
         },
         onSuccess: () => {
@@ -497,7 +497,7 @@ export function useNavigation() {
           })
           
           if (process.env.NODE_ENV === 'development') {
-            console.log(`🧭 [NAVIGATION] Successfully navigated to: ${path}`)
+            //console.log(`🧭 [NAVIGATION] Successfully navigated to: ${path}`)
           }
         },
         onError: (error) => {
@@ -738,7 +738,7 @@ export function useNavigation() {
     lastNavigationError.value = null
     
     if (process.env.NODE_ENV === 'development') {
-      console.log('[NAVIGATION] Navigation history cleared')
+      //console.log('[NAVIGATION] Navigation history cleared')
     }
   }
   
@@ -748,9 +748,9 @@ export function useNavigation() {
   const debugNavigation = () => {
     if (process.env.NODE_ENV === 'development') {
       console.group('🧭 Navigation Debug Info')
-      console.log('Available Navigation:', getAvailableNavigation.value)
-      console.log('Navigation Stats:', getNavigationStats.value)
-      console.log('Current Navigation State:', {
+      //console.log('Available Navigation:', getAvailableNavigation.value)
+      //console.log('Navigation Stats:', getNavigationStats.value)
+      //console.log('Current Navigation State:', {
         isNavigating: isNavigating.value,
         lastError: lastNavigationError.value
       })
@@ -794,7 +794,7 @@ export function useNavigation() {
     globalErrorHandler.value = null
     
     if (process.env.NODE_ENV === 'development') {
-      console.log('[NAVIGATION] Composable unmounted, guards cleared')
+      //console.log('[NAVIGATION] Composable unmounted, guards cleared')
     }
   })
   

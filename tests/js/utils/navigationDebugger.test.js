@@ -333,7 +333,7 @@ describe('NavigationDebugger', () => {
       const debugInfo = navigationDebugger.gatherDebugInfo()
       navigationDebugger.checkCommonIssues(debugInfo)
       
-      expect(mockConsole.log).toHaveBeenCalledWith('✅ No common issues detected')
+      expect(mock//console.log).toHaveBeenCalledWith('✅ No common issues detected')
     })
   })
 

@@ -268,13 +268,13 @@ const sectionActions = [
     id: 'edit', 
     label: 'Edit', 
     variant: 'secondary',
-    handler: () => console.log('Edit section')
+    handler: () => //console.log('Edit section')
   },
   { 
     id: 'settings', 
     label: 'Settings', 
     variant: 'ghost',
-    handler: () => console.log('Section settings')
+    handler: () => //console.log('Section settings')
   }
 ];
 
@@ -301,18 +301,18 @@ const cardActions = [
 
 // Event handlers
 const handleSectionAction = (action) => {
-  console.log('Section action:', action);
+  //console.log('Section action:', action);
   if (action.handler) {
     action.handler();
   }
 };
 
 const handleCardAction = (action) => {
-  console.log('Card action:', action);
+  //console.log('Card action:', action);
 };
 
 const handleCardClick = (event) => {
-  console.log('Card clicked:', event);
+  //console.log('Card clicked:', event);
   alert('Card was clicked!');
 };
 </script>

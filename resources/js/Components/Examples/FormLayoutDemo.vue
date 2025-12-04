@@ -382,7 +382,7 @@ const loadingActions = [
 
 // Event handlers
 const handleBasicSubmit = (event) => {
-  console.log('Basic form submitted:', basicForm.value);
+  //console.log('Basic form submitted:', basicForm.value);
   
   // Simulate validation
   const errors = {};
@@ -403,7 +403,7 @@ const handleBasicSubmit = (event) => {
 };
 
 const handleAction = (action) => {
-  console.log('Action clicked:', action);
+  //console.log('Action clicked:', action);
   
   if (action.id === 'cancel') {
     if (confirm('Are you sure you want to cancel? Your changes will be lost.')) {
@@ -421,7 +421,7 @@ const handleAction = (action) => {
 };
 
 const handleMultiStepSubmit = (event) => {
-  console.log('Multi-step form submitted:', projectForm.value);
+  //console.log('Multi-step form submitted:', projectForm.value);
   
   isSubmitting.value = true;
   
@@ -442,7 +442,7 @@ const handleMultiStepSubmit = (event) => {
 };
 
 const handleMultiStepAction = (action) => {
-  console.log('Multi-step action:', action);
+  //console.log('Multi-step action:', action);
   
   switch (action.id) {
     case 'next':
@@ -470,7 +470,7 @@ const handleMultiStepAction = (action) => {
 };
 
 const handleStepChange = ({ step, index }) => {
-  console.log('Step change:', step, index);
+  //console.log('Step change:', step, index);
   currentStep.value = index;
 };
 

@@ -14,9 +14,9 @@ export function useAuth() {
     if (process.env.NODE_ENV === 'development') {
       console.group(`🔐 [AUTH ERROR] ${context}`)
       console.error('Error:', error)
-      console.log('Page props structure:', page.props ? Object.keys(page.props) : 'No props')
-      console.log('Auth object:', page.props?.auth)
-      console.log('Timestamp:', new Date().toISOString())
+      //console.log('Page props structure:', page.props ? Object.keys(page.props) : 'No props')
+      //console.log('Auth object:', page.props?.auth)
+      //console.log('Timestamp:', new Date().toISOString())
       console.trace('Stack trace')
       console.groupEnd()
     }
@@ -155,16 +155,16 @@ export function useAuth() {
   const debugAuthState = () => {
     if (process.env.NODE_ENV === 'development') {
       console.group('🔐 Authentication Debug Info')
-      console.log('Timestamp:', new Date().toISOString())
-      console.log('Page props available:', !!page.props)
-      console.log('Page props keys:', page.props ? Object.keys(page.props) : 'None')
-      console.log('Auth object:', page.props?.auth)
-      console.log('Auth object keys:', page.props?.auth ? Object.keys(page.props.auth) : 'None')
-      console.log('User object:', user.value)
-      console.log('User object keys:', user.value ? Object.keys(user.value) : 'None')
-      console.log('Is authenticated:', isAuthenticated.value)
-      console.log('User roles:', roles.value)
-      console.log('Roles type:', typeof roles.value, Array.isArray(roles.value) ? '(array)' : '(not array)')
+      //console.log('Timestamp:', new Date().toISOString())
+      //console.log('Page props available:', !!page.props)
+      //console.log('Page props keys:', page.props ? Object.keys(page.props) : 'None')
+      //console.log('Auth object:', page.props?.auth)
+      //console.log('Auth object keys:', page.props?.auth ? Object.keys(page.props.auth) : 'None')
+      //console.log('User object:', user.value)
+      //console.log('User object keys:', user.value ? Object.keys(user.value) : 'None')
+      //console.log('Is authenticated:', isAuthenticated.value)
+      //console.log('User roles:', roles.value)
+      //console.log('Roles type:', typeof roles.value, Array.isArray(roles.value) ? '(array)' : '(not array)')
       console.groupEnd()
     }
   }

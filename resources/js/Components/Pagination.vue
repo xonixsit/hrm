@@ -413,7 +413,7 @@ const goToPage = (page) => {
     return;
   }
   
-  console.log('goToPage called with:', page);
+  //console.log('goToPage called with:', page);
   
   // Emit the event first
   emit('page-change', page);
@@ -425,10 +425,10 @@ const goToPage = (page) => {
   // Strategy 1: Use Laravel pagination links
   if (props.links && props.links.length > 0) {
     const pageLink = props.links.find(link => parseInt(link.label) === page);
-    console.log('Found pageLink:', pageLink);
+    //console.log('Found pageLink:', pageLink);
     
     if (pageLink?.url) {
-      console.log('Strategy 1: Using Laravel link:', pageLink.url);
+      //console.log('Strategy 1: Using Laravel link:', pageLink.url);
       router.get(pageLink.url);
       navigationSuccess = true;
     }
@@ -436,12 +436,12 @@ const goToPage = (page) => {
   
   // Strategy 2: Manual URL construction if Strategy 1 failed
   if (!navigationSuccess) {
-    console.log('Strategy 2: Manual URL construction');
+    //console.log('Strategy 2: Manual URL construction');
     const currentPath = window.location.pathname;
     const searchParams = new URLSearchParams(window.location.search);
     searchParams.set('page', page);
     const newUrl = `${currentPath}?${searchParams.toString()}`;
-    console.log('Navigating to:', newUrl);
+    //console.log('Navigating to:', newUrl);
     router.get(newUrl);
   }
 };

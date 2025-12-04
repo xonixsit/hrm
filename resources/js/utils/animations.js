@@ -233,7 +233,7 @@ export const monitorAnimationPerformance = (animationName, callback) => {
     
     if (elapsed >= 1000) {
       const fps = Math.round((frameCount * 1000) / elapsed);
-      console.log(`Animation "${animationName}" FPS: ${fps}`);
+      //console.log(`Animation "${animationName}" FPS: ${fps}`);
       
       if (fps < 30) {
         console.warn(`Animation "${animationName}" is running below 30 FPS`);

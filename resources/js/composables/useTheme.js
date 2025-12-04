@@ -280,18 +280,18 @@ export function useTheme() {
   const debugThemeState = () => {
     if (process.env.NODE_ENV === 'development') {
       console.group('🎨 Theme Debug Info');
-      console.log('Current theme:', currentTheme.value);
-      console.log('System theme:', systemTheme.value);
-      console.log('Active theme:', activeTheme.value);
-      console.log('Use system theme:', isSystemThemePreferred.value);
-      console.log('Is dark:', isDark.value);
-      console.log('Theme config:', themeConfig.value);
-      console.log('Available themes:', Object.keys(themes));
+      //console.log('Current theme:', currentTheme.value);
+      //console.log('System theme:', systemTheme.value);
+      //console.log('Active theme:', activeTheme.value);
+      //console.log('Use system theme:', isSystemThemePreferred.value);
+      //console.log('Is dark:', isDark.value);
+      //console.log('Theme config:', themeConfig.value);
+      //console.log('Available themes:', Object.keys(themes));
       
       // Additional debugging info
-      console.log('DOM theme class:', document.documentElement.className);
-      console.log('LocalStorage preference:', localStorage.getItem('theme-preference'));
-      console.log('System prefers dark:', window.matchMedia('(prefers-color-scheme: dark)').matches);
+      //console.log('DOM theme class:', document.documentElement.className);
+      //console.log('LocalStorage preference:', localStorage.getItem('theme-preference'));
+      //console.log('System prefers dark:', window.matchMedia('(prefers-color-scheme: dark)').matches);
       console.groupEnd();
     }
   };
@@ -397,7 +397,7 @@ export function useTheme() {
       const success = resetThemeToDefault();
       
       if (success) {
-        console.log('Theme system recovery successful');
+        //console.log('Theme system recovery successful');
         return true;
       } else {
         throw new Error('Failed to reset theme to default');

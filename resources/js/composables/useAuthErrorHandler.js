@@ -81,7 +81,7 @@ export function useAuthErrorHandler() {
       [ERROR_LEVELS.WARNING]: console.warn,
       [ERROR_LEVELS.INFO]: console.info,
       [ERROR_LEVELS.DEBUG]: console.debug
-    }[report.level] || console.log
+    }[report.level] || //console.log
     
     console.group(`🔐 [AUTH ${report.level.toUpperCase()}] ${report.message}`)
     logMethod('Report ID:', report.id)
@@ -228,7 +228,7 @@ export function useAuthErrorHandler() {
   const clearErrorHistory = () => {
     errorHistory.value = []
     if (process.env.NODE_ENV === 'development') {
-      console.log('[AUTH ERROR HANDLER] Error history cleared')
+      //console.log('[AUTH ERROR HANDLER] Error history cleared')
     }
   }
   
@@ -245,7 +245,7 @@ export function useAuthErrorHandler() {
     }
     
     if (process.env.NODE_ENV === 'development') {
-      console.log('[AUTH ERROR HANDLER] Error history export:', exportData)
+      //console.log('[AUTH ERROR HANDLER] Error history export:', exportData)
     }
     
     return exportData
@@ -257,14 +257,14 @@ export function useAuthErrorHandler() {
   const debugUtils = process.env.NODE_ENV === 'development' ? {
     logErrorStats: () => {
       console.group('📊 Authentication Error Statistics')
-      console.log('Stats:', getErrorStats.value)
+      //console.log('Stats:', getErrorStats.value)
       console.groupEnd()
     },
     
     logRecentErrors: (count = 5) => {
       console.group(`📋 Recent Authentication Errors (${count})`)
       errorHistory.value.slice(0, count).forEach((error, index) => {
-        console.log(`${index + 1}.`, error)
+        //console.log(`${index + 1}.`, error)
       })
       console.groupEnd()
     },
@@ -366,6 +366,6 @@ export function setupGlobalAuthErrorHandler() {
   })
   
   if (process.env.NODE_ENV === 'development') {
-    console.log('🔧 [AUTH ERROR HANDLER] Global error handlers initialized')
+    //console.log('🔧 [AUTH ERROR HANDLER] Global error handlers initialized')
   }
 }

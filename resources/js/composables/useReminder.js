@@ -21,7 +21,7 @@ export function useReminder() {
         });
       });
     } else {
-        console.log('notification permission not granted')
+        //console.log('notification permission not granted')
     }
   };
 

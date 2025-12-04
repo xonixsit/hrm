@@ -602,7 +602,7 @@ const handleFileUpload = async (event) => {
       // Clear the file input
       event.target.value = '';
       
-      console.log('Files uploaded successfully:', result.files);
+      //console.log('Files uploaded successfully:', result.files);
     } else {
       const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
       console.error('File upload failed:', errorData);

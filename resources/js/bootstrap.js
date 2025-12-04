@@ -42,18 +42,18 @@ if (pusherKey) {
                 },
             });
 
-            console.log('✅ Laravel Echo initialized with Pusher');
+            //console.log('✅ Laravel Echo initialized with Pusher');
         }).catch(error => {
             console.warn('⚠️ Failed to load Pusher:', error);
-            console.log('📝 Run: npm install pusher-js');
+            //console.log('📝 Run: npm install pusher-js');
         });
     }).catch(error => {
         console.warn('⚠️ Failed to load Laravel Echo:', error);
-        console.log('📝 Run: npm install laravel-echo');
+        //console.log('📝 Run: npm install laravel-echo');
     });
 } else {
     console.warn('⚠️ Pusher credentials not found. Real-time features disabled.');
-    console.log('📝 Add VITE_PUSHER_APP_KEY to your .env file to enable real-time features.');
+    //console.log('📝 Add VITE_PUSHER_APP_KEY to your .env file to enable real-time features.');
     
     // Set Echo to null so components can check for its availability
     window.Echo = null;

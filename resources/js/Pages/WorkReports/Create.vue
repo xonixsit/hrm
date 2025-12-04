@@ -251,10 +251,10 @@ const breadcrumbs = computed(() => [
 ]);
 
 const submitForm = () => {
-  console.log('Submitting form with data:', form.data());
+  //console.log('Submitting form with data:', form.data());
   form.post(route('work-reports.store'), {
     onSuccess: () => {
-      console.log('Form submitted successfully');
+      //console.log('Form submitted successfully');
     },
     onError: (errors) => {
       console.error('Form submission errors:', errors);

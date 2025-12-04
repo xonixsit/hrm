@@ -251,12 +251,12 @@
   }
 
   onMounted(() => {
-    console.log('=== MANUAL CLOCK OUT MODAL DEBUG ===')
-    console.log('Full attendance object:', JSON.stringify(props.attendance, null, 2))
+    //console.log('=== MANUAL CLOCK OUT MODAL DEBUG ===')
+    //console.log('Full attendance object:', JSON.stringify(props.attendance, null, 2))
     
     // Set default clock out time to the attendance date
     if (!props.attendance?.date) {
-      console.log('No attendance date found, using current time')
+      //console.log('No attendance date found, using current time')
       clockOutTime.value = getCurrentDateTime()
       return
     }
@@ -265,8 +265,8 @@
       const attendanceDate = props.attendance.date
       const now = new Date()
       
-      console.log('Raw attendance date:', attendanceDate)
-      console.log('Current date:', now.toISOString())
+      //console.log('Raw attendance date:', attendanceDate)
+      //console.log('Current date:', now.toISOString())
       
       // Always use the attendance date, regardless of format
       let attendanceDateString
@@ -280,14 +280,14 @@
         attendanceDateString = dateObj.toISOString().split('T')[0]
       }
       
-      console.log('Processed attendance date string:', attendanceDateString)
+      //console.log('Processed attendance date string:', attendanceDateString)
       
       // Always use 5 PM on the attendance date as default
       const defaultTime = `${attendanceDateString}T17:00`
       clockOutTime.value = defaultTime
       
-      console.log('Final clock out time set to:', clockOutTime.value)
-      console.log('=== END DEBUG ===')
+      //console.log('Final clock out time set to:', clockOutTime.value)
+      //console.log('=== END DEBUG ===')
       
     } catch (error) {
       console.error('Error setting default clock out time:', error)

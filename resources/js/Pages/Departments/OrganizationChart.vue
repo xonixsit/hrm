@@ -266,7 +266,7 @@ const resetZoom = () => {
 
 const exportChart = () => {
   // Implementation for exporting the chart as image/PDF
-  console.log('Exporting organization chart...')
+  //console.log('Exporting organization chart...')
 }
 
 const printChart = () => {

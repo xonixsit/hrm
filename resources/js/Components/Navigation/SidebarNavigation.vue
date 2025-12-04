@@ -638,17 +638,17 @@ const toggleCollapse = () => {
 };
 
 const handleNavigate = (item) => {
-  console.log('Navigation clicked:', item);
+  //console.log('Navigation clicked:', item);
   emit('navigate', { route: item.route, item });
   
   if (item.route) {
     try {
-      console.log('Attempting navigation to:', item.route);
+      //console.log('Attempting navigation to:', item.route);
       if (typeof window !== 'undefined' && window.route) {
         router.visit(window.route(item.route));
       } else {
         const url = `/${item.route.replace('.', '/')}`;
-        console.log('Navigating to URL:', url);
+        //console.log('Navigating to URL:', url);
         router.visit(url);
       }
     } catch (error) {
@@ -687,7 +687,7 @@ onMounted(() => {
   checkDesktop();
   
   // DEBUG: Log component mounting with unique ID
-  console.log('[SidebarNavigation] Component mounted, isDesktop:', isDesktop.value, 'ID:', componentId.value);
+  //console.log('[SidebarNavigation] Component mounted, isDesktop:', isDesktop.value, 'ID:', componentId.value);
   
   // Register component with conflict detector
   conflictDetector.registerComponent(componentId.value, 'desktop');

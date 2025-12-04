@@ -95,11 +95,11 @@ const props = defineProps({
 });
 
 // Log everything to console for debugging
-console.log('=== MY ASSESSMENTS DEBUG ===');
-console.log('Props:', props);
-console.log('Assessments:', props.assessments);
-console.log('Stats:', props.stats);
-console.log('Route function:', typeof route);
+//console.log('=== MY ASSESSMENTS DEBUG ===');
+//console.log('Props:', props);
+//console.log('Assessments:', props.assessments);
+//console.log('Stats:', props.stats);
+//console.log('Route function:', typeof route);
 
 const safeRoute = (routeName, params = null) => {
   try {

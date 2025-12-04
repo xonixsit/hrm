@@ -100,19 +100,19 @@ const actions = [
     id: 'create',
     label: 'Create New',
     variant: 'primary',
-    handler: () => console.log('Create clicked')
+    handler: () => //console.log('Create clicked')
   },
   {
     id: 'export',
     label: 'Export',
     variant: 'secondary',
-    handler: () => console.log('Export clicked')
+    handler: () => //console.log('Export clicked')
   },
   {
     id: 'settings',
     label: 'Settings',
     variant: 'ghost',
-    handler: () => console.log('Settings clicked')
+    handler: () => //console.log('Settings clicked')
   }
 ];
 
@@ -136,14 +136,14 @@ const activeTab = ref('overview');
 
 // Event handlers
 const handleAction = (action) => {
-  console.log('Action clicked:', action);
+  //console.log('Action clicked:', action);
   if (action.handler) {
     action.handler();
   }
 };
 
 const handleTabChange = (tab) => {
-  console.log('Tab changed:', tab);
+  //console.log('Tab changed:', tab);
   activeTab.value = tab.id;
 };
 </script>

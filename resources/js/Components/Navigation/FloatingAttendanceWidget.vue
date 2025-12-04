@@ -292,7 +292,7 @@ const updateExpandedState = (forceUpdate = false) => {
     }
     
     if (wasChanged) {
-      console.log(`FloatingWidget: Auto-${newExpandedState ? 'expanded' : 'collapsed'} (clockedIn: ${attendance.value.clockedIn}, force: ${forceUpdate})`)
+      //console.log(`FloatingWidget: Auto-${newExpandedState ? 'expanded' : 'collapsed'} (clockedIn: ${attendance.value.clockedIn}, force: ${forceUpdate})`)
     }
   }
 }
@@ -403,7 +403,7 @@ const handleBreak = async () => {
           completedBreak
         ]
         
-        console.log('💾 FloatingWidget: Saved completed break session:', completedBreak)
+        //console.log('💾 FloatingWidget: Saved completed break session:', completedBreak)
       }
       
       const response = await window.axios.post('/api/attendance/break-end', {
@@ -466,7 +466,7 @@ const fetchCurrentStatus = async () => {
     if (newClockInTime !== currentClockInTime || !data.clocked_in) {
       // Clear completed break sessions for new day/session
       completedBreakSessions.value = []
-      console.log('🔄 FloatingWidget: New session detected, cleared completed breaks')
+      //console.log('🔄 FloatingWidget: New session detected, cleared completed breaks')
     }
     
     attendance.value.clockedIn = data.clocked_in || false
@@ -480,10 +480,10 @@ const fetchCurrentStatus = async () => {
         end: session.end,
         isOngoing: false
       }))
-      console.log('📊 FloatingWidget: Loaded break sessions from server:', {
-        serverBreakSessions: data.break_sessions.length,
-        localBreakSessions: completedBreakSessions.value.length
-      })
+      // //console.log('📊 FloatingWidget: Loaded break sessions from server:', {
+      //   serverBreakSessions: data.break_sessions.length,
+      //   localBreakSessions: completedBreakSessions.value.length
+      // })
     }
     
     // Use the same logic as main dashboard for break start time
@@ -510,14 +510,14 @@ const fetchCurrentStatus = async () => {
     // Update expanded state based on clock-in status
     updateExpandedState()
     
-    console.log('FloatingWidget: Fetched status:', {
-      clockedIn: attendance.value.clockedIn,
-      onBreak: attendance.value.onBreak,
-      breakStartTime: breakStartTime.value,
-      completedBreaks: completedBreakSessions.value.length,
-      totalBreakTime: totalBreakTime.value,
-      isExpanded: isExpanded.value
-    })
+    // //console.log('FloatingWidget: Fetched status:', {
+    //   clockedIn: attendance.value.clockedIn,
+    //   onBreak: attendance.value.onBreak,
+    //   breakStartTime: breakStartTime.value,
+    //   completedBreaks: completedBreakSessions.value.length,
+    //   totalBreakTime: totalBreakTime.value,
+    //   isExpanded: isExpanded.value
+    // })
   } catch (error) {
     console.error('Failed to fetch attendance status:', error)
   }
@@ -533,7 +533,7 @@ const handleStorageChange = (event) => {
 
 // Listen for attendance updates via Laravel Echo
 const handleAttendanceUpdate = (data) => {
-  console.log('FloatingWidget: Received attendance update via Echo:', data)
+  //console.log('FloatingWidget: Received attendance update via Echo:', data)
   
   // Update local state immediately for responsive UI
   attendance.value.clockedIn = data.clocked_in
@@ -556,18 +556,18 @@ const handleAttendanceUpdate = (data) => {
   // Update expanded state based on new clock-in status
   updateExpandedState()
   
-  console.log('FloatingWidget: State updated via Echo:', {
-    clockedIn: attendance.value.clockedIn,
-    onBreak: attendance.value.onBreak,
-    clockInTime: attendance.value.clockInTime,
-    breakStartTime: breakStartTime.value,
-    isExpanded: isExpanded.value
-  })
+  // //console.log('FloatingWidget: State updated via Echo:', {
+  //   clockedIn: attendance.value.clockedIn,
+  //   onBreak: attendance.value.onBreak,
+  //   clockInTime: attendance.value.clockInTime,
+  //   breakStartTime: breakStartTime.value,
+  //   isExpanded: isExpanded.value
+  // })
 }
 
 // Fallback: Listen for custom attendance state change events (legacy support)
 const handleAttendanceStateChange = (event) => {
-  console.log('FloatingWidget: Received attendance state change (legacy):', event.detail)
+  //console.log('FloatingWidget: Received attendance state change (legacy):', event.detail)
   
   const { clockedIn, onBreak, clockInTime, breakStartTime: eventBreakStartTime } = event.detail
   
@@ -592,13 +592,13 @@ const handleAttendanceStateChange = (event) => {
   // Update expanded state based on new clock-in status
   updateExpandedState()
   
-  console.log('FloatingWidget: State updated (legacy):', {
-    clockedIn: attendance.value.clockedIn,
-    onBreak: attendance.value.onBreak,
-    breakStartTime: breakStartTime.value,
-    eventBreakStartTime: eventBreakStartTime,
-    isExpanded: isExpanded.value
-  })
+  // //console.log('FloatingWidget: State updated (legacy):', {
+  //   clockedIn: attendance.value.clockedIn,
+  //   onBreak: attendance.value.onBreak,
+  //   breakStartTime: breakStartTime.value,
+  //   eventBreakStartTime: eventBreakStartTime,
+  //   isExpanded: isExpanded.value
+  // })
 }
 
 // Broadcast attendance updates to other components
@@ -636,14 +636,7 @@ const broadcastCurrentStatus = () => {
     // Also update localStorage for persistence
     broadcastAttendanceUpdate();
     
-    console.log('FloatingWidget: Broadcasted current status to dashboard:', {
-      clockedIn: attendance.value.clockedIn,
-      onBreak: attendance.value.onBreak,
-      clockInTime: attendance.value.clockInTime,
-      breakStartTime: breakStartTime.value,
-      completedBreaks: completedBreakSessions.value.length,
-      totalBreakTime: totalBreakTime.value
-    });
+    // 
   } catch (error) {
     console.warn('Failed to broadcast current status:', error);
   }
@@ -674,15 +667,7 @@ const broadcastBreakStatusChange = (action) => {
     // Also update localStorage for persistence
     broadcastAttendanceUpdate();
     
-    console.log(`FloatingWidget: Broadcasted break ${action} to dashboard:`, {
-      clockedIn: attendance.value.clockedIn,
-      onBreak: attendance.value.onBreak,
-      clockInTime: attendance.value.clockInTime,
-      breakStartTime: breakStartTime.value,
-      completedBreaks: completedBreakSessions.value.length,
-      totalBreakTime: totalBreakTime.value,
-      action: action
-    });
+  
   } catch (error) {
     console.warn('Failed to broadcast break status change:', error);
   }
@@ -725,7 +710,7 @@ onMounted(async () => {
         window.Echo.private(`attendance.${employeeId}`)
           .listen('.attendance.updated', handleAttendanceUpdate)
         
-        console.log(`FloatingWidget: Subscribed to Echo channel attendance.${employeeId}`)
+        //console.log(`FloatingWidget: Subscribed to Echo channel attendance.${employeeId}`)
       } else {
         console.warn('FloatingWidget: No employee ID found for Echo subscription')
       }
@@ -742,7 +727,7 @@ onMounted(async () => {
   // Listen for custom attendance state change events from dashboard (legacy)
   window.addEventListener('attendance-state-changed', handleAttendanceStateChange)
   
-  console.log('FloatingWidget: Event listeners registered')
+  // //console.log('FloatingWidget: Event listeners registered')
 })
 
 onUnmounted(() => {
@@ -759,7 +744,7 @@ onUnmounted(() => {
           window.Echo.leave(channel.name.replace('private-', ''))
         }
       })
-      console.log('FloatingWidget: Unsubscribed from Echo channels')
+      //console.log('FloatingWidget: Unsubscribed from Echo channels')
     } catch (error) {
       console.warn('FloatingWidget: Error unsubscribing from Echo channels:', error)
     }
@@ -768,7 +753,6 @@ onUnmounted(() => {
   window.removeEventListener('storage', handleStorageChange)
   window.removeEventListener('attendance-state-changed', handleAttendanceStateChange)
   
-  console.log('FloatingWidget: Event listeners removed')
 })
 </script>
 
@@ -817,7 +801,7 @@ onUnmounted(() => {
   @apply bg-yellow-500;
   animation: pulse 2s ease-in-out infinite;
 }
-
+c
 .status-dot--out {
   @apply bg-gray-400;
 }

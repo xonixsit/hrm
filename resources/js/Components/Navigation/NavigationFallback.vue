@@ -293,7 +293,7 @@ const handleNavigation = (item, event) => {
     
     // Log navigation attempt
     if (isDevelopment) {
-      console.log('[NAVIGATION FALLBACK] Navigation attempt:', item)
+      //console.log('[NAVIGATION FALLBACK] Navigation attempt:', item)
     }
     
   } catch (error) {
@@ -329,7 +329,7 @@ const handleRetryNavigation = async () => {
     }
     
     if (isDevelopment) {
-      console.log(`[NAVIGATION FALLBACK] Retry attempt ${retryCount.value}/${maxRetries}`)
+      //console.log(`[NAVIGATION FALLBACK] Retry attempt ${retryCount.value}/${maxRetries}`)
     }
     
   } catch (error) {

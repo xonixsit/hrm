@@ -139,6 +139,11 @@
 
           <!-- Break Monitoring Dashboard -->
           <BreakMonitoringWidget :break-violations="breakViolations" />
+          
+          <!-- Timezone & Weather Widget -->
+          <!-- <TimezoneWeatherWidget 
+            :system-timezone="systemTimezone" 
+            :weather-api-key="weatherApiKey" /> -->
 
           <!-- Competency Management Dashboard -->
           <UnifiedCard title="Competency Management" description="Track and manage employee competencies"
@@ -251,6 +256,8 @@
                 </div>
                 <ChevronRightIcon class="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </button>
+
+             
             </div>
           </UnifiedCard>
 
@@ -368,8 +375,20 @@
     </div>
 
     <!-- Birthday Popup -->
-    <BirthdayPopup v-if="birthdayData?.currentUserBirthday" :show="showBirthdayPopup"
-      :employee="birthdayData.currentUserBirthday" @close="closeBirthdayPopup" />
+    <BirthdayPopup 
+      v-if="birthdayData?.currentUserBirthday || showBirthdayPopup" 
+      :show="showBirthdayPopup"
+      :employee="birthdayData?.currentUserBirthday || {
+        id: user?.employee?.id || 1,
+        user: {
+          name: user?.name || 'Test User',
+          email: user?.email || 'test@example.com'
+        },
+        job_title: user?.employee?.job_title || 'Employee',
+        department: null,
+        age: 25
+      }" 
+      @close="closeBirthdayPopup" />
   </AuthenticatedLayout>
 </template>
 
@@ -410,6 +429,7 @@
   import BirthdayPopup from '@/Components/Dashboard/BirthdayPopup.vue';
   import AttendanceTrackingWidget from '@/Components/Dashboard/AttendanceTrackingWidget.vue';
   import BreakMonitoringWidget from '@/Components/Dashboard/BreakMonitoringWidget.vue';
+  import TimezoneWeatherWidget from '@/Components/Dashboard/TimezoneWeatherWidget.vue';
 
   // Icons
   import {
@@ -500,6 +520,14 @@
     breakViolations: {
       type: Array,
       default: () => []
+    },
+    systemTimezone: {
+      type: String,
+      default: 'UTC'
+    },
+    weatherApiKey: {
+      type: String,
+      default: null
     }
   });
 
@@ -516,11 +544,10 @@
   // Computed properties
   const isAdmin = computed(() => {
     const result = Array.isArray(userRoles.value) && userRoles.value.includes('Admin');
-    console.log('Dashboard - User:', user.value);
-    console.log('Dashboard - Roles:', userRoles.value);
-    console.log('Dashboard - Is Admin:', result);
-    console.log('Dashboard - Admin Stats:', props.adminStats);
-    console.log('Dashboard - Attendance Tracking:', props.attendanceTracking);
+    console.log('🔍 Dashboard - User:', user.value);
+    console.log('🔍 Dashboard - Roles:', userRoles.value);
+    console.log('🔍 Dashboard - Is Admin:', result);
+    console.log('🔍 Dashboard - Which dashboard will show:', result ? 'Admin' : 'Employee');
     return result;
   });
 
@@ -629,7 +656,7 @@
 
   const handleSendMessage = (member) => {
     // Implement messaging functionality
-    console.log('Send message to:', member);
+    //console.log('Send message to:', member);
   };
 
   const handleClockInOut = async () => {
@@ -661,7 +688,7 @@
       });
 
       if (response.data.success) {
-        console.log('🎯 Clock in/out successful, response:', response.data);
+        //console.log('🎯 Clock in/out successful, response:', response.data);
         
         // Update local state immediately without full refresh
         await updateAttendanceStatus();
@@ -693,7 +720,7 @@
     try {
       // First, verify the current status via API
       const statusCheck = await axios.get('/api/attendance/current');
-      console.log('🔍 API status check before reload:', statusCheck.data);
+      //console.log('🔍 API status check before reload:', statusCheck.data);
       
       // Use Inertia to reload only the attendance-related props
       await router.reload({ 
@@ -702,7 +729,7 @@
         preserveState: true
       });
       
-      console.log('✅ Attendance status updated via Inertia reload');
+      //console.log('✅ Attendance status updated via Inertia reload');
     } catch (error) {
       console.error('Failed to update attendance status:', error);
       // Fallback to page reload if Inertia reload fails
@@ -766,16 +793,56 @@
 
   // Birthday popup logic
   const checkAndShowBirthdayPopup = () => {
+    console.log('🎂 Dashboard: Full birthday data:', props.birthdayData);
+    console.log('🎂 Dashboard: Current user birthday:', props.birthdayData?.currentUserBirthday);
+    console.log('🎂 Dashboard: Today\'s birthdays:', props.birthdayData?.todaysBirthdays);
+    console.log('🎂 Dashboard: User info:', user.value);
+    
     if (props.birthdayData?.currentUserBirthday) {
       // Show popup after a short delay to let the page load
       setTimeout(() => {
+        console.log('🎂 Dashboard: Showing birthday popup for:', props.birthdayData.currentUserBirthday.user.name);
         showBirthdayPopup.value = true;
       }, 1000);
+    } else {
+      console.log('🎂 Dashboard: No current user birthday found');
     }
   };
 
   const closeBirthdayPopup = () => {
+    console.log('🎂 Dashboard: Closing birthday popup');
     showBirthdayPopup.value = false;
+  };
+
+  // Test methods for birthday functionality
+  const testBirthday = async () => {
+    try {
+      const response = await fetch('/test-birthday');
+      const data = await response.json();
+      console.log('🎂 Birthday test result:', data);
+      
+      // Refresh the page to see the birthday modal
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    } catch (error) {
+      console.error('Birthday test error:', error);
+    }
+  };
+
+  const resetBirthday = async () => {
+    try {
+      const response = await fetch('/reset-birthday');
+      const data = await response.json();
+      console.log('🎂 Birthday reset result:', data);
+      
+      // Refresh the page
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    } catch (error) {
+      console.error('Birthday reset error:', error);
+    }
   };
 
   const getAttendanceStatus = (clockedIn, total) => {

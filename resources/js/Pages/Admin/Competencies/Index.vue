@@ -75,7 +75,7 @@ const search = () => {
 };
 
 const deleteCompetency = (id) => {
-    console.log('Delete competency clicked:', id);
+    //console.log('Delete competency clicked:', id);
     if (confirm('Are you sure you want to delete this competency?')) {
         router.delete(route('competencies.destroy', id));
     }

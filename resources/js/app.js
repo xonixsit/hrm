@@ -12,7 +12,7 @@ try {
   window.process = window.process || {};
   window.process.env = window.process.env || {};
   window.process.env.NODE_ENV = import.meta.env.MODE || 'production';
-  console.log('[APP] Successfully defined process.env');
+  //console.log('[APP] Successfully defined process.env');
 } catch (error) {
   console.warn('[APP] Error defining process.env:', error);
   // Create a fallback process object
@@ -69,15 +69,15 @@ if ('serviceWorker' in navigator) {
       return Promise.all(unregisterPromises);
     }).then(() => {
       navigator.serviceWorker.register('/sw.js?v=4').then(registration => {
-        console.log('ServiceWorker registration successful with scope: ', registration.scope);
+        //console.log('ServiceWorker registration successful with scope: ', registration.scope);
         // Request permission as soon as the service worker is ready
         return Notification.requestPermission();
       }).then(permission => {
         if (permission === 'granted') {
-          console.log('Notification permission granted.');
+          //console.log('Notification permission granted.');
         }
       }).catch(err => {
-        console.log('ServiceWorker registration failed: ', err);
+        //console.log('ServiceWorker registration failed: ', err);
       });
     });
   });

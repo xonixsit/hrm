@@ -329,35 +329,35 @@ const gridActions = [
 
 // Event handlers
 const handleViewChange = (view) => {
-  console.log('View changed to:', view);
+  //console.log('View changed to:', view);
 };
 
 const handleRowClick = (row) => {
-  console.log('Table row clicked:', row);
+  //console.log('Table row clicked:', row);
 };
 
 const handleItemClick = ({ item, index }) => {
-  console.log('Item clicked:', item, 'at index:', index);
+  //console.log('Item clicked:', item, 'at index:', index);
 };
 
 const handleItemAction = ({ action, item, index }) => {
-  console.log('Item action:', action, 'on item:', item, 'at index:', index);
+  //console.log('Item action:', action, 'on item:', item, 'at index:', index);
 };
 
 const handleTableAction = (action) => {
-  console.log('Table action:', action);
+  //console.log('Table action:', action);
 };
 
 const handleListAction = (action) => {
-  console.log('List action:', action);
+  //console.log('List action:', action);
 };
 
 const handleGridAction = (action) => {
-  console.log('Grid action:', action);
+  //console.log('Grid action:', action);
 };
 
 const handleEmptyAction = (action) => {
-  console.log('Empty state action:', action);
+  //console.log('Empty state action:', action);
   
   if (action.id === 'add' || action.id === 'create') {
     alert('Add/Create action triggered!');
@@ -367,12 +367,12 @@ const handleEmptyAction = (action) => {
 };
 
 const handleInteractiveClick = ({ item }) => {
-  console.log('Interactive item clicked:', item);
+  //console.log('Interactive item clicked:', item);
   item.selected = !item.selected;
 };
 
 const handleInteractiveAction = ({ action, item }) => {
-  console.log('Interactive action:', action, 'on item:', item);
+  //console.log('Interactive action:', action, 'on item:', item);
   alert(`${action.label} action on "${item.title}"`);
 };
 

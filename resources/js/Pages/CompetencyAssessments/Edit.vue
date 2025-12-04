@@ -292,7 +292,7 @@ const updateAssessment = () => {
   router.put(route('competency-assessments.update', props.assessment.id), form.value, {
     onSuccess: () => {
       // Success - controller will redirect to show page with success message
-      console.log('Assessment updated successfully');
+      //console.log('Assessment updated successfully');
     },
     onError: (errors) => {
       console.error('Failed to update assessment:', errors);

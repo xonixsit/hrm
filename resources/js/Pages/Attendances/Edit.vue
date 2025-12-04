@@ -238,7 +238,7 @@ const props = defineProps({
 const { showNotification } = useNotifications();
 
 // Debug logging
-console.log('Attendance data received:', props.attendance);
+//console.log('Attendance data received:', props.attendance);
 
 // Helper functions
 const formatDateTimeForInput = (dateTimeString) => {

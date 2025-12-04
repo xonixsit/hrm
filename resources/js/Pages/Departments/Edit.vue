@@ -399,7 +399,7 @@ const handleSubmit = () => {
 
     // Log values for debugging specific fields
     if (['parent_department_id', 'manager_id', 'established_date'].includes(key)) {
-      console.log(`Field: ${key}, Original:`, originalValue, `Current:`, currentValue);
+      //console.log(`Field: ${key}, Original:`, originalValue, `Current:`, currentValue);
     }
     // Special handling for fields that might be null or empty string interchangeably
     const normalizeString = (value) => (typeof value === 'string' ? value.trim() : value);
@@ -439,7 +439,7 @@ const handleSubmit = () => {
     data: changedData,
     onSuccess: () => {
       // Success handled by Inertia redirect
-          console.log(changedData);
+          //console.log(changedData);
 
     },
     onError: (errors) => {

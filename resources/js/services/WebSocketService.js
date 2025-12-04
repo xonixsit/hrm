@@ -30,7 +30,7 @@ class WebSocketService {
       this.ws.onclose = this.handleClose.bind(this)
       this.ws.onerror = this.handleError.bind(this)
       
-      console.log('WebSocket: Attempting to connect to', wsUrl)
+      //console.log('WebSocket: Attempting to connect to', wsUrl)
     } catch (error) {
       console.error('WebSocket: Connection failed', error)
       this.scheduleReconnect()
@@ -41,7 +41,7 @@ class WebSocketService {
    * Handle WebSocket connection open
    */
   handleOpen(event) {
-    console.log('WebSocket: Connected successfully')
+    //console.log('WebSocket: Connected successfully')
     this.isConnected = true
     this.reconnectAttempts = 0
     
@@ -73,7 +73,7 @@ class WebSocketService {
       
       // Handle authentication response
       if (data.type === 'auth_success') {
-        console.log('WebSocket: Authentication successful')
+        //console.log('WebSocket: Authentication successful')
         this.emit('authenticated', data)
         return
       }
@@ -108,7 +108,7 @@ class WebSocketService {
    * Handle WebSocket connection close
    */
   handleClose(event) {
-    console.log('WebSocket: Connection closed', event.code, event.reason)
+    //console.log('WebSocket: Connection closed', event.code, event.reason)
     this.isConnected = false
     this.stopHeartbeat()
     
@@ -267,7 +267,7 @@ class WebSocketService {
     this.reconnectAttempts++
     const delay = this.reconnectInterval * Math.pow(2, this.reconnectAttempts - 1) // Exponential backoff
     
-    console.log(`WebSocket: Scheduling reconnection attempt ${this.reconnectAttempts} in ${delay}ms`)
+    //console.log(`WebSocket: Scheduling reconnection attempt ${this.reconnectAttempts} in ${delay}ms`)
     
     setTimeout(() => {
       if (!this.isConnected) {

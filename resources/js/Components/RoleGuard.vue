@@ -220,15 +220,15 @@ const hasAccess = computed(() => {
       
       // Log access attempt if requested
       if (props.logAccess && isDevelopment) {
-        console.log(`[ROLE GUARD] Access ${access ? 'granted' : 'denied'}`, {
-          roles: props.roles,
-          permissions: props.permissions,
-          matchType: props.matchType,
-          userRoles: userRoles.value,
-          userPermissions: userPermissions.value.length,
-          roleAccess,
-          permissionAccess
-        })
+        // //console.log(`[ROLE GUARD] Access ${access ? 'granted' : 'denied'}`, {
+        //   roles: props.roles,
+        //   permissions: props.permissions,
+        //   matchType: props.matchType,
+        //   userRoles: userRoles.value,
+        //   userPermissions: userPermissions.value.length,
+        //   roleAccess,
+        //   permissionAccess
+        // })
       }
       
       return access
@@ -316,7 +316,7 @@ const handleRetry = () => {
   resetError()
   
   if (isDevelopment) {
-    console.log('[ROLE GUARD] Retrying access check')
+    //console.log('[ROLE GUARD] Retrying access check')
     debugAuthState()
   }
 }

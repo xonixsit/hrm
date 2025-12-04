@@ -391,7 +391,7 @@ export function useUserPreferences() {
   // Synchronization (placeholder for future server sync)
   const syncPreferences = async () => {
     // TODO: Implement server synchronization
-    console.log('Preference synchronization not yet implemented');
+    //console.log('Preference synchronization not yet implemented');
     return false;
   };
   

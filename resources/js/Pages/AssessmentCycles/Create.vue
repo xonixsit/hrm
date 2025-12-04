@@ -317,7 +317,7 @@ const form = ref({
 const processing = ref(false);
 
 const createCycle = () => {
-  console.log('Creating assessment cycle with data:', form.value);
+  //console.log('Creating assessment cycle with data:', form.value);
   
   // Basic frontend validation
   if (!form.value.name) {
@@ -351,7 +351,7 @@ const createCycle = () => {
   
   router.post(route('assessment-cycles.store'), form.value, {
     onSuccess: (page) => {
-      console.log('Assessment cycle created successfully:', page);
+      //console.log('Assessment cycle created successfully:', page);
     },
     onError: (errors) => {
       console.error('Assessment cycle creation failed:', errors);

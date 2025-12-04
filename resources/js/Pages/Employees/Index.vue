@@ -621,7 +621,7 @@ const handleTableAction = (action) => {
 // Filter methods - simple like work reports
 const applyFilters = () => {
   loading.value = true;
-  console.log('apply filters');
+  //console.log('apply filters');
   const params = {
     page: 1, // Reset to first page when filtering
     per_page: props.employees.per_page || 10

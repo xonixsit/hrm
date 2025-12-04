@@ -32,7 +32,7 @@ export class NavigationGuardService {
     this.isInitialized = true
     
     if (process.env.NODE_ENV === 'development') {
-      console.log('[NAVIGATION GUARD SERVICE] Initialized with default guards')
+      //console.log('[NAVIGATION GUARD SERVICE] Initialized with default guards')
     }
   }
 
@@ -52,7 +52,7 @@ export class NavigationGuardService {
     })
 
     if (process.env.NODE_ENV === 'development') {
-      console.log(`[NAVIGATION GUARD SERVICE] Registered guard: ${name}`)
+      //console.log(`[NAVIGATION GUARD SERVICE] Registered guard: ${name}`)
     }
   }
 
@@ -63,7 +63,7 @@ export class NavigationGuardService {
     const removed = this.guards.delete(name)
     
     if (removed && process.env.NODE_ENV === 'development') {
-      console.log(`[NAVIGATION GUARD SERVICE] Unregistered guard: ${name}`)
+      //console.log(`[NAVIGATION GUARD SERVICE] Unregistered guard: ${name}`)
     }
     
     return removed
@@ -526,7 +526,7 @@ export class NavigationGuardService {
       guard.enabled = enabled
       
       if (process.env.NODE_ENV === 'development') {
-        console.log(`[NAVIGATION GUARD SERVICE] Guard ${name} ${enabled ? 'enabled' : 'disabled'}`)
+        //console.log(`[NAVIGATION GUARD SERVICE] Guard ${name} ${enabled ? 'enabled' : 'disabled'}`)
       }
     }
   }
@@ -539,7 +539,7 @@ export class NavigationGuardService {
     localStorage.removeItem('navigation_history')
     
     if (process.env.NODE_ENV === 'development') {
-      console.log('[NAVIGATION GUARD SERVICE] Error history cleared')
+      //console.log('[NAVIGATION GUARD SERVICE] Error history cleared')
     }
   }
 }

@@ -201,7 +201,7 @@ const formatDateForInput = (date) => {
     
     // Debug logging in development
     if (process.env.NODE_ENV === 'development') {
-      console.log('Date formatting:', { original: date, formatted });
+      //console.log('Date formatting:', { original: date, formatted });
     }
     
     return formatted;

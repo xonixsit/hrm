@@ -64,7 +64,7 @@ export function useAttendance(userId = null) {
 
   // WebSocket event handlers
   const handleAttendanceUpdate = (data) => {
-    console.log('Attendance update received:', data)
+    //console.log('Attendance update received:', data)
     
     // Update local state based on server data
     clockedIn.value = data.clocked_in || false
@@ -97,7 +97,7 @@ export function useAttendance(userId = null) {
   }
 
   const handleStatsUpdate = (data) => {
-    console.log('Stats update received:', data)
+    //console.log('Stats update received:', data)
     
     if (data.weekly_hours) weeklyHours.value = data.weekly_hours
     if (data.monthly_hours) monthlyHours.value = data.monthly_hours
@@ -105,7 +105,7 @@ export function useAttendance(userId = null) {
   }
 
   const handleNotification = (notification) => {
-    console.log('Attendance notification:', notification)
+    //console.log('Attendance notification:', notification)
     
     // Handle different types of notifications
     switch (notification.type) {

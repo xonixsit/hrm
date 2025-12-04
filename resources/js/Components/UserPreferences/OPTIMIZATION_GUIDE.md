@@ -217,7 +217,7 @@ const measurePreferenceOperation = (operation, fn) => {
   const result = fn()
   const duration = performance.now() - start
   
-  console.log(`Preference ${operation} took ${duration.toFixed(2)}ms`)
+  //console.log(`Preference ${operation} took ${duration.toFixed(2)}ms`)
   return result
 }
 ```

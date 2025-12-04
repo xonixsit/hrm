@@ -204,7 +204,7 @@ export function useLayoutSpacing() {
     try {
       // Log transition start
       if (process.env.NODE_ENV === 'development') {
-        console.log(`[useLayoutSpacing] Starting layout transition: ${reason}`, metadata);
+        //console.log(`[useLayoutSpacing] Starting layout transition: ${reason}`, metadata);
       }
 
       // Wait for next tick to ensure DOM updates
@@ -220,7 +220,7 @@ export function useLayoutSpacing() {
       await new Promise(resolve => setTimeout(resolve, transitionState.value.duration));
 
       if (process.env.NODE_ENV === 'development') {
-        console.log(`[useLayoutSpacing] Layout transition completed: ${reason}`);
+        //console.log(`[useLayoutSpacing] Layout transition completed: ${reason}`);
       }
     } catch (error) {
       console.error('[useLayoutSpacing] Layout transition error:', error);
@@ -327,14 +327,14 @@ export function useLayoutSpacing() {
   const debugLayoutSpacing = () => {
     if (process.env.NODE_ENV === 'development') {
       console.group('📐 Layout Spacing Debug Info');
-      console.log('Current layout type:', layoutType.value);
-      console.log('Current spacing:', currentSpacing.value);
-      console.log('Sidebar state:', sidebarState.value);
-      console.log('Mobile state:', mobileState.value);
-      console.log('Transition state:', transitionState.value);
-      console.log('Content dimensions:', getContentAreaDimensions());
-      console.log('CSS custom properties:', cssCustomProperties.value);
-      console.log('Layout conflicts:', detectLayoutConflicts());
+      //console.log('Current layout type:', layoutType.value);
+      //console.log('Current spacing:', currentSpacing.value);
+      //console.log('Sidebar state:', sidebarState.value);
+      //console.log('Mobile state:', mobileState.value);
+      //console.log('Transition state:', transitionState.value);
+      //console.log('Content dimensions:', getContentAreaDimensions());
+      //console.log('CSS custom properties:', cssCustomProperties.value);
+      //console.log('Layout conflicts:', detectLayoutConflicts());
       console.groupEnd();
     }
   };

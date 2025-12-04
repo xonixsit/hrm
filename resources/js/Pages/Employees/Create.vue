@@ -539,7 +539,7 @@ const handleSubmit = () => {
 
 const handleSaveDraft = () => {
   // Implement save as draft functionality
-  console.log('Saving as draft...')
+  //console.log('Saving as draft...')
   // You could save to localStorage or send to a draft endpoint
 }
 

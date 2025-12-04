@@ -585,7 +585,7 @@
     form.put(route('employees.update', props.employee.id), {
       onSuccess: () => {
         // Success message will be shown via flash message and notification
-        console.log('Employee updated successfully')
+        //console.log('Employee updated successfully')
       },
       onError: (errors) => {
         console.error('Form submission errors:', errors)
@@ -632,7 +632,7 @@
             message: `Password has been reset successfully for ${props.employee.user.name}`
           })
           
-          console.log('Password reset successfully')
+          //console.log('Password reset successfully')
         },
         onError: (errors) => {
           console.error('Password reset errors:', errors)

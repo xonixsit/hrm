@@ -527,12 +527,12 @@ const toggleErrorDetails = () => {
 onMounted(() => {
   if (isDevelopment) {
     console.group('🚨 [ERROR PAGE] Error Information')
-    console.log('Error Code:', props.errorCode)
-    console.log('Error Type:', props.errorType)
-    console.log('Title:', displayTitle.value)
-    console.log('Description:', displayDescription.value)
-    console.log('Error Details:', props.errorDetails)
-    console.log('Request Info:', props.requestInfo)
+    //console.log('Error Code:', props.errorCode)
+    //console.log('Error Type:', props.errorType)
+    //console.log('Title:', displayTitle.value)
+    //console.log('Description:', displayDescription.value)
+    //console.log('Error Details:', props.errorDetails)
+    //console.log('Request Info:', props.requestInfo)
     console.groupEnd()
   }
 })

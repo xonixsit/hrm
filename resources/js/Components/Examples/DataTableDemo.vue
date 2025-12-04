@@ -286,48 +286,48 @@ const filteredUsers = computed(() => {
 
 // Methods
 const handleSearch = (query) => {
-  console.log('Search:', query);
+  //console.log('Search:', query);
 };
 
 const handleAdvancedSearch = (query) => {
   searchQuery.value = query;
-  console.log('Advanced Search:', query);
+  //console.log('Advanced Search:', query);
 };
 
 const handleFilter = (filters) => {
   activeFilters.value = filters;
-  console.log('Filter:', filters);
+  //console.log('Filter:', filters);
 };
 
 const handleSort = (sort) => {
-  console.log('Sort:', sort);
+  //console.log('Sort:', sort);
 };
 
 const handleAdvancedSort = (sort) => {
   sortConfig.value = sort;
-  console.log('Advanced Sort:', sort);
+  //console.log('Advanced Sort:', sort);
 };
 
 const handlePageChange = (page) => {
-  console.log('Page Change:', page);
+  //console.log('Page Change:', page);
 };
 
 const handlePageSizeChange = (size) => {
   pageSize.value = size;
-  console.log('Page Size Change:', size);
+  //console.log('Page Size Change:', size);
 };
 
 const handleSelectionChange = (selection) => {
   selectedUsers.value = selection;
-  console.log('Selection Change:', selection);
+  //console.log('Selection Change:', selection);
 };
 
 const handleRowClick = (row) => {
-  console.log('Row Click:', row);
+  //console.log('Row Click:', row);
 };
 
 const handleRowAction = ({ action, row }) => {
-  console.log('Row Action:', action, row);
+  //console.log('Row Action:', action, row);
   
   if (action.id === 'delete') {
     if (confirm(`Are you sure you want to delete ${row.name}?`)) {
@@ -340,7 +340,7 @@ const handleRowAction = ({ action, row }) => {
 };
 
 const handleHeaderAction = (action) => {
-  console.log('Header Action:', action);
+  //console.log('Header Action:', action);
   
   if (action.id === 'create') {
     const newUser = {
@@ -383,7 +383,7 @@ const resetData = () => {
 
 // Lifecycle
 onMounted(() => {
-  console.log('DataTable Demo mounted');
+  //console.log('DataTable Demo mounted');
 });
 </script>
 </template>

@@ -701,7 +701,7 @@ onMounted(() => {
     console.error('Route helper is not available. This will cause navigation issues.');
     showNotification('Navigation system not properly initialized. Please refresh the page.', 'error');
   } else {
-    console.log('Route helper is available. Navigation should work properly.');
+    //console.log('Route helper is available. Navigation should work properly.');
   }
   
   // Test a few key routes
@@ -715,7 +715,7 @@ onMounted(() => {
     testRoutes.forEach(routeName => {
       try {
         const url = route(routeName);
-        console.log(`✓ Route ${routeName} is available: ${url}`);
+        //console.log(`✓ Route ${routeName} is available: ${url}`);
       } catch (error) {
         console.error(`✗ Route ${routeName} failed:`, error);
       }

@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'weather' => [
+        'api_key' => env('WEATHER_API_KEY'),
+        'provider' => env('WEATHER_PROVIDER', 'openweathermap'), // openweathermap, weatherapi, etc.
+    ],
+
 ];

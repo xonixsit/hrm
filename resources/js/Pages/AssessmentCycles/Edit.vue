@@ -222,7 +222,7 @@ const updateCycle = () => {
   router.put(route('assessment-cycles.update', props.cycle.id), form.value, {
     onSuccess: (page) => {
       // Success - controller will redirect to show page with success message
-      console.log('Assessment cycle updated successfully');
+      //console.log('Assessment cycle updated successfully');
     },
     onError: (errors) => {
       console.error('Failed to update assessment cycle:', errors);

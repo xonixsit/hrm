@@ -105,7 +105,7 @@ class NotificationService {
       type: 'clock-in'
     })
     
-    console.log(`Clock-in reminder scheduled for ${reminderTime.toLocaleString()}`)
+    //console.log(`Clock-in reminder scheduled for ${reminderTime.toLocaleString()}`)
   }
 
   /**
@@ -130,7 +130,7 @@ class NotificationService {
       type: 'clock-out'
     })
     
-    console.log(`Clock-out reminder scheduled for ${new Date(Date.now() + reminderDelay).toLocaleString()}`)
+    //console.log(`Clock-out reminder scheduled for ${new Date(Date.now() + reminderDelay).toLocaleString()}`)
   }
 
   /**
@@ -156,7 +156,7 @@ class NotificationService {
       type: 'break'
     })
     
-    console.log(`Break reminder scheduled for ${new Date(Date.now() + reminderDelay).toLocaleString()}`)
+    //console.log(`Break reminder scheduled for ${new Date(Date.now() + reminderDelay).toLocaleString()}`)
   }
 
   /**
@@ -180,7 +180,7 @@ class NotificationService {
       type: 'overtime'
     })
     
-    console.log(`Overtime warning scheduled for ${new Date(Date.now() + warningDelay).toLocaleString()}`)
+    //console.log(`Overtime warning scheduled for ${new Date(Date.now() + warningDelay).toLocaleString()}`)
   }
 
   /**
@@ -305,7 +305,7 @@ class NotificationService {
     if (reminder) {
       clearTimeout(reminder.timeoutId)
       this.reminders.delete(reminderId)
-      console.log(`Cleared reminder: ${reminderId}`)
+      //console.log(`Cleared reminder: ${reminderId}`)
     }
   }
 
@@ -317,7 +317,7 @@ class NotificationService {
       clearTimeout(reminder.timeoutId)
     })
     this.reminders.clear()
-    console.log('Cleared all reminders')
+    //console.log('Cleared all reminders')
   }
 
   /**
@@ -345,7 +345,7 @@ class NotificationService {
       this.clearAllReminders()
     }
     
-    console.log(`Notifications ${enabled ? 'enabled' : 'disabled'}`)
+    //console.log(`Notifications ${enabled ? 'enabled' : 'disabled'}`)
   }
 
   /**
@@ -415,7 +415,7 @@ class NotificationService {
     // Clock-out and break reminders will be scheduled when user clocks in
     // Overtime warning will be scheduled based on work hours
     
-    console.log('Default reminders initialized with preferences:', preferences)
+    //console.log('Default reminders initialized with preferences:', preferences)
   }
 }
 

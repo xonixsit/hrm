@@ -242,7 +242,7 @@ The BaseButton component now includes:
 import { monitorAnimationPerformance } from '@/utils/animations';
 
 const stopMonitoring = monitorAnimationPerformance('my-animation', (fps) => {
-  console.log(`Animation FPS: ${fps}`);
+  //console.log(`Animation FPS: ${fps}`);
   if (fps < 30) {
     console.warn('Animation performance below 30 FPS');
   }

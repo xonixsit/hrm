@@ -892,7 +892,7 @@ const handleSubmit = () => {
   const progressValue = parseInt(form.progress) || 0;
   form.progress = progressValue;
   
-  console.log('Submitting form with progress:', progressValue);
+  //console.log('Submitting form with progress:', progressValue);
   
   form.put(route('projects.update', props.project.id), {
     onSuccess: () => {
@@ -906,7 +906,7 @@ const handleSubmit = () => {
       router.visit(route('projects.show', props.project.id));
     },
     onError: (errors) => {
-      console.log('Form submission errors:', errors);
+      //console.log('Form submission errors:', errors);
       showNotification({
         type: 'error',
         title: 'Update Failed',

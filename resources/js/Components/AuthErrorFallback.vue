@@ -126,9 +126,9 @@ const errorType = computed(() => {
 onMounted(() => {
   if (isDevelopment) {
     console.group('🔧 [AUTH ERROR FALLBACK] Component mounted')
-    console.log('Error Info:', props.errorInfo)
-    console.log('Auth Error:', getAuthError())
-    console.log('Error Type:', errorType.value)
+    //console.log('Error Info:', props.errorInfo)
+    //console.log('Auth Error:', getAuthError())
+    //console.log('Error Type:', errorType.value)
     debugAuthState()
     console.groupEnd()
   }
@@ -140,7 +140,7 @@ const toggleDetails = () => {
 
 const handleRefresh = () => {
   if (isDevelopment) {
-    console.log('[AUTH ERROR FALLBACK] Refreshing page')
+    //console.log('[AUTH ERROR FALLBACK] Refreshing page')
   }
   
   emit('refresh')
@@ -149,7 +149,7 @@ const handleRefresh = () => {
 
 const handleLogout = () => {
   if (isDevelopment) {
-    console.log('[AUTH ERROR FALLBACK] Logging out user')
+    //console.log('[AUTH ERROR FALLBACK] Logging out user')
   }
   
   router.post('/logout')
@@ -162,7 +162,7 @@ const handleRetry = async () => {
   
   try {
     if (isDevelopment) {
-      console.log('[AUTH ERROR FALLBACK] Attempting retry')
+      //console.log('[AUTH ERROR FALLBACK] Attempting retry')
     }
     
     await retryWithAuthCheck(async () => {
@@ -177,7 +177,7 @@ const handleRetry = async () => {
     })
     
     if (isDevelopment) {
-      console.log('[AUTH ERROR FALLBACK] Retry successful')
+      //console.log('[AUTH ERROR FALLBACK] Retry successful')
     }
   } catch (error) {
     if (isDevelopment) {
@@ -190,7 +190,7 @@ const handleRetry = async () => {
 
 const handleContinue = () => {
   if (isDevelopment) {
-    console.log('[AUTH ERROR FALLBACK] User chose to continue despite errors')
+    //console.log('[AUTH ERROR FALLBACK] User chose to continue despite errors')
   }
   
   resetError()

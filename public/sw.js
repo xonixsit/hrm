@@ -7,7 +7,7 @@ self.addEventListener('push', event => {
 });
 
 self.addEventListener('notificationclick', event => {
-  console.log('Notification clicked:', event);
+  //console.log('Notification clicked:', event);
   event.notification.close();
   event.waitUntil(
     clients.openWindow('/attendance')

@@ -229,6 +229,13 @@
         :upcoming-birthdays="birthdayNotifications.upcomingBirthdays" 
         :stats="birthdayNotifications.stats" />
     </div>
+
+    <!-- Birthday Popup for Current User -->
+    <BirthdayPopup 
+      v-if="birthdayNotifications?.currentUserBirthday" 
+      :show="showBirthdayPopup"
+      :employee="birthdayNotifications.currentUserBirthday" 
+      @close="closeBirthdayPopup" />
   </div>
 </template>
 
@@ -236,6 +243,7 @@
 import { computed, ref, onMounted, onUnmounted } from 'vue';
 import { useAuth } from '@/composables/useAuth.js';
 import BirthdayNotifications from './BirthdayNotifications.vue';
+import BirthdayPopup from './BirthdayPopup.vue';
 
 // Import icons
 import {
@@ -290,6 +298,7 @@ const { user } = useAuth();
 // Local state
 const currentTime = ref(new Date());
 const showDebug = ref(false); // Toggle debug section
+const showBirthdayPopup = ref(false);
 const attendanceState = ref({
   clockedIn: false,
   onBreak: false,
@@ -674,13 +683,13 @@ const updateDurations = () => {
   
   // Debug logging for break sessions
   if (attendanceState.value.completedBreakSessions.length > 0) {
-    console.log('🔍 Dashboard: Break sessions debug:', {
-      completedSessions: attendanceState.value.completedBreakSessions.length,
-      currentBreak: attendanceState.value.onBreak,
-      breakStartTime: attendanceState.value.breakStartTime,
-      currentBreakDuration: attendanceState.value.breakDuration,
-      totalBreakTimeComputed: totalBreakTime.value
-    });
+    // //console.log('🔍 Dashboard: Break sessions debug:', {
+    //   completedSessions: attendanceState.value.completedBreakSessions.length,
+    //   currentBreak: attendanceState.value.onBreak,
+    //   breakStartTime: attendanceState.value.breakStartTime,
+    //   currentBreakDuration: attendanceState.value.breakDuration,
+    //   totalBreakTimeComputed: totalBreakTime.value
+    // });
   }
 };
 
@@ -693,20 +702,20 @@ const handleQuickAction = (action) => {
 
 // Manual refresh from FloatingWidget (for debugging)
 const refreshFromFloatingWidget = () => {
-  console.log('🔄 Dashboard: Manual refresh requested');
+  //console.log('🔄 Dashboard: Manual refresh requested');
   
   // First try to sync from localStorage
   const synced = syncWithFloatingWidget();
   
   // Always request fresh data from FloatingWidget
-  console.log('📡 Dashboard: Requesting fresh data from FloatingWidget...');
+  //console.log('📡 Dashboard: Requesting fresh data from FloatingWidget...');
   window.dispatchEvent(new CustomEvent('dashboard-requests-sync'));
   
   // Also try to get current status from API
   if (window.axios) {
     window.axios.get('/api/attendance/current')
       .then(response => {
-        console.log('📡 Dashboard: Received fresh data from API:', response.data);
+        //console.log('📡 Dashboard: Received fresh data from API:', response.data);
         
         // Update state with fresh API data
         attendanceState.value = {
@@ -722,12 +731,7 @@ const refreshFromFloatingWidget = () => {
         
         updateDurations();
         
-        console.log('✅ Dashboard: Updated from API:', {
-          clockedIn: attendanceState.value.clockedIn,
-          isClockedInComputed: isClockedIn.value,
-          workProgressPercentage: workProgressPercentage.value,
-          progressWidth: progressWidth.value
-        });
+      
       })
       .catch(error => {
         console.error('❌ Dashboard: Failed to fetch from API:', error);
@@ -739,7 +743,7 @@ const refreshFromFloatingWidget = () => {
 const handleKeyDown = (event) => {
   if (event.ctrlKey && event.shiftKey && event.key === 'D') {
     showDebug.value = !showDebug.value;
-    console.log('🐛 Dashboard: Debug mode', showDebug.value ? 'enabled' : 'disabled');
+    //console.log('🐛 Dashboard: Debug mode', showDebug.value ? 'enabled' : 'disabled');
   }
 };
 
@@ -755,7 +759,6 @@ const initializeAttendanceState = () => {
     totalBreakTime: props.currentAttendance?.todays_summary?.break_time || '0h 0m'
   };
   
-  console.log('🔄 Dashboard: Initialized attendance state:', attendanceState.value);
 };
 
 // Sync with FloatingWidget state from localStorage
@@ -784,7 +787,6 @@ const syncWithFloatingWidget = () => {
         
         updateDurations();
         
-        console.log('🔄 Dashboard: Synced with FloatingWidget localStorage:', attendanceState.value);
         return true;
       }
     }
@@ -796,7 +798,6 @@ const syncWithFloatingWidget = () => {
 
 // Echo/Pusher event handlers
 const handleAttendanceUpdate = (data) => {
-  console.log('📡 Dashboard: Received attendance update via Echo:', data);
   
   attendanceState.value = {
     clockedIn: data.clocked_in || false,
@@ -814,12 +815,8 @@ const handleAttendanceUpdate = (data) => {
 
 // Fallback: Listen for attendance updates from FloatingWidget (legacy support)
 const handleAttendanceStateChange = (event) => {
-  console.log('📡 Dashboard: Received attendance state change (legacy):', event.detail);
-  console.log('🔍 Dashboard: Current state before update:', {
-    clockedIn: attendanceState.value.clockedIn,
-    onBreak: attendanceState.value.onBreak,
-    clockInTime: attendanceState.value.clockInTime
-  });
+  //console.log('📡 Dashboard: Received attendance state change (legacy):', event.detail);
+  
   
   const { 
     clockedIn, 
@@ -847,7 +844,7 @@ const handleAttendanceStateChange = (event) => {
       isOngoing: false
     };
     updatedBreakSessions = [...updatedBreakSessions, completedBreak];
-    console.log('💾 Dashboard: Saved completed break session locally:', completedBreak);
+    //console.log('💾 Dashboard: Saved completed break session locally:', completedBreak);
   }
   
   attendanceState.value = {
@@ -863,18 +860,26 @@ const handleAttendanceStateChange = (event) => {
   
   updateDurations();
   
-  console.log('✅ Dashboard: Updated attendance state from FloatingWidget:', {
-    clockedIn: attendanceState.value.clockedIn,
-    onBreak: attendanceState.value.onBreak,
-    clockInTime: attendanceState.value.clockInTime,
-    workDuration: attendanceState.value.workDuration,
-    breakDuration: attendanceState.value.breakDuration,
-    completedBreaks: attendanceState.value.completedBreakSessions.length,
-    totalBreakTime: totalBreakTime,
-    isClockedInComputed: isClockedIn.value,
-    workProgressPercentage: workProgressPercentage.value,
-    progressWidth: progressWidth.value
-  });
+   
+};
+
+// Birthday popup logic
+const checkAndShowBirthdayPopup = () => {
+  
+  if (props.birthdayNotifications?.currentUserBirthday) {
+    // Show popup after a short delay to let the page load
+    setTimeout(() => {
+      console.log('🎂 EmployeeDashboard: Showing birthday popup for:', props.birthdayNotifications.currentUserBirthday.user.name);
+      showBirthdayPopup.value = true;
+    }, 1500); // Slightly longer delay for employee dashboard
+  } else {
+    console.log('🎂 EmployeeDashboard: No current user birthday found');
+  }
+};
+
+const closeBirthdayPopup = () => {
+  console.log('🎂 EmployeeDashboard: Closing birthday popup');
+  showBirthdayPopup.value = false;
 };
 
 // Initialize component
@@ -886,20 +891,12 @@ onMounted(async () => {
   // Try to sync with FloatingWidget state first
   const synced = syncWithFloatingWidget();
   if (synced) {
-    console.log('✅ Dashboard: Successfully synced with FloatingWidget');
+    //console.log('✅ Dashboard: Successfully synced with FloatingWidget');
   } else {
-    console.log('⚠️ Dashboard: No recent FloatingWidget data found');
+    //console.log('⚠️ Dashboard: No recent FloatingWidget data found');
   }
   
-  // Log initial state for debugging
-  console.log('🔍 Dashboard: Initial state after sync:', {
-    clockedIn: attendanceState.value.clockedIn,
-    onBreak: attendanceState.value.onBreak,
-    clockInTime: attendanceState.value.clockInTime,
-    isClockedInComputed: isClockedIn.value,
-    workProgressPercentage: workProgressPercentage.value,
-    progressWidth: progressWidth.value
-  });
+   
   
   // Start time update interval
   timeInterval = setInterval(() => {
@@ -919,7 +916,7 @@ onMounted(async () => {
       window.Echo.private(`attendance.${employeeId}`)
         .listen('.attendance.updated', handleAttendanceUpdate);
       
-      console.log(`📡 Dashboard: Subscribed to Echo channel attendance.${employeeId}`);
+      //console.log(`📡 Dashboard: Subscribed to Echo channel attendance.${employeeId}`);
     } catch (error) {
       console.error('Dashboard: Failed to subscribe to Echo channel:', error);
     }
@@ -933,7 +930,10 @@ onMounted(async () => {
   // Add keyboard shortcut to toggle debug mode (Ctrl+Shift+D)
   window.addEventListener('keydown', handleKeyDown);
   
-  console.log('🚀 Dashboard: Initialized with Echo and legacy event listeners (Press Ctrl+Shift+D for debug)');
+  // Check for birthday popup
+  checkAndShowBirthdayPopup();
+  
+  //console.log('🚀 Dashboard: Initialized with Echo and legacy event listeners (Press Ctrl+Shift+D for debug)');
 });
 
 onUnmounted(() => {
@@ -946,7 +946,7 @@ onUnmounted(() => {
     const employeeId = user.value.employee.id;
     try {
       window.Echo.leave(`attendance.${employeeId}`);
-      console.log('📡 Dashboard: Unsubscribed from Echo channels');
+      //console.log('📡 Dashboard: Unsubscribed from Echo channels');
     } catch (error) {
       console.warn('Dashboard: Error unsubscribing from Echo channels:', error);
     }
@@ -958,7 +958,7 @@ onUnmounted(() => {
   // Remove keyboard event listener
   window.removeEventListener('keydown', handleKeyDown);
   
-  console.log('🔄 Dashboard: Cleanup completed');
+  //console.log('🔄 Dashboard: Cleanup completed');
 });
 </script>
 

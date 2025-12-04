@@ -132,7 +132,7 @@ const errorStats = computed(() => getErrorStats.value)
 // Component lifecycle
 onMounted(() => {
   if (isDevelopment) {
-    console.log('🔧 [AUTH ERROR EXAMPLE] Component mounted')
+    //console.log('🔧 [AUTH ERROR EXAMPLE] Component mounted')
     debugAuthState()
   }
 })
@@ -142,7 +142,7 @@ const handleRetry = async () => {
   try {
     await retryWithAuthCheck(async () => {
       // Simulate retry operation
-      console.log('Retrying authentication-dependent operation...')
+      //console.log('Retrying authentication-dependent operation...')
     })
   } catch (error) {
     handleAuthError(error, {
@@ -166,7 +166,7 @@ const simulateAuthError = () => {
   try {
     // Intentionally access undefined property to trigger error
     const fakeUser = null
-    console.log(fakeUser.auth.user.name) // This will throw an error
+    //console.log(fakeUser.auth.user.name) // This will throw an error
   } catch (error) {
     handleAuthError(error, {
       component: 'AuthErrorExample',
@@ -192,7 +192,7 @@ const simulateRoleError = () => {
 const showErrorStats = () => {
   if (isDevelopment) {
     console.group('📊 Current Error Statistics')
-    console.log('Error Stats:', errorStats.value)
+    //console.log('Error Stats:', errorStats.value)
     console.groupEnd()
   }
 }

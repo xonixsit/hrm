@@ -365,7 +365,7 @@ describe('Dashboard', () => {
     it('handles refresh events correctly', async () => {
       const adminDashboard = wrapper.findComponent({ name: 'AdminDashboard' });
       
-      // Mock console.log to verify the refresh action
+      // Mock //console.log to verify the refresh action
       const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
       
       await adminDashboard.vm.$emit('refresh');

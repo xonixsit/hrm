@@ -109,16 +109,16 @@ class NavigationDebugger {
   debugNavigationState(debugInfo, detailed) {
     console.group('📊 Navigation State')
     
-    console.log('Window Size:', `${debugInfo.window.width}x${debugInfo.window.height}`)
-    console.log('Current URL:', debugInfo.location.href)
-    console.log('Active Components:', debugInfo.components.active)
-    console.log('Conflicts:', debugInfo.conflicts.hasConflicts ? '❌ YES' : '✅ NO')
-    console.log('Monitoring Enabled:', debugInfo.monitoring.totalEvents > 0 ? '✅ YES' : '❌ NO')
+    //console.log('Window Size:', `${debugInfo.window.width}x${debugInfo.window.height}`)
+    //console.log('Current URL:', debugInfo.location.href)
+    //console.log('Active Components:', debugInfo.components.active)
+    //console.log('Conflicts:', debugInfo.conflicts.hasConflicts ? '❌ YES' : '✅ NO')
+    //console.log('Monitoring Enabled:', debugInfo.monitoring.totalEvents > 0 ? '✅ YES' : '❌ NO')
     
     if (detailed) {
-      console.log('Full Window Info:', debugInfo.window)
-      console.log('Full Location Info:', debugInfo.location)
-      console.log('DOM Analysis:', debugInfo.dom)
+      //console.log('Full Window Info:', debugInfo.window)
+      //console.log('Full Location Info:', debugInfo.location)
+      //console.log('DOM Analysis:', debugInfo.dom)
     }
     
     console.groupEnd()
@@ -137,20 +137,20 @@ class NavigationDebugger {
       conflicts.conflicts.forEach((conflict, index) => {
         console.error(`${index + 1}. ${conflict.type}: ${conflict.message}`)
         if (detailed) {
-          console.log('Conflict Details:', conflict)
+          //console.log('Conflict Details:', conflict)
         }
       })
     } else {
-      console.log('✅ No conflicts detected')
+      //console.log('✅ No conflicts detected')
     }
     
-    console.log('Active Components:', conflicts.activeComponents.length)
+    //console.log('Active Components:', conflicts.activeComponents.length)
     conflicts.activeComponents.forEach(component => {
-      console.log(`- ${component.type}: ${component.id}`)
+      //console.log(`- ${component.type}: ${component.id}`)
     })
     
     if (detailed) {
-      console.log('Full Conflict Status:', conflicts)
+      //console.log('Full Conflict Status:', conflicts)
     }
     
     console.groupEnd()
@@ -164,10 +164,10 @@ class NavigationDebugger {
     
     const components = debugInfo.components
     
-    console.log('Active Components:', components.active.length)
-    console.log('Desktop Components:', components.desktop.length)
-    console.log('Mobile Components:', components.mobile.length)
-    console.log('Fallback Components:', components.fallback.length)
+    //console.log('Active Components:', components.active.length)
+    //console.log('Desktop Components:', components.desktop.length)
+    //console.log('Mobile Components:', components.mobile.length)
+    //console.log('Fallback Components:', components.fallback.length)
     
     if (components.duplicates.length > 0) {
       console.warn('⚠️ Duplicate Components Found:')
@@ -177,11 +177,11 @@ class NavigationDebugger {
     }
     
     if (detailed) {
-      console.log('Component Details:')
-      console.log('- Active:', components.active)
-      console.log('- Desktop:', components.desktop)
-      console.log('- Mobile:', components.mobile)
-      console.log('- Fallback:', components.fallback)
+      //console.log('Component Details:')
+      //console.log('- Active:', components.active)
+      //console.log('- Desktop:', components.desktop)
+      //console.log('- Mobile:', components.mobile)
+      //console.log('- Fallback:', components.fallback)
     }
     
     console.groupEnd()
@@ -195,10 +195,10 @@ class NavigationDebugger {
     
     const breakpoints = debugInfo.breakpoints
     
-    console.log('Current Width:', breakpoints.currentWidth)
-    console.log('Expected Type:', breakpoints.expectedType)
-    console.log('Actual Type:', breakpoints.actualType)
-    console.log('Match:', breakpoints.matches ? '✅ YES' : '❌ NO')
+    //console.log('Current Width:', breakpoints.currentWidth)
+    //console.log('Expected Type:', breakpoints.expectedType)
+    //console.log('Actual Type:', breakpoints.actualType)
+    //console.log('Match:', breakpoints.matches ? '✅ YES' : '❌ NO')
     
     if (!breakpoints.matches) {
       console.warn('⚠️ Breakpoint mismatch detected!')
@@ -206,7 +206,7 @@ class NavigationDebugger {
     }
     
     if (detailed) {
-      console.log('Breakpoint Details:', breakpoints)
+      //console.log('Breakpoint Details:', breakpoints)
     }
     
     console.groupEnd()
@@ -220,10 +220,10 @@ class NavigationDebugger {
     
     const performance = debugInfo.performance
     
-    console.log('Average Load Time:', `${performance.averageLoadTime.toFixed(2)}ms`)
-    console.log('Total Events:', performance.totalEvents)
-    console.log('Error Rate:', `${performance.errorRate}%`)
-    console.log('Events/Minute:', performance.eventsPerMinute)
+    //console.log('Average Load Time:', `${performance.averageLoadTime.toFixed(2)}ms`)
+    //console.log('Total Events:', performance.totalEvents)
+    //console.log('Error Rate:', `${performance.errorRate}%`)
+    //console.log('Events/Minute:', performance.eventsPerMinute)
     
     if (performance.slowComponents.length > 0) {
       console.warn('⚠️ Slow Components:')
@@ -233,7 +233,7 @@ class NavigationDebugger {
     }
     
     if (detailed) {
-      console.log('Performance Details:', performance)
+      //console.log('Performance Details:', performance)
     }
     
     console.groupEnd()
@@ -247,9 +247,9 @@ class NavigationDebugger {
     
     const errors = debugInfo.errors
     
-    console.log('Total Errors:', errors.totalErrors)
-    console.log('Recent Errors:', errors.recentErrors.length)
-    console.log('Error Types:', Object.keys(errors.errorsByType).join(', '))
+    //console.log('Total Errors:', errors.totalErrors)
+    //console.log('Recent Errors:', errors.recentErrors.length)
+    //console.log('Error Types:', Object.keys(errors.errorsByType).join(', '))
     
     if (errors.recentErrors.length > 0) {
       console.warn('Recent Errors:')
@@ -259,7 +259,7 @@ class NavigationDebugger {
     }
     
     if (detailed) {
-      console.log('Error Details:', errors)
+      //console.log('Error Details:', errors)
     }
     
     console.groupEnd()
@@ -271,8 +271,8 @@ class NavigationDebugger {
   debugDetailed(debugInfo) {
     console.group('🔍 Detailed Analysis')
     
-    console.log('Full Debug Info:', debugInfo)
-    console.log('Debug History:', this.debugHistory.slice(0, 10))
+    //console.log('Full Debug Info:', debugInfo)
+    //console.log('Debug History:', this.debugHistory.slice(0, 10))
     
     // Check for common issues
     this.checkCommonIssues(debugInfo)
@@ -319,7 +319,7 @@ class NavigationDebugger {
         console.warn(`${index + 1}. ${issue}`)
       })
     } else {
-      console.log('✅ No common issues detected')
+      //console.log('✅ No common issues detected')
     }
     
     console.groupEnd()
@@ -494,12 +494,12 @@ class NavigationDebugger {
       conflicts: conflictDetector
     }
     
-    console.log('🧭 Navigation Debug Tools Available:')
-    console.log('- debugNavigation() - Full debug report')
-    console.log('- debugNavigationConflicts() - Conflict analysis')
-    console.log('- debugNavigationPerformance() - Performance analysis')
-    console.log('- debugNavigationComponents() - Component analysis')
-    console.log('- navDebug.* - Debug shortcuts object')
+    //console.log('🧭 Navigation Debug Tools Available:')
+    //console.log('- debugNavigation() - Full debug report')
+    //console.log('- debugNavigationConflicts() - Conflict analysis')
+    //console.log('- debugNavigationPerformance() - Performance analysis')
+    //console.log('- debugNavigationComponents() - Component analysis')
+    //console.log('- navDebug.* - Debug shortcuts object')
   }
   
   /**
@@ -515,13 +515,13 @@ class NavigationDebugger {
       conflictData: conflictDetector.getStatus()
     }
     
-    console.log('📤 Debug Data Export:', exportData)
+    //console.log('📤 Debug Data Export:', exportData)
     
     // Copy to clipboard if available
     if (navigator.clipboard) {
       navigator.clipboard.writeText(JSON.stringify(exportData, null, 2))
-        .then(() => console.log('✅ Debug data copied to clipboard'))
-        .catch(() => console.log('❌ Failed to copy to clipboard'))
+        .then(() => //console.log('✅ Debug data copied to clipboard'))
+        .catch(() => //console.log('❌ Failed to copy to clipboard'))
     }
     
     return exportData
@@ -535,7 +535,7 @@ class NavigationDebugger {
     navigationMonitor.reset()
     conflictDetector.reset()
     
-    console.log('🔄 Debug data reset')
+    //console.log('🔄 Debug data reset')
     this.addToHistory('debug_reset', { timestamp: Date.now() })
   }
   

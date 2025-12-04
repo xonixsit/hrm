@@ -29,6 +29,14 @@ class WorkReport extends Model
         'date' => 'date',
     ];
 
+    /**
+     * Get the date formatted for frontend to avoid timezone issues
+     */
+    public function getDateFormattedAttribute()
+    {
+        return $this->date ? $this->date->format('Y-m-d') : null;
+    }
+
     public function employee()
     {
         return $this->belongsTo(Employee::class);

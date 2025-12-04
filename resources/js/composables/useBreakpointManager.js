@@ -74,7 +74,7 @@ export function useBreakpointManager() {
     
     // Log dimension changes in development
     if (process.env.NODE_ENV === 'development') {
-      console.log(`[BreakpointManager] Dimensions updated: ${newWidth}x${newHeight} (${newOrientation})`);
+      //console.log(`[BreakpointManager] Dimensions updated: ${newWidth}x${newHeight} (${newOrientation})`);
     }
   };
   
@@ -115,7 +115,7 @@ export function useBreakpointManager() {
     }
     
     if (process.env.NODE_ENV === 'development') {
-      console.log('[BreakpointManager] State preserved:', currentState);
+      //console.log('[BreakpointManager] State preserved:', currentState);
     }
     
     return currentState;
@@ -131,7 +131,7 @@ export function useBreakpointManager() {
       }
       
       if (process.env.NODE_ENV === 'development') {
-        console.log('[BreakpointManager] State restored:', preservedState.value);
+        //console.log('[BreakpointManager] State restored:', preservedState.value);
       }
       
       return preservedState.value;
@@ -160,7 +160,7 @@ export function useBreakpointManager() {
       
       // Log transition start
       if (process.env.NODE_ENV === 'development') {
-        console.log(`[BreakpointManager] Starting transition: ${fromMode} → ${toMode}`);
+        //console.log(`[BreakpointManager] Starting transition: ${fromMode} → ${toMode}`);
       }
       
       // Wait for next tick to ensure DOM updates
@@ -173,7 +173,7 @@ export function useBreakpointManager() {
       restorePreservedState();
       
       if (process.env.NODE_ENV === 'development') {
-        console.log(`[BreakpointManager] Transition completed: ${fromMode} → ${toMode}`);
+        //console.log(`[BreakpointManager] Transition completed: ${fromMode} → ${toMode}`);
       }
       
       return preservedData;
@@ -188,7 +188,7 @@ export function useBreakpointManager() {
   // Edge case handlers
   const handleDeviceRotation = () => {
     if (process.env.NODE_ENV === 'development') {
-      console.log('[BreakpointManager] Device rotation detected');
+      //console.log('[BreakpointManager] Device rotation detected');
     }
     
     // Preserve state during rotation
@@ -203,7 +203,7 @@ export function useBreakpointManager() {
   
   const handleBrowserZoom = () => {
     if (process.env.NODE_ENV === 'development') {
-      console.log('[BreakpointManager] Browser zoom detected');
+      //console.log('[BreakpointManager] Browser zoom detected');
     }
     
     // Handle zoom-induced breakpoint changes
@@ -263,10 +263,10 @@ export function useBreakpointManager() {
   const debugBreakpointManager = () => {
     if (process.env.NODE_ENV === 'development') {
       console.group('📏 BreakpointManager Debug Info');
-      console.log('Breakpoint info:', getBreakpointInfo());
-      console.log('Preserved state:', preservedState.value);
-      console.log('State history:', stateHistory.value);
-      console.log('Conflict check:', detectBreakpointConflicts());
+      //console.log('Breakpoint info:', getBreakpointInfo());
+      //console.log('Preserved state:', preservedState.value);
+      //console.log('State history:', stateHistory.value);
+      //console.log('Conflict check:', detectBreakpointConflicts());
       console.groupEnd();
     }
   };
@@ -322,7 +322,7 @@ export function useBreakpointManager() {
     
     // Log initialization
     if (process.env.NODE_ENV === 'development') {
-      console.log('[BreakpointManager] Initialized with mode:', navigationMode.value);
+      //console.log('[BreakpointManager] Initialized with mode:', navigationMode.value);
     }
   });
   

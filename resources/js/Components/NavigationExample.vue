@@ -206,7 +206,7 @@ const testAuthenticationError = async () => {
   try {
     await navigateTo('/admin/secret-page', { requiresAuth: true })
   } catch (error) {
-    console.log('Authentication error test triggered:', error)
+    //console.log('Authentication error test triggered:', error)
   }
 }
 
@@ -215,7 +215,7 @@ const testPermissionError = async () => {
   try {
     await navigateTo('/employees', { strictMode: true })
   } catch (error) {
-    console.log('Permission error test triggered:', error)
+    //console.log('Permission error test triggered:', error)
   }
 }
 
@@ -227,7 +227,7 @@ const testNetworkError = async () => {
   try {
     await navigateTo('/test-network-error')
   } catch (error) {
-    console.log('Network error test triggered:', error)
+    //console.log('Network error test triggered:', error)
   } finally {
     window.fetch = originalFetch
   }
@@ -239,7 +239,7 @@ const testRateLimitError = async () => {
     try {
       await navigateTo(`/test-rate-limit-${i}`)
     } catch (error) {
-      console.log(`Rate limit test ${i} triggered:`, error)
+      //console.log(`Rate limit test ${i} triggered:`, error)
     }
   }
 }
@@ -277,8 +277,8 @@ const getIcon = (iconName) => {
 }
 
 onMounted(() => {
-  console.log('Navigation Example component mounted')
-  console.log('Available navigation:', availableNavigation.value)
-  console.log('Guard stats:', guardStats.value)
+  //console.log('Navigation Example component mounted')
+  //console.log('Available navigation:', availableNavigation.value)
+  //console.log('Guard stats:', guardStats.value)
 })
 </script>

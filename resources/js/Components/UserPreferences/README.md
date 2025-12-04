@@ -217,7 +217,7 @@ The system is designed to support server-side synchronization in the future with
 ```javascript
 // Get current preferences
 const { preferences } = useUserPreferences();
-console.log(preferences.value.fontSize); // 'normal'
+//console.log(preferences.value.fontSize); // 'normal'
 
 // Change font size
 setPreference('fontSize', 'large');

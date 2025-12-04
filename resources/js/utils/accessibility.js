@@ -500,7 +500,7 @@ export const AccessibilityTesting = {
   // Log accessibility issues to console
   logAccessibilityIssues(issues) {
     if (issues.length === 0) {
-      console.log('✅ No basic accessibility issues found');
+      //console.log('✅ No basic accessibility issues found');
     } else {
       console.warn('⚠️ Accessibility issues found:');
       issues.forEach(issue => console.warn(`  - ${issue}`));
@@ -548,7 +548,7 @@ export function initializeAccessibility() {
   // Initialize ARIA live regions
   ariaLiveManager.init();
 
-  console.log('🔧 Accessibility features initialized');
+  //console.log('🔧 Accessibility features initialized');
 }
 
 // Auto-initialize when DOM is ready

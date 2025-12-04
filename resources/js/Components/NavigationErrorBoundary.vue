@@ -129,8 +129,8 @@ const handleError = (error, errorInfo = null) => {
         
         console.group('🚨 Navigation Error Boundary')
         console.error('Error:', error)
-        console.log('Error Info:', errorInfo)
-        console.log('Current URL:', window.location.href)
+        //console.log('Error Info:', errorInfo)
+        //console.log('Current URL:', window.location.href)
         debugAuthState()
         console.groupEnd()
       }

@@ -100,6 +100,12 @@ class WorkReportController extends Controller
         
         $workReports = $query->orderBy('date', 'desc')->paginate($perPage);
         
+        // Transform dates to avoid timezone issues
+        $workReports->getCollection()->transform(function ($report) {
+            $report->date_formatted = $report->date->format('Y-m-d');
+            return $report;
+        });
+        
         // Get employees for filter dropdown (only for admins/managers/HR)
         $employees = [];
         if ($user->hasRole('Admin') || $user->hasRole('Manager') || $user->hasRole('HR')) {

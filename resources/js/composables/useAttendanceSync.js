@@ -106,7 +106,7 @@ const saveStateToStorage = () => {
       lastUpdate: new Date().toISOString()
     }
     localStorage.setItem('shared-attendance-state', JSON.stringify(state))
-    console.log('💾 Saved shared attendance state:', state)
+    //console.log('💾 Saved shared attendance state:', state)
   } catch (error) {
     console.warn('Failed to save shared attendance state:', error)
   }
@@ -130,7 +130,7 @@ const loadStateFromStorage = () => {
         sharedAttendanceState.totalBreakMinutes.value = state.totalBreakMinutes || 0
         sharedAttendanceState.breakSessions.value = state.breakSessions || []
         
-        console.log('📥 Loaded shared attendance state from storage:', state)
+        //console.log('📥 Loaded shared attendance state from storage:', state)
         return true
       }
     }
@@ -143,7 +143,7 @@ const loadStateFromStorage = () => {
 // API functions
 const fetchCurrentStatus = async () => {
   try {
-    console.log('🔄 Fetching current attendance status...')
+    //console.log('🔄 Fetching current attendance status...')
     
     const response = await fetch('/api/attendance/current', {
       method: 'GET',
@@ -155,7 +155,7 @@ const fetchCurrentStatus = async () => {
     
     if (response.ok) {
       const data = await response.json()
-      console.log('✅ Current status from API:', data)
+      //console.log('✅ Current status from API:', data)
       
       // Update shared state with API data
       sharedAttendanceState.clockedIn.value = data.clocked_in || false
@@ -293,7 +293,7 @@ const broadcastStateChange = () => {
     }
   })
   window.dispatchEvent(event)
-  console.log('📡 Broadcasted attendance state change')
+  //console.log('📡 Broadcasted attendance state change')
 }
 
 // Watch for state changes and save to storage

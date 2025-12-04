@@ -131,23 +131,17 @@
 </template>
 
 <script setup>
-console.log('🎯 ClockInOutWidget script is loading...')
+//console.log('🎯 ClockInOutWidget script is loading...')
 
-import { computed, ref, onMounted, onUnmounted, watch, nextTick } from 'vue'
+import { computed, ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { useAuth } from '@/composables/useAuth.js'
 import { 
   ClockIcon, 
   PlayIcon, 
   PauseIcon, 
-  MapPinIcon,
   CheckCircleIcon,
   XCircleIcon,
-  ChartBarIcon,
-  BellIcon,
-  CogIcon,
-  WifiIcon,
-  ExclamationTriangleIcon,
-  TrophyIcon
+  CogIcon
 } from '@heroicons/vue/24/outline'
 
 const props = defineProps({
@@ -242,7 +236,7 @@ const props = defineProps({
 const emit = defineEmits(['clock-in-out', 'take-break', 'verify-location', 'settings-change'])
 
 // Composables
-const { user } = useAuth()
+const { } = useAuth()
 
 // Local attendance state (using own state management)
 const attendance = {
@@ -285,44 +279,7 @@ const realTimeWorkDuration = ref('0h 0m 0s')
 const realTimeBreakDuration = ref('0h 0m 0s')
 const breakStartTime = ref(null)
 
-// Break time computed property - FIXED to use backend data
-const breakTimeDisplay = computed(() => {
-  // If currently on break, show current break session duration
-  if (attendance.onBreak.value && breakStartTime.value) {
-    const breakStart = new Date(breakStartTime.value)
-    const now = new Date()
-    const breakMs = now - breakStart
-    
-    // Convert to hours, minutes, and seconds
-    const breakMinutes = Math.floor(breakMs / (1000 * 60))
-    const hours = Math.floor(breakMinutes / 60)
-    const minutes = breakMinutes % 60
-    const seconds = Math.floor((breakMs % (1000 * 60)) / 1000)
-    
-    return `${hours}h ${minutes}m ${seconds}s`
-  }
-  
-  // Get break time directly from API data stored in component
-  // We know the API returns break_time: "1h 23m"
-  const apiBreakTime = attendance.todaysSummary.value?.breakTime
-  
-  console.log('🔍 Current break time from API:', apiBreakTime)
-  console.log('🔍 Full summary object:', attendance.todaysSummary.value)
-  
-  if (apiBreakTime && apiBreakTime !== '0h 0m') {
-    // Parse and add seconds for consistency
-    const breakTimeMatch = apiBreakTime.match(/(\d+)h\s*(\d+)m/)
-    if (breakTimeMatch) {
-      const hours = parseInt(breakTimeMatch[1])
-      const minutes = parseInt(breakTimeMatch[2])
-      console.log('✅ Showing accumulated break time:', `${hours}h ${minutes}m 0s`)
-      return `${hours}h ${minutes}m 0s`
-    }
-  }
-  
-  console.log('⚠️ No accumulated break time found, showing 0')
-  return '0h 0m 0s'
-})
+
 
 // Break time calculation (same as floating widget)
 const breakTimeFromFloatingWidget = computed(() => {
@@ -367,14 +324,13 @@ const syncWithFloatingWidget = () => {
     const floatingBreakTime = floatingWidget.querySelector('.stat:last-child .stat-value')
     if (floatingBreakTime) {
       const breakValue = floatingBreakTime.textContent.trim()
-      console.log('🔄 Syncing break time from floating widget:', breakValue)
+      //console.log('🔄 Syncing break time from floating widget:', breakValue)
       
       // Update the main widget break time element directly
       const mainBreakTime = document.querySelector('.time-display-section .time-metric:nth-child(2) .time-value')
       if (mainBreakTime) {
         const breakWithSeconds = breakValue.includes('s') ? breakValue : breakValue + ' 0s'
         mainBreakTime.textContent = breakWithSeconds
-        console.log('✅ Main widget break time synced to:', breakWithSeconds)
       }
     }
   }
@@ -386,15 +342,6 @@ const statusText = computed(() => {
   if (attendance.clockedIn.value) return 'Clocked In'
   return 'Clocked Out'
 })
-
-const statusIndicatorClasses = computed(() => [
-  'flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium',
-  {
-    'bg-green-100 text-green-800': attendance.clockedIn.value && !attendance.onBreak.value,
-    'bg-yellow-100 text-yellow-800': attendance.onBreak.value,
-    'bg-neutral-100 text-neutral-600': !attendance.clockedIn.value
-  }
-])
 
 const clockButtonText = computed(() => {
   if (attendance.loading.value) return 'Processing...'
@@ -414,56 +361,6 @@ const primaryActionClasses = computed(() => [
   'primary-action',
   attendance.clockedIn.value ? 'primary-action--danger' : 'primary-action--success'
 ])
-
-const breakButtonClasses = computed(() => [
-  'flex items-center space-x-2 px-4 py-2 text-sm font-medium rounded-lg border transition-colors cursor-pointer',
-  attendance.onBreak.value
-    ? 'border-yellow-300 bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
-    : 'border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50'
-])
-
-const connectionStatusClasses = computed(() => [
-  attendance.isConnected.value ? 'text-green-500' : 'text-red-500'
-])
-
-const connectionStatusText = computed(() => {
-  switch (attendance.connectionStatus.value) {
-    case 'connected':
-      return 'Connected'
-    case 'disconnected':
-      return 'Disconnected'
-    case 'error':
-      return 'Connection Error'
-    default:
-      return 'Unknown'
-  }
-})
-
-const progressBarClasses = computed(() => {
-  const percentage = attendance.workProgress.value.percentage
-  if (percentage >= 100) return 'bg-green-500'
-  if (percentage >= 75) return 'bg-teal-500'
-  if (percentage >= 50) return 'bg-yellow-500'
-  return 'bg-neutral-400'
-})
-
-// Real-time computed properties for consistent time display
-const realTimeTotalHours = computed(() => {
-  if (!attendance.clockedIn.value || !attendance.clockInTime.value) {
-    return '0h 0m'
-  }
-  
-  const clockInTime = new Date(attendance.clockInTime.value)
-  const now = new Date()
-  const totalMs = now - clockInTime
-  
-  // Convert to hours and minutes
-  const totalMinutes = Math.floor(totalMs / (1000 * 60))
-  const hours = Math.floor(totalMinutes / 60)
-  const minutes = totalMinutes % 60
-  
-  return `${hours}h ${minutes}m`
-})
 
 const workEfficiency = computed(() => {
   if (!attendance.clockedIn.value || !attendance.clockInTime.value) {
@@ -514,13 +411,7 @@ const updateTime = () => {
 }
 
 const updateWorkDuration = () => {
-  console.log('updateWorkDuration called', {
-    clockedIn: attendance.clockedIn.value,
-    onBreak: attendance.onBreak.value,
-    clockInTime: attendance.clockInTime.value,
-    breakStartTime: breakStartTime.value
-  })
-  
+   
   if (attendance.clockedIn.value && attendance.clockInTime.value) {
     const clockInTime = new Date(attendance.clockInTime.value)
     const now = new Date()
@@ -531,7 +422,7 @@ const updateWorkDuration = () => {
     const seconds = Math.floor((diffMs % (1000 * 60)) / 1000)
     
     realTimeWorkDuration.value = `${hours}h ${minutes}m ${seconds}s`
-    console.log('Work duration updated to:', realTimeWorkDuration.value)
+    //console.log('Work duration updated to:', realTimeWorkDuration.value)
   } else {
     realTimeWorkDuration.value = '0h 0m 0s'
   }
@@ -543,30 +434,30 @@ const updateWorkDuration = () => {
     const now = new Date()
     const diffMs = now - breakStart
     
-    console.log('Current break duration calculation:', {
-      onBreak: attendance.onBreak.value,
-      breakStartTime: breakStartTime.value,
-      breakStart: breakStart.toISOString(),
-      now: now.toISOString(),
-      diffMs: diffMs
-    })
+    // //console.log('Current break duration calculation:', {
+    //   onBreak: attendance.onBreak.value,
+    //   breakStartTime: breakStartTime.value,
+    //   breakStart: breakStart.toISOString(),
+    //   now: now.toISOString(),
+    //   diffMs: diffMs
+    // })
     
     const hours = Math.floor(diffMs / (1000 * 60 * 60))
     const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60))
     const seconds = Math.floor((diffMs % (1000 * 60)) / 1000)
     
     realTimeBreakDuration.value = `${hours}h ${minutes}m ${seconds}s`
-    console.log('Current break duration updated to:', realTimeBreakDuration.value)
+    //console.log('Current break duration updated to:', realTimeBreakDuration.value)
   } else {
     // Show total break time from today's summary (accumulated breaks)
     const todaysBreakTime = attendance.todaysSummary.value?.breakTime || '0h 0m'
     
-    console.log('🔍 Getting break time from summary:', {
-      todaysBreakTime,
-      fullSummary: attendance.todaysSummary.value,
-      onBreak: attendance.onBreak.value,
-      breakStartTime: breakStartTime.value
-    })
+    // //console.log('🔍 Getting break time from summary:', {
+    //   todaysBreakTime,
+    //   fullSummary: attendance.todaysSummary.value,
+    //   onBreak: attendance.onBreak.value,
+    //   breakStartTime: breakStartTime.value
+    // })
     
     // Parse the break time string (e.g., "1h 30m") and add seconds for consistency
     const breakTimeMatch = todaysBreakTime.match(/(\d+)h\s*(\d+)m/)
@@ -574,14 +465,14 @@ const updateWorkDuration = () => {
       const hours = parseInt(breakTimeMatch[1])
       const minutes = parseInt(breakTimeMatch[2])
       realTimeBreakDuration.value = `${hours}h ${minutes}m 0s`
-      console.log('✅ Parsed break time successfully:', realTimeBreakDuration.value)
+      //console.log('✅ Parsed break time successfully:', realTimeBreakDuration.value)
     } else {
       // If no break time in summary, show 0 but make it visible
       realTimeBreakDuration.value = '0h 0m 0s'
-      console.log('⚠️ No break time found or failed to parse, showing 0:', todaysBreakTime)
+      //console.log('⚠️ No break time found or failed to parse, showing 0:', todaysBreakTime)
     }
     
-    console.log('📊 Final break duration set to:', realTimeBreakDuration.value, 'from source:', todaysBreakTime)
+    //console.log('📊 Final break duration set to:', realTimeBreakDuration.value, 'from source:', todaysBreakTime)
   }
 }
 
@@ -590,14 +481,14 @@ const handleClockInOut = async () => {
     attendance.loading.value = true
     
     if (attendance.clockedIn.value) {
-      console.log('Clocking out...')
+      //console.log('Clocking out...')
       
       // Make API call to clock out using Axios (handles CSRF automatically)
       const response = await window.axios.post('/api/attendance/clock-out', {
         timestamp: new Date().toISOString()
       })
       
-      console.log('Clock out successful:', response.data)
+      //console.log('Clock out successful:', response.data)
       const data = response.data
       
       // Update local state
@@ -626,15 +517,15 @@ const handleClockInOut = async () => {
         }
       }))
     } else {
-      console.log('Clocking in...')
+      //console.log('Clocking in...')
       
       // Make API call to clock in using Axios (handles CSRF automatically)
       const response = await window.axios.post('/api/attendance/clock-in', {
         timestamp: new Date().toISOString()
       })
       
-      console.log('Clock in response status:', response.status, response.statusText)
-      console.log('Clock in successful:', response.data)
+      //console.log('Clock in response status:', response.status, response.statusText)
+      //console.log('Clock in successful:', response.data)
       
       const data = response.data
       
@@ -643,7 +534,7 @@ const handleClockInOut = async () => {
       attendance.onBreak.value = false
       attendance.clockInTime.value = data.clock_in_time || new Date().toISOString()
       
-      console.log('After clock in - clockedIn:', attendance.clockedIn.value, 'clockInTime:', attendance.clockInTime.value)
+      //console.log('After clock in - clockedIn:', attendance.clockedIn.value, 'clockInTime:', attendance.clockInTime.value)
       
       // Force UI update by triggering reactivity
       await nextTick()
@@ -682,57 +573,57 @@ const handleBreak = async () => {
     attendance.loading.value = true
     
     if (attendance.onBreak.value) {
-      console.log('Ending break...')
+      //console.log('Ending break...')
       
       // Make API call to end break using Axios (handles CSRF automatically)
       const response = await window.axios.post('/api/attendance/break-end', {
         timestamp: new Date().toISOString()
       })
       
-      console.log('Break end successful:', response.data)
+      //console.log('Break end successful:', response.data)
       
       // Update local state
       attendance.onBreak.value = false
       breakStartTime.value = null
       
       // Update today's summary with the new break time from the response
-      console.log('🔍 Break end response data:', response.data)
+      //console.log('🔍 Break end response data:', response.data)
       
       if (response.data.attendance) {
         const newBreakTime = response.data.attendance.break_duration
-        console.log('📊 Updating break time from API response:', newBreakTime)
+        //console.log('📊 Updating break time from API response:', newBreakTime)
         attendance.todaysSummary.value.breakTime = newBreakTime || attendance.todaysSummary.value.breakTime
       }
       
       // Also check if break_duration is directly in response.data
       if (response.data.break_duration) {
-        console.log('📊 Found break_duration directly in response:', response.data.break_duration)
+        //console.log('📊 Found break_duration directly in response:', response.data.break_duration)
         attendance.todaysSummary.value.breakTime = response.data.break_duration
       }
       
       // Fetch fresh data from API to ensure we have the latest break time
-      console.log('🔄 Fetching fresh status after break end...')
+      //console.log('🔄 Fetching fresh status after break end...')
       const freshData = await fetchCurrentStatus()
       
       // Double-check that break time was updated
       if (freshData && freshData.todays_summary && freshData.todays_summary.break_time) {
-        console.log('✅ Fresh break time from API:', freshData.todays_summary.break_time)
+        //console.log('✅ Fresh break time from API:', freshData.todays_summary.break_time)
         attendance.todaysSummary.value.breakTime = freshData.todays_summary.break_time
       }
       
       // Let updateWorkDuration calculate the accumulated break time
       updateWorkDuration()
       
-      console.log('🎯 Break end complete - final break time:', attendance.todaysSummary.value.breakTime)
+      //console.log('🎯 Break end complete - final break time:', attendance.todaysSummary.value.breakTime)
     } else {
-      console.log('Starting break...')
+      //console.log('Starting break...')
       
       // Make API call to start break using Axios (handles CSRF automatically)
       const response = await window.axios.post('/api/attendance/break-start', {
         timestamp: new Date().toISOString()
       })
       
-      console.log('Break start successful:', response.data)
+      //console.log('Break start successful:', response.data)
       const data = response.data
       
       // Update local state
@@ -776,41 +667,7 @@ const verifyLocation = async () => {
   }
 }
 
-const getActivityIcon = (type) => {
-  const iconMap = {
-    'clock-in': PlayIcon,
-    'clock-out': PauseIcon,
-    'break-start': PauseIcon,
-    'break-end': PlayIcon,
-    'location-verified': CheckCircleIcon,
-    'location-failed': XCircleIcon
-  }
-  return iconMap[type] || ClockIcon
-}
 
-const formatTime = (timeString) => {
-  const time = new Date(timeString)
-  return time.toLocaleTimeString('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true
-  })
-}
-
-const formatRelativeTime = (dateString) => {
-  const now = new Date()
-  const date = new Date(dateString)
-  const diffInMinutes = Math.floor((now - date) / (1000 * 60))
-  
-  if (diffInMinutes < 1) return 'just now'
-  if (diffInMinutes < 60) return `${diffInMinutes}m ago`
-  
-  const diffInHours = Math.floor(diffInMinutes / 60)
-  if (diffInHours < 24) return `${diffInHours}h ago`
-  
-  const diffInDays = Math.floor(diffInHours / 24)
-  return `${diffInDays}d ago`
-}
 
 // Settings methods
 const updateDailyGoal = (value) => {
@@ -839,20 +696,11 @@ const toggleNotifications = (enabled) => {
   emit('settings-change', { notificationsEnabled: enabled })
 }
 
-// Notification panel
-const unreadNotifications = ref(0)
-const showNotificationPanel = ref(false)
 
-const toggleNotificationPanel = () => {
-  showNotificationPanel.value = !showNotificationPanel.value
-  if (showNotificationPanel.value) {
-    unreadNotifications.value = 0
-  }
-}
 
 // Initialize attendance state with current data
 const initializeAttendanceState = () => {
-  console.log('🔄 Initializing attendance state with:', props.currentAttendance)
+  //console.log('🔄 Initializing attendance state with:', props.currentAttendance)
   
   // Set the attendance state from the current attendance data
   if (props.currentAttendance) {
@@ -860,11 +708,11 @@ const initializeAttendanceState = () => {
     const onBreak = props.currentAttendance.on_break || false
     const clockInTime = props.currentAttendance.clock_in_time || null
     
-    console.log('📊 Setting attendance state:', {
-      clockedIn,
-      onBreak,
-      clockInTime
-    })
+    // //console.log('📊 Setting attendance state:', {
+    //   clockedIn,
+    //   onBreak,
+    //   clockInTime
+    // })
     
     attendance.clockedIn.value = clockedIn
     attendance.onBreak.value = onBreak
@@ -892,18 +740,18 @@ const initializeAttendanceState = () => {
       attendance.averageDaily.value = props.currentAttendance.stats.average_daily || '0h 0m'
     }
     
-    console.log('Attendance state initialized:', {
-      clockedIn: attendance.clockedIn.value,
-      onBreak: attendance.onBreak.value,
-      clockInTime: attendance.clockInTime.value
-    })
+    // //console.log('Attendance state initialized:', {
+    //   clockedIn: attendance.clockedIn.value,
+    //   onBreak: attendance.onBreak.value,
+    //   clockInTime: attendance.clockInTime.value
+    // })
   }
 }
 
 // Fetch current attendance status from API
 const fetchCurrentStatus = async () => {
   try {
-    console.log('🔄 Fetching current attendance status from API...')
+    //console.log('🔄 Fetching current attendance status from API...')
     
     const response = await fetch('/api/attendance/current', {
       method: 'GET',
@@ -915,7 +763,7 @@ const fetchCurrentStatus = async () => {
     
     if (response.ok) {
       const data = await response.json()
-      console.log('✅ Current status from API:', data)
+      //console.log('✅ Current status from API:', data)
       
       // Update attendance state with API data
       attendance.clockedIn.value = data.clocked_in || false
@@ -931,15 +779,15 @@ const fetchCurrentStatus = async () => {
           sessions: data.todays_summary.sessions || 0,
           clockIns: data.todays_summary.clock_ins || 0
         }
-        console.log('📊 Updated today\'s summary from API:', attendance.todaysSummary.value)
+        //console.log('📊 Updated today\'s summary from API:', attendance.todaysSummary.value)
       }
       
-      console.log('📊 Updated attendance state from API:', {
-        clockedIn: attendance.clockedIn.value,
-        onBreak: attendance.onBreak.value,
-        clockInTime: attendance.clockInTime.value,
-        breakTime: attendance.todaysSummary.value.breakTime
-      })
+      // //console.log('📊 Updated attendance state from API:', {
+      //   clockedIn: attendance.clockedIn.value,
+      //   onBreak: attendance.onBreak.value,
+      //   clockInTime: attendance.clockInTime.value,
+      //   breakTime: attendance.todaysSummary.value.breakTime
+      // })
       
       // Update work duration if clocked in
       if (attendance.clockedIn.value && attendance.clockInTime.value) {
@@ -991,7 +839,7 @@ const updateBreakTimeDisplay = () => {
 
 // Listen for floating widget state changes
 const handleFloatingWidgetStateChange = (event) => {
-  console.log('🔄 Main widget received state change from floating widget:', event.detail)
+  //console.log('🔄 Main widget received state change from floating widget:', event.detail)
   
   const { clockedIn, onBreak, clockInTime, breakStartTime: floatingBreakStartTime } = event.detail
   
@@ -1007,12 +855,12 @@ const handleFloatingWidgetStateChange = (event) => {
   // Update break time display
   updateBreakTimeDisplay()
   
-  console.log('✅ Main widget state synchronized with floating widget')
+  //console.log('✅ Main widget state synchronized with floating widget')
 }
 
 // Lifecycle
 onMounted(async () => {
-  console.log('🚀 ClockInOutWidget mounted - syncing with floating widget...')
+  //console.log('🚀 ClockInOutWidget mounted - syncing with floating widget...')
   
   // Initialize with props first
   initializeAttendanceState()
@@ -1042,12 +890,16 @@ onMounted(async () => {
     verifyLocation()
   }
   
-  console.log('✅ ClockInOutWidget initialization complete with floating widget sync!')
+  //console.log('✅ ClockInOutWidget initialization complete with floating widget sync!')
 })
 
 onUnmounted(() => {
   if (timeInterval) clearInterval(timeInterval)
   if (workDurationInterval) clearInterval(workDurationInterval)
+  if (syncInterval) clearInterval(syncInterval)
+  
+  // Remove event listeners
+  window.removeEventListener('attendance-state-changed', handleFloatingWidgetStateChange)
 })
 </script>
 

@@ -547,8 +547,8 @@ const syncWithAttendance = async () => {
 
 // Debug logging (remove in production)
 if (process.env.NODE_ENV === 'development') {
-  console.log('Original timesheet date:', props.timesheet.date);
-  console.log('Formatted date for input:', formatDateForInput(props.timesheet.date));
+  //console.log('Original timesheet date:', props.timesheet.date);
+  //console.log('Formatted date for input:', formatDateForInput(props.timesheet.date));
 }
 
 // Watch for changes in the timesheet prop and update form date

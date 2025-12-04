@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
-use App\Services\BirthdayService;
 use Illuminate\Console\Command;
+use App\Services\BirthdayService;
 
 class SendBirthdayWishes extends Command
 {
@@ -12,60 +12,30 @@ class SendBirthdayWishes extends Command
      *
      * @var string
      */
-    protected $signature = 'birthday:send-wishes {--dry-run : Show what would be sent without actually sending}';
+    protected $signature = 'birthday:send-wishes';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Send birthday wishes to employees celebrating their birthday today';
-
-    protected BirthdayService $birthdayService;
-
-    public function __construct(BirthdayService $birthdayService)
-    {
-        parent::__construct();
-        $this->birthdayService = $birthdayService;
-    }
+    protected $description = 'Send birthday wishes to employees with birthdays today';
 
     /**
      * Execute the console command.
      */
-    public function handle()
+    public function handle(BirthdayService $birthdayService)
     {
-        $this->info('🎂 Checking for birthdays today...');
-
-        $birthdayEmployees = $this->birthdayService->getTodaysBirthdays();
-
-        if ($birthdayEmployees->isEmpty()) {
-            $this->info('No birthdays today. 😊');
-            return Command::SUCCESS;
-        }
-
-        $this->info("Found {$birthdayEmployees->count()} birthday(s) today:");
-
-        foreach ($birthdayEmployees as $employee) {
-            $age = $employee->getAge();
-            $ageText = $age ? " (turning {$age})" : '';
-            $this->line("  🎉 {$employee->getFullName()}{$ageText} - {$employee->user->email}");
-        }
-
-        if ($this->option('dry-run')) {
-            $this->warn('DRY RUN: No emails were actually sent.');
-            return Command::SUCCESS;
-        }
-
         $this->info('Sending birthday wishes...');
-
-        $sentCount = $this->birthdayService->sendBirthdayWishes();
-
+        
+        $sentCount = $birthdayService->sendBirthdayWishes();
+        
         if ($sentCount > 0) {
-            $this->info("✅ Successfully sent {$sentCount} birthday wish email(s)!");
+            $this->info("Birthday wishes sent to {$sentCount} employees.");
         } else {
-            $this->warn('No birthday emails were sent (possibly due to preferences or errors).');
+            $this->info('No birthday wishes to send today.');
         }
-
+        
         return Command::SUCCESS;
     }
 }

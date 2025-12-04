@@ -599,19 +599,19 @@ const canManualClockOut = (attendance) => {
   const isActiveStatus = attendance.status === 'clocked_in' || attendance.status === 'on_break';
   
   // Debug logging
-  console.log('Manual clock out check:', {
-    attendanceId: attendance.id,
-    employeeUserId: attendance.employee?.user?.id,
-    currentUserId: user.value?.id,
-    isOwnAttendance,
-    isAdminOrHR: isAdminOrHR.value,
-    canAccess,
-    status: attendance.status,
-    clockOut: attendance.clock_out,
-    hasNoClockOut,
-    isActiveStatus,
-    finalResult: canAccess && isActiveStatus && hasNoClockOut
-  });
+  // //console.log('Manual clock out check:', {
+  //   attendanceId: attendance.id,
+  //   employeeUserId: attendance.employee?.user?.id,
+  //   currentUserId: user.value?.id,
+  //   isOwnAttendance,
+  //   isAdminOrHR: isAdminOrHR.value,
+  //   canAccess,
+  //   status: attendance.status,
+  //   clockOut: attendance.clock_out,
+  //   hasNoClockOut,
+  //   isActiveStatus,
+  //   finalResult: canAccess && isActiveStatus && hasNoClockOut
+  // });
   
   return canAccess && isActiveStatus && hasNoClockOut;
 };

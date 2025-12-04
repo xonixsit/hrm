@@ -578,7 +578,7 @@
 
   const downloadErrorReport = () => {
     // In a real implementation, this would generate and download an error report
-    console.log('Downloading error report...')
+    //console.log('Downloading error report...')
   }
 
   // Event listeners

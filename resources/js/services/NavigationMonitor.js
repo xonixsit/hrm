@@ -322,7 +322,7 @@ class NavigationMonitor {
     
     if (process.env.NODE_ENV === 'development') {
       console.timeEnd(`[NAV MONITOR] ${markName}`)
-      console.log(`[NAV MONITOR] ${markName}: ${duration.toFixed(2)}ms`)
+      //console.log(`[NAV MONITOR] ${markName}: ${duration.toFixed(2)}ms`)
     }
     
     this.logEvent(
@@ -395,8 +395,8 @@ class NavigationMonitor {
       [this.SEVERITY_LEVELS.HIGH]: console.warn,
       [this.SEVERITY_LEVELS.MEDIUM]: console.warn,
       [this.SEVERITY_LEVELS.LOW]: console.info,
-      [this.SEVERITY_LEVELS.INFO]: console.log
-    }[event.severity] || console.log
+      [this.SEVERITY_LEVELS.INFO]: //console.log
+    }[event.severity] || //console.log
     
     const emoji = {
       [this.EVENT_TYPES.NAVIGATION_LOAD]: '🚀',
@@ -446,8 +446,8 @@ class NavigationMonitor {
     if (process.env.NODE_ENV === 'development') {
       console.group(`🚨 [NAV MONITOR] CRITICAL EVENT: ${event.type}`)
       console.error('Event:', event)
-      console.log('Current Metrics:', this.metrics.value)
-      console.log('Recent Events:', this.events.value.slice(0, 5))
+      //console.log('Current Metrics:', this.metrics.value)
+      //console.log('Recent Events:', this.events.value.slice(0, 5))
       console.groupEnd()
     }
   }

@@ -342,19 +342,19 @@ const isStartDateInFuture = computed(() => {
 });
 
 const startCycle = () => {
-  console.log('Start cycle clicked for:', props.cycle.name);
+  //console.log('Start cycle clicked for:', props.cycle.name);
   if (confirm(`Are you sure you want to start the "${props.cycle.name}" assessment cycle?`)) {
-    console.log('Starting cycle...');
+    //console.log('Starting cycle...');
     processing.value = true;
     router.post(route('assessment-cycles.start', props.cycle.id), {}, {
       onSuccess: (page) => {
-        console.log('Start cycle success:', page);
+        //console.log('Start cycle success:', page);
       },
       onError: (errors) => {
         console.error('Start cycle error:', errors);
       },
       onFinish: () => {
-        console.log('Start cycle finished');
+        //console.log('Start cycle finished');
         processing.value = false;
       }
     });
@@ -362,19 +362,19 @@ const startCycle = () => {
 };
 
 const completeCycle = () => {
-  console.log('Complete cycle clicked for:', props.cycle.name);
+  //console.log('Complete cycle clicked for:', props.cycle.name);
   if (confirm(`Are you sure you want to complete the "${props.cycle.name}" assessment cycle?`)) {
-    console.log('Completing cycle...');
+    //console.log('Completing cycle...');
     processing.value = true;
     router.post(route('assessment-cycles.complete', props.cycle.id), {}, {
       onSuccess: (page) => {
-        console.log('Complete cycle success:', page);
+        //console.log('Complete cycle success:', page);
       },
       onError: (errors) => {
         console.error('Complete cycle error:', errors);
       },
       onFinish: () => {
-        console.log('Complete cycle finished');
+        //console.log('Complete cycle finished');
         processing.value = false;
       }
     });
