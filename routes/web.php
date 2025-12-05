@@ -246,6 +246,12 @@ Route::middleware('auth')->group(function () {
     Route::prefix('api/admin')->group(function () {
         Route::get('settings', [App\Http\Controllers\Api\AdminSettingsController::class, 'getSettings']);
     });
+
+    // Weather API proxy routes (optional - use if CORS issues occur)
+    Route::prefix('api/weather')->group(function () {
+        Route::get('current', [App\Http\Controllers\Api\WeatherProxyController::class, 'getWeather']);
+        Route::get('timezone', [App\Http\Controllers\Api\WeatherProxyController::class, 'getTimezone']);
+    });
     Route::resource('leaves', LeaveController::class)->parameters(['leaves' => 'leave']);
     Route::post('leaves/{leave}/approve', [LeaveController::class, 'approve'])->name('leaves.approve');
     Route::post('leaves/{leave}/reject', [LeaveController::class, 'reject'])->name('leaves.reject');

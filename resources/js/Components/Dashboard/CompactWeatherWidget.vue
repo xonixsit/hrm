@@ -84,7 +84,7 @@ const fetchWeather = async () => {
   
   try {
     const weatherResponse = await fetch(
-      `http://api.weatherapi.com/v1/current.json?key=${props.weatherApiKey}&q=${location.value}&aqi=no`
+      `https://api.weatherapi.com/v1/current.json?key=${props.weatherApiKey}&q=${location.value}&aqi=no`
     );
     
     if (!weatherResponse.ok) throw new Error('Weather API failed');
@@ -92,7 +92,7 @@ const fetchWeather = async () => {
     const weatherData = await weatherResponse.json();
     
     const timezoneResponse = await fetch(
-      `http://api.weatherapi.com/v1/timezone.json?key=${props.weatherApiKey}&q=${location.value}`
+      `https://api.weatherapi.com/v1/timezone.json?key=${props.weatherApiKey}&q=${location.value}`
     );
     
     if (!timezoneResponse.ok) throw new Error('Timezone API failed');

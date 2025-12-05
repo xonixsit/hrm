@@ -164,7 +164,7 @@ const fetchWeather = async () => {
   try {
     // Fetch weather data from WeatherAPI
     const weatherResponse = await fetch(
-      `http://api.weatherapi.com/v1/current.json?key=${props.weatherApiKey}&q=${props.location}&aqi=no`
+      `https://api.weatherapi.com/v1/current.json?key=${props.weatherApiKey}&q=${props.location}&aqi=no`
     );
     
     if (!weatherResponse.ok) {
@@ -175,7 +175,7 @@ const fetchWeather = async () => {
     
     // Fetch timezone data from WeatherAPI
     const timezoneResponse = await fetch(
-      `http://api.weatherapi.com/v1/timezone.json?key=${props.weatherApiKey}&q=${props.location}`
+      `https://api.weatherapi.com/v1/timezone.json?key=${props.weatherApiKey}&q=${props.location}`
     );
     
     if (!timezoneResponse.ok) {
