@@ -24,6 +24,7 @@ use App\Http\Controllers\AssessmentCycleController;
 use App\Http\Controllers\AssessmentWorkflowController;
 use App\Http\Controllers\CompetencyAnalyticsController;
 use App\Http\Controllers\OrganizationalAnalyticsController;
+use App\Http\Controllers\SkillTestController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -239,6 +240,11 @@ Route::middleware('auth')->group(function () {
     Route::prefix('api/birthday')->group(function () {
         Route::get('status', [App\Http\Controllers\BirthdayController::class, 'getCurrentUserBirthdayStatus']);
         Route::get('stats', [App\Http\Controllers\BirthdayController::class, 'getBirthdayStats']);
+    });
+
+    // Admin Settings API routes
+    Route::prefix('api/admin')->group(function () {
+        Route::get('settings', [App\Http\Controllers\Api\AdminSettingsController::class, 'getSettings']);
     });
     Route::resource('leaves', LeaveController::class)->parameters(['leaves' => 'leave']);
     Route::post('leaves/{leave}/approve', [LeaveController::class, 'approve'])->name('leaves.approve');
@@ -664,6 +670,18 @@ Route::middleware('auth')->group(function () {
     Route::post('/support', [App\Http\Controllers\SupportController::class, 'store'])->name('support.store');
     Route::get('/support/{supportRequest}', [App\Http\Controllers\SupportController::class, 'show'])->name('support.show');
     Route::patch('/support/{supportRequest}/status', [App\Http\Controllers\SupportController::class, 'updateStatus'])->name('support.update-status');
+    
+    // Skill Testing routes
+    Route::prefix('skill-tests')->name('skill-tests.')->group(function () {
+        Route::get('/', [SkillTestController::class, 'index'])->name('index');
+        Route::get('/create', [SkillTestController::class, 'create'])->name('create');
+        Route::post('/', [SkillTestController::class, 'store'])->name('store');
+        Route::get('/{skillTest}/edit', [SkillTestController::class, 'edit'])->name('edit');
+        Route::patch('/{skillTest}', [SkillTestController::class, 'update'])->name('update');
+        Route::delete('/{skillTest}', [SkillTestController::class, 'destroy'])->name('destroy');
+        Route::post('/{skillTest}/publish', [SkillTestController::class, 'publish'])->name('publish');
+        Route::post('/{skillTest}/archive', [SkillTestController::class, 'archive'])->name('archive');
+    });
     
     // Legal pages routes
     Route::get('/legal/disclaimer', function () {

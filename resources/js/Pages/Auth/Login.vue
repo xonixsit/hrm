@@ -145,7 +145,7 @@ const isSignupFormValid = computed(() => {
                     </div>
                     <div class="flex items-center space-x-3">
                         <div class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
-                            <Icon name="shield-check" class="w-4 h-4" />
+                            <Icon name="calendar-days" class="w-4 h-4" />
                         </div>
                         <span class="text-white/90">Leave management system</span>
                     </div>

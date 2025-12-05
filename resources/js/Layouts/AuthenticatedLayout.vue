@@ -1,12 +1,12 @@
 <script setup>
-    import { ref, computed, useSlots, onMounted } from 'vue';
+    import { computed, useSlots, onMounted } from 'vue';
     import NavigationErrorDisplay from '@/Components/NavigationErrorDisplay.vue';
     import IntegratedTopNav from '@/Components/Navigation/IntegratedTopNav.vue';
     import NotificationContainer from '@/Components/Notifications/NotificationContainer.vue';
     import FloatingAttendanceWidget from '@/Components/Navigation/FloatingAttendanceWidget.vue';
-    import SkipLinks from '@/Components/Accessibility/SkipLinks.vue';
     import LiveRegion from '@/Components/Accessibility/LiveRegion.vue';
     import AppFooter from '@/Components/Layout/AppFooter.vue';
+    import CompactWeatherWidget from '@/Components/Dashboard/CompactWeatherWidget.vue';
     import { useAuth } from '@/composables/useAuth';
     import { useTheme } from '@/composables/useTheme.js';
     import { useReminder } from '@/composables/useReminder';
@@ -14,7 +14,7 @@
     import { useFlashMessages } from '@/composables/useFlashMessages';
 
     const slots = useSlots();
-    const { user, isAuthenticated, hasRole, getUserProperty, getAuthError } = useAuth();
+    const { hasRole, getAuthError } = useAuth();
     const { isDark, initializeTheme } = useTheme();
 
     useReminder();
@@ -36,8 +36,6 @@
             return window.location.pathname.replace('/', '') || 'dashboard';
         }
     });
-
-    const hasHeader = computed(() => !!slots.header);
 </script>
 
 <template>
@@ -90,10 +88,10 @@
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                     <!-- Enhanced header with consistent styling -->
                     <div :class="[
-            'flex items-center justify-between',
+            'flex items-center justify-between gap-4',
             isDark ? 'text-white' : 'text-gray-900'
           ]">
-                        <div>
+                        <div class="flex-1">
                             <h1 :class="[
                 'text-2xl font-bold transition-colors duration-200',
                 isDark ? 'text-white' : 'text-gray-900'
@@ -107,6 +105,14 @@
               ]">
                                 <slot name="subtitle" />
                             </div>
+                        </div>
+
+                        <!-- Compact Weather Widget -->
+                        <div :class="[
+              'flex items-center',
+              isDark ? 'text-gray-300' : 'text-gray-600'
+            ]">
+                            <CompactWeatherWidget />
                         </div>
 
                         <!-- Header actions area -->

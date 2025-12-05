@@ -78,7 +78,7 @@ class DashboardController extends Controller
                             'age' => $employee->getAge(),
                         ];
                     })->toArray(),
-                    'upcomingBirthdays' => $this->birthdayService->getUpcomingBirthdays(7)->map(function ($birthday) {
+                    'upcomingBirthdays' => $this->birthdayService->getUpcomingBirthdays(1)->map(function ($birthday) {
                         return [
                             'employee' => [
                                 'id' => $birthday['employee']->id,

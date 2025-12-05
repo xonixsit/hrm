@@ -40,6 +40,7 @@ class SystemSettingsController extends Controller
         $validated = $request->validate([
             'app_name' => 'required|string|max:255',
             'app_timezone' => 'required|string',
+            'company_location' => 'required|string|max:255',
             'maintenance_mode' => 'sometimes|boolean',
             'registration_enabled' => 'sometimes|boolean',
             'email_notifications' => 'sometimes|boolean',
@@ -53,8 +54,10 @@ class SystemSettingsController extends Controller
         $validated['registration_enabled'] = $request->has('registration_enabled') ? (bool) $request->registration_enabled : false;
         $validated['email_notifications'] = $request->has('email_notifications') ? (bool) $request->email_notifications : false;
 
-        // Store settings in cache/config
+        // Store settings in database and cache
         foreach ($validated as $key => $value) {
+            $type = is_bool($value) ? 'boolean' : (is_int($value) ? 'integer' : 'string');
+            \App\Models\Setting::set("system_settings.{$key}", $value, $type);
             Cache::forever("system_settings.{$key}", $value);
         }
 
@@ -67,14 +70,15 @@ class SystemSettingsController extends Controller
     private function getSystemSettings(): array
     {
         return [
-            'app_name' => Cache::get('system_settings.app_name', config('app.name', 'HR Management')),
-            'app_timezone' => Cache::get('system_settings.app_timezone', config('app.timezone', 'UTC')),
-            'maintenance_mode' => Cache::get('system_settings.maintenance_mode', false),
-            'registration_enabled' => Cache::get('system_settings.registration_enabled', true),
-            'email_notifications' => Cache::get('system_settings.email_notifications', true),
-            'backup_frequency' => Cache::get('system_settings.backup_frequency', 'daily'),
-            'session_timeout' => Cache::get('system_settings.session_timeout', 120),
-            'max_file_upload' => Cache::get('system_settings.max_file_upload', 10),
+            'app_name' => \App\Models\Setting::get('system_settings.app_name', config('app.name', 'HR Management')),
+            'app_timezone' => \App\Models\Setting::get('system_settings.app_timezone', config('app.timezone', 'UTC')),
+            'company_location' => \App\Models\Setting::get('system_settings.company_location', 'Chicago'),
+            'maintenance_mode' => \App\Models\Setting::get('system_settings.maintenance_mode', false),
+            'registration_enabled' => \App\Models\Setting::get('system_settings.registration_enabled', true),
+            'email_notifications' => \App\Models\Setting::get('system_settings.email_notifications', true),
+            'backup_frequency' => \App\Models\Setting::get('system_settings.backup_frequency', 'daily'),
+            'session_timeout' => \App\Models\Setting::get('system_settings.session_timeout', 120),
+            'max_file_upload' => \App\Models\Setting::get('system_settings.max_file_upload', 10),
         ];
     }
 

@@ -141,9 +141,8 @@
           <BreakMonitoringWidget :break-violations="breakViolations" />
           
           <!-- Timezone & Weather Widget -->
-          <!-- <TimezoneWeatherWidget 
-            :system-timezone="systemTimezone" 
-            :weather-api-key="weatherApiKey" /> -->
+           <TimezoneWeatherWidget location="Chicago" />
+
 
           <!-- Competency Management Dashboard -->
           <UnifiedCard title="Competency Management" description="Track and manage employee competencies"
@@ -297,13 +296,13 @@
     <!-- Manager Dashboard Layout -->
     <!-- <div v-else-if="isManager" class="manager-layout">
       <ManagerDashboard :stats="managerStats" :team-members="teamMembers" :team-performance="teamPerformance"
-        :team-activities="teamActivities" :loading="loading" @view-member="handleViewMember"
         @send-message="handleSendMessage" />
     </div> -->
 
     <!-- Employee Dashboard Layout -->
     <div v-else class="employee-layout">
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
         <!-- Main Dashboard Content -->
         <div class="lg:col-span-3">
           <EmployeeDashboard :stats="employeeStats" :personal-activities="personalActivities" :my-tasks="myTasks"

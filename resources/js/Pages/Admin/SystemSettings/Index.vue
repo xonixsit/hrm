@@ -53,11 +53,24 @@
                       />
                     </div>
 
+                    <!-- Company Location -->
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-2">Company Location</label>
+                      <input
+                        v-model="form.company_location"
+                        type="text"
+                        placeholder="e.g., Chicago"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                        required
+                      />
+                    </div>
+
                     <!-- Timezone -->
                     <div>
                       <label class="block text-sm font-medium text-gray-700 mb-2">Timezone</label>
                       <select
-                        v-model="form.app_timezone"
+                        :value="form.app_timezone"
+                        @change="(e) => updateTimezone(e.target.value)"
                         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                         required
                       >
@@ -297,9 +310,24 @@ const props = defineProps({
 
 const processing = ref(false)
 
+const timezoneLocationMap = {
+  'UTC': 'UTC',
+  'America/New_York': 'New York',
+  'America/Chicago': 'Chicago',
+  'America/Denver': 'Denver',
+  'America/Los_Angeles': 'Los Angeles',
+  'Europe/London': 'London',
+  'Europe/Paris': 'Paris',
+  'Asia/Tokyo': 'Tokyo',
+  'Asia/Shanghai': 'Shanghai',
+  'Asia/Kolkata': 'Kolkata',
+  'Australia/Sydney': 'Sydney',
+}
+
 const form = reactive({
   app_name: props.settings.app_name,
   app_timezone: props.settings.app_timezone,
+  company_location: props.settings.company_location,
   maintenance_mode: props.settings.maintenance_mode,
   registration_enabled: props.settings.registration_enabled,
   email_notifications: props.settings.email_notifications,
@@ -307,6 +335,14 @@ const form = reactive({
   session_timeout: props.settings.session_timeout,
   max_file_upload: props.settings.max_file_upload,
 })
+
+const updateTimezone = (timezone) => {
+  form.app_timezone = timezone
+  // Auto-populate location based on timezone
+  if (timezoneLocationMap[timezone]) {
+    form.company_location = timezoneLocationMap[timezone]
+  }
+}
 
 const updateSettings = () => {
   processing.value = true

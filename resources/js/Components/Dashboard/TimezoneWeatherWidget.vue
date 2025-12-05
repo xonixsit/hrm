@@ -86,7 +86,11 @@ const props = defineProps({
   },
   weatherApiKey: {
     type: String,
-    default: null
+    default: '31340efcae6547a7aee150722250512'
+  },
+  location: {
+    type: String,
+    default: 'Chicago'
   }
 });
 
@@ -158,51 +162,52 @@ const fetchWeather = async () => {
   }
   
   try {
-    // Get user's location first
-    const position = await getCurrentPosition();
-    const { latitude, longitude } = position.coords;
-    
-    // Fetch weather data from OpenWeatherMap API
-    const response = await fetch(
-      `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${props.weatherApiKey}&units=metric`
+    // Fetch weather data from WeatherAPI
+    const weatherResponse = await fetch(
+      `http://api.weatherapi.com/v1/current.json?key=${props.weatherApiKey}&q=${props.location}&aqi=no`
     );
     
-    if (!response.ok) {
+    if (!weatherResponse.ok) {
       throw new Error('Weather API request failed');
     }
     
-    const data = await response.json();
+    const weatherData = await weatherResponse.json();
+    
+    // Fetch timezone data from WeatherAPI
+    const timezoneResponse = await fetch(
+      `http://api.weatherapi.com/v1/timezone.json?key=${props.weatherApiKey}&q=${props.location}`
+    );
+    
+    if (!timezoneResponse.ok) {
+      throw new Error('Timezone API request failed');
+    }
+    
+    const timezoneData = await timezoneResponse.json();
     
     weather.value = {
-      temperature: Math.round(data.main.temp),
+      temperature: Math.round(weatherData.current.temp_c),
       unit: 'C',
-      condition: data.weather[0].main,
-      humidity: data.main.humidity,
-      windSpeed: Math.round(data.wind.speed * 3.6), // Convert m/s to km/h
+      condition: weatherData.current.condition.text,
+      humidity: weatherData.current.humidity,
+      windSpeed: Math.round(weatherData.current.wind_kph),
       windUnit: 'km/h',
-      location: data.name
+      location: `${weatherData.location.name}, ${weatherData.location.country}`
     };
+    
+    // Update timezone info from API
+    timezoneName.value = timezoneData.timezone.tz_id;
+    const offset = timezoneData.timezone.utc_offset_hours;
+    const sign = offset >= 0 ? '+' : '';
+    timezoneOffset.value = `UTC${sign}${offset}`;
     
     weatherError.value = false;
   } catch (error) {
-    console.error('Weather fetch error:', error);
+    console.error('Weather/Timezone fetch error:', error);
     weatherError.value = true;
   }
 };
 
-const getCurrentPosition = () => {
-  return new Promise((resolve, reject) => {
-    if (!navigator.geolocation) {
-      reject(new Error('Geolocation not supported'));
-      return;
-    }
-    
-    navigator.geolocation.getCurrentPosition(resolve, reject, {
-      timeout: 10000,
-      enableHighAccuracy: false
-    });
-  });
-};
+
 
 const refreshData = async () => {
   loading.value = true;
