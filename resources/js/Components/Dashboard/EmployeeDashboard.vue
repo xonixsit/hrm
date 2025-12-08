@@ -933,6 +933,11 @@ onMounted(async () => {
   // Check for birthday popup
   checkAndShowBirthdayPopup();
   
+  // Debug birthday data
+  console.log('🎂 EmployeeDashboard: Birthday notifications data:', props.birthdayNotifications);
+  console.log('🎂 EmployeeDashboard: Today\'s birthdays:', props.birthdayNotifications?.todaysBirthdays);
+  console.log('🎂 EmployeeDashboard: Upcoming birthdays:', props.birthdayNotifications?.upcomingBirthdays);
+  
   //console.log('🚀 Dashboard: Initialized with Echo and legacy event listeners (Press Ctrl+Shift+D for debug)');
 });
 

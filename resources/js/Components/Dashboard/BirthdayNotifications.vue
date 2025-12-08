@@ -114,8 +114,13 @@ const props = defineProps({
 const showAllUpcoming = ref(false)
 
 const showNotifications = computed(() => {
-    // Only show if there are today's birthdays or upcoming birthdays
-    return props.todaysBirthdays.length > 0 || props.upcomingBirthdays.length > 0
+    // Always show the widget (it will display appropriate message if no birthdays)
+    console.log('🎂 BirthdayNotifications: Props received:', {
+        todaysBirthdays: props.todaysBirthdays,
+        upcomingBirthdays: props.upcomingBirthdays,
+        stats: props.stats
+    });
+    return true
 })
 
 const displayedUpcomingBirthdays = computed(() => {

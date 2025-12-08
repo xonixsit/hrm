@@ -212,7 +212,7 @@ class BirthdayService
     public function getNextBirthday(): ?array
     {
         // Get upcoming birthdays (excluding today)
-        $upcomingBirthdays = $this->getUpcomingBirthdays(365);
+        $upcomingBirthdays = $this->getUpcomingBirthdays(2);
         
         // Filter out any birthdays that are 0 days away (shouldn't happen with our logic, but just in case)
         $nextBirthday = $upcomingBirthdays->filter(function ($birthday) {

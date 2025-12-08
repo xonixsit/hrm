@@ -909,7 +909,11 @@
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A'
 
-    const date = new Date(dateString)
+    // Parse date string as local date to avoid timezone conversion issues
+    // Split the date string and create a date in local timezone
+    const [year, month, day] = dateString.split('T')[0].split('-')
+    const date = new Date(year, parseInt(month) - 1, day)
+    
     return date.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
