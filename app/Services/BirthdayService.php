@@ -21,16 +21,22 @@ class BirthdayService
     {
         $today = now()->setTimezone(config('app.timezone'))->startOfDay();
         
-        $employees = Employee::with(['user', 'department'])
+        $employees = Employee::active()
+            ->with(['user', 'department'])
             ->whereNotNull('date_of_birth')
             ->get();
         
-        Log::info('Birthday check - Today: ' . $today->format('Y-m-d m-d'), ['month' => $today->month, 'day' => $today->day]);
-        Log::info('Total employees with DOB: ' . $employees->count());
+        Log::info('Birthday check - Today: ' . $today->format('Y-m-d'), ['month' => $today->month, 'day' => $today->day]);
+        Log::info('Total active employees with DOB: ' . $employees->count());
         
         $birthdays = $employees->filter(function ($employee) use ($today) {
-            $dob = Carbon::parse($employee->date_of_birth);
+            if (!$employee->date_of_birth) {
+                return false;
+            }
+            
+            $dob = Carbon::parse($employee->date_of_birth)->setTimezone(config('app.timezone'));
             $match = $dob->month === $today->month && $dob->day === $today->day;
+            
             if ($match) {
                 Log::info('Birthday match found: ' . $employee->user->name . ' DOB: ' . $dob->format('Y-m-d'));
             }

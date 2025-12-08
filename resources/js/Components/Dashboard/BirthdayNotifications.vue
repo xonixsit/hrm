@@ -16,35 +16,21 @@
             </div>
             
             <div class="space-y-2">
-                <!-- Current user's birthday (highlighted) -->
-                <div v-if="currentUserBirthday && currentUserBirthday.user" class="flex items-center justify-between bg-white rounded-lg p-3 shadow-sm border-2 border-pink-300">
+                <!-- All birthdays today -->
+                <div v-for="employee in todaysBirthdays" :key="employee.id" 
+                    :class="isCurrentUser(employee) ? 'border-2 border-pink-300 bg-pink-50' : ''"
+                    class="flex items-center justify-between bg-white rounded-lg p-3 shadow-sm">
                     <div class="flex items-center space-x-3">
-                        <div class="w-10 h-10 bg-pink-200 rounded-full flex items-center justify-center">
-                            <span class="text-sm font-semibold text-pink-700">
-                                {{ getInitials(currentUserBirthday.user?.name || 'U') }}
+                        <div :class="isCurrentUser(employee) ? 'bg-pink-200' : 'bg-pink-100'" class="w-10 h-10 rounded-full flex items-center justify-center">
+                            <span class="text-sm font-semibold" :class="isCurrentUser(employee) ? 'text-pink-700' : 'text-pink-700'">
+                                {{ getInitials(employee.user?.name || 'U') }}
                             </span>
                         </div>
                         <div>
-                            <p class="font-medium text-gray-900">{{ currentUserBirthday.user?.name }} <span class="text-pink-600 font-bold">(You!)</span></p>
-                            <p class="text-sm text-gray-500">{{ currentUserBirthday.job_title || 'Employee' }}</p>
-                        </div>
-                    </div>
-                    <div class="text-right">
-                        <div class="text-lg">🎂</div>
-                        <p v-if="currentUserBirthday.age" class="text-xs text-gray-500">{{ currentUserBirthday.age }} years</p>
-                    </div>
-                </div>
-
-                <!-- Other team members' birthdays -->
-                <div v-for="employee in todaysBirthdays" :key="employee.id" class="flex items-center justify-between bg-white rounded-lg p-3 shadow-sm">
-                    <div class="flex items-center space-x-3">
-                        <div class="w-10 h-10 bg-pink-100 rounded-full flex items-center justify-center">
-                            <span class="text-sm font-semibold text-pink-700">
-                                {{ getInitials(employee.user.name) }}
-                            </span>
-                        </div>
-                        <div>
-                            <p class="font-medium text-gray-900">{{ employee.user.name }}</p>
+                            <p class="font-medium text-gray-900">
+                                {{ employee.user?.name }}
+                                <span v-if="isCurrentUser(employee)" class="text-pink-600 font-bold">(You!)</span>
+                            </p>
                             <p class="text-sm text-gray-500">{{ employee.job_title || 'Employee' }}</p>
                         </div>
                     </div>
@@ -172,6 +158,10 @@ const getInitials = (name) => {
         .map(word => word.charAt(0).toUpperCase())
         .join('')
         .substring(0, 2)
+}
+
+const isCurrentUser = (employee) => {
+    return currentUserBirthday && employee.id === currentUserBirthday.id
 }
 
 const formatBirthdayDate = (date) => {

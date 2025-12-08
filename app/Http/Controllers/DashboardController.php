@@ -64,14 +64,9 @@ class DashboardController extends Controller
                         return $employee->user_id === $user->id;
                     });
                 }
-                
-                // Filter out current user from todaysBirthdays to avoid duplication
-                $otherBirthdays = $todaysBirthdays->filter(function ($employee) use ($user) {
-                    return !$user->employee || $employee->user_id !== $user->id;
-                });
                     
                 $data['birthdayData'] = [
-                    'todaysBirthdays' => $otherBirthdays->map(function ($employee) {
+                    'todaysBirthdays' => $todaysBirthdays->map(function ($employee) {
                         return [
                             'id' => $employee->id,
                             'user' => [
