@@ -263,6 +263,7 @@
           <!-- Birthday Notifications -->
           <BirthdayNotifications :todays-birthdays="birthdayData.todaysBirthdays"
             :upcoming-birthdays="birthdayData.upcomingBirthdays" :stats="birthdayData.stats" 
+            :current-user-birthday="birthdayData.currentUserBirthday"
             :system-timezone="systemTimezone" />
 
           <!-- System Status -->
