@@ -2,11 +2,11 @@
     <div v-if="showNotifications" class="space-y-4">
         <!-- Debug: Show if component is rendering -->
         <div v-if="currentUserBirthday" class="text-xs text-gray-500 p-2 bg-gray-100 rounded">
-            Debug: Birthday data received - {{ currentUserBirthday.user?.name }}
+            Debug: Birthday data received - {{ currentUserBirthday.user?.name }} - {{ todaysBirthdays.length }}
         </div>
         
         <!-- Today's Birthdays -->
-        <div v-if="todaysBirthdays.length > 0 || currentUserBirthday" class="bg-gradient-to-r from-pink-50 to-purple-50 border border-pink-200 rounded-lg p-4">
+        <div v-if="todaysBirthdays.length >= 0 || currentUserBirthday" class="bg-gradient-to-r from-pink-50 to-purple-50 border border-pink-200 rounded-lg p-4">
             <div class="flex items-center space-x-3 mb-3">
                 <div class="text-2xl">🎉</div>
                 <div>
