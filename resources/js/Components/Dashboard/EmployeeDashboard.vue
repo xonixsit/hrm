@@ -227,7 +227,8 @@
       <BirthdayNotifications 
         :todays-birthdays="birthdayNotifications.todaysBirthdays"
         :upcoming-birthdays="birthdayNotifications.upcomingBirthdays" 
-        :stats="birthdayNotifications.stats" />
+        :stats="birthdayNotifications.stats"
+        :current-user-birthday="birthdayNotifications.currentUserBirthday" />
     </div>
 
     <!-- Birthday Popup for Current User -->

@@ -1,7 +1,7 @@
 <template>
     <div v-if="showNotifications" class="space-y-4">
         <!-- Today's Birthdays -->
-        <div v-if="todaysBirthdays.length > 0" class="bg-gradient-to-r from-pink-50 to-purple-50 border border-pink-200 rounded-lg p-4">
+        <div v-if="todaysBirthdays.length > 0 || currentUserBirthday" class="bg-gradient-to-r from-pink-50 to-purple-50 border border-pink-200 rounded-lg p-4">
             <div class="flex items-center space-x-3 mb-3">
                 <div class="text-2xl">🎉</div>
                 <div>
@@ -11,6 +11,26 @@
             </div>
             
             <div class="space-y-2">
+                <!-- Current user's birthday (highlighted) -->
+                <div v-if="currentUserBirthday" class="flex items-center justify-between bg-white rounded-lg p-3 shadow-sm border-2 border-pink-300">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-pink-200 rounded-full flex items-center justify-center">
+                            <span class="text-sm font-semibold text-pink-700">
+                                {{ getInitials(currentUserBirthday.user.name) }}
+                            </span>
+                        </div>
+                        <div>
+                            <p class="font-medium text-gray-900">{{ currentUserBirthday.user.name }} <span class="text-pink-600 font-bold">(You!)</span></p>
+                            <p class="text-sm text-gray-500">{{ currentUserBirthday.job_title || 'Employee' }}</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-lg">🎂</div>
+                        <p v-if="currentUserBirthday.age" class="text-xs text-gray-500">{{ currentUserBirthday.age }} years</p>
+                    </div>
+                </div>
+
+                <!-- Other team members' birthdays -->
                 <div v-for="employee in todaysBirthdays" :key="employee.id" class="flex items-center justify-between bg-white rounded-lg p-3 shadow-sm">
                     <div class="flex items-center space-x-3">
                         <div class="w-10 h-10 bg-pink-100 rounded-full flex items-center justify-center">
@@ -108,6 +128,10 @@ const props = defineProps({
     systemTimezone: {
         type: String,
         default: 'UTC'
+    },
+    currentUserBirthday: {
+        type: Object,
+        default: null
     }
 })
 
