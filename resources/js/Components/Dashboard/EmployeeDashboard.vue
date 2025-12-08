@@ -223,12 +223,12 @@
     </div>
 
     <!-- Birthday Notifications -->
-    <div class="birthday-section">
+    <div class="birthday-section" v-if="birthdayNotifications">
       <BirthdayNotifications 
-        :todays-birthdays="birthdayNotifications.todaysBirthdays"
-        :upcoming-birthdays="birthdayNotifications.upcomingBirthdays" 
-        :stats="birthdayNotifications.stats"
-        :current-user-birthday="birthdayNotifications.currentUserBirthday" />
+        :todays-birthdays="birthdayNotifications?.todaysBirthdays || []"
+        :upcoming-birthdays="birthdayNotifications?.upcomingBirthdays || []" 
+        :stats="birthdayNotifications?.stats || {}"
+        :current-user-birthday="birthdayNotifications?.currentUserBirthday || null" />
     </div>
 
     <!-- Birthday Popup for Current User -->

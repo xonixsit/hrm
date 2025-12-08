@@ -502,7 +502,8 @@
       default: () => ({
         todaysBirthdays: [],
         upcomingBirthdays: [],
-        stats: {}
+        stats: {},
+        currentUserBirthday: null
       })
     },
     attendanceTracking: {

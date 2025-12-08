@@ -97,7 +97,7 @@
 
 
         <!-- No Birthdays Today Message -->
-        <div v-if="todaysBirthdays.length === 0 && upcomingBirthdays.length === 0 && stats && stats.this_month === 0" class="bg-gradient-to-r from-teal-50 to-indigo-50 border border-teal-200 rounded-lg p-4">
+        <div v-if="todaysBirthdays.length === 0 && !currentUserBirthday && upcomingBirthdays.length === 0" class="bg-gradient-to-r from-teal-50 to-indigo-50 border border-teal-200 rounded-lg p-4">
             <div class="flex items-center space-x-3">
                 <div class="text-2xl">🎂</div>
                 <div>
@@ -139,10 +139,16 @@ const showAllUpcoming = ref(false)
 
 const showNotifications = computed(() => {
     // Always show the widget (it will display appropriate message if no birthdays)
+    const hasData = props.todaysBirthdays?.length > 0 || 
+                    props.upcomingBirthdays?.length > 0 || 
+                    props.currentUserBirthday;
+    
     console.log('🎂 BirthdayNotifications: Props received:', {
         todaysBirthdays: props.todaysBirthdays,
         upcomingBirthdays: props.upcomingBirthdays,
-        stats: props.stats
+        currentUserBirthday: props.currentUserBirthday,
+        stats: props.stats,
+        hasData: hasData
     });
     return true
 })
