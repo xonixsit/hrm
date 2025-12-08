@@ -1,5 +1,10 @@
 <template>
     <div v-if="showNotifications" class="space-y-4">
+        <!-- Debug: Show if component is rendering -->
+        <div v-if="currentUserBirthday" class="text-xs text-gray-500 p-2 bg-gray-100 rounded">
+            Debug: Birthday data received - {{ currentUserBirthday.user?.name }}
+        </div>
+        
         <!-- Today's Birthdays -->
         <div v-if="todaysBirthdays.length > 0 || currentUserBirthday" class="bg-gradient-to-r from-pink-50 to-purple-50 border border-pink-200 rounded-lg p-4">
             <div class="flex items-center space-x-3 mb-3">
@@ -12,15 +17,15 @@
             
             <div class="space-y-2">
                 <!-- Current user's birthday (highlighted) -->
-                <div v-if="currentUserBirthday" class="flex items-center justify-between bg-white rounded-lg p-3 shadow-sm border-2 border-pink-300">
+                <div v-if="currentUserBirthday && currentUserBirthday.user" class="flex items-center justify-between bg-white rounded-lg p-3 shadow-sm border-2 border-pink-300">
                     <div class="flex items-center space-x-3">
                         <div class="w-10 h-10 bg-pink-200 rounded-full flex items-center justify-center">
                             <span class="text-sm font-semibold text-pink-700">
-                                {{ getInitials(currentUserBirthday.user.name) }}
+                                {{ getInitials(currentUserBirthday.user?.name || 'U') }}
                             </span>
                         </div>
                         <div>
-                            <p class="font-medium text-gray-900">{{ currentUserBirthday.user.name }} <span class="text-pink-600 font-bold">(You!)</span></p>
+                            <p class="font-medium text-gray-900">{{ currentUserBirthday.user?.name }} <span class="text-pink-600 font-bold">(You!)</span></p>
                             <p class="text-sm text-gray-500">{{ currentUserBirthday.job_title || 'Employee' }}</p>
                         </div>
                     </div>
@@ -161,6 +166,7 @@ const displayedUpcomingBirthdays = computed(() => {
 })
 
 const getInitials = (name) => {
+    if (!name) return 'U'
     return name
         .split(' ')
         .map(word => word.charAt(0).toUpperCase())

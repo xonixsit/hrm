@@ -223,7 +223,7 @@
     </div>
 
     <!-- Birthday Notifications -->
-    <div class="birthday-section" v-if="birthdayNotifications">
+    <div class="birthday-section">
       <BirthdayNotifications 
         :todays-birthdays="birthdayNotifications?.todaysBirthdays || []"
         :upcoming-birthdays="birthdayNotifications?.upcomingBirthdays || []" 
