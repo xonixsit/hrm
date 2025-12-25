@@ -24,6 +24,7 @@ class Employee extends Model
         'exit_processed_by',
         'contract_type',
         'photo',
+        'profile_pic',
         'phone',
         'address',
         'status',

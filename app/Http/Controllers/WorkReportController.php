@@ -504,6 +504,7 @@ class WorkReportController extends Controller
                     'position' => $employee->position ?? 'Employee',
                     'department' => $employee->department ? $employee->department->name : 'No Department',
                     'department_id' => $employee->department_id,
+                    'profile_pic' => $employee->profile_pic,
                     'total_calls' => (int) $totalCalls,
                     'interested_calls' => (int) $interestedCalls,
                     'success_rate' => $successRate,

@@ -499,7 +499,26 @@
                 <tr v-for="row in workReports.data" :key="row.id" class="hover:bg-gray-50">
                   <td v-for="column in tableColumns" :key="column.key"
                     class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {{ column.formatter ? column.formatter(row[column.key]) : row[column.key] }}
+                    <!-- Employee Avatar Cell -->
+                    <div v-if="column.isEmployee" class="flex items-center space-x-3">
+                      <div v-if="row.employee?.profile_pic" class="w-10 h-10 rounded-full overflow-hidden ring-2 ring-white shadow-sm border border-gray-200 flex-shrink-0">
+                        <img 
+                          :src="`/storage/${row.employee.profile_pic}`" 
+                          :alt="row.employee.user?.name"
+                          class="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div v-else class="w-10 h-10 bg-gradient-to-br from-primary-100 to-primary-200 rounded-full flex items-center justify-center ring-2 ring-white shadow-sm flex-shrink-0">
+                        <span class="text-sm font-semibold text-primary-700">
+                          {{ getInitials(row.employee?.user?.name || 'Unknown') }}
+                        </span>
+                      </div>
+                      <span class="font-medium text-gray-900">{{ row.employee?.user?.name || 'Unavailable' }}</span>
+                    </div>
+                    <!-- Regular Cell -->
+                    <span v-else>
+                      {{ column.formatter ? column.formatter(row[column.key]) : row[column.key] }}
+                    </span>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div class="flex items-center justify-end">
@@ -1118,6 +1137,15 @@
     }
   };
 
+  const getInitials = (name) => {
+    if (!name) return '?';
+    return name
+      .split(' ')
+      .map(part => part.charAt(0).toUpperCase())
+      .slice(0, 2)
+      .join('');
+  };
+
   // Dropdown management
   const setDropdownRef = (el, reportId) => {
     if (el) {
@@ -1253,7 +1281,7 @@
         key: 'employee',
         label: 'Employee',
         sortable: true,
-        formatter: (value) => value?.user?.name || 'Unavailable'
+        isEmployee: true
       });
     }
     return columns;

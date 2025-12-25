@@ -115,5 +115,56 @@ class ProfileController extends Controller
         return Redirect::route('profile.edit')->with('success', 'Profile updated successfully.');
     }
 
+    /**
+     * Upload profile picture
+     */
+    public function uploadProfilePic(Request $request)
+    {
+        $user = $request->user();
+        $employee = $user->employee;
 
+        if (!$employee) {
+            return back()->withErrors(['profile_pic' => 'Employee profile not found.']);
+        }
+
+        try {
+            $validated = $request->validate([
+                'profile_pic' => 'required|image|mimes:jpeg,png,jpg,gif|max:5120', // 5MB max
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return back()->withErrors($e->errors());
+        }
+
+        try {
+            // Delete old profile picture if exists
+            if ($employee->profile_pic) {
+                \Storage::disk('public')->delete($employee->profile_pic);
+            }
+
+            // Store new profile picture
+            $path = $request->file('profile_pic')->store('profile-pictures', 'public');
+
+            // Update employee record
+            $employee->update(['profile_pic' => $path]);
+
+            // Return JSON response for AJAX requests
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Profile picture uploaded successfully.',
+                    'profile_pic' => \Storage::url($path),
+                ]);
+            }
+
+            return back()->with('success', 'Profile picture uploaded successfully.');
+        } catch (\Exception $e) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'error' => 'Failed to upload file. Please try again.'
+                ], 500);
+            }
+
+            return back()->withErrors(['profile_pic' => 'Failed to upload file. Please try again.']);
+        }
+    }
 }

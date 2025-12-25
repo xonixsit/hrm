@@ -112,7 +112,7 @@
                     <div class="flex-1 min-w-0">
                       <p class="text-sm font-medium text-gray-900 truncate">{{ employee.name }}</p>
                       <p class="text-xs text-gray-500 truncate">
-                        {{ employee.position || 'Employee' }}
+                        {{ employee.job_title || 'Employee' }}
                         <span v-if="employee.department"> • {{ employee.department.name }}</span>
                       </p>
                     </div>
@@ -278,7 +278,7 @@
       const searchTerm = employeeSearch.value.toLowerCase();
       filtered = filtered.filter(employee =>
         employee.name.toLowerCase().includes(searchTerm) ||
-        (employee.position && employee.position.toLowerCase().includes(searchTerm))
+        (employee.job_title && employee.job_title.toLowerCase().includes(searchTerm))
       );
     }
 

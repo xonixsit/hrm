@@ -33,7 +33,9 @@ class AttendanceController extends Controller
 
         try {
             $user = Auth::user();
-            $query = Attendance::with('employee.user');
+            $query = Attendance::with(['employee' => function ($query) {
+                $query->select('id', 'user_id', 'employee_code', 'profile_pic', 'job_title');
+            }, 'employee.user']);
 
         // Base query based on user role
         if (!($user->hasRole('Admin') || $user->hasRole('HR'))) {

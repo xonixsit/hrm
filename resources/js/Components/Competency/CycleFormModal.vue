@@ -272,7 +272,7 @@
                                   <div class="employee-info">
                                     <div class="employee-name">{{ employee.name }}</div>
                                     <div class="employee-details">
-                                      <span v-if="employee.position" class="employee-position">{{ employee.position }}</span>
+                                      <span v-if="employee.job_title" class="employee-position">{{ employee.job_title }}</span>
                                       <span v-if="employee.department" class="employee-department">{{ employee.department.name }}</span>
                                     </div>
                                   </div>
@@ -631,7 +631,7 @@ const filteredEmployees = computed(() => {
   const search = employeeSearch.value.toLowerCase();
   return props.employees.filter(employee =>
     employee.name.toLowerCase().includes(search) ||
-    (employee.position && employee.position.toLowerCase().includes(search)) ||
+    (employee.job_title && employee.job_title.toLowerCase().includes(search)) ||
     (employee.department && employee.department.name.toLowerCase().includes(search))
   );
 });

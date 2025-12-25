@@ -469,6 +469,7 @@ class DashboardController extends Controller
                     'job_title' => $employee->job_title,
                     'department' => $employee->department ? $employee->department->name : 'No Department',
                     'employee_code' => $employee->employee_code,
+                    'profile_pic' => $employee->profile_pic,
                 ];
             })->values();
 
@@ -481,6 +482,7 @@ class DashboardController extends Controller
                     'job_title' => $attendance->employee->job_title,
                     'department' => $attendance->employee->department ? $attendance->employee->department->name : 'No Department',
                     'employee_code' => $attendance->employee->employee_code,
+                    'profile_pic' => $attendance->employee->profile_pic,
                     'clock_in_time' => $attendance->clock_in ? $attendance->clock_in->toISOString() : null,
                     'work_duration' => $attendance->getCurrentSessionDuration(),
                     'on_break' => $attendance->on_break ?? false,
@@ -1631,6 +1633,7 @@ class DashboardController extends Controller
                             'employee_name' => $attendance->employee->user->name,
                             'job_title' => $attendance->employee->job_title,
                             'department' => $attendance->employee->department->name ?? 'General',
+                            'profile_pic' => $attendance->employee->profile_pic,
                             'break_number' => $breakNumber,
                             'duration' => $this->formatDuration($currentBreakDuration),
                             'limit' => $this->formatDuration($limit),

@@ -1,6 +1,7 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { Head } from '@inertiajs/vue3';
+import confetti from 'canvas-confetti';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import PageLayout from '@/Components/Layout/PageLayout.vue';
 import FormLayout from '@/Components/Forms/FormLayout.vue';
@@ -32,7 +33,127 @@ const props = defineProps({
     },
 });
 
-const hasEmployeeProfile = computed(() => !!props.employee);
+const employeeData = ref(props.employee);
+const uploadProgress = ref(0);
+const uploadMessage = ref('');
+const avatarKey = ref(0);
+
+// Watch for changes to force re-render
+watch(() => employeeData.value?.profile_pic, (newVal) => {
+  avatarKey.value++;
+}, { deep: true });
+
+const hasEmployeeProfile = computed(() => !!employeeData.value);
+
+const handlePictureUpdated = (data) => {
+  if (employeeData.value) {
+    employeeData.value.profile_pic = data.path;
+  }
+};
+
+const handleProfilePicChange = (event) => {
+  const file = event.target.files?.[0];
+  if (!file) return;
+
+  // Validate file type
+  if (!file.type.startsWith('image/')) {
+    uploadMessage.value = 'Please select a valid image file.';
+    setTimeout(() => { uploadMessage.value = ''; }, 3000);
+    return;
+  }
+
+  // Validate file size (5MB)
+  if (file.size > 5 * 1024 * 1024) {
+    uploadMessage.value = 'File size must be less than 5MB.';
+    setTimeout(() => { uploadMessage.value = ''; }, 3000);
+    return;
+  }
+
+  uploadProgress.value = 0;
+  uploadMessage.value = 'Uploading...';
+
+  const formData = new FormData();
+  formData.append('profile_pic', file);
+
+  const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+  const xhr = new XMLHttpRequest();
+
+  xhr.upload.addEventListener('progress', (event) => {
+    if (event.lengthComputable) {
+      uploadProgress.value = Math.round((event.loaded / event.total) * 100);
+    }
+  });
+
+  xhr.addEventListener('load', () => {
+    try {
+      const response = JSON.parse(xhr.responseText);
+      if (xhr.status === 200 && response.success) {
+        uploadMessage.value = 'Profile picture updated!';
+        uploadProgress.value = 0;
+        
+        // Immediately update the avatar with the new image
+        if (employeeData.value) {
+          employeeData.value.profile_pic = response.profile_pic.replace('/storage/', '');
+        }
+
+        // Trigger confetti animation
+        triggerConfetti();
+
+        setTimeout(() => {
+          uploadMessage.value = '';
+          // Reload page to update user menu
+          window.location.reload();
+        }, 2000);
+      } else {
+        uploadMessage.value = response.error || response.message || 'Upload failed.';
+        uploadProgress.value = 0;
+        setTimeout(() => { uploadMessage.value = ''; }, 3000);
+      }
+    } catch (e) {
+      console.error('Parse error:', e, 'Response:', xhr.responseText);
+      uploadMessage.value = 'Server error: ' + xhr.responseText.substring(0, 100);
+      uploadProgress.value = 0;
+      setTimeout(() => { uploadMessage.value = ''; }, 3000);
+    }
+  });
+
+  xhr.addEventListener('error', () => {
+    uploadMessage.value = 'Network error.';
+    uploadProgress.value = 0;
+  });
+
+  xhr.open('POST', route('profile.upload-picture'));
+  xhr.setRequestHeader('X-CSRF-TOKEN', csrfToken || '');
+  xhr.setRequestHeader('Accept', 'application/json');
+  xhr.send(formData);
+};
+
+const triggerConfetti = () => {
+  const duration = 2000;
+  const animationEnd = Date.now() + duration;
+
+  const randomInRange = (min, max) => {
+    return Math.random() * (max - min) + min;
+  };
+
+  const interval = setInterval(() => {
+    const timeLeft = animationEnd - Date.now();
+
+    if (timeLeft <= 0) {
+      return clearInterval(interval);
+    }
+
+    const particleCount = 50 * (timeLeft / duration);
+
+    confetti({
+      particleCount,
+      angle: randomInRange(55, 125),
+      spread: randomInRange(50, 70),
+      origin: { x: randomInRange(0.1, 0.9), y: Math.random() - 0.2 },
+      colors: ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981'],
+    });
+  }, 250);
+};
 
 const getInitials = (name) => {
   return name
@@ -52,8 +173,8 @@ const formatDate = (date) => {
 };
 
 const calculateYearsOfService = () => {
-  if (!props.employee?.join_date) return 'N/A';
-  const joinDate = new Date(props.employee.join_date);
+  if (!employeeData.value?.join_date) return 'N/A';
+  const joinDate = new Date(employeeData.value.join_date);
   const today = new Date();
   const years = today.getFullYear() - joinDate.getFullYear();
   const months = today.getMonth() - joinDate.getMonth();
@@ -94,24 +215,61 @@ const breadcrumbs = computed(() => [
             subtitle="Manage your personal information and account settings"
             :breadcrumbs="breadcrumbs"
         >
-            <!-- Employment Summary Header -->
+            <!-- Employment Summary Header with Integrated Profile Picture Upload -->
             <div v-if="hasEmployeeProfile" class="bg-white border border-neutral-200 rounded-lg shadow-sm mb-6">
                 <!-- Header Section -->
                 <div class="bg-gradient-to-r from-primary-50 to-primary-100 px-6 py-4 border-b border-neutral-200 rounded-t-lg">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center space-x-4">
-                            <div class="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center">
-                                <span class="text-lg font-semibold text-primary-700">
-                                    {{ getInitials(user.name) }}
-                                </span>
+                            <!-- Profile Picture with Upload Overlay -->
+                            <div :key="avatarKey" class="relative group">
+                                <div v-if="employeeData?.profile_pic" class="w-16 h-16 rounded-full overflow-hidden border-2 border-primary-200 flex-shrink-0">
+                                    <img 
+                                        :src="`/storage/${employeeData.profile_pic}`" 
+                                        :alt="user.name"
+                                        class="w-full h-full object-cover"
+                                    />
+                                </div>
+                                <div v-else class="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                    <span class="text-2xl font-semibold text-primary-700">
+                                        {{ getInitials(user.name) }}
+                                    </span>
+                                </div>
+                                <!-- Upload Overlay -->
+                                <button 
+                                    @click="$refs.profilePicInput.click()"
+                                    class="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center cursor-pointer"
+                                >
+                                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                    </svg>
+                                </button>
+                                <!-- Hidden File Input -->
+                                <input 
+                                    ref="profilePicInput"
+                                    type="file"
+                                    accept="image/*"
+                                    class="hidden"
+                                    @change="handleProfilePicChange"
+                                />
                             </div>
                             <div>
                                 <h3 class="text-xl font-semibold text-neutral-900">{{ user.name }}</h3>
-                                <p class="text-sm text-neutral-600">{{ employee.job_title || 'Employee' }}</p>
+                                <p class="text-sm text-neutral-600">{{ employeeData.job_title || 'Employee' }}</p>
                                 <div class="flex items-center space-x-2 mt-1">
                                     <span class="text-xs text-neutral-500">Employee ID:</span>
-                                    <span class="text-xs font-mono bg-neutral-200 px-2 py-0.5 rounded">{{ employee.employee_code || 'N/A' }}</span>
-                                    <span class="text-xs bg-primary-100 text-primary-700 px-2 py-0.5 rounded">{{ employee.department?.name || 'No Department' }}</span>
+                                    <span class="text-xs font-mono bg-neutral-200 px-2 py-0.5 rounded">{{ employeeData.employee_code || 'N/A' }}</span>
+                                    <span class="text-xs bg-primary-100 text-primary-700 px-2 py-0.5 rounded">{{ employeeData.department?.name || 'No Department' }}</span>
+                                </div>
+                                <!-- Upload Progress and Message -->
+                                <div v-if="uploadProgress > 0 || uploadMessage" class="mt-3 space-y-2">
+                                    <div v-if="uploadMessage" class="text-xs font-medium text-primary-600">{{ uploadMessage }}</div>
+                                    <div v-if="uploadProgress > 0" class="w-full bg-neutral-200 rounded-full h-1.5 overflow-hidden">
+                                        <div
+                                            class="bg-gradient-to-r from-primary-500 to-primary-600 h-full transition-all duration-300"
+                                            :style="{ width: uploadProgress + '%' }"
+                                        ></div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -145,7 +303,7 @@ const breadcrumbs = computed(() => [
                                 <BuildingOfficeIcon class="h-8 w-8 text-success-600" />
                                 <div>
                                     <p class="text-sm font-medium text-neutral-600">Department</p>
-                                    <p class="text-sm font-semibold text-neutral-900">{{ employee.department?.name || 'N/A' }}</p>
+                                    <p class="text-sm font-semibold text-neutral-900">{{ employeeData.department?.name || 'N/A' }}</p>
                                 </div>
                             </div>
                         </div>
@@ -155,7 +313,7 @@ const breadcrumbs = computed(() => [
                                 <PhoneIcon class="h-8 w-8 text-info-600" />
                                 <div>
                                     <p class="text-sm font-medium text-neutral-600">Contact</p>
-                                    <p class="text-sm font-semibold text-neutral-900">{{ employee.phone || 'Not provided' }}</p>
+                                    <p class="text-sm font-semibold text-neutral-900">{{ employeeData.phone || 'Not provided' }}</p>
                                 </div>
                             </div>
                         </div>
@@ -174,19 +332,19 @@ const breadcrumbs = computed(() => [
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <dt class="text-sm font-medium text-neutral-500">Job Title</dt>
-                            <dd class="text-sm font-medium text-neutral-900 mt-1">{{ employee.job_title || 'Not specified' }}</dd>
+                            <dd class="text-sm font-medium text-neutral-900 mt-1">{{ employeeData.job_title || 'Not specified' }}</dd>
                         </div>
                         <div>
                             <dt class="text-sm font-medium text-neutral-500">Manager</dt>
-                            <dd class="text-sm font-medium text-neutral-900 mt-1">{{ employee.manager?.name || 'Not assigned' }}</dd>
+                            <dd class="text-sm font-medium text-neutral-900 mt-1">{{ employeeData.manager?.name || 'Not assigned' }}</dd>
                         </div>
                         <div>
                             <dt class="text-sm font-medium text-neutral-500">Join Date</dt>
-                            <dd class="text-sm font-medium text-neutral-900 mt-1">{{ formatDate(employee.join_date) }}</dd>
+                            <dd class="text-sm font-medium text-neutral-900 mt-1">{{ formatDate(employeeData.join_date) }}</dd>
                         </div>
                         <div>
                             <dt class="text-sm font-medium text-neutral-500">Employment Type</dt>
-                            <dd class="text-sm font-medium text-neutral-900 mt-1">{{ formatEmploymentType(employee.employment_type) }}</dd>
+                            <dd class="text-sm font-medium text-neutral-900 mt-1">{{ formatEmploymentType(employeeData.employment_type) }}</dd>
                         </div>
                     </div>
                 </div>
@@ -199,7 +357,7 @@ const breadcrumbs = computed(() => [
                 description="Update your personal details and contact information"
                 variant="card"
             >
-                <UpdateEmployeeProfileForm :employee="employee" :user="user" />
+                <UpdateEmployeeProfileForm :employee="employeeData" :user="user" />
             </FormLayout>
 
             <!-- Account Settings -->

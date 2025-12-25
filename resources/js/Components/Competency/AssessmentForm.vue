@@ -11,7 +11,7 @@
           </div>
           <div class="employee-details">
             <h3 class="employee-name">{{ employee.name }}</h3>
-            <p class="employee-role">{{ employee.position || 'Employee' }}</p>
+            <p class="employee-role">{{ employee.job_title || 'Employee' }}</p>
             <p v-if="employee.department" class="employee-department">{{ employee.department.name }}</p>
           </div>
         </div>

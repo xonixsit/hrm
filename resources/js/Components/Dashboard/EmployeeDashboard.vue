@@ -5,8 +5,25 @@
       <!-- Combined Welcome & Clock Display -->
       <div class="welcome-clock-display">
         <div class="welcome-section">
-          <h2 class="greeting-text">Welcome back, {{ employeeName }}! 👋</h2>
-          <p class="greeting-subtitle">Ready to make today productive?</p>
+          <!-- Avatar with Greeting -->
+          <div class="flex items-center space-x-4">
+            <div v-if="user?.employee?.profile_pic" class="w-16 h-16 rounded-full overflow-hidden border-2 border-primary-200 flex-shrink-0">
+              <img 
+                :src="`/storage/${user.employee.profile_pic}`" 
+                :alt="employeeName"
+                class="w-full h-full object-cover"
+              />
+            </div>
+            <div v-else class="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0">
+              <span class="text-2xl font-semibold text-primary-700">
+                {{ getInitials(employeeName) }}
+              </span>
+            </div>
+            <div>
+              <h2 class="greeting-text">Welcome back, {{ employeeName }}! 👋</h2>
+              <p class="greeting-subtitle">Ready to make today productive?</p>
+            </div>
+          </div>
         </div>
         <div class="clock-section">
           <div class="current-time">{{ currentTimeFormatted }}</div>
@@ -295,6 +312,16 @@ const emit = defineEmits(['action']);
 
 // Composables
 const { user } = useAuth();
+
+// Helper function to get initials
+// const getInitials = (name) => {
+//   if (!name) return 'U';
+//   return name
+//     .split(' ')
+//     .map(word => word.charAt(0).toUpperCase())
+//     .join('')
+//     .substring(0, 2);
+// };
 
 // Local state
 const currentTime = ref(new Date());
@@ -881,6 +908,15 @@ const checkAndShowBirthdayPopup = () => {
 const closeBirthdayPopup = () => {
   console.log('🎂 EmployeeDashboard: Closing birthday popup');
   showBirthdayPopup.value = false;
+};
+
+const getInitials = (name) => {
+  if (!name) return 'U';
+  return name
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase())
+    .join('')
+    .substring(0, 2);
 };
 
 // Initialize component

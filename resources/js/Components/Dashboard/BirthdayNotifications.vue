@@ -6,7 +6,7 @@
         </div>
         
         <!-- Today's Birthdays -->
-        <div v-if="(todaysBirthdays && todaysBirthdays.length > 0) || currentUserBirthday" class="bg-gradient-to-r from-pink-50 to-purple-50 border border-pink-200 rounded-lg p-4">
+        <div v-if="todaysBirthdays && todaysBirthdays.length > 0" class="bg-gradient-to-r from-pink-50 to-purple-50 border border-pink-200 rounded-lg p-4">
             <div class="flex items-center space-x-3 mb-3">
                 <div class="text-2xl">🎉</div>
                 <div>
@@ -21,7 +21,15 @@
                     :class="isCurrentUser(employee) ? 'border-2 border-pink-300 bg-pink-50' : ''"
                     class="flex items-center justify-between bg-white rounded-lg p-3 shadow-sm">
                     <div class="flex items-center space-x-3">
-                        <div :class="isCurrentUser(employee) ? 'bg-pink-200' : 'bg-pink-100'" class="w-10 h-10 rounded-full flex items-center justify-center">
+                        <!-- Avatar with Profile Picture -->
+                        <div v-if="employee.user?.profile_pic" class="w-10 h-10 rounded-full overflow-hidden border-2 border-pink-200 flex-shrink-0">
+                            <img 
+                                :src="`/storage/${employee.user.profile_pic}`" 
+                                :alt="employee.user?.name"
+                                class="w-full h-full object-cover"
+                            />
+                        </div>
+                        <div v-else :class="isCurrentUser(employee) ? 'bg-pink-200' : 'bg-pink-100'" class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0">
                             <span class="text-sm font-semibold" :class="isCurrentUser(employee) ? 'text-pink-700' : 'text-pink-700'">
                                 {{ getInitials(employee.user?.name || 'U') }}
                             </span>
@@ -67,7 +75,15 @@
                     class="flex items-center justify-between bg-white rounded-lg p-3 shadow-sm"
                 >
                     <div class="flex items-center space-x-3">
-                        <div class="w-10 h-10 bg-teal-100 rounded-full flex items-center justify-center">
+                        <!-- Avatar with Profile Picture -->
+                        <div v-if="birthday.employee.user?.profile_pic" class="w-10 h-10 rounded-full overflow-hidden border-2 border-teal-200 flex-shrink-0">
+                            <img 
+                                :src="`/storage/${birthday.employee.user.profile_pic}`" 
+                                :alt="birthday.employee.user.name"
+                                class="w-full h-full object-cover"
+                            />
+                        </div>
+                        <div v-else class="w-10 h-10 bg-teal-100 rounded-full flex items-center justify-center flex-shrink-0">
                             <span class="text-sm font-semibold text-teal-700">
                                 {{ getInitials(birthday.employee.user.name) }}
                             </span>
@@ -161,7 +177,13 @@ const getInitials = (name) => {
 }
 
 const isCurrentUser = (employee) => {
-    return currentUserBirthday && employee.id === currentUserBirthday.id
+    // Check if this employee is the current user by comparing with currentUserBirthday
+    if (currentUserBirthday && employee.id === currentUserBirthday.id) {
+        return true
+    }
+    // Fallback: if currentUserBirthday is not set, we can't determine if it's the current user
+    // So we'll just return false and let the employee show without highlighting
+    return false
 }
 
 const formatBirthdayDate = (date) => {

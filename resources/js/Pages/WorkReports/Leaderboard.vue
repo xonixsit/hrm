@@ -174,8 +174,16 @@
                 <div class="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-gray-400 text-white text-xs font-bold px-2 py-1 rounded-full">
                   2nd
                 </div>
-                <div class="w-16 h-16 bg-gray-300 rounded-full mx-auto mb-3 flex items-center justify-center text-2xl">
-                  👤
+                <!-- Profile Picture -->
+                <div v-if="topPerformers[1]?.profile_pic" class="w-16 h-16 bg-gray-300 rounded-full mx-auto mb-3 overflow-hidden border-2 border-gray-400">
+                  <img 
+                    :src="`/storage/${topPerformers[1].profile_pic}`" 
+                    :alt="topPerformers[1]?.name"
+                    class="w-full h-full object-cover"
+                  />
+                </div>
+                <div v-else class="w-16 h-16 bg-gray-300 rounded-full mx-auto mb-3 flex items-center justify-center text-2xl font-bold text-gray-600">
+                  {{ topPerformers[1]?.name?.charAt(0).toUpperCase() }}
                 </div>
                 <h4 class="font-semibold text-gray-900">{{ topPerformers[1]?.name }}</h4>
                 <p class="text-sm text-gray-600">{{ getMetricValue(topPerformers[1]) }}</p>
@@ -188,8 +196,16 @@
                 <div class="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-yellow-500 text-white text-sm font-bold px-3 py-1 rounded-full">
                   🥇 1st
                 </div>
-                <div class="w-20 h-20 bg-yellow-200 rounded-full mx-auto mb-4 flex items-center justify-center text-3xl">
-                  👤
+                <!-- Profile Picture -->
+                <div v-if="topPerformers[0]?.profile_pic" class="w-20 h-20 bg-yellow-200 rounded-full mx-auto mb-4 overflow-hidden border-2 border-yellow-500">
+                  <img 
+                    :src="`/storage/${topPerformers[0].profile_pic}`" 
+                    :alt="topPerformers[0]?.name"
+                    class="w-full h-full object-cover"
+                  />
+                </div>
+                <div v-else class="w-20 h-20 bg-yellow-200 rounded-full mx-auto mb-4 flex items-center justify-center text-3xl font-bold text-yellow-700">
+                  {{ topPerformers[0]?.name?.charAt(0).toUpperCase() }}
                 </div>
                 <h4 class="font-bold text-gray-900 text-lg">{{ topPerformers[0]?.name }}</h4>
                 <p class="text-gray-700 font-semibold">{{ getMetricValue(topPerformers[0]) }}</p>
@@ -202,8 +218,16 @@
                 <div class="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-orange-400 text-white text-xs font-bold px-2 py-1 rounded-full">
                   3rd
                 </div>
-                <div class="w-16 h-16 bg-orange-300 rounded-full mx-auto mb-3 flex items-center justify-center text-2xl">
-                  👤
+                <!-- Profile Picture -->
+                <div v-if="topPerformers[2]?.profile_pic" class="w-16 h-16 bg-orange-300 rounded-full mx-auto mb-3 overflow-hidden border-2 border-orange-400">
+                  <img 
+                    :src="`/storage/${topPerformers[2].profile_pic}`" 
+                    :alt="topPerformers[2]?.name"
+                    class="w-full h-full object-cover"
+                  />
+                </div>
+                <div v-else class="w-16 h-16 bg-orange-300 rounded-full mx-auto mb-3 flex items-center justify-center text-2xl font-bold text-orange-700">
+                  {{ topPerformers[2]?.name?.charAt(0).toUpperCase() }}
                 </div>
                 <h4 class="font-semibold text-gray-900">{{ topPerformers[2]?.name }}</h4>
                 <p class="text-sm text-gray-600">{{ getMetricValue(topPerformers[2]) }}</p>
@@ -247,12 +271,22 @@
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
                     <div class="flex items-center">
-                      <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center text-sm font-medium text-gray-600 mr-3">
-                        {{ employee.name.charAt(0).toUpperCase() }}
+                      <!-- Profile Picture -->
+                      <div v-if="employee.profile_pic" class="w-10 h-10 rounded-full overflow-hidden ring-2 ring-white shadow-sm border border-gray-200 flex-shrink-0 mr-3">
+                        <img 
+                          :src="`/storage/${employee.profile_pic}`" 
+                          :alt="employee.name"
+                          class="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div v-else class="w-10 h-10 bg-gradient-to-br from-primary-100 to-primary-200 rounded-full flex items-center justify-center ring-2 ring-white shadow-sm flex-shrink-0 mr-3">
+                        <span class="text-sm font-semibold text-primary-700">
+                          {{ getInitials(employee.name) }}
+                        </span>
                       </div>
                       <div>
                         <div class="text-sm font-medium text-gray-900">{{ employee.name }}</div>
-                        <div class="text-sm text-gray-500">{{ employee.position || 'Employee' }}</div>
+                        <div class="text-sm text-gray-500">{{ employee.job_title || 'Employee' }}</div>
                       </div>
                     </div>
                   </td>
@@ -396,6 +430,15 @@ const getMetricValue = (employee) => {
     default:
       return `${employee.performance_score} points`
   }
+}
+
+const getInitials = (name) => {
+  if (!name) return '?'
+  return name
+    .split(' ')
+    .map(part => part.charAt(0).toUpperCase())
+    .slice(0, 2)
+    .join('')
 }
 
 const getLeaderboardTitle = () => {

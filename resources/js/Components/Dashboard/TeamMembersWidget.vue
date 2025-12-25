@@ -16,7 +16,7 @@
         </div>
         <div class="member-info">
           <h4 class="member-name">{{ member.name }}</h4>
-          <p class="member-position">{{ member.position }}</p>
+          <p class="member-position">{{ member.job_title }}</p>
         </div>
         <div class="member-actions">
           <button

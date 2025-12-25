@@ -184,7 +184,16 @@
             <template #cell-name="{ row }">
               <div class="flex items-center space-x-3">
                 <div class="flex-shrink-0 relative">
-                  <div class="w-10 h-10 bg-gradient-to-br from-primary-100 to-primary-200 rounded-full flex items-center justify-center ring-2 ring-white shadow-sm">
+                  <!-- Profile Picture -->
+                  <div v-if="row.profile_pic" class="w-10 h-10 rounded-full overflow-hidden ring-2 ring-white shadow-sm border border-gray-200">
+                    <img 
+                      :src="`/storage/${row.profile_pic}`" 
+                      :alt="row.user.name"
+                      class="w-full h-full object-cover"
+                    />
+                  </div>
+                  <!-- Fallback to Initials -->
+                  <div v-else class="w-10 h-10 bg-gradient-to-br from-primary-100 to-primary-200 rounded-full flex items-center justify-center ring-2 ring-white shadow-sm">
                     <span class="text-sm font-semibold text-primary-700">
                       {{ getInitials(row.user.name) }}
                     </span>

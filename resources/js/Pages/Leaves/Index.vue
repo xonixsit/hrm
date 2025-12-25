@@ -238,14 +238,20 @@
                   <tr v-for="leave in leaves.data" :key="leave.id" class="hover:bg-gray-50">
                     <td v-if="canManageLeaves" class="px-6 py-4 whitespace-nowrap">
                       <div class="flex items-center">
-                        <div class="flex-shrink-0 h-8 w-8">
-                          <div class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
-                            <span class="text-sm font-medium text-gray-700">
-                              {{ getInitials(leave.employee?.user?.name || '') }}
-                            </span>
-                          </div>
+                        <!-- Profile Picture -->
+                        <div v-if="leave.employee?.profile_pic" class="w-10 h-10 rounded-full overflow-hidden ring-2 ring-white shadow-sm border border-gray-200 flex-shrink-0 mr-3">
+                          <img 
+                            :src="`/storage/${leave.employee.profile_pic}`" 
+                            :alt="leave.employee?.user?.name"
+                            class="w-full h-full object-cover"
+                          />
                         </div>
-                        <div class="ml-3">
+                        <div v-else class="w-10 h-10 bg-gradient-to-br from-primary-100 to-primary-200 rounded-full flex items-center justify-center ring-2 ring-white shadow-sm flex-shrink-0 mr-3">
+                          <span class="text-sm font-semibold text-primary-700">
+                            {{ getInitials(leave.employee?.user?.name || '') }}
+                          </span>
+                        </div>
+                        <div>
                           <div class="text-sm font-medium text-gray-900">
                             {{ leave.employee?.user?.name || 'N/A' }}
                           </div>

@@ -389,6 +389,9 @@
         age: 25
       }" 
       @close="closeBirthdayPopup" />
+
+    <!-- Guide Slideshow -->
+    <GuideSlideshow ref="guideSlideshowRef" />
   </AuthenticatedLayout>
 </template>
 
@@ -397,6 +400,7 @@
   import { useAuth } from '@/composables/useAuth.js';
   import { router } from '@inertiajs/vue3';
   import axios from 'axios';
+  import { getInitials } from '@/utils/formatters.js';
   import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 
   // Unified UI Components
@@ -430,6 +434,7 @@
   import AttendanceTrackingWidget from '@/Components/Dashboard/AttendanceTrackingWidget.vue';
   import BreakMonitoringWidget from '@/Components/Dashboard/BreakMonitoringWidget.vue';
   import TimezoneWeatherWidget from '@/Components/Dashboard/TimezoneWeatherWidget.vue';
+  import GuideSlideshow from '@/Components/Dashboard/GuideSlideshow.vue';
 
   // Icons
   import {
@@ -443,7 +448,8 @@
     PlusIcon,
     ChartBarIcon,
     CogIcon,
-    ArrowTrendingUpIcon
+    ArrowTrendingUpIcon,
+    QuestionMarkCircleIcon
   } from '@heroicons/vue/24/outline';
 
   import { CakeIcon } from '@heroicons/vue/24/solid';
@@ -541,6 +547,7 @@
   const rejectionItem = ref(null);
   const rejectionReason = ref('');
   const showBirthdayPopup = ref(false);
+  const guideSlideshowRef = ref(null);
 
   // Computed properties
   const isAdmin = computed(() => {
@@ -577,6 +584,12 @@
 
   const headerActions = computed(() => {
     const actions = [
+      {
+        id: 'guide',
+        label: 'View Guide',
+        icon: 'QuestionMarkCircleIcon',
+        handler: () => guideSlideshowRef.value?.openSlideshow()
+      },
       {
         id: 'refresh',
         label: 'Refresh',
@@ -627,7 +640,8 @@
       ArrowPathIcon,
       CogIcon,
       ChartBarIcon,
-      ClockIcon
+      ClockIcon,
+      QuestionMarkCircleIcon
     };
     return iconMap[iconName] || ClockIcon;
   };

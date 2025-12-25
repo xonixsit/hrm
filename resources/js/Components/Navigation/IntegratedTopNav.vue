@@ -249,8 +249,15 @@
                       ? 'text-gray-300 hover:text-white hover:bg-gray-700/50' 
                       : 'text-white/90 hover:text-white hover:bg-white/15 backdrop-blur-sm hover:shadow-md')
               ]">
-              <div :class="[
-                'w-9 h-9 rounded-lg flex items-center justify-center text-sm font-bold',
+              <div v-if="user?.employee?.profile_pic" class="w-9 h-9 rounded-lg overflow-hidden flex-shrink-0 border-2 border-white/30">
+                <img 
+                  :src="`/storage/${user.employee.profile_pic}`" 
+                  :alt="user?.name"
+                  class="w-full h-full object-cover"
+                />
+              </div>
+              <div v-else :class="[
+                'w-9 h-9 rounded-lg flex items-center justify-center text-sm font-bold flex-shrink-0',
                 isDark ? 'bg-teal-600 text-white' : 'bg-teal-500 text-white'
               ]">
                 {{ userInitials }}
@@ -410,7 +417,7 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { router } from '@inertiajs/vue3'
+import { router, usePage } from '@inertiajs/vue3'
 import { useAuth } from '@/composables/useAuth.js'
 import { useTheme } from '@/composables/useTheme.js'
 
@@ -421,8 +428,12 @@ const props = defineProps({
   }
 })
 
-const { user, roles: userRoles } = useAuth()
+const page = usePage()
 const { isDark } = useTheme()
+
+// Use page.props for reactive user data
+const user = computed(() => page.props.auth?.user)
+const userRoles = computed(() => page.props.auth?.user?.roles || [])
 
 const showMore = ref(false)
 const showAssessmentMenu = ref(false)

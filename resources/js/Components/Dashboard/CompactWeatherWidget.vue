@@ -104,7 +104,9 @@ const fetchWeather = async () => {
       condition: weatherData.current.condition.text
     };
     
-    timezoneName.value = timezoneData.timezone.tz_id;
+    if (timezoneData?.timezone?.tz_id) {
+      timezoneName.value = timezoneData.timezone.tz_id;
+    }
   } catch (error) {
     console.error('Weather fetch error:', error);
   }

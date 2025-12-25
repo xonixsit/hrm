@@ -37,7 +37,9 @@ class LeaveController extends Controller
         $isApprover = $user->hasAnyRole(['Admin', 'HR', 'Manager']);
 
         if ($isApprover) {
-            $query->with(['employee.user', 'leaveType']);
+            $query->with(['employee' => function ($q) {
+                $q->select('id', 'user_id', 'employee_code', 'profile_pic', 'job_title');
+            }, 'employee.user', 'leaveType']);
         } else {
             $query->with('leaveType');
             $query->where('employee_id', $user->employee->id);

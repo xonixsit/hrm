@@ -106,8 +106,8 @@
                       <div class="employee-info">
                         <div class="employee-name">{{ employee.name }}</div>
                         <div class="employee-details">
-                          <span v-if="employee.position" class="employee-position">
-                            {{ employee.position }}
+                          <span v-if="employee.job_title" class="employee-position">
+                            {{ employee.job_title }}
                           </span>
                           <span v-if="employee.department" class="employee-department">
                             {{ employee.department.name }}

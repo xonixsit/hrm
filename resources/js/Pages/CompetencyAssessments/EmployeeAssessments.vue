@@ -2,7 +2,7 @@
   <AuthenticatedLayout>
     <PageLayout
       :title="`${employee.name} - Assessments`"
-      :subtitle="`${employee.position}${employee.department ? ' • ' + employee.department.name : ''}`"
+      :subtitle="`${employee.job_title}${employee.department ? ' • ' + employee.department.name : ''}`"
       :breadcrumbs="breadcrumbs"
       :actions="headerActions"
     >

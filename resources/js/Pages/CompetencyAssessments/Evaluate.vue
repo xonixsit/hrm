@@ -41,7 +41,7 @@
                   </div>
                   <div class="flex-1">
                     <h3 class="text-lg font-semibold text-gray-900">{{ assessment.employee?.user?.name }}</h3>
-                    <p class="text-gray-600">{{ assessment.employee?.position || 'Employee' }}</p>
+                    <p class="text-gray-600">{{ assessment.employee?.job_title || 'Employee' }}</p>
                     <div class="mt-2 flex items-center space-x-4 text-sm text-gray-500">
                       <span class="flex items-center">
                         <BuildingOfficeIcon class="w-4 h-4 mr-1" />

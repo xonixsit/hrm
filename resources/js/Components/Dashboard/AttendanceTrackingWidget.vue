@@ -107,6 +107,19 @@
         >
           <div class="flex items-center space-x-3 flex-1 min-w-0">
             <div class="w-2 h-2 bg-green-400 rounded-full flex-shrink-0"></div>
+            <!-- Profile Picture -->
+            <div v-if="employee.profile_pic" class="w-8 h-8 rounded-full overflow-hidden ring-1 ring-white shadow-sm border border-gray-200 flex-shrink-0">
+              <img 
+                :src="`/storage/${employee.profile_pic}`" 
+                :alt="employee.name"
+                class="w-full h-full object-cover"
+              />
+            </div>
+            <div v-else class="w-8 h-8 bg-gradient-to-br from-primary-100 to-primary-200 rounded-full flex items-center justify-center ring-1 ring-white shadow-sm flex-shrink-0">
+              <span class="text-xs font-semibold text-primary-700">
+                {{ getInitials(employee.name) }}
+              </span>
+            </div>
             <div class="min-w-0 flex-1">
               <div class="font-medium text-gray-900 truncate">{{ employee.name }}</div>
               <div class="text-sm text-gray-600 truncate">
@@ -139,7 +152,20 @@
           class="employee-card flex items-center justify-between p-3 bg-red-50 rounded-lg border border-red-100"
         >
           <div class="flex items-center space-x-3">
-            <div class="w-2 h-2 bg-red-400 rounded-full"></div>
+            <div class="w-2 h-2 bg-red-400 rounded-full flex-shrink-0"></div>
+            <!-- Profile Picture -->
+            <div v-if="employee.profile_pic" class="w-8 h-8 rounded-full overflow-hidden ring-1 ring-white shadow-sm border border-gray-200 flex-shrink-0">
+              <img 
+                :src="`/storage/${employee.profile_pic}`" 
+                :alt="employee.name"
+                class="w-full h-full object-cover"
+              />
+            </div>
+            <div v-else class="w-8 h-8 bg-gradient-to-br from-primary-100 to-primary-200 rounded-full flex items-center justify-center ring-1 ring-white shadow-sm flex-shrink-0">
+              <span class="text-xs font-semibold text-primary-700">
+                {{ getInitials(employee.name) }}
+              </span>
+            </div>
             <div>
               <div class="font-medium text-gray-900">{{ employee.name }}</div>
               <div class="text-sm text-gray-600">
@@ -225,6 +251,16 @@ const getAttendanceRateColor = (rate) => {
   if (rate >= 90) return 'bg-green-500';
   if (rate >= 75) return 'bg-yellow-500';
   return 'bg-red-500';
+};
+
+
+const getInitials = (name) => {
+  if (!name) return '?';
+  return name
+    .split(' ')
+    .map(part => part.charAt(0).toUpperCase())
+    .slice(0, 2)
+    .join('');
 };
 
 const getFormattedTime = (timeString) => {
