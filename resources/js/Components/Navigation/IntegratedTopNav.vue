@@ -516,6 +516,7 @@ const moreNavItems = computed(() => {
 
     if (isAdmin) {
       items.push(
+        { route: 'admin.broadcasts.index', label: 'Broadcasts', category: 'admin' },
         { route: 'admin.roles.index', label: 'Role Management', category: 'admin' },
         { route: 'admin.system-settings.index', label: 'System Settings', category: 'admin' },
         { route: 'leave-types.index', label: 'Leave Policies', category: 'admin' },

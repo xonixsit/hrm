@@ -66,6 +66,42 @@ axios.interceptors.response.use(
     return response;
   },
   (error) => {
+    // Handle CSRF token mismatch (419 errors)
+    if (error.response?.status === 419) {
+      console.warn('[CSRF] Token mismatch detected, attempting to refresh...');
+      
+      // Try to get a fresh CSRF token
+      return axios.get('/api/csrf-token')
+        .then(response => {
+          const newToken = response.data.csrf_token;
+          if (newToken) {
+            // Update the meta tag
+            const metaTag = document.querySelector('meta[name="csrf-token"]');
+            if (metaTag) {
+              metaTag.setAttribute('content', newToken);
+            }
+            
+            // Update axios default headers
+            window.axios.defaults.headers.common['X-CSRF-TOKEN'] = newToken;
+            
+            // Retry the original request with the new token
+            const originalRequest = error.config;
+            originalRequest.headers['X-CSRF-TOKEN'] = newToken;
+            
+            console.log('[CSRF] Token refreshed, retrying request...');
+            return axios(originalRequest);
+          } else {
+            throw new Error('Failed to get new CSRF token');
+          }
+        })
+        .catch(refreshError => {
+          console.error('[CSRF] Failed to refresh token:', refreshError);
+          // If we can't refresh the token, reload the page
+          window.location.reload();
+          return Promise.reject(error);
+        });
+    }
+    
     // Enhanced error handling for axios responses
     if (error && typeof error === 'object') {
       // Ensure response object exists and has required properties

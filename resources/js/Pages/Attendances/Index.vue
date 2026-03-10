@@ -384,8 +384,23 @@ import axios from 'axios';
 onMounted(() => {
   const urlParams = new URLSearchParams(window.location.search);
   if (urlParams.get('action') === 'clock-in') {
-    axios.post('/api/attendance/clock-in').then(() => {
+    axios.post('/api/attendance/clock-in', {}, {
+      headers: {
+        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      }
+    }).then(() => {
       window.location.href = route('dashboard');
+    }).catch(error => {
+      console.error('Clock-in failed:', error);
+      if (error.response?.status === 419) {
+        // CSRF token mismatch - refresh and try again
+        window.location.reload();
+      } else {
+        // Redirect to dashboard anyway to avoid being stuck
+        window.location.href = route('dashboard');
+      }
     });
   }
 });

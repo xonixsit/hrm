@@ -15,6 +15,7 @@ use App\Http\Controllers\SupportController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TimesheetController;
 use App\Http\Controllers\WorkReportController;
+use App\Http\Controllers\BroadcastController;
 use App\Http\Controllers\Admin\CompetencyController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\EmployeeCompetencyController;
@@ -609,6 +610,49 @@ Route::middleware('auth')->group(function () {
         Route::get('roles', [RoleController::class, 'index'])->name('roles.index');
         Route::post('roles/{user}/assign', [RoleController::class, 'assignRole'])->name('roles.assign');
         Route::post('roles/{user}/remove', [RoleController::class, 'removeRole'])->name('roles.remove');
+        
+        // Broadcast Management
+        Route::resource('broadcasts', BroadcastController::class);
+        Route::post('broadcasts/test-email', [BroadcastController::class, 'sendTestEmail'])->name('broadcasts.test-email');
+        Route::get('broadcasts/test-mail-config', function() {
+            try {
+                $user = Auth::user();
+                
+                // Test basic email sending
+                Mail::raw('This is a test email from Xonobics HR System.', function ($message) {
+                    $message->to('xonixsit@outlook.com')
+                            ->subject('Test Email - Configuration Check');
+                });
+                
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Test email sent successfully!',
+                    'config' => [
+                        'mailer' => config('mail.default'),
+                        'host' => config('mail.mailers.smtp.host'),
+                        'port' => config('mail.mailers.smtp.port'),
+                        'from' => config('mail.from.address'),
+                        'user' => $user->name
+                    ]
+                ]);
+            } catch (\Exception $e) {
+                return response()->json([
+                    'success' => false,
+                    'error' => $e->getMessage(),
+                    'config' => [
+                        'mailer' => config('mail.default'),
+                        'host' => config('mail.mailers.smtp.host'),
+                        'port' => config('mail.mailers.smtp.port'),
+                        'from' => config('mail.from.address')
+                    ]
+                ]);
+            }
+        })->name('broadcasts.test-mail-config');
+        Route::get('broadcasts/create-simple', function() {
+            return Inertia::render('Admin/Broadcasts/CreateSimple');
+        })->name('broadcasts.create-simple');
+        Route::post('broadcasts/{broadcast}/send', [BroadcastController::class, 'send'])->name('broadcasts.send');
+        Route::delete('broadcasts/{broadcast}', [BroadcastController::class, 'delete'])->name('broadcasts.delete');
     });
     
 

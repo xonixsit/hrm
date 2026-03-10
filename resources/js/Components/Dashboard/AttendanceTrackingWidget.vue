@@ -302,9 +302,16 @@ const sendReminder = async () => {
   
   loading.value = true;
   try {
+    // Get fresh CSRF token
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    
+    if (!csrfToken) {
+      throw new Error('CSRF token not found');
+    }
+    
     const response = await window.axios.post('/api/attendance/send-clock-in-reminders', {}, {
       headers: {
-        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
+        'X-CSRF-TOKEN': csrfToken,
         'Accept': 'application/json',
         'Content-Type': 'application/json'
       }
@@ -328,10 +335,21 @@ const sendReminder = async () => {
   } catch (error) {
     console.error('Failed to send reminder:', error);
     
+    let errorMessage = '❌ Failed to send reminders. Please try again.';
+    
+    // Handle specific CSRF error
+    if (error.response?.status === 419) {
+      errorMessage = '❌ Session expired. Please refresh the page and try again.';
+      // Optionally refresh the page after a delay
+      setTimeout(() => {
+        window.location.reload();
+      }, 3000);
+    }
+    
     // Show error toast
     const toast = document.createElement('div');
     toast.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 transition-all duration-300';
-    toast.textContent = '❌ Failed to send reminders. Please try again.';
+    toast.textContent = errorMessage;
     document.body.appendChild(toast);
     
     setTimeout(() => {
