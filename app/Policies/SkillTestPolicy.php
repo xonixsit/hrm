@@ -5,6 +5,7 @@ namespace App\Policies;
 use App\Models\User;
 use App\Models\SkillTest;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use Illuminate\Support\Facades\Log;
 
 class SkillTestPolicy
 {
@@ -53,9 +54,7 @@ class SkillTestPolicy
      */
     public function update(User $user, SkillTest $skillTest)
     {
-        // Only admin and HR can update tests
-        // Only allow updates if test is in draft status
-        return $user->hasAnyRole(['Admin', 'HR']) && $skillTest->isDraft();
+        return $user->hasAnyRole(['Admin', 'HR']);
     }
 
     /**
@@ -83,7 +82,20 @@ class SkillTestPolicy
     {
         // Only admin and HR can publish tests
         // Only allow publishing if test is in draft status
-        return $user->hasAnyRole(['Admin', 'HR']) && $skillTest->isDraft();
+        $hasRole = $user->hasAnyRole(['Admin', 'HR']);
+        $isDraft = $skillTest->isDraft();
+        
+        Log::info("Publish authorization check", [
+            'user_id' => $user->id,
+            'user_roles' => $user->getRoleNames(),
+            'has_role' => $hasRole,
+            'test_id' => $skillTest->id,
+            'test_status' => $skillTest->status,
+            'is_draft' => $isDraft,
+            'result' => $hasRole && $isDraft
+        ]);
+        
+        return $hasRole && $isDraft;
     }
 
     /**

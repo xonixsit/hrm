@@ -725,6 +725,7 @@ Route::middleware('auth')->group(function () {
     // Skill Testing routes
     Route::prefix('skill-tests')->name('skill-tests.')->group(function () {
         Route::get('/', [SkillTestController::class, 'index'])->name('index');
+        Route::get('/my-tests', [SkillTestController::class, 'myTests'])->name('my-tests');
         Route::get('/create', [SkillTestController::class, 'create'])->name('create');
         Route::post('/', [SkillTestController::class, 'store'])->name('store');
         Route::get('/{skillTest}/edit', [SkillTestController::class, 'edit'])->name('edit');
@@ -732,6 +733,32 @@ Route::middleware('auth')->group(function () {
         Route::delete('/{skillTest}', [SkillTestController::class, 'destroy'])->name('destroy');
         Route::post('/{skillTest}/publish', [SkillTestController::class, 'publish'])->name('publish');
         Route::post('/{skillTest}/archive', [SkillTestController::class, 'archive'])->name('archive');
+        
+        // Question management routes
+        Route::post('/{skillTest}/questions', [SkillTestController::class, 'storeQuestion'])->name('questions.store');
+        Route::patch('/{skillTest}/questions/{question}', [SkillTestController::class, 'updateQuestion'])->name('questions.update');
+        Route::delete('/{skillTest}/questions/{question}', [SkillTestController::class, 'destroyQuestion'])->name('questions.destroy');
+        
+        // Assignment routes
+        Route::get('/{skillTest}/assignments', [SkillTestController::class, 'showAssignments'])->name('assignments');
+        Route::post('/{skillTest}/assign', [SkillTestController::class, 'assign'])->name('assign');
+        Route::patch('/assignments/{testAssignment}', [SkillTestController::class, 'updateAssignment'])->name('update-assignment');
+        
+        // Test taking routes
+        Route::get('/{skillTest}/take', [SkillTestController::class, 'take'])->name('take');
+        Route::post('/{skillTest}/start', [SkillTestController::class, 'startSession'])->name('start');
+        Route::get('/session/{testSession}', [SkillTestController::class, 'testSession'])->name('test-session');
+        Route::post('/session/{testSession}/questions/{question}/answer', [SkillTestController::class, 'saveAnswer'])->name('save-answer');
+        Route::post('/session/{testSession}/submit', [SkillTestController::class, 'submitSession'])->name('submit-session');
+
+        // Employee result view
+        Route::get('/results/{testResponse}', [SkillTestController::class, 'myResult'])->name('my-result');
+
+        // Review routes (Admin/HR only)
+        Route::get('/reviews', [\App\Http\Controllers\SkillTestReviewController::class, 'index'])->name('reviews.index');
+        Route::get('/reviews/{testResponse}', [\App\Http\Controllers\SkillTestReviewController::class, 'show'])->name('reviews.show');
+        Route::post('/reviews/{testResponse}/answers/{answer}', [\App\Http\Controllers\SkillTestReviewController::class, 'reviewAnswer'])->name('reviews.answer');
+        Route::post('/reviews/{testResponse}/finalize', [\App\Http\Controllers\SkillTestReviewController::class, 'finalize'])->name('reviews.finalize');
     });
     
     // Legal pages routes
@@ -741,6 +768,26 @@ Route::middleware('auth')->group(function () {
     Route::get('/legal/privacy', function () {
         return Inertia::render('Legal/PrivacyPolicy');
     })->name('legal.privacy');
+    
+    // API routes for AJAX requests
+    Route::prefix('api')->middleware('auth')->group(function () {
+        Route::get('/employees', function () {
+            $employees = \App\Models\Employee::with('user')
+                ->active()
+                ->get()
+                ->map(function ($employee) {
+                    return [
+                        'id' => $employee->id,
+                        'full_name' => $employee->getFullName(),
+                        'email' => $employee->user?->email ?? $employee->personal_email,
+                    ];
+                })
+                ->sortBy('full_name')
+                ->values();
+            
+            return response()->json(['employees' => $employees]);
+        });
+    });
 });
 
 require __DIR__.'/auth.php';

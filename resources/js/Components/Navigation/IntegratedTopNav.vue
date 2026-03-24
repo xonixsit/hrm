@@ -488,6 +488,7 @@ const moreNavItems = computed(() => {
     const rolesArray = Array.isArray(roles) ? roles : []
     
     const items = [
+      { route: 'skill-tests.my-tests', label: 'My Tests', category: 'regular' },
       { route: 'work-reports.index', label: 'Work Reports', category: 'regular' },
       { route: 'work-reports.leaderboard', label: 'Leaderboard', category: 'regular' },
       { route: 'feedbacks.index', label: 'Feedback', category: 'regular' },
@@ -516,7 +517,9 @@ const moreNavItems = computed(() => {
 
     if (isAdmin) {
       items.push(
-        { route: 'admin.broadcasts.index', label: 'Broadcasts', category: 'admin' },
+        { route: 'skill-tests.index', label: 'Skill Tests', category: 'admin' },
+        { route: 'skill-tests.reviews.index', label: 'Test Reviews', category: 'admin' },
+        // { route: 'admin.broadcasts.index', label: 'Broadcasts', category: 'admin' },
         { route: 'admin.roles.index', label: 'Role Management', category: 'admin' },
         { route: 'admin.system-settings.index', label: 'System Settings', category: 'admin' },
         { route: 'leave-types.index', label: 'Leave Policies', category: 'admin' },

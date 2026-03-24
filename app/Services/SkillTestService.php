@@ -172,15 +172,7 @@ class SkillTestService
                     throw new Exception("Single answer question {$question->id} must have exactly one correct answer.");
                 }
             } elseif ($question->isText()) {
-                $textConfig = $question->textConfig;
-
-                if (!$textConfig) {
-                    throw new Exception("Text question {$question->id} is missing configuration.");
-                }
-
-                if (empty($textConfig->expected_answer_guidelines)) {
-                    throw new Exception("Text question {$question->id} must have expected answer guidelines.");
-                }
+                // text_config is optional for text questions
             }
         }
 
@@ -379,4 +371,252 @@ class SkillTestService
             return $newTest;
         });
     }
+
+    /**
+     * Add a question to a skill test
+     *
+     * @param SkillTest $test
+     * @param array $data
+     * @return Question
+     * @throws Exception
+     */
+    public function addQuestion(SkillTest $test, array $data): Question
+    {
+        if (!$test->isDraft()) {
+            throw new Exception("Cannot add questions to a published or archived test.");
+        }
+
+        Log::info("Adding question with data:", $data);
+
+        return DB::transaction(function () use ($test, $data) {
+            // Set order to last
+            $maxOrder = $test->questions()->max('order') ?? 0;
+            $data['order'] = $maxOrder + 1;
+            $data['skill_test_id'] = $test->id;
+
+            $question = Question::create([
+                'skill_test_id' => $data['skill_test_id'],
+                'type' => $data['type'],
+                'question_text' => $data['question_text'],
+                'points' => $data['points'],
+                'order' => $data['order'],
+            ]);
+
+            // Add options for MCQ or single answer
+            if (in_array($data['type'], ['mcq', 'single_answer']) && isset($data['options'])) {
+                foreach ($data['options'] as $optionData) {
+                    if (!empty($optionData['option_text'])) {
+                        $question->options()->create([
+                            'option_text' => $optionData['option_text'],
+                            'explanation' => $optionData['explanation'] ?? null,
+                            'is_correct' => $optionData['is_correct'] ?? false,
+                            'order' => $optionData['order'],
+                        ]);
+                    }
+                }
+            }
+
+            // Add text config for text answer
+            if ($data['type'] === 'text' && isset($data['text_config'])) {
+                $question->textConfig()->create($data['text_config']);
+            }
+
+            Log::info("Question added to test {$test->id}: {$question->id}");
+            return $question->load(['options', 'textConfig']);
+        });
+    }
+
+    /**
+     * Update a question
+     *
+     * @param SkillTest $test
+     * @param Question $question
+     * @param array $data
+     * @return Question
+     * @throws Exception
+     */
+    public function updateQuestion(SkillTest $test, Question $question, array $data): Question
+    {
+        if (!$test->isDraft()) {
+            throw new Exception("Cannot update questions in a published or archived test.");
+        }
+
+        if ($question->skill_test_id !== $test->id) {
+            throw new Exception("Question does not belong to this test.");
+        }
+
+        return DB::transaction(function () use ($question, $data) {
+            $question->update([
+                'question_text' => $data['question_text'],
+                'points' => $data['points'],
+            ]);
+
+            // Update options for MCQ or single answer
+            if (in_array($question->type, ['mcq', 'single_answer']) && isset($data['options'])) {
+                // Delete existing options
+                $question->options()->delete();
+
+                // Create new options
+                foreach ($data['options'] as $optionData) {
+                    if (!empty($optionData['option_text'])) {
+                        $question->options()->create([
+                            'option_text' => $optionData['option_text'],
+                            'explanation' => $optionData['explanation'] ?? null,
+                            'is_correct' => $optionData['is_correct'] ?? false,
+                            'order' => $optionData['order'],
+                        ]);
+                    }
+                }
+            }
+
+            // Update text config for text answer
+            if ($question->type === 'text' && isset($data['text_config'])) {
+                if ($question->textConfig) {
+                    $question->textConfig->update($data['text_config']);
+                } else {
+                    $question->textConfig()->create($data['text_config']);
+                }
+            }
+
+            Log::info("Question updated: {$question->id}");
+            return $question->load(['options', 'textConfig']);
+        });
+    }
+
+    /**
+     * Delete a question
+     *
+     * @param SkillTest $test
+     * @param Question $question
+     * @return bool
+     * @throws Exception
+     */
+    public function deleteQuestion(SkillTest $test, Question $question): bool
+    {
+        if (!$test->isDraft()) {
+            throw new Exception("Cannot delete questions from a published or archived test.");
+        }
+
+        if ($question->skill_test_id !== $test->id) {
+            throw new Exception("Question does not belong to this test.");
+        }
+
+        try {
+            $question->delete();
+            Log::info("Question deleted: {$question->id}");
+            return true;
+        } catch (Exception $e) {
+            Log::error("Failed to delete question {$question->id}: " . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    /**
+     * Assign test to employees
+     *
+     * @param SkillTest $test
+     * @param array $employeeIds
+     * @param array $config
+     * @return Collection
+     * @throws Exception
+     */
+    public function assignToEmployees(SkillTest $test, array $employeeIds, array $config): Collection
+    {
+        if (!$test->isPublished()) {
+            throw new Exception("Cannot assign a test that is not published.");
+        }
+
+        if (empty($employeeIds)) {
+            throw new Exception("At least one employee must be selected.");
+        }
+
+        $assignments = collect();
+
+        return DB::transaction(function () use ($test, $employeeIds, $config, &$assignments) {
+            foreach ($employeeIds as $employeeId) {
+                $assignment = $test->testAssignments()->create([
+                    'employee_id' => $employeeId,
+                    'assigned_by' => auth()->id(),
+                    'available_from' => $config['available_from'] ?? now(),
+                    'available_until' => $config['available_until'] ?? null,
+                    'max_attempts' => $config['max_attempts'] ?? $test->max_attempts,
+                    'status' => 'pending',
+                ]);
+
+                $assignments->push($assignment);
+                Log::info("Test {$test->id} assigned to employee {$employeeId}");
+            }
+
+            return $assignments;
+        });
+    }
+
+    /**
+     * Get assignments for a specific employee
+     *
+     * @param int $employeeId
+     * @return EloquentCollection
+     */
+    public function getAssignmentsForEmployee(int $employeeId): EloquentCollection
+    {
+        return \App\Models\TestAssignment::where('employee_id', $employeeId)
+            ->with(['skillTest', 'assignedBy', 'testSessions'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+    }
+
+    /**
+     * Get assignments for a specific test
+     *
+     * @param SkillTest $test
+     * @return EloquentCollection
+     */
+    public function getAssignmentsForTest(SkillTest $test): EloquentCollection
+    {
+        return $test->testAssignments()
+            ->with(['employee.user', 'assignedBy', 'testSessions'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+    }
+
+    /**
+     * Update an assignment
+     *
+     * @param TestAssignment $assignment
+     * @param array $data
+     * @return TestAssignment
+     * @throws Exception
+     */
+    public function updateAssignment(\App\Models\TestAssignment $assignment, array $data): \App\Models\TestAssignment
+    {
+        // Validate available_until is after available_from
+        if (isset($data['available_until']) && isset($data['available_from'])) {
+            $from = new \DateTime($data['available_from']);
+            $until = new \DateTime($data['available_until']);
+            
+            if ($until <= $from) {
+                throw new Exception("Deadline must be after the available from date.");
+            }
+        }
+
+        // Validate max_attempts
+        if (isset($data['max_attempts']) && $data['max_attempts'] < 1) {
+            throw new Exception("Maximum attempts must be at least 1.");
+        }
+
+        try {
+            $assignment->update($data);
+            Log::info("Assignment updated", [
+                'assignment_id' => $assignment->id,
+                'test_id' => $assignment->skill_test_id,
+                'employee_id' => $assignment->employee_id,
+            ]);
+            
+            return $assignment;
+        } catch (Exception $e) {
+            Log::error("Failed to update assignment {$assignment->id}: " . $e->getMessage());
+            throw $e;
+        }
+    }
+
 }
