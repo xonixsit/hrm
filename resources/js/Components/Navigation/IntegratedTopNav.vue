@@ -456,12 +456,19 @@ const userInitials = computed(() => {
 })
 
 // Main navigation items
-const mainNavItems = computed(() => [
-  { route: 'dashboard', label: 'Dashboard' },
-  { route: 'attendances.index', label: 'Time Tracking' },
-  { route: 'leaves.index', label: 'Leave Applications' },
-  { route: 'taxgpt.index', label: 'TaxGPT' }
-])
+const mainNavItems = computed(() => {
+  const items = [
+    { route: 'dashboard', label: 'Dashboard' },
+    { route: 'attendances.index', label: 'Time Tracking' },
+    { route: 'leaves.index', label: 'Leave Applications' },
+  ]
+  // Check if taxgpt route exists in Ziggy before adding
+  const ziggyRoutes = window?.Ziggy?.routes ?? {}
+  if (ziggyRoutes['taxgpt.index']) {
+    items.push({ route: 'taxgpt.index', label: 'TaxGPT' })
+  }
+  return items
+})
 
 // Assessment menu items for all users
 const assessmentMenuItems = computed(() => {
