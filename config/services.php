@@ -37,7 +37,11 @@ return [
 
     'weather' => [
         'api_key' => env('WEATHER_API_KEY'),
-        'provider' => env('WEATHER_PROVIDER', 'openweathermap'), // openweathermap, weatherapi, etc.
+        'provider' => env('WEATHER_PROVIDER', 'openweathermap'),
+    ],
+
+    'groq' => [
+        'api_key' => env('GROQ_API_KEY', ''),
     ],
 
 ];

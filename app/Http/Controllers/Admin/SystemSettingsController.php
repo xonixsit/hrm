@@ -47,6 +47,7 @@ class SystemSettingsController extends Controller
             'backup_frequency' => 'required|in:daily,weekly,monthly',
             'session_timeout' => 'required|integer|min:5|max:1440',
             'max_file_upload' => 'required|integer|min:1|max:100',
+            'groq_api_key' => 'nullable|string|max:500',
         ]);
 
         // Ensure boolean fields are properly set
@@ -79,6 +80,7 @@ class SystemSettingsController extends Controller
             'backup_frequency' => \App\Models\Setting::get('system_settings.backup_frequency', 'daily'),
             'session_timeout' => \App\Models\Setting::get('system_settings.session_timeout', 120),
             'max_file_upload' => \App\Models\Setting::get('system_settings.max_file_upload', 10),
+            'groq_api_key' => \App\Models\Setting::get('system_settings.groq_api_key', config('services.groq.api_key', '')),
         ];
     }
 

@@ -760,6 +760,16 @@ Route::middleware('auth')->group(function () {
         Route::post('/reviews/{testResponse}/answers/{answer}', [\App\Http\Controllers\SkillTestReviewController::class, 'reviewAnswer'])->name('reviews.answer');
         Route::post('/reviews/{testResponse}/finalize', [\App\Http\Controllers\SkillTestReviewController::class, 'finalize'])->name('reviews.finalize');
     });
+
+    // TaxGPT routes
+    Route::prefix('taxgpt')->name('taxgpt.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\TaxGptController::class, 'index'])->name('index');
+        Route::get('/{chatSession}', [\App\Http\Controllers\TaxGptController::class, 'show'])->name('show');
+        Route::post('/new', [\App\Http\Controllers\TaxGptController::class, 'newSession'])->name('new');
+        Route::post('/{chatSession}/message', [\App\Http\Controllers\TaxGptController::class, 'sendMessage'])->name('message');
+        Route::post('/{chatSession}/stream', [\App\Http\Controllers\TaxGptController::class, 'streamMessage'])->name('stream');
+        Route::delete('/{chatSession}', [\App\Http\Controllers\TaxGptController::class, 'deleteSession'])->name('delete');
+    });
     
     // Legal pages routes
     Route::get('/legal/disclaimer', function () {
