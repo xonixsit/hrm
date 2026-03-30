@@ -475,11 +475,13 @@ const assessmentMenuItems = computed(() => {
   const roles = userRoles.value || []
   const rolesArray = Array.isArray(roles) ? roles : []
   const isManagement = rolesArray.includes('Admin') || rolesArray.includes('Manager') || rolesArray.includes('HR')
-  
+  const ziggyRoutes = window?.Ziggy?.routes ?? {}
+  const hasRoute = (name) => !!ziggyRoutes[name]
+
   const items = [
     { route: 'competency-assessments.my-assessments', label: 'My Assessments' }
   ]
-  
+
   if (isManagement) {
     items.push(
       { route: 'competency-assessments.index', label: 'All Assessments' },
@@ -489,8 +491,8 @@ const assessmentMenuItems = computed(() => {
       { route: 'competencies.index', label: 'Competency Setup' }
     )
   }
-  
-  return items
+
+  return items.filter(item => hasRoute(item.route))
 })
 
 // Categorized navigation items
@@ -498,6 +500,8 @@ const moreNavItems = computed(() => {
   try {
     const roles = userRoles.value || []
     const rolesArray = Array.isArray(roles) ? roles : []
+    const ziggyRoutes = window?.Ziggy?.routes ?? {}
+    const hasRoute = (name) => !!ziggyRoutes[name]
     
     const items = [
       { route: 'skill-tests.my-tests', label: 'My Tests', category: 'regular' },
@@ -519,19 +523,10 @@ const moreNavItems = computed(() => {
       )
     }
 
-    // // HR specific items (only if not admin to avoid duplicates)
-    // if (isHR && !isAdmin) {
-    //   items.push(
-    //     { route: 'leave-types.index', label: 'Leave Policies', category: 'management' },
-    //     { route: 'support.admin', label: 'Support Management', category: 'management' }
-    //   )
-    // }
-
     if (isAdmin) {
       items.push(
         { route: 'skill-tests.index', label: 'Skill Tests', category: 'admin' },
         { route: 'skill-tests.reviews.index', label: 'Test Reviews', category: 'admin' },
-        // { route: 'admin.broadcasts.index', label: 'Broadcasts', category: 'admin' },
         { route: 'admin.roles.index', label: 'Role Management', category: 'admin' },
         { route: 'admin.system-settings.index', label: 'System Settings', category: 'admin' },
         { route: 'leave-types.index', label: 'Leave Policies', category: 'admin' },
@@ -541,7 +536,8 @@ const moreNavItems = computed(() => {
       )
     }
 
-    return items
+    // Filter out any routes not registered in Ziggy to prevent runtime errors
+    return items.filter(item => hasRoute(item.route))
   } catch (error) {
     console.error('Error computing moreNavItems:', error)
     return [

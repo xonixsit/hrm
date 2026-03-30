@@ -195,10 +195,12 @@ const fetchWeather = async () => {
     };
     
     // Update timezone info from API
-    timezoneName.value = timezoneData.timezone.tz_id;
-    const offset = timezoneData.timezone.utc_offset_hours;
-    const sign = offset >= 0 ? '+' : '';
-    timezoneOffset.value = `UTC${sign}${offset}`;
+    if (timezoneData?.timezone?.tz_id) {
+      timezoneName.value = timezoneData.timezone.tz_id;
+      const offset = timezoneData.timezone.utc_offset_hours;
+      const sign = offset >= 0 ? '+' : '';
+      timezoneOffset.value = `UTC${sign}${offset}`;
+    }
     
     weatherError.value = false;
   } catch (error) {
