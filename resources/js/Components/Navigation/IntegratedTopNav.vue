@@ -420,7 +420,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { router, usePage } from '@inertiajs/vue3'
 import { useAuth } from '@/composables/useAuth.js'
 import { useTheme } from '@/composables/useTheme.js'
@@ -443,12 +443,6 @@ const showMore = ref(false)
 const showAssessmentMenu = ref(false)
 const showUserMenu = ref(false)
 const showMobileMenu = ref(false)
-
-// Debug logging
-//console.log('IntegratedTopNav - User:', user.value)
-//console.log('IntegratedTopNav - Roles:', userRoles.value)
-//console.log('IntegratedTopNav - Is Admin:', userRoles.value?.includes('Admin'))
-//console.log('IntegratedTopNav - Component Loaded Successfully')
 
 const userInitials = computed(() => {
   if (!user.value?.name) return 'U'
@@ -475,8 +469,6 @@ const assessmentMenuItems = computed(() => {
   const roles = userRoles.value || []
   const rolesArray = Array.isArray(roles) ? roles : []
   const isManagement = rolesArray.includes('Admin') || rolesArray.includes('Manager') || rolesArray.includes('HR')
-  const ziggyRoutes = window?.Ziggy?.routes ?? {}
-  const hasRoute = (name) => !!ziggyRoutes[name]
 
   const items = [
     { route: 'competency-assessments.my-assessments', label: 'My Assessments' }
@@ -492,7 +484,8 @@ const assessmentMenuItems = computed(() => {
     )
   }
 
-  return items.filter(item => hasRoute(item.route))
+  // Return all items without filtering - routes are validated server-side
+  return items
 })
 
 // Categorized navigation items
@@ -500,8 +493,6 @@ const moreNavItems = computed(() => {
   try {
     const roles = userRoles.value || []
     const rolesArray = Array.isArray(roles) ? roles : []
-    const ziggyRoutes = window?.Ziggy?.routes ?? {}
-    const hasRoute = (name) => !!ziggyRoutes[name]
     
     const items = [
       { route: 'skill-tests.my-tests', label: 'My Tests', category: 'regular' },
@@ -536,16 +527,11 @@ const moreNavItems = computed(() => {
       )
     }
 
-    // Filter out any routes not registered in Ziggy to prevent runtime errors
-    return items.filter(item => hasRoute(item.route))
+    // Return all items without filtering - routes are validated server-side
+    return items
   } catch (error) {
     console.error('Error computing moreNavItems:', error)
-    return [
-      { route: 'work-reports.index', label: 'Work Reports', category: 'regular' },
-      { route: 'work-reports.leaderboard', label: 'Leaderboard', category: 'regular' },
-      { route: 'feedbacks.index', label: 'Feedback', category: 'regular' },
-      { route: 'support.index', label: 'Support', category: 'regular' }
-    ]
+    return []
   }
 })
 
