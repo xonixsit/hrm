@@ -188,24 +188,24 @@
                   <div v-if="row.profile_pic" class="w-10 h-10 rounded-full overflow-hidden ring-2 ring-white shadow-sm border border-gray-200">
                     <img 
                       :src="`/storage/${row.profile_pic}`" 
-                      :alt="row.user.name"
+                      :alt="row.user?.name || 'Employee'"
                       class="w-full h-full object-cover"
                     />
                   </div>
                   <!-- Fallback to Initials -->
                   <div v-else class="w-10 h-10 bg-gradient-to-br from-primary-100 to-primary-200 rounded-full flex items-center justify-center ring-2 ring-white shadow-sm">
                     <span class="text-sm font-semibold text-primary-700">
-                      {{ getInitials(row.user.name) }}
+                      {{ getInitials(row.user?.name || 'N/A') }}
                     </span>
                   </div>
                   <!-- Online status indicator -->
                   <div class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-400 border-2 border-white rounded-full"></div>
                 </div>
                 <div class="min-w-0 flex-1">
-                  <div class="font-semibold text-neutral-900 truncate">{{ row.user.name }}</div>
+                  <div class="font-semibold text-neutral-900 truncate">{{ row.user?.name || 'No User' }}</div>
                   <div class="flex items-center space-x-2 text-sm text-neutral-500">
                     <span class="truncate">{{ row.employee_code || 'No code' }}</span>
-                    <span v-if="row.user.email_verified_at" class="text-green-600" title="Verified">
+                    <span v-if="row.user?.email_verified_at" class="text-green-600" title="Verified">
                       <Icon name="check-badge" class="w-3 h-3" />
                     </span>
                   </div>
@@ -216,7 +216,7 @@
             <!-- Custom cell for email -->
             <template #cell-email="{ row }">
               <div class="text-sm">
-                <div v-if="row.user.email" class="text-neutral-900">
+                <div v-if="row.user?.email" class="text-neutral-900">
                   {{ row.user.email }}
                 </div>
                 <div v-else class="text-neutral-400 italic">

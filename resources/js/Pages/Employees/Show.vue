@@ -14,7 +14,14 @@
             <div class="flex items-end space-x-6 -mt-16">
               <!-- Avatar -->
               <div class="flex-shrink-0">
-                <div class="h-24 w-24 rounded-full bg-white p-1 shadow-lg">
+                <div v-if="employee.profile_pic" class="h-24 w-24 rounded-full bg-white p-1 shadow-lg">
+                  <img 
+                    :src="`/storage/${employee.profile_pic}`" 
+                    :alt="employee.user.name"
+                    class="h-full w-full rounded-full object-cover"
+                  />
+                </div>
+                <div v-else class="h-24 w-24 rounded-full bg-white p-1 shadow-lg">
                   <div
                     class="h-full w-full rounded-full bg-gradient-to-r from-teal-500 to-purple-600 flex items-center justify-center">
                     <span class="text-2xl font-bold text-white">

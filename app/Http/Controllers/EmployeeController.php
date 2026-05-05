@@ -397,6 +397,40 @@ class EmployeeController extends Controller
         return back()->with('success', 'Employee updated successfully.');
     }
 
+    /**
+     * Upload profile picture for an employee (Admin/HR only)
+     */
+    public function uploadProfilePic(Request $request, Employee $employee)
+    {
+        // Check if user can update this employee
+        $this->authorize('update', $employee);
+
+        $request->validate([
+            'profile_pic' => 'required|image|mimes:jpeg,png,jpg,gif|max:5120', // 5MB max
+        ]);
+
+        try {
+            // Delete old profile picture if exists
+            if ($employee->profile_pic) {
+                \Storage::disk('public')->delete($employee->profile_pic);
+            }
+
+            // Store new profile picture
+            $path = $request->file('profile_pic')->store('profile-pictures', 'public');
+
+            // Update employee record
+            $employee->update(['profile_pic' => $path]);
+
+            $this->logAudit('Profile Picture Updated', 'Updated profile picture for employee: ' . $employee->employee_code);
+
+            return back()->with('success', 'Profile picture uploaded successfully.');
+        } catch (\Exception $e) {
+            \Log::error('Profile picture upload failed: ' . $e->getMessage());
+            
+            return back()->withErrors(['profile_pic' => 'Failed to upload file. Please try again.']);
+        }
+    }
+
     public function resetPassword(Request $request, Employee $employee)
     {
         // Check if user can reset passwords (Admin only)

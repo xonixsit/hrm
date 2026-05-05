@@ -107,6 +107,7 @@ Route::middleware('auth')->group(function () {
         Route::post('employees/{employee}/reactivate', [EmployeeController::class, 'reactivate'])->name('employees.reactivate');
         Route::post('employees/{id}/restore', [EmployeeController::class, 'restore'])->name('employees.restore');
         Route::delete('employees/{id}/force-delete', [EmployeeController::class, 'forceDelete'])->name('employees.force-delete');
+        Route::post('employees/{employee}/upload-picture', [EmployeeController::class, 'uploadProfilePic'])->name('employees.upload-picture');
         
         // Employee Import Routes
         Route::get('employees-import', [\App\Http\Controllers\EmployeeImportController::class, 'index'])->name('employees.import');
