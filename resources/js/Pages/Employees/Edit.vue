@@ -28,61 +28,50 @@
         <!-- Employee Overview -->
         <div class="bg-neutral-50 rounded-lg p-4 mb-6">
           <div class="flex items-center space-x-4">
-            <!-- Profile Picture with Upload on Hover -->
-            <div class="relative group">
+            <!-- Profile Picture Display -->
+            <div v-if="previewImage || employee.profile_pic" class="w-16 h-16 rounded-full overflow-hidden flex-shrink-0 border-2 border-primary-200">
+              <img 
+                :src="previewImage || `/storage/${employee.profile_pic}`" 
+                :alt="employee.user.name"
+                class="w-full h-full object-cover"
+              />
+            </div>
+            <div v-else class="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center">
+              <span class="text-lg font-semibold text-primary-700">
+                {{ getInitials(employee.user.name) }}
+              </span>
+            </div>
+
+            <div class="flex-1">
+              <h3 class="text-lg font-semibold text-neutral-900">{{ employee.user.name }}</h3>
+              <p class="text-sm text-neutral-600">{{ employee.user.email }}</p>
+              <div class="flex items-center space-x-2 mt-1">
+                <span class="text-xs text-neutral-500">Employee ID:</span>
+                <span class="text-xs font-mono bg-neutral-200 px-2 py-0.5 rounded">{{ employee.employee_code || 'N/A' }}</span>
+              </div>
+            </div>
+
+            <!-- Upload Button -->
+            <div>
               <input
                 ref="profilePicInput"
                 type="file"
                 accept="image/*"
                 class="hidden"
-                @change="handleProfilePicUpload"
+                @change="handleProfilePicSelect"
               />
-              
-              <div v-if="employee.profile_pic" class="w-16 h-16 rounded-full overflow-hidden flex-shrink-0 border-2 border-primary-200 cursor-pointer">
-                <img 
-                  :src="`/storage/${employee.profile_pic}`" 
-                  :alt="employee.user.name"
-                  class="w-full h-full object-cover"
-                />
-              </div>
-              <div v-else class="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center cursor-pointer">
-                <span class="text-lg font-semibold text-primary-700">
-                  {{ getInitials(employee.user.name) }}
-                </span>
-              </div>
-
-              <!-- Hover Overlay for Upload -->
-              <div
+              <button
+                type="button"
                 @click="$refs.profilePicInput.click()"
-                class="absolute inset-0 rounded-full bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-pointer flex flex-col items-center justify-center"
+                class="inline-flex items-center px-3 py-2 border border-primary-300 shadow-sm text-sm leading-4 font-medium rounded-md text-primary-700 bg-white hover:bg-primary-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
               >
-                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
-                <span class="text-white text-xs font-medium mt-1">{{ employee.profile_pic ? 'Change' : 'Upload' }}</span>
-              </div>
-
-              <!-- Upload Progress Overlay -->
-              <div
-                v-if="profilePicUploading"
-                class="absolute inset-0 rounded-full bg-black/70 flex items-center justify-center"
-              >
-                <svg class="animate-spin h-6 w-6 text-white" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-              </div>
-            </div>
-
-            <div>
-              <h3 class="text-lg font-semibold text-neutral-900">{{ employee.user.name }}</h3>
-              <p class="text-sm text-neutral-600">{{ employee.user.email }}</p>
-              <div class="flex items-center space-x-2 mt-1">
-                <span class="text-xs text-neutral-500">Employee ID:</span>
-                <span class="text-xs font-mono bg-neutral-200 px-2 py-0.5 rounded">{{ employee.employee_code || 'N/A'
-                  }}</span>
-              </div>
+                {{ form.profile_pic ? 'Change Photo' : (employee.profile_pic ? 'Change Photo' : 'Upload Photo') }}
+              </button>
+              <p v-if="form.profile_pic" class="text-xs text-green-600 mt-1">New photo selected</p>
             </div>
           </div>
         </div>
@@ -466,23 +455,17 @@
     employment_type: props.employee.employment_type || 'full_time',
     work_location: props.employee.work_location || '',
     salary: props.employee.salary || '',
-    salary_currency: props.employee.salary_currency || 'USD'
+    salary_currency: props.employee.salary_currency || 'USD',
+    
+    // Profile Picture
+    profile_pic: null
   })
 
-
-
-  // Password reset form
-  const passwordForm = useForm({
-    new_password: '',
-    new_password_confirmation: ''
-  })
-
-  // Profile picture upload state
+  const previewImage = ref(null)
   const profilePicInput = ref(null)
-  const profilePicUploading = ref(false)
 
-  // Handle profile picture upload
-  const handleProfilePicUpload = async (event) => {
+  // Handle profile picture file selection
+  const handleProfilePicSelect = (event) => {
     const file = event.target.files[0]
     if (!file) return
 
@@ -498,31 +481,21 @@
       return
     }
 
-    profilePicUploading.value = true
-
-    const formData = new FormData()
-    formData.append('profile_pic', file)
-
-    router.post(route('employees.upload-picture', props.employee.id), formData, {
-      preserveScroll: true,
-      forceFormData: true,
-      onSuccess: () => {
-        profilePicUploading.value = false
-        // Reset file input
-        if (profilePicInput.value) {
-          profilePicInput.value.value = ''
-        }
-      },
-      onError: (errors) => {
-        profilePicUploading.value = false
-        const errorMessage = errors.profile_pic || 'Failed to upload profile picture. Please try again.'
-        alert(errorMessage)
-      },
-      onFinish: () => {
-        profilePicUploading.value = false
-      }
-    })
+    form.profile_pic = file
+    
+    // Create preview
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      previewImage.value = e.target.result
+    }
+    reader.readAsDataURL(file)
   }
+
+  // Password reset form
+  const passwordForm = useForm({
+    new_password: '',
+    new_password_confirmation: ''
+  })
 
   // Breadcrumbs configuration
   const breadcrumbs = [
@@ -607,7 +580,8 @@
       form.employment_type !== (props.employee.employment_type || 'full_time') ||
       form.work_location !== (props.employee.work_location || '') ||
       form.salary !== (props.employee.salary || '') ||
-      form.salary_currency !== (props.employee.salary_currency || 'USD')
+      form.salary_currency !== (props.employee.salary_currency || 'USD') ||
+      form.profile_pic !== null
   })
 
   // Password reset permissions and validation
@@ -671,10 +645,16 @@
   }
 
   const handleSubmit = () => {
-    form.put(route('employees.update', props.employee.id), {
+    // When uploading files, we need to use POST with _method spoofing
+    form.transform((data) => ({
+      ...data,
+      _method: 'PUT'
+    })).post(route('employees.update', props.employee.id), {
+      forceFormData: true,
       onSuccess: () => {
         // Success message will be shown via flash message and notification
-        //console.log('Employee updated successfully')
+        previewImage.value = null
+        form.profile_pic = null
       },
       onError: (errors) => {
         console.error('Form submission errors:', errors)

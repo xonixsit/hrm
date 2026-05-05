@@ -348,6 +348,7 @@ class EmployeeController extends Controller
             'contract_type' => $canEditEmploymentInfo ? 'required|string' : 'sometimes',
             'employment_type' => $canEditEmploymentInfo ? 'nullable|in:full_time,part_time,contract,intern,consultant' : 'sometimes',
             'work_location' => $canEditEmploymentInfo ? 'nullable|string|max:255' : 'sometimes',
+            'profile_pic' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120', // 5MB max
         ];
 
         // Personal info (Admin, HR, or self can edit)
@@ -383,6 +384,17 @@ class EmployeeController extends Controller
         }
 
         $validated = $request->validate($rules);
+
+        // Handle profile picture upload
+        if ($request->hasFile('profile_pic')) {
+            // Delete old profile picture if exists
+            if ($employee->profile_pic) {
+                \Storage::disk('public')->delete($employee->profile_pic);
+            }
+            
+            // Store new profile picture
+            $validated['profile_pic'] = $request->file('profile_pic')->store('profile-pictures', 'public');
+        }
 
         // Update employee record
         $employeeData = collect($validated)->except(['name'])->toArray();

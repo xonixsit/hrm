@@ -429,15 +429,33 @@ class SkillTestController extends Controller
      * Show employee's assigned tests
      */
     public function myTests(Request $request)
-        {
+    {
+        try {
+            \Log::info('MyTests: Starting', ['user_id' => $request->user()->id]);
+            
             $user = $request->user();
             $employee = $user->employee;
 
             if (!$employee) {
+                \Log::warning('MyTests: No employee record found', ['user_id' => $user->id]);
                 return Inertia::render('SkillTests/MyTests', ['assignments' => []]);
             }
 
+            \Log::info('MyTests: Employee found', ['employee_id' => $employee->id]);
+            
+            // Check if service exists and has method
+            if (!method_exists($this->skillTestService, 'getAssignmentsForEmployee')) {
+                \Log::error('MyTests: Method getAssignmentsForEmployee does not exist on SkillTestService', [
+                    'service_class' => get_class($this->skillTestService),
+                    'available_methods' => get_class_methods($this->skillTestService)
+                ]);
+                throw new \Exception('SkillTestService is missing getAssignmentsForEmployee method');
+            }
+
+            \Log::info('MyTests: Calling getAssignmentsForEmployee', ['employee_id' => $employee->id]);
             $assignments = $this->skillTestService->getAssignmentsForEmployee($employee->id);
+            \Log::info('MyTests: Got assignments', ['count' => $assignments->count()]);
+            
             $assignedTestIds = $assignments->pluck('skill_test_id')->toArray();
 
             // All published tests not explicitly assigned — shown as virtual/open entries
@@ -506,11 +524,25 @@ class SkillTestController extends Controller
             $allAssignments = $assignments->map($formatReal)
                 ->concat($unassignedTests->map($formatVirtual));
 
+            \Log::info('MyTests: Returning assignments', ['total_count' => $allAssignments->count()]);
+
             return Inertia::render('SkillTests/MyTests', [
                 'assignments' => $allAssignments,
             ]);
+        } catch (\Exception $e) {
+            \Log::error('MyTests: Exception occurred', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return Inertia::render('SkillTests/MyTests', [
+                'assignments' => [],
+                'error' => 'Failed to load skill tests: ' . $e->getMessage()
+            ]);
         }
-
+    }
 
     /**
      * Show test start screen

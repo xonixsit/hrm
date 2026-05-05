@@ -11,9 +11,9 @@ SET FOREIGN_KEY_CHECKS = 0;
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `skill_tests` (
   `id`                   BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `name`                 VARCHAR(255)    NOT NULL,
+  `name`                 VARCHAR(191)    NOT NULL,
   `description`          TEXT            NULL,
-  `category`             VARCHAR(255)    NULL,
+  `category`             VARCHAR(191)    NULL,
   `difficulty_level`     ENUM('easy','medium','hard') NOT NULL DEFAULT 'medium',
   `passing_score`        INT             NOT NULL DEFAULT 70,
   `time_limit`           INT             NULL COMMENT 'in minutes',
