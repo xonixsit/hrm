@@ -187,7 +187,7 @@
                   <!-- Profile Picture -->
                   <div v-if="row.profile_pic" class="w-10 h-10 rounded-full overflow-hidden ring-2 ring-white shadow-sm border border-gray-200">
                     <img 
-                      :src="`/storage/${row.profile_pic}`" 
+                      :src="`/${row.profile_pic}`" 
                       :alt="row.user?.name || 'Employee'"
                       class="w-full h-full object-cover"
                     />

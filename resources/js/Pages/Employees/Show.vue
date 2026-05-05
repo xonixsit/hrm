@@ -16,7 +16,7 @@
               <div class="flex-shrink-0">
                 <div v-if="employee.profile_pic" class="h-24 w-24 rounded-full bg-white p-1 shadow-lg">
                   <img 
-                    :src="`/storage/${employee.profile_pic}`" 
+                    :src="`/${employee.profile_pic}`" 
                     :alt="employee.user.name"
                     class="h-full w-full rounded-full object-cover"
                   />

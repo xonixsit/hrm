@@ -31,7 +31,7 @@
             <!-- Profile Picture Display -->
             <div v-if="previewImage || employee.profile_pic" class="w-16 h-16 rounded-full overflow-hidden flex-shrink-0 border-2 border-primary-200">
               <img 
-                :src="previewImage || `/storage/${employee.profile_pic}`" 
+                :src="previewImage || `/${employee.profile_pic}`" 
                 :alt="employee.user.name"
                 class="w-full h-full object-cover"
               />

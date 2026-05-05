@@ -389,11 +389,24 @@ class EmployeeController extends Controller
         if ($request->hasFile('profile_pic')) {
             // Delete old profile picture if exists
             if ($employee->profile_pic) {
-                \Storage::disk('public')->delete($employee->profile_pic);
+                $oldPath = public_path($employee->profile_pic);
+                if (file_exists($oldPath)) {
+                    unlink($oldPath);
+                }
             }
             
-            // Store new profile picture
-            $validated['profile_pic'] = $request->file('profile_pic')->store('profile-pictures', 'public');
+            // Store new profile picture in public/images/profile-pictures/
+            $file = $request->file('profile_pic');
+            $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+            $destinationPath = public_path('images/profile-pictures');
+            
+            // Create directory if it doesn't exist
+            if (!file_exists($destinationPath)) {
+                mkdir($destinationPath, 0755, true);
+            }
+            
+            $file->move($destinationPath, $filename);
+            $validated['profile_pic'] = 'images/profile-pictures/' . $filename;
         }
 
         // Update employee record
@@ -424,11 +437,24 @@ class EmployeeController extends Controller
         try {
             // Delete old profile picture if exists
             if ($employee->profile_pic) {
-                \Storage::disk('public')->delete($employee->profile_pic);
+                $oldPath = public_path($employee->profile_pic);
+                if (file_exists($oldPath)) {
+                    unlink($oldPath);
+                }
             }
 
-            // Store new profile picture
-            $path = $request->file('profile_pic')->store('profile-pictures', 'public');
+            // Store new profile picture in public/images/profile-pictures/
+            $file = $request->file('profile_pic');
+            $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+            $destinationPath = public_path('images/profile-pictures');
+            
+            // Create directory if it doesn't exist
+            if (!file_exists($destinationPath)) {
+                mkdir($destinationPath, 0755, true);
+            }
+            
+            $file->move($destinationPath, $filename);
+            $path = 'images/profile-pictures/' . $filename;
 
             // Update employee record
             $employee->update(['profile_pic' => $path]);

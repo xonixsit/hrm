@@ -112,7 +112,7 @@ const currentPicture = ref('');
 
 onMounted(() => {
   if (props.employee?.profile_pic) {
-    currentPicture.value = `/storage/${props.employee.profile_pic}`;
+    currentPicture.value = `/${props.employee.profile_pic}`;
   }
 });
 

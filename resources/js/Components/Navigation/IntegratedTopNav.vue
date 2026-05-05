@@ -255,7 +255,7 @@
               ]">
               <div v-if="user?.employee?.profile_pic" class="w-9 h-9 rounded-lg overflow-hidden flex-shrink-0 border-2 border-white/30">
                 <img 
-                  :src="`/storage/${user.employee.profile_pic}`" 
+                  :src="`/${user.employee.profile_pic}`" 
                   :alt="user?.name"
                   class="w-full h-full object-cover"
                 />

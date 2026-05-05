@@ -26,9 +26,17 @@ use App\Http\Controllers\AssessmentWorkflowController;
 use App\Http\Controllers\CompetencyAnalyticsController;
 use App\Http\Controllers\OrganizationalAnalyticsController;
 use App\Http\Controllers\SkillTestController;
+use App\Http\Controllers\ProfilePictureController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
+
+// Route to serve profile pictures (workaround for symlink issues)
+// This route bypasses the symlink and serves files directly from storage
+Route::get('/storage/profile-pictures/{filename}', [ProfilePictureController::class, 'show'])
+    ->name('profile-picture.show')
+    ->middleware('web');
 
 Route::get('/', function () {
     return redirect()->route('login');

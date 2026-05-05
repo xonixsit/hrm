@@ -93,7 +93,7 @@ const handleProfilePicChange = (event) => {
         
         // Immediately update the avatar with the new image
         if (employeeData.value) {
-          employeeData.value.profile_pic = response.profile_pic.replace('/storage/', '');
+          employeeData.value.profile_pic = response.profile_pic.replace('/', '');
         }
 
         // Trigger confetti animation
@@ -225,7 +225,7 @@ const breadcrumbs = computed(() => [
                             <div :key="avatarKey" class="relative group">
                                 <div v-if="employeeData?.profile_pic" class="w-16 h-16 rounded-full overflow-hidden border-2 border-primary-200 flex-shrink-0">
                                     <img 
-                                        :src="`/storage/${employeeData.profile_pic}`" 
+                                        :src="`/${employeeData.profile_pic}`" 
                                         :alt="user.name"
                                         class="w-full h-full object-cover"
                                     />
