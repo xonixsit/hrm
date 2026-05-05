@@ -645,12 +645,11 @@
   }
 
   const handleSubmit = () => {
-    // When uploading files, we need to use POST with _method spoofing
-    form.transform((data) => ({
-      ...data,
-      _method: 'PUT'
-    })).post(route('employees.update', props.employee.id), {
+    // Inertia doesn't support file uploads with PUT/PATCH directly
+    // We need to use POST with _method field
+    const options = {
       forceFormData: true,
+      preserveScroll: true,
       onSuccess: () => {
         // Success message will be shown via flash message and notification
         previewImage.value = null
@@ -676,7 +675,18 @@
           }
         }
       }
-    })
+    }
+    
+    // If there's a file upload, use POST with _method
+    if (form.profile_pic) {
+      router.post(route('employees.update', props.employee.id), {
+        ...form.data(),
+        _method: 'PUT'
+      }, options)
+    } else {
+      // No file upload, use regular PUT
+      form.put(route('employees.update', props.employee.id), options)
+    }
   }
 
   const handleReset = () => {
