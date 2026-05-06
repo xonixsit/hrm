@@ -65,7 +65,7 @@
             <!-- Profile Picture -->
             <div v-if="violation.profile_pic" class="w-8 h-8 rounded-full overflow-hidden ring-1 ring-white shadow-sm border border-gray-200 flex-shrink-0">
               <img 
-                :src="`/storage/${violation.profile_pic}`" 
+                :src="`/${violation.profile_pic}`" 
                 :alt="violation.employee_name"
                 class="w-full h-full object-cover"
               />

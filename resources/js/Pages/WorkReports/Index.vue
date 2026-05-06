@@ -503,7 +503,7 @@
                     <div v-if="column.isEmployee" class="flex items-center space-x-3">
                       <div v-if="row.employee?.profile_pic" class="w-10 h-10 rounded-full overflow-hidden ring-2 ring-white shadow-sm border border-gray-200 flex-shrink-0">
                         <img 
-                          :src="`/storage/${row.employee.profile_pic}`" 
+                          :src="`/${row.employee.profile_pic}`" 
                           :alt="row.employee.user?.name"
                           class="w-full h-full object-cover"
                         />

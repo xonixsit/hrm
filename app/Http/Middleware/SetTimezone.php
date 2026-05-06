@@ -16,8 +16,16 @@ class SetTimezone
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // Get timezone from system settings, fallback to config
-        $timezone = Cache::get('system_settings.app_timezone', config('app.timezone', 'UTC'));
+        // Get timezone from system settings (database first, then cache, then config)
+        $timezone = \App\Models\Setting::get('system_settings.app_timezone');
+        
+        if (!$timezone) {
+            $timezone = Cache::get('system_settings.app_timezone');
+        }
+        
+        if (!$timezone) {
+            $timezone = config('app.timezone', 'UTC');
+        }
         
         // Set the default timezone for the application
         if ($timezone) {

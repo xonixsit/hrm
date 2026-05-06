@@ -388,18 +388,33 @@ const workEfficiency = computed(() => {
 
 // Methods
 const updateTime = () => {
-  const now = new Date()
+  // Get server time from Inertia props
+  const serverTimeStr = usePage().props.server_time
   
-  // Update current time
-  currentTime.value = now.toLocaleTimeString('en-US', {
+  let serverTime;
+  if (serverTimeStr) {
+    // Parse the server time and calculate offset
+    const serverTimeBase = new Date(serverTimeStr)
+    const now = new Date()
+    const offset = serverTimeBase.getTime() - now.getTime()
+    
+    // Apply offset to current time
+    serverTime = new Date(now.getTime() + offset)
+  } else {
+    // Fallback to local time
+    serverTime = new Date()
+  }
+  
+  // Update current time using server time
+  currentTime.value = serverTime.toLocaleTimeString('en-US', {
     hour12: false,
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit'
   })
   
-  // Update current date
-  currentDate.value = now.toLocaleDateString('en-US', {
+  // Update current date using server time
+  currentDate.value = serverTime.toLocaleDateString('en-US', {
     weekday: 'long',
     year: 'numeric',
     month: 'long',

@@ -218,7 +218,7 @@
                       <!-- Profile Picture -->
                       <div v-if="attendance.employee?.profile_pic" class="w-10 h-10 rounded-full overflow-hidden ring-2 ring-white shadow-sm border border-gray-200 flex-shrink-0 mr-3">
                         <img 
-                          :src="`/storage/${attendance.employee.profile_pic}`" 
+                          :src="`/${attendance.employee.profile_pic}`" 
                           :alt="attendance.employee?.user?.name"
                           class="w-full h-full object-cover"
                         />

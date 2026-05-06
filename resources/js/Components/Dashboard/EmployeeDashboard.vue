@@ -9,7 +9,7 @@
           <div class="flex items-center space-x-4">
             <div v-if="user?.employee?.profile_pic" class="w-16 h-16 rounded-full overflow-hidden border-2 border-primary-200 flex-shrink-0">
               <img 
-                :src="`/storage/${user.employee.profile_pic}`" 
+                :src="`/${user.employee.profile_pic}`" 
                 :alt="employeeName"
                 class="w-full h-full object-cover"
               />
@@ -27,7 +27,7 @@
         </div>
         <div class="clock-section">
           <div class="current-time">{{ currentTimeFormatted }}</div>
-          <div class="current-date">{{ currentDate }}</div>
+          <div class="current-date">{{ currentDateFormatted }}</div>
         </div>
         <div class="work-status">
           <div class="status-indicator" :class="statusClasses">
@@ -195,47 +195,37 @@
       </div>
     </div>
 
-    <!-- Break Sessions Debug (Development) -->
-    <div v-if="showDebug" class="debug-section">
-      <h3 class="section-title">Break Sessions Debug</h3>
-      <div class="debug-content">
-        <div class="debug-item">
-          <strong>Completed Break Sessions:</strong> {{ attendanceState.completedBreakSessions.length }}
+    <!-- Break Sessions Debug (Development) - Always Visible for Debugging -->
+    <div class="debug-section" style="margin-top: 2rem; padding: 1rem; background: #f3f4f6; border-radius: 0.5rem;">
+      <h3 class="section-title">Progress Bar Debug Info</h3>
+      <div class="debug-content" style="font-size: 0.875rem;">
+        <div class="debug-item" style="margin-bottom: 0.5rem;">
+          <strong>Current Server Time:</strong> {{ currentTime }}
         </div>
-        <div class="debug-item">
-          <strong>Current Break:</strong> {{ isOnBreak ? 'Yes' : 'No' }}
+        <div class="debug-item" style="margin-bottom: 0.5rem;">
+          <strong>Clocked In:</strong> {{ isClockedIn ? 'Yes' : 'No' }}
         </div>
-        <div class="debug-item">
-          <strong>Break Start Time:</strong> {{ attendanceState.breakStartTime || 'None' }}
-        </div>
-        <div class="debug-item">
-          <strong>Current Break Duration:</strong> {{ breakDuration }}
-        </div>
-        <div class="debug-item">
-          <strong>Total Break Time (Computed):</strong> {{ totalBreakTime }}
-        </div>
-        <div class="debug-item">
-          <strong>Clocked In (Dashboard):</strong> {{ attendanceState.clockedIn }}
-        </div>
-        <div class="debug-item">
-          <strong>isClockedIn Computed:</strong> {{ isClockedIn }}
-        </div>
-        <div class="debug-item">
-          <strong>Work Progress %:</strong> {{ Math.round(workProgressPercentage) }}%
-        </div>
-        <div class="debug-item">
-          <strong>Progress Width:</strong> {{ progressWidth }}%
-        </div>
-        <div class="debug-item">
+        <div class="debug-item" style="margin-bottom: 0.5rem;">
           <strong>Clock In Time:</strong> {{ attendanceState.clockInTime || 'None' }}
         </div>
-        <div class="debug-item">
-          <strong>Break Sessions:</strong>
-          <pre>{{ JSON.stringify(attendanceState.completedBreakSessions, null, 2) }}</pre>
+        <div class="debug-item" style="margin-bottom: 0.5rem;">
+          <strong>Progress Start Position:</strong> {{ progressStartPosition }}%
         </div>
-        <button @click="refreshFromFloatingWidget" class="debug-button">
-          Refresh from FloatingWidget
-        </button>
+        <div class="debug-item" style="margin-bottom: 0.5rem;">
+          <strong>Progress Width:</strong> {{ progressWidth }}%
+        </div>
+        <div class="debug-item" style="margin-bottom: 0.5rem;">
+          <strong>Current Time Position:</strong> {{ currentTimePosition }}%
+        </div>
+        <div class="debug-item" style="margin-bottom: 0.5rem;">
+          <strong>Work Progress %:</strong> {{ Math.round(workProgressPercentage) }}%
+        </div>
+        <div class="debug-item" style="margin-bottom: 0.5rem;">
+          <strong>Work Duration:</strong> {{ workDuration }}
+        </div>
+        <div class="debug-item" style="margin-bottom: 0.5rem;">
+          <strong>Condition Check:</strong> isClockedIn={{ isClockedIn }}, progressWidth={{ progressWidth }}, should show={{ isClockedIn && progressWidth > 0 }}
+        </div>
       </div>
     </div>
 
@@ -324,7 +314,9 @@ const { user } = useAuth();
 // };
 
 // Local state
-const currentTime = ref(new Date());
+const currentTime = ref(''); // Formatted time string from server
+const currentDate = ref(''); // Formatted date string from server
+const currentTimeObj = ref(new Date()); // Date object for calculations
 const showDebug = ref(false); // Toggle debug section
 const showBirthdayPopup = ref(false);
 const attendanceState = ref({
@@ -342,21 +334,11 @@ let timeInterval = null;
 
 // Computed properties
 const currentTimeFormatted = computed(() => {
-  return currentTime.value.toLocaleTimeString('en-US', {
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: true
-  });
+  return currentTime.value;
 });
 
-const currentDate = computed(() => {
-  return currentTime.value.toLocaleDateString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
+const currentDateFormatted = computed(() => {
+  return currentDate.value;
 });
 
 const isClockedIn = computed(() => {
@@ -406,7 +388,7 @@ const totalBreakTime = computed(() => {
   // Add current break session if on break
   if (attendanceState.value.onBreak && attendanceState.value.breakStartTime) {
     const breakStart = new Date(attendanceState.value.breakStartTime);
-    const now = currentTime.value;
+    const now = currentTimeObj.value;
     const diffMs = Math.max(0, now - breakStart);
     totalMinutes += Math.floor(diffMs / (1000 * 60));
   }
@@ -418,7 +400,7 @@ const totalBreakTime = computed(() => {
 });
 
 const workdayStatus = computed(() => {
-  const now = currentTime.value;
+  const now = currentTimeObj.value;
   const hour = now.getHours();
   
   // Timeline hours: 7 AM to 7 PM (but work calculation is still 9 hours)
@@ -481,7 +463,7 @@ const workProgressPercentage = computed(() => {
     return 0;
   }
 
-  const now = currentTime.value;
+  const now = currentTimeObj.value;
   const clockIn = new Date(attendanceState.value.clockInTime);
 
   if (now < clockIn) {
@@ -505,46 +487,162 @@ const progressStartPosition = computed(() => {
     return 0;
   }
   
-  // Calculate where the employee clocked in on the timeline
-  const clockIn = new Date(attendanceState.value.clockInTime);
-  const clockInHour = clockIn.getHours();
-  const clockInMinute = clockIn.getMinutes();
+  // Parse the clock-in time which is in UTC format
+  const clockInUTC = new Date(attendanceState.value.clockInTime);
   
-  // Timeline: 7 AM to 7 PM = 12 hours (for visual positioning)
-  if (clockInHour < 7) {
-    return 0; // Clocked in before 7 AM, start at beginning
-  } else if (clockInHour >= 19) {
-    return 100; // Clocked in after 7 PM, start at end
-  } else {
-    // Calculate position based on clock-in time on 12-hour timeline
-    const timelineHour = clockInHour - 7; // Convert to 0-12 range
-    const timelineMinutes = timelineHour * 60 + clockInMinute;
-    const totalTimelineMinutes = 12 * 60; // 720 minutes
+  // Get the timezone offset from server
+  // The server time API returns the correct timezone time
+  // We need to calculate the offset between UTC and server timezone
+  const now = new Date();
+  const serverTimeStr = currentTime.value; // e.g., "03:22:15 PM"
+  
+  if (!serverTimeStr) return 0;
+  
+  try {
+    // Parse server time to get the actual hour/minute in server timezone
+    const timeMatch = serverTimeStr.match(/(\d+):(\d+):(\d+)\s*(AM|PM)/i);
+    if (!timeMatch) return 0;
     
-    return (timelineMinutes / totalTimelineMinutes) * 100;
+    let serverHour = parseInt(timeMatch[1]);
+    const serverMinute = parseInt(timeMatch[2]);
+    const ampm = timeMatch[4].toUpperCase();
+    
+    // Convert to 24-hour format
+    if (ampm === 'PM' && serverHour !== 12) {
+      serverHour += 12;
+    } else if (ampm === 'AM' && serverHour === 12) {
+      serverHour = 0;
+    }
+    
+    // Calculate timezone offset in hours
+    // Server time - UTC time = offset
+    const utcHour = now.getUTCHours();
+    const utcMinute = now.getUTCMinutes();
+    const serverTotalMinutes = serverHour * 60 + serverMinute;
+    const utcTotalMinutes = utcHour * 60 + utcMinute;
+    let offsetMinutes = serverTotalMinutes - utcTotalMinutes;
+    
+    // Handle day boundary crossing
+    if (offsetMinutes > 720) offsetMinutes -= 1440;
+    if (offsetMinutes < -720) offsetMinutes += 1440;
+    
+    // Apply offset to clock-in time
+    const clockInServerTime = new Date(clockInUTC.getTime() + offsetMinutes * 60 * 1000);
+    const clockInHour = clockInServerTime.getUTCHours();
+    const clockInMinute = clockInServerTime.getUTCMinutes();
+    
+    // console.log('🕐 Clock-in conversion:', {
+    //   clockInUTC: attendanceState.value.clockInTime,
+    //   offsetMinutes,
+    //   clockInServerHour: clockInHour,
+    //   clockInServerMinute: clockInMinute
+    // });
+    
+    // Timeline: 7 AM to 7 PM = 12 hours (for visual positioning)
+    if (clockInHour < 7) {
+      return 0; // Clocked in before 7 AM, start at beginning
+    } else if (clockInHour >= 19) {
+      return 100; // Clocked in after 7 PM, start at end
+    } else {
+      // Calculate position based on clock-in time on 12-hour timeline
+      const timelineHour = clockInHour - 7; // Convert to 0-12 range
+      const timelineMinutes = timelineHour * 60 + clockInMinute;
+      const totalTimelineMinutes = 12 * 60; // 720 minutes
+      
+      return (timelineMinutes / totalTimelineMinutes) * 100;
+    }
+  } catch (error) {
+    console.error('Error calculating progress start position:', error);
+    return 0;
   }
 });
 
 const progressWidth = computed(() => {
-  if (!isClockedIn.value || !attendanceState.value.clockInTime) return 0;
+  if (!isClockedIn.value || !attendanceState.value.clockInTime) {
+    console.log('❌ Progress width = 0: Not clocked in or no clock-in time');
+    return 0;
+  }
   
-  // Calculate progress width based on actual work duration (not total elapsed time)
-  const workDurationStr = attendanceState.value.workDuration || '0h 0m';
+  // Parse current server time
+  if (!currentTime.value) {
+    console.log('❌ Progress width = 0: No current time');
+    return 0;
+  }
   
-  // Parse work duration string (e.g., "2h 30m")
-  const hoursMatch = workDurationStr.match(/(\d+)h/);
-  const minutesMatch = workDurationStr.match(/(\d+)m/);
-  
-  const workHours = hoursMatch ? parseInt(hoursMatch[1]) : 0;
-  const workMinutes = minutesMatch ? parseInt(minutesMatch[1]) : 0;
-  
-  const totalWorkMinutes = workHours * 60 + workMinutes;
-  const totalWorkDayMinutes = 9 * 60; // 9-hour work day = 540 minutes
-  
-  // Calculate what percentage of the timeline this work duration represents
-  const workPercentage = (totalWorkMinutes / totalWorkDayMinutes) * 100;
-  
-  return Math.min(workPercentage, 100);
+  try {
+    const timeMatch = currentTime.value.match(/(\d+):(\d+):(\d+)\s*(AM|PM)/i);
+    if (!timeMatch) {
+      console.log('❌ Progress width = 0: Could not parse time:', currentTime.value);
+      return 0;
+    }
+    
+    let currentHour = parseInt(timeMatch[1]);
+    const currentMinute = parseInt(timeMatch[2]);
+    const ampm = timeMatch[4].toUpperCase();
+    
+    // Convert to 24-hour format
+    if (ampm === 'PM' && currentHour !== 12) {
+      currentHour += 12;
+    } else if (ampm === 'AM' && currentHour === 12) {
+      currentHour = 0;
+    }
+    
+    // Convert clock-in time from UTC to server timezone
+    const clockInUTC = new Date(attendanceState.value.clockInTime);
+    const now = new Date();
+    
+    // Calculate timezone offset
+    const utcHour = now.getUTCHours();
+    const utcMinute = now.getUTCMinutes();
+    const serverTotalMinutes = currentHour * 60 + currentMinute;
+    const utcTotalMinutes = utcHour * 60 + utcMinute;
+    let offsetMinutes = serverTotalMinutes - utcTotalMinutes;
+    
+    // Handle day boundary crossing
+    if (offsetMinutes > 720) offsetMinutes -= 1440;
+    if (offsetMinutes < -720) offsetMinutes += 1440;
+    
+    // Apply offset to clock-in time
+    const clockInServerTime = new Date(clockInUTC.getTime() + offsetMinutes * 60 * 1000);
+    const clockInHour = clockInServerTime.getUTCHours();
+    const clockInMinute = clockInServerTime.getUTCMinutes();
+    
+    console.log('⏰ Time info:', {
+      currentTime: currentTime.value,
+      currentHour,
+      currentMinute,
+      clockInTime: attendanceState.value.clockInTime,
+      clockInHour,
+      clockInMinute
+    });
+    
+    // Calculate positions on timeline (7 AM to 7 PM)
+    const getTimelinePosition = (hour, minute) => {
+      if (hour < 7) return 0;
+      if (hour >= 19) return 100;
+      const timelineHour = hour - 7;
+      const timelineMinutes = timelineHour * 60 + minute;
+      const totalTimelineMinutes = 12 * 60;
+      return (timelineMinutes / totalTimelineMinutes) * 100;
+    };
+    
+    const startPos = getTimelinePosition(clockInHour, clockInMinute);
+    const currentPos = getTimelinePosition(currentHour, currentMinute);
+    
+    const width = Math.max(0, currentPos - startPos);
+    
+    console.log('📊 Progress calculation:', {
+      startPos: startPos.toFixed(2) + '%',
+      currentPos: currentPos.toFixed(2) + '%',
+      width: width.toFixed(2) + '%'
+    });
+    
+    // Width is the difference between current position and start position
+    return width;
+  } catch (error) {
+    console.error('❌ Error calculating progress width:', error);
+    return 0;
+  }
 });
 
 const progressLabel = computed(() => {
@@ -554,26 +652,44 @@ const progressLabel = computed(() => {
 
 // Current time position on the timeline (0-100%) for Full Timeline (7 AM to 7 PM)
 const currentTimePosition = computed(() => {
-  const now = currentTime.value;
-  const hour = now.getHours();
-  const minute = now.getMinutes();
+  // Parse the server time string (format: "01:08:32 PM")
+  if (!currentTime.value) return 0;
   
-  // Full timeline: 7 AM to 7 PM = 12 hours
-  // Timeline positions: 7 AM = 0%, 7 PM = 100%
-  
-  if (hour < 7) {
-    // Before timeline - show at beginning
-    return 0;
-  } else if (hour >= 19) {
-    // After timeline - show at end
-    return 100;
-  } else {
-    // During timeline hours (7 AM to 7 PM)
-    const timelineHour = hour - 7; // Convert to 0-12 range
-    const timelineMinutes = timelineHour * 60 + minute;
-    const totalTimelineMinutes = 12 * 60; // 720 minutes
+  try {
+    const timeMatch = currentTime.value.match(/(\d+):(\d+):(\d+)\s*(AM|PM)/i);
+    if (!timeMatch) return 0;
     
-    return (timelineMinutes / totalTimelineMinutes) * 100;
+    let hour = parseInt(timeMatch[1]);
+    const minute = parseInt(timeMatch[2]);
+    const ampm = timeMatch[4].toUpperCase();
+    
+    // Convert to 24-hour format
+    if (ampm === 'PM' && hour !== 12) {
+      hour += 12;
+    } else if (ampm === 'AM' && hour === 12) {
+      hour = 0;
+    }
+    
+    // Full timeline: 7 AM to 7 PM = 12 hours
+    // Timeline positions: 7 AM = 0%, 7 PM = 100%
+    
+    if (hour < 7) {
+      // Before timeline - show at beginning
+      return 0;
+    } else if (hour >= 19) {
+      // After timeline - show at end
+      return 100;
+    } else {
+      // During timeline hours (7 AM to 7 PM)
+      const timelineHour = hour - 7; // Convert to 0-12 range
+      const timelineMinutes = timelineHour * 60 + minute;
+      const totalTimelineMinutes = 12 * 60; // 720 minutes
+      
+      return (timelineMinutes / totalTimelineMinutes) * 100;
+    }
+  } catch (error) {
+    console.error('Error parsing time for position:', error);
+    return 0;
   }
 });
 
@@ -605,6 +721,31 @@ const breakTimeFills = computed(() => {
     return (timelineMinutes / totalTimelineMinutes) * 100;
   };
   
+  // Helper function to parse server time string
+  const parseServerTime = () => {
+    if (!currentTime.value) return null;
+    
+    try {
+      const timeMatch = currentTime.value.match(/(\d+):(\d+):(\d+)\s*(AM|PM)/i);
+      if (!timeMatch) return null;
+      
+      let hour = parseInt(timeMatch[1]);
+      const minute = parseInt(timeMatch[2]);
+      const ampm = timeMatch[4].toUpperCase();
+      
+      // Convert to 24-hour format
+      if (ampm === 'PM' && hour !== 12) {
+        hour += 12;
+      } else if (ampm === 'AM' && hour === 12) {
+        hour = 0;
+      }
+      
+      return { hour, minute };
+    } catch (error) {
+      return null;
+    }
+  };
+  
   // Add completed break sessions
   if (attendanceState.value.completedBreakSessions) {
     attendanceState.value.completedBreakSessions.forEach(session => {
@@ -629,17 +770,19 @@ const breakTimeFills = computed(() => {
   // Add current break session if on break
   if (isOnBreak.value && attendanceState.value.breakStartTime) {
     const breakStart = new Date(attendanceState.value.breakStartTime);
-    const now = currentTime.value;
+    const currentServerTime = parseServerTime();
     
-    const startPos = getTimelinePosition(breakStart.getHours(), breakStart.getMinutes());
-    const currentPos = getTimelinePosition(now.getHours(), now.getMinutes());
-    
-    if (startPos !== null && currentPos !== null && currentPos > startPos) {
-      fills.push({
-        left: startPos,
-        width: currentPos - startPos,
-        isOngoing: true
-      });
+    if (currentServerTime) {
+      const startPos = getTimelinePosition(breakStart.getHours(), breakStart.getMinutes());
+      const currentPos = getTimelinePosition(currentServerTime.hour, currentServerTime.minute);
+      
+      if (startPos !== null && currentPos !== null && currentPos > startPos) {
+        fills.push({
+          left: startPos,
+          width: currentPos - startPos,
+          isOngoing: true
+        });
+      }
     }
   }
   
@@ -668,8 +811,24 @@ const quickActions = computed(() => [
 ]);
 
 // Methods
-const updateCurrentTime = () => {
-  currentTime.value = new Date();
+const updateCurrentTime = async () => {
+  try {
+    // Fetch current server time from API
+    const response = await fetch('/api/server-time');
+    const data = await response.json();
+    
+    // Use the pre-formatted time strings from server for display
+    currentTime.value = data.time;
+    currentDate.value = data.date;
+    
+    // Also update the Date object for calculations
+    currentTimeObj.value = new Date(data.timestamp * 1000);
+  } catch (error) {
+    // Fallback: use current time
+    console.error('Failed to fetch server time:', error);
+    currentTimeObj.value = new Date();
+  }
+  
   updateDurations();
 };
 
@@ -677,7 +836,7 @@ const updateDurations = () => {
   // Update work duration
   if (attendanceState.value.clockedIn && attendanceState.value.clockInTime) {
     const clockIn = new Date(attendanceState.value.clockInTime);
-    const now = currentTime.value;
+    const now = new Date(); // Use current time for duration calculations
     const diffMs = now.getTime() - clockIn.getTime();
     
     if (diffMs > 0) {
@@ -694,7 +853,7 @@ const updateDurations = () => {
   // Update current break duration (for display purposes)
   if (attendanceState.value.onBreak && attendanceState.value.breakStartTime) {
     const breakStart = new Date(attendanceState.value.breakStartTime);
-    const now = currentTime.value;
+    const now = new Date(); // Use current time for duration calculations
     const diffMs = now.getTime() - breakStart.getTime();
     
     if (diffMs > 0) {
@@ -940,7 +1099,7 @@ onMounted(async () => {
     updateCurrentTime();
     
     // Periodic sync with FloatingWidget every 30 seconds
-    if (currentTime.value.getSeconds() % 30 === 0) {
+    if (currentTimeObj.value.getSeconds() % 30 === 0) {
       syncWithFloatingWidget();
     }
   }, 1000);

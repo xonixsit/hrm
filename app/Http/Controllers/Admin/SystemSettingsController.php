@@ -62,6 +62,15 @@ class SystemSettingsController extends Controller
             Cache::forever("system_settings.{$key}", $value);
         }
 
+        // If timezone was updated, immediately apply it
+        if (isset($validated['app_timezone'])) {
+            date_default_timezone_set($validated['app_timezone']);
+            config(['app.timezone' => $validated['app_timezone']]);
+            
+            // Clear config cache to ensure the new timezone is used
+            \Artisan::call('config:clear');
+        }
+
         return redirect()->back()->with('success', 'System settings updated successfully.');
     }
 

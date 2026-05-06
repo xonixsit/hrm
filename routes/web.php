@@ -810,3 +810,45 @@ Route::middleware('auth')->group(function () {
 });
 
 require __DIR__.'/auth.php';
+
+
+// Test route to debug timezone configuration
+Route::get('/test-timezone', function () {
+    $data = [
+        'php_timezone' => date_default_timezone_get(),
+        'config_timezone' => config('app.timezone'),
+        'env_timezone' => env('APP_TIMEZONE'),
+        'current_time' => now()->toString(),
+        'current_time_formatted' => now()->format('Y-m-d H:i:s T'),
+    ];
+    
+    // Check if settings table exists
+    try {
+        $dbTimezone = \App\Models\Setting::get('system_settings.app_timezone');
+        $data['db_timezone'] = $dbTimezone;
+        
+        // Get all system settings
+        $allSettings = DB::table('settings')
+            ->where('key', 'like', 'system_settings.%')
+            ->get();
+        $data['all_settings'] = $allSettings;
+        
+        // Check cache
+        $data['cache_timezone'] = Cache::get('system_settings.app_timezone');
+    } catch (\Exception $e) {
+        $data['db_error'] = $e->getMessage();
+    }
+    
+    return response()->json($data, 200, [], JSON_PRETTY_PRINT);
+})->middleware('auth')->name('test.timezone');
+
+
+// API endpoint to get current server time
+Route::get('/api/server-time', function () {
+    return response()->json([
+        'time' => now()->format('h:i:s A'), // 12-hour format with AM/PM
+        'date' => now()->format('l, F j, Y'),
+        'timestamp' => now()->timestamp,
+        'timezone' => config('app.timezone'),
+    ]);
+})->middleware('auth');

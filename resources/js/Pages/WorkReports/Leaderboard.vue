@@ -177,7 +177,7 @@
                 <!-- Profile Picture -->
                 <div v-if="topPerformers[1]?.profile_pic" class="w-16 h-16 bg-gray-300 rounded-full mx-auto mb-3 overflow-hidden border-2 border-gray-400">
                   <img 
-                    :src="`/storage/${topPerformers[1].profile_pic}`" 
+                    :src="`/${topPerformers[1].profile_pic}`" 
                     :alt="topPerformers[1]?.name"
                     class="w-full h-full object-cover"
                   />
@@ -199,7 +199,7 @@
                 <!-- Profile Picture -->
                 <div v-if="topPerformers[0]?.profile_pic" class="w-20 h-20 bg-yellow-200 rounded-full mx-auto mb-4 overflow-hidden border-2 border-yellow-500">
                   <img 
-                    :src="`/storage/${topPerformers[0].profile_pic}`" 
+                    :src="`/${topPerformers[0].profile_pic}`" 
                     :alt="topPerformers[0]?.name"
                     class="w-full h-full object-cover"
                   />
@@ -221,7 +221,7 @@
                 <!-- Profile Picture -->
                 <div v-if="topPerformers[2]?.profile_pic" class="w-16 h-16 bg-orange-300 rounded-full mx-auto mb-3 overflow-hidden border-2 border-orange-400">
                   <img 
-                    :src="`/storage/${topPerformers[2].profile_pic}`" 
+                    :src="`/${topPerformers[2].profile_pic}`" 
                     :alt="topPerformers[2]?.name"
                     class="w-full h-full object-cover"
                   />
@@ -274,7 +274,7 @@
                       <!-- Profile Picture -->
                       <div v-if="employee.profile_pic" class="w-10 h-10 rounded-full overflow-hidden ring-2 ring-white shadow-sm border border-gray-200 flex-shrink-0 mr-3">
                         <img 
-                          :src="`/storage/${employee.profile_pic}`" 
+                          :src="`/${employee.profile_pic}`" 
                           :alt="employee.name"
                           class="w-full h-full object-cover"
                         />

@@ -24,7 +24,7 @@
                         <!-- Avatar with Profile Picture -->
                         <div v-if="employee.user?.profile_pic" class="w-10 h-10 rounded-full overflow-hidden border-2 border-pink-200 flex-shrink-0">
                             <img 
-                                :src="`/storage/${employee.user.profile_pic}`" 
+                                :src="`/${employee.user.profile_pic}`" 
                                 :alt="employee.user?.name"
                                 class="w-full h-full object-cover"
                             />
@@ -78,7 +78,7 @@
                         <!-- Avatar with Profile Picture -->
                         <div v-if="birthday.employee.user?.profile_pic" class="w-10 h-10 rounded-full overflow-hidden border-2 border-teal-200 flex-shrink-0">
                             <img 
-                                :src="`/storage/${birthday.employee.user.profile_pic}`" 
+                                :src="`/${birthday.employee.user.profile_pic}`" 
                                 :alt="birthday.employee.user.name"
                                 class="w-full h-full object-cover"
                             />

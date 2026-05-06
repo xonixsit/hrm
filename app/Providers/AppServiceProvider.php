@@ -31,6 +31,22 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Set application timezone from database settings
+        // This runs after database is connected
+        $this->app->booted(function () {
+            try {
+                if (Schema::hasTable('settings')) {
+                    $timezone = \App\Models\Setting::get('system_settings.app_timezone');
+                    if ($timezone) {
+                        date_default_timezone_set($timezone);
+                        config(['app.timezone' => $timezone]);
+                    }
+                }
+            } catch (\Exception $e) {
+                // Silently fail if settings table doesn't exist yet (during migration)
+                \Log::debug('Timezone setting failed: ' . $e->getMessage());
+            }
+        });
 
      
     
