@@ -25,18 +25,18 @@
       <!-- Summary Card -->
       <div class="bg-white rounded-lg border border-gray-200 p-5 mb-6 grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
         <div>
-          <p class="text-2xl font-bold text-gray-900">{{ localScore.toFixed(1) }}</p>
+          <p class="text-2xl font-bold text-gray-900">{{ (localScore || 0).toFixed(1) }}</p>
           <p class="text-xs text-gray-500 mt-1">Total Score</p>
         </div>
         <div>
-          <p class="text-2xl font-bold text-gray-900">{{ test.total_points }}</p>
+          <p class="text-2xl font-bold text-gray-900">{{ test.total_points || 0 }}</p>
           <p class="text-xs text-gray-500 mt-1">Max Points</p>
         </div>
         <div>
-          <p class="text-2xl font-bold" :class="localPercentage >= test.passing_score ? 'text-green-600' : 'text-red-600'">
-            {{ localPercentage }}%
+          <p class="text-2xl font-bold" :class="localPercentage >= (test.passing_score || 0) ? 'text-green-600' : 'text-red-600'">
+            {{ localPercentage || 0 }}%
           </p>
-          <p class="text-xs text-gray-500 mt-1">Percentage (pass: {{ test.passing_score }}%)</p>
+          <p class="text-xs text-gray-500 mt-1">Percentage (pass: {{ test.passing_score || 0 }}%)</p>
         </div>
         <div>
           <span class="text-lg font-bold" :class="localPassed ? 'text-green-600' : 'text-red-600'">
@@ -180,12 +180,18 @@ const message = ref('');
 const messageType = ref('success');
 const finalizing = ref(false);
 
-const localScore = computed(() => localAnswers.reduce((sum, a) => sum + (a.editScore || 0), 0));
-const localPercentage = computed(() => {
-  const total = props.test.total_points;
-  return total > 0 ? Math.round((localScore.value / total) * 100) : 0;
+const localScore = computed(() => {
+  const score = localAnswers.reduce((sum, a) => sum + (parseFloat(a.editScore) || 0), 0);
+  return isNaN(score) ? 0 : score;
 });
-const localPassed = computed(() => localPercentage.value >= props.test.passing_score);
+
+const localPercentage = computed(() => {
+  const total = parseFloat(props.test.total_points) || 0;
+  const score = localScore.value || 0;
+  return total > 0 ? Math.round((score / total) * 100) : 0;
+});
+
+const localPassed = computed(() => localPercentage.value >= (props.test.passing_score || 0));
 
 const statusLabel = (s) => ({ auto_scored: 'Auto Scored', pending_review: 'Pending Review', reviewed: 'Reviewed' }[s] || s);
 const typeLabel = (t) => ({ mcq: 'Multiple Choice', single_answer: 'Single Answer', text: 'Text Answer' }[t] || t);
