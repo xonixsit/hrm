@@ -1,0 +1,22 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::table('trivia_game_sessions', function (Blueprint $table) {
+            $table->integer('coins_earned')->default(0)->after('time_taken_seconds');
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::table('trivia_game_sessions', function (Blueprint $table) {
+            $table->dropColumn('coins_earned');
+        });
+    }
+};

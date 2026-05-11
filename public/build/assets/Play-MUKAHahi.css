@@ -1,0 +1,1 @@
+.flying-coin{animation:coinPulse .3s ease-in-out;perspective:1000px;transform-style:preserve-3d}.coin-svg{width:100%;height:100%;display:block}@keyframes coinPulse{0%,to{transform:scale(1)}50%{transform:scale(1.2)}}.coin-counter-target[data-v-a844572d]{transition:all .3s ease}

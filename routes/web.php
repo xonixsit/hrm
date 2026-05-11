@@ -623,6 +623,23 @@ Route::middleware('auth')->group(function () {
         // Broadcast Management
         Route::resource('broadcasts', BroadcastController::class);
         Route::post('broadcasts/test-email', [BroadcastController::class, 'sendTestEmail'])->name('broadcasts.test-email');
+        
+        // Game Content Management
+        Route::prefix('games')->name('games.')->group(function () {
+            // Objection Crusher
+            Route::get('objection-crusher', [App\Http\Controllers\Admin\GameContentController::class, 'objectionIndex'])->name('objection-crusher.index');
+            Route::post('objection-crusher/generate', [App\Http\Controllers\Admin\GameContentController::class, 'generateObjections'])->name('objection-crusher.generate');
+            Route::post('objection-crusher/store', [App\Http\Controllers\Admin\GameContentController::class, 'storeObjections'])->name('objection-crusher.store');
+            Route::put('objection-crusher/{objection}', [App\Http\Controllers\Admin\GameContentController::class, 'updateObjection'])->name('objection-crusher.update');
+            Route::delete('objection-crusher/{objection}', [App\Http\Controllers\Admin\GameContentController::class, 'deleteObjection'])->name('objection-crusher.delete');
+            
+            // Tax Trivia Tower
+            Route::get('tax-trivia', [App\Http\Controllers\Admin\GameContentController::class, 'triviaIndex'])->name('tax-trivia.index');
+            Route::post('tax-trivia/generate', [App\Http\Controllers\Admin\GameContentController::class, 'generateTrivia'])->name('tax-trivia.generate');
+            Route::post('tax-trivia/store', [App\Http\Controllers\Admin\GameContentController::class, 'storeTrivia'])->name('tax-trivia.store');
+            Route::put('tax-trivia/{question}', [App\Http\Controllers\Admin\GameContentController::class, 'updateTrivia'])->name('tax-trivia.update');
+            Route::delete('tax-trivia/{question}', [App\Http\Controllers\Admin\GameContentController::class, 'deleteTrivia'])->name('tax-trivia.delete');
+        });
         Route::get('broadcasts/test-mail-config', function() {
             try {
                 $user = Auth::user();
@@ -694,6 +711,22 @@ Route::middleware('auth')->group(function () {
     Route::post('assessment-cycles/{assessmentCycle}/send-reminders', [AssessmentCycleController::class, 'sendReminders'])->name('assessment-cycles.send-reminders');
     Route::get('assessment-cycles/{assessmentCycle}/progress-report', [AssessmentCycleController::class, 'progressReport'])->name('assessment-cycles.progress-report');
     Route::post('assessment-cycles/{assessmentCycle}/duplicate', [AssessmentCycleController::class, 'duplicate'])->name('assessment-cycles.duplicate');
+    
+    // Employee Games
+    Route::prefix('games')->name('games.')->group(function () {
+        // Objection Crusher
+        Route::get('objection-crusher', [App\Http\Controllers\GameController::class, 'objectionCrusherIndex'])->name('objection-crusher');
+        Route::get('objection-crusher/cards', [App\Http\Controllers\GameController::class, 'getObjectionCards'])->name('objection-crusher.cards');
+        Route::post('objection-crusher/save', [App\Http\Controllers\GameController::class, 'saveObjectionSession'])->name('objection-crusher.save');
+        
+        // Tax Trivia Tower
+        Route::get('tax-trivia', [App\Http\Controllers\GameController::class, 'taxTriviaIndex'])->name('tax-trivia');
+        Route::get('tax-trivia/questions', [App\Http\Controllers\GameController::class, 'getTriviaQuestions'])->name('tax-trivia.questions');
+        Route::post('tax-trivia/save', [App\Http\Controllers\GameController::class, 'saveTriviaSession'])->name('tax-trivia.save');
+        
+        // Leaderboard
+        Route::get('leaderboard', [App\Http\Controllers\GameController::class, 'leaderboard'])->name('leaderboard');
+    });
     
     // Competency Analytics routes
     Route::prefix('competency-analytics')->name('competency-analytics.')->group(function () {

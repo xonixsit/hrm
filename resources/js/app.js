@@ -91,6 +91,12 @@ createInertiaApp({
             import.meta.glob('./Pages/**/*.vue'),
         ),
     setup({ el, App, props, plugin }) {
+        // Ensure CSRF token is set for Inertia requests
+        const token = document.head.querySelector('meta[name="csrf-token"]');
+        if (token) {
+            window.axios.defaults.headers.common['X-CSRF-TOKEN'] = token.content;
+        }
+        
         const app = createApp({ render: () => h(App, props) })
             .use(plugin)
             .use(ZiggyVue);

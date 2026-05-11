@@ -498,6 +498,9 @@ const moreNavItems = computed(() => {
       { route: 'skill-tests.my-tests', label: 'My Tests', category: 'regular' },
       { route: 'work-reports.index', label: 'Work Reports', category: 'regular' },
       { route: 'work-reports.leaderboard', label: 'Leaderboard', category: 'regular' },
+      { route: 'games.objection-crusher', label: '🎯 Objection Crusher', category: 'regular' },
+      { route: 'games.tax-trivia', label: '🏢 Tax Trivia Tower', category: 'regular' },
+      { route: 'games.leaderboard', label: '🏆 Game Leaderboard', category: 'regular' },
       { route: 'feedbacks.index', label: 'Feedback', category: 'regular' },
       { route: 'employee-handbook', label: 'Employee Handbook', category: 'regular' },
       { route: 'support.index', label: 'Support', category: 'regular' }
@@ -518,6 +521,8 @@ const moreNavItems = computed(() => {
       items.push(
         { route: 'skill-tests.index', label: 'Skill Tests', category: 'admin' },
         { route: 'skill-tests.reviews.index', label: 'Test Reviews', category: 'admin' },
+        { route: 'admin.games.objection-crusher.index', label: '🎮 Objection Crusher Content', category: 'admin' },
+        { route: 'admin.games.tax-trivia.index', label: '🎮 Tax Trivia Content', category: 'admin' },
         { route: 'admin.roles.index', label: 'Role Management', category: 'admin' },
         { route: 'admin.system-settings.index', label: 'System Settings', category: 'admin' },
         { route: 'leave-types.index', label: 'Leave Policies', category: 'admin' },

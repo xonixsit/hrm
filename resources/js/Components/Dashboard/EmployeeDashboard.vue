@@ -721,27 +721,47 @@ const breakTimeFills = computed(() => {
     return (timelineMinutes / totalTimelineMinutes) * 100;
   };
   
-  // Helper function to parse server time string
-  const parseServerTime = () => {
+  // Helper function to convert UTC time to server timezone
+  const convertUTCToServerTime = (utcTimeStr) => {
     if (!currentTime.value) return null;
     
     try {
       const timeMatch = currentTime.value.match(/(\d+):(\d+):(\d+)\s*(AM|PM)/i);
       if (!timeMatch) return null;
       
-      let hour = parseInt(timeMatch[1]);
-      const minute = parseInt(timeMatch[2]);
+      let serverHour = parseInt(timeMatch[1]);
+      const serverMinute = parseInt(timeMatch[2]);
       const ampm = timeMatch[4].toUpperCase();
       
       // Convert to 24-hour format
-      if (ampm === 'PM' && hour !== 12) {
-        hour += 12;
-      } else if (ampm === 'AM' && hour === 12) {
-        hour = 0;
+      if (ampm === 'PM' && serverHour !== 12) {
+        serverHour += 12;
+      } else if (ampm === 'AM' && serverHour === 12) {
+        serverHour = 0;
       }
       
-      return { hour, minute };
+      // Calculate timezone offset
+      const now = new Date();
+      const utcHour = now.getUTCHours();
+      const utcMinute = now.getUTCMinutes();
+      const serverTotalMinutes = serverHour * 60 + serverMinute;
+      const utcTotalMinutes = utcHour * 60 + utcMinute;
+      let offsetMinutes = serverTotalMinutes - utcTotalMinutes;
+      
+      // Handle day boundary crossing
+      if (offsetMinutes > 720) offsetMinutes -= 1440;
+      if (offsetMinutes < -720) offsetMinutes += 1440;
+      
+      // Apply offset to UTC time
+      const utcTime = new Date(utcTimeStr);
+      const serverTime = new Date(utcTime.getTime() + offsetMinutes * 60 * 1000);
+      
+      return {
+        hour: serverTime.getUTCHours(),
+        minute: serverTime.getUTCMinutes()
+      };
     } catch (error) {
+      console.error('Error converting UTC to server time:', error);
       return null;
     }
   };
@@ -750,18 +770,20 @@ const breakTimeFills = computed(() => {
   if (attendanceState.value.completedBreakSessions) {
     attendanceState.value.completedBreakSessions.forEach(session => {
       if (session.start && session.end) {
-        const startTime = new Date(session.start);
-        const endTime = new Date(session.end);
+        const startTime = convertUTCToServerTime(session.start);
+        const endTime = convertUTCToServerTime(session.end);
         
-        const startPos = getTimelinePosition(startTime.getHours(), startTime.getMinutes());
-        const endPos = getTimelinePosition(endTime.getHours(), endTime.getMinutes());
-        
-        if (startPos !== null && endPos !== null && endPos > startPos) {
-          fills.push({
-            left: startPos,
-            width: endPos - startPos,
-            isOngoing: false
-          });
+        if (startTime && endTime) {
+          const startPos = getTimelinePosition(startTime.hour, startTime.minute);
+          const endPos = getTimelinePosition(endTime.hour, endTime.minute);
+          
+          if (startPos !== null && endPos !== null && endPos > startPos) {
+            fills.push({
+              left: startPos,
+              width: endPos - startPos,
+              isOngoing: false
+            });
+          }
         }
       }
     });
@@ -769,19 +791,33 @@ const breakTimeFills = computed(() => {
   
   // Add current break session if on break
   if (isOnBreak.value && attendanceState.value.breakStartTime) {
-    const breakStart = new Date(attendanceState.value.breakStartTime);
-    const currentServerTime = parseServerTime();
+    const breakStartConverted = convertUTCToServerTime(attendanceState.value.breakStartTime);
     
-    if (currentServerTime) {
-      const startPos = getTimelinePosition(breakStart.getHours(), breakStart.getMinutes());
-      const currentPos = getTimelinePosition(currentServerTime.hour, currentServerTime.minute);
-      
-      if (startPos !== null && currentPos !== null && currentPos > startPos) {
-        fills.push({
-          left: startPos,
-          width: currentPos - startPos,
-          isOngoing: true
-        });
+    if (breakStartConverted && currentTime.value) {
+      // Parse current server time
+      const timeMatch = currentTime.value.match(/(\d+):(\d+):(\d+)\s*(AM|PM)/i);
+      if (timeMatch) {
+        let currentHour = parseInt(timeMatch[1]);
+        const currentMinute = parseInt(timeMatch[2]);
+        const ampm = timeMatch[4].toUpperCase();
+        
+        // Convert to 24-hour format
+        if (ampm === 'PM' && currentHour !== 12) {
+          currentHour += 12;
+        } else if (ampm === 'AM' && currentHour === 12) {
+          currentHour = 0;
+        }
+        
+        const startPos = getTimelinePosition(breakStartConverted.hour, breakStartConverted.minute);
+        const currentPos = getTimelinePosition(currentHour, currentMinute);
+        
+        if (startPos !== null && currentPos !== null && currentPos > startPos) {
+          fills.push({
+            left: startPos,
+            width: currentPos - startPos,
+            isOngoing: true
+          });
+        }
       }
     }
   }
