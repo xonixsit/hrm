@@ -553,16 +553,16 @@
   const isFormValid = computed(() => {
     // Check required fields for employment info (Admin, HR, Manager can edit)
     const employmentInfoValid = !canEditEmploymentInfo.value || (
-      form.department_id &&
-      form.job_title?.trim() &&
-      form.employee_code?.trim() &&
-      form.join_date?.trim() &&
-      form.contract_type?.trim()
+      !!form.department_id &&
+      !!(form.job_title || '').toString().trim() &&
+      !!(form.employee_code || '').toString().trim() &&
+      !!(form.join_date || '').toString().trim() &&
+      !!(form.contract_type || '').toString().trim()
     )
-    
+
     // Check required fields for personal info (Admin, HR, or self can edit)
-    const personalInfoValid = !canEditPersonalInfo.value || form.name?.trim()
-    
+    const personalInfoValid = !canEditPersonalInfo.value || !!(form.name || '').toString().trim()
+
     return employmentInfoValid && personalInfoValid
   })
 
