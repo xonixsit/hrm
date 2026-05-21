@@ -427,12 +427,12 @@
     name: props.employee.user?.name || '',
 
     // Employee Basic Information
-    employee_code: props.employee.employee_code || '',
-    department_id: props.employee.department_id || '',
-    manager_id: props.employee.manager_id || '',
-    job_title: props.employee.job_title || '',
+    employee_code: String(props.employee.employee_code || ''),
+    department_id: String(props.employee.department_id || ''),
+    manager_id: String(props.employee.manager_id || ''),
+    job_title: String(props.employee.job_title || ''),
     join_date: props.employee.join_date ? new Date(props.employee.join_date).toISOString().split('T')[0] : '',
-    contract_type: props.employee.contract_type || '',
+    contract_type: String(props.employee.contract_type || ''),
 
     // Personal Information
     date_of_birth: props.employee.date_of_birth ? new Date(props.employee.date_of_birth).toISOString().split('T')[0] : '',
@@ -553,7 +553,7 @@
   const isFormValid = computed(() => {
     // Check required fields for employment info (Admin, HR, Manager can edit)
     const employmentInfoValid = !canEditEmploymentInfo.value || (
-      form.department_id?.trim() &&
+      form.department_id &&
       form.job_title?.trim() &&
       form.employee_code?.trim() &&
       form.join_date?.trim() &&
