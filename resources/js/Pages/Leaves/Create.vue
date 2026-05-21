@@ -119,8 +119,8 @@
                         <input 
                           id="from_date"
                           v-model="form.from_date" 
-                          type="date" 
-                          :min="minDate"
+                          type="date"
+                          required
                           class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm pl-10"
                           :class="{ 'border-red-300 focus:border-red-500 focus:ring-red-500': form.errors.from_date }"
                           @change="validateDates"
@@ -144,8 +144,9 @@
                         <input 
                           id="to_date"
                           v-model="form.to_date" 
-                          type="date" 
-                          :min="form.from_date || minDate"
+                          type="date"
+                          :min="form.from_date"
+                          required
                           class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm pl-10"
                           :class="{ 'border-red-300 focus:border-red-500 focus:ring-red-500': form.errors.to_date }"
                           @change="validateDates"
@@ -193,6 +194,7 @@
                       v-model="form.reason" 
                       rows="4"
                       maxlength="500"
+                      required
                       placeholder="Please provide a detailed reason for your leave application. Include any relevant information that will help your manager understand the context of your application."
                       class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm resize-none"
                       :class="{ 'border-red-300 focus:border-red-500 focus:ring-red-500': form.errors.reason }"
@@ -352,7 +354,13 @@
                 <svg class="flex-shrink-0 h-5 w-5 text-green-500 mt-0.5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                 </svg>
-                <span>Submit applications at least 2 weeks in advance</span>
+                <span>Planned leaves should be submitted at least 2 weeks in advance</span>
+              </div>
+              <div class="flex items-start">
+                <svg class="flex-shrink-0 h-5 w-5 text-green-500 mt-0.5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                <span>Urgent and sick leaves can be applied retroactively</span>
               </div>
               <div class="flex items-start">
                 <svg class="flex-shrink-0 h-5 w-5 text-green-500 mt-0.5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -364,13 +372,7 @@
                 <svg class="flex-shrink-0 h-5 w-5 text-green-500 mt-0.5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                 </svg>
-                <span>Check team calendar for conflicts</span>
-              </div>
-              <div class="flex items-start">
-                <svg class="flex-shrink-0 h-5 w-5 text-green-500 mt-0.5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                </svg>
-                <span>Emergency leaves can be submitted retroactively</span>
+                <span>Check team calendar for conflicts when possible</span>
               </div>
             </div>
           </ContentCard>
@@ -406,11 +408,7 @@ const form = useForm({
 const currentStep = ref(1);
 const displayedLeaveTypes = computed(() => props.leaveTypes);
 
-// Computed properties
-const minDate = computed(() => {
-  const today = new Date();
-  return today.toISOString().split('T')[0];
-});
+// Computed properties (minDate removed to allow retroactive leave applications)
 
 const selectedLeaveType = computed(() => {
   return props.leaveTypes.find(type => type.id == form.leave_type_id);
@@ -518,9 +516,29 @@ const validateDates = () => {
 };
 
 const nextStep = () => {
-  if (canProceedToReview.value) {
-    currentStep.value = 2;
+  // Validate required fields before proceeding
+  if (!form.leave_type_id) {
+    alert('Please select a leave type');
+    return;
   }
+  if (!form.from_date) {
+    alert('Please select a start date');
+    return;
+  }
+  if (!form.to_date) {
+    alert('Please select an end date');
+    return;
+  }
+  if (!form.reason || form.reason.trim().length < 10) {
+    alert('Please provide a detailed reason (at least 10 characters)');
+    return;
+  }
+  if (exceedsBalance.value) {
+    alert('The requested leave duration exceeds your available balance');
+    return;
+  }
+  
+  currentStep.value = 2;
 };
 
 const confirmationChecked = ref(false);
@@ -553,12 +571,11 @@ const saveDraft = () => {
   //console.log('Save draft functionality would be implemented here');
 };
 
-// Set default date to tomorrow (to encourage advance planning)
+// Set default date to today (allows retroactive applications for urgent/sick leaves)
 onMounted(() => {
   if (!form.from_date) {
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    form.from_date = tomorrow.toISOString().split('T')[0];
+    const today = new Date();
+    form.from_date = today.toISOString().split('T')[0];
   }
 });
 </script>

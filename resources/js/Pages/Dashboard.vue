@@ -390,13 +390,60 @@
       }" 
       @close="closeBirthdayPopup" />
 
-    <!-- Guide Slideshow -->
-    <GuideSlideshow ref="guideSlideshowRef" />
+    <!-- Video Tutorial Modal -->
+    <Teleport to="body">
+      <div v-if="showVideoModal" class="fixed inset-0 z-[9999] flex items-center justify-center p-4" style="margin: 0 !important;">
+        <div class="fixed inset-0 bg-black bg-opacity-75" @click="showVideoModal = false"></div>
+        <div class="relative bg-white rounded-lg shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+          <div class="flex justify-between items-center p-6 border-b border-gray-200 sticky top-0 bg-white z-10">
+            <h3 class="text-2xl font-bold text-gray-900">🎯 Objection Crusher - Training Video</h3>
+            <button
+              @click="showVideoModal = false"
+              class="text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <div class="p-6">
+            <div class="aspect-video bg-black rounded-lg overflow-hidden">
+              <video
+                ref="videoPlayer"
+                class="w-full h-full"
+                controls
+                autoplay
+              >
+                <source src="/videos/objection-crusher.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+              </video>
+            </div>
+            <div class="mt-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div class="text-sm text-gray-600">
+                <p class="font-medium mb-2">Learn how to handle customer objections:</p>
+                <ul class="list-disc list-inside space-y-1">
+                  <li>Privacy concerns (SSN, birthdate, documents)</li>
+                  <li>Trust and security questions</li>
+                  <li>Professional response techniques</li>
+                  <li>Building customer confidence</li>
+                </ul>
+              </div>
+              <button
+                @click="closeVideoModal"
+                class="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-lg transition-colors whitespace-nowrap"
+              >
+                Got it!
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </AuthenticatedLayout>
 </template>
 
 <script setup>
-  import { computed, ref } from 'vue';
+  import { computed, ref, watch } from 'vue';
   import { useAuth } from '@/composables/useAuth.js';
   import { router } from '@inertiajs/vue3';
   import axios from 'axios';
@@ -434,7 +481,6 @@
   import AttendanceTrackingWidget from '@/Components/Dashboard/AttendanceTrackingWidget.vue';
   import BreakMonitoringWidget from '@/Components/Dashboard/BreakMonitoringWidget.vue';
   import TimezoneWeatherWidget from '@/Components/Dashboard/TimezoneWeatherWidget.vue';
-  import GuideSlideshow from '@/Components/Dashboard/GuideSlideshow.vue';
 
   // Icons
   import {
@@ -547,7 +593,8 @@
   const rejectionItem = ref(null);
   const rejectionReason = ref('');
   const showBirthdayPopup = ref(false);
-  const guideSlideshowRef = ref(null);
+  const showVideoModal = ref(false);
+  const videoPlayer = ref(null);
 
   // Computed properties
   const isAdmin = computed(() => {
@@ -586,9 +633,9 @@
     const actions = [
       {
         id: 'guide',
-        label: 'View Guide',
+        label: 'Watch Training Video',
         icon: 'QuestionMarkCircleIcon',
-        handler: () => guideSlideshowRef.value?.openSlideshow()
+        handler: () => showVideoModal.value = true
       },
       {
         id: 'refresh',
@@ -829,6 +876,24 @@
     showBirthdayPopup.value = false;
   };
 
+  const closeVideoModal = () => {
+    showVideoModal.value = false;
+    localStorage.setItem('objection_crusher_video_watched', 'true');
+    document.body.style.overflow = '';
+  };
+
+  // Check if user should see video on first login
+  const checkFirstLogin = () => {
+    const hasWatched = localStorage.getItem('objection_crusher_video_watched');
+    if (!hasWatched) {
+      // Show video modal after a short delay
+      setTimeout(() => {
+        showVideoModal.value = true;
+        document.body.style.overflow = 'hidden';
+      }, 1000);
+    }
+  };
+
   // Test methods for birthday functionality
   const testBirthday = async () => {
     try {
@@ -880,7 +945,18 @@
 
   // Check for birthday popup on component mount
   import { onMounted } from 'vue';
+  
+  // Watch for modal state changes to control body scroll
+  watch(showVideoModal, (newValue) => {
+    if (newValue) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+  });
+  
   onMounted(() => {
     checkAndShowBirthdayPopup();
+    checkFirstLogin();
   });
 </script>

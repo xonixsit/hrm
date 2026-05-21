@@ -241,6 +241,7 @@ const objectionCards = ref([]);
 const responseCards = ref([]);
 const selectedCard = ref(null);
 const matches = ref([]);
+const correctAnswers = ref({}); // Store correct objection-response pairs (hidden from user)
 
 const currentScore = ref(0);
 const correctMatches = ref(0);
@@ -258,8 +259,28 @@ const startGame = async () => {
       params: gameSettings.value
     });
     
-    objectionCards.value = response.data.objections.map(c => ({ ...c, matched: false }));
-    responseCards.value = response.data.responses.map(c => ({ ...c, matched: false }));
+    // Store correct answers separately (hidden from user)
+    correctAnswers.value = {};
+    response.data.responses.forEach(r => {
+      if (r.is_correct && r.objection_id) {
+        correctAnswers.value[r.objection_id] = r.id;
+      }
+    });
+    
+    // Remove answer data from cards shown to user
+    objectionCards.value = response.data.objections.map(c => ({ 
+      id: c.id, 
+      text: c.text, 
+      type: c.type, 
+      matched: false 
+    }));
+    
+    responseCards.value = response.data.responses.map(c => ({ 
+      id: c.id, 
+      text: c.text, 
+      type: c.type, 
+      matched: false 
+    }));
     
     gameStarted.value = true;
     elapsedTime.value = 0;
@@ -307,7 +328,10 @@ const checkMatch = (card1, card2) => {
   
   totalAttempts.value++;
   
-  if (response.objection_id === objection.id && response.is_correct) {
+  // Check against hidden correct answers
+  const isCorrect = correctAnswers.value[objection.id] === response.id;
+  
+  if (isCorrect) {
     // Correct match
     objection.matched = true;
     response.matched = true;
