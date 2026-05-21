@@ -568,30 +568,31 @@
 
   // Check if form has changes
   const hasChanges = computed(() => {
+    const str = (v) => (v != null ? String(v) : '')
     const originalJoinDate = props.employee.join_date ? new Date(props.employee.join_date).toISOString().split('T')[0] : ''
     const originalDOB = props.employee.date_of_birth ? new Date(props.employee.date_of_birth).toISOString().split('T')[0] : ''
 
-    return form.name !== (props.employee.user?.name || '') ||
-      form.department_id !== (props.employee.department_id || '') ||
-      form.manager_id !== (props.employee.manager_id || '') ||
-      form.job_title !== (props.employee.job_title || '') ||
-      form.employee_code !== (props.employee.employee_code || '') ||
+    return form.name !== str(props.employee.user?.name) ||
+      form.department_id !== str(props.employee.department_id) ||
+      form.manager_id !== str(props.employee.manager_id) ||
+      form.job_title !== str(props.employee.job_title) ||
+      form.employee_code !== str(props.employee.employee_code) ||
       form.join_date !== originalJoinDate ||
-      form.contract_type !== (props.employee.contract_type || '') ||
+      form.contract_type !== str(props.employee.contract_type) ||
       form.date_of_birth !== originalDOB ||
-      form.gender !== (props.employee.gender || '') ||
-      form.phone !== (props.employee.phone || '') ||
-      form.personal_email !== (props.employee.personal_email || '') ||
-      form.nationality !== (props.employee.nationality || '') ||
-      form.current_address !== (props.employee.current_address || '') ||
-      form.permanent_address !== (props.employee.permanent_address || '') ||
-      form.emergency_contact_name !== (props.employee.emergency_contact_name || '') ||
-      form.emergency_contact_relationship !== (props.employee.emergency_contact_relationship || '') ||
-      form.emergency_contact_phone !== (props.employee.emergency_contact_phone || '') ||
-      form.emergency_contact_email !== (props.employee.emergency_contact_email || '') ||
+      form.gender !== str(props.employee.gender) ||
+      form.phone !== str(props.employee.phone) ||
+      form.personal_email !== str(props.employee.personal_email) ||
+      form.nationality !== str(props.employee.nationality) ||
+      form.current_address !== str(props.employee.current_address) ||
+      form.permanent_address !== str(props.employee.permanent_address) ||
+      form.emergency_contact_name !== str(props.employee.emergency_contact_name) ||
+      form.emergency_contact_relationship !== str(props.employee.emergency_contact_relationship) ||
+      form.emergency_contact_phone !== str(props.employee.emergency_contact_phone) ||
+      form.emergency_contact_email !== str(props.employee.emergency_contact_email) ||
       form.employment_type !== (props.employee.employment_type || 'full_time') ||
-      form.work_location !== (props.employee.work_location || '') ||
-      form.salary !== (props.employee.salary || '') ||
+      form.work_location !== str(props.employee.work_location) ||
+      form.salary !== str(props.employee.salary) ||
       form.salary_currency !== (props.employee.salary_currency || 'USD') ||
       form.profile_pic !== null
   })
