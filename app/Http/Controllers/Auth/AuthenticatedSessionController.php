@@ -35,7 +35,13 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        // Avoid redirecting to API/JSON routes stored as intended URL
+        $intended = session()->pull('url.intended');
+        if ($intended && !str_contains($intended, '/api/')) {
+            return redirect($intended);
+        }
+
+        return redirect()->route('dashboard');
     }
 
     /**

@@ -38,8 +38,6 @@ class HandleInertiaRequests extends Middleware
             ],
             'csrf_token' => csrf_token(),
             'app_timezone' => config('app.timezone', 'UTC'),
-            'server_time_formatted' => now()->format('h:i:s A'),
-            'server_date_formatted' => now()->format('l, F j, Y'),
         ];
     }
 }
