@@ -496,7 +496,7 @@ const openDropdown = async () => {
   isOpen.value = true;
   highlightedIndex.value = -1;
   searchQuery.value = '';
-  dropdownUpwards = 1;
+  dropdownUpwards.value = false;
   await nextTick();
 
   const dropdown = dropdownRef.value;
