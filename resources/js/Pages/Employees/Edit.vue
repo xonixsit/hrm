@@ -660,27 +660,20 @@
   }
 
   const handleSubmit = () => {
-    // Inertia doesn't support file uploads with PUT/PATCH directly
-    // We need to use POST with _method field
     const options = {
-      forceFormData: true,
       preserveScroll: true,
+      forceFormData: !!form.profile_pic,
       onSuccess: () => {
-        // Success message will be shown via flash message and notification
         previewImage.value = null
         form.profile_pic = null
       },
       onError: (errors) => {
         console.error('Form submission errors:', errors)
-        
-        // Show error notification
         showNotification({
           type: 'error',
           title: 'Update Failed',
           message: 'Please check the form for errors and try again.'
         })
-        
-        // Scroll to first error
         const firstErrorField = Object.keys(errors)[0]
         if (firstErrorField) {
           const element = document.querySelector(`[name="${firstErrorField}"]`)
@@ -691,17 +684,10 @@
         }
       }
     }
-    
-    // If there's a file upload, use POST with _method
-    if (form.profile_pic) {
-      router.post(route('employees.update', props.employee.id), {
-        ...form.data(),
-        _method: 'PUT'
-      }, options)
-    } else {
-      // No file upload, use regular PUT
-      form.put(route('employees.update', props.employee.id), options)
-    }
+
+    // Always POST with _method: PUT — Laravel can't parse PUT multipart/form-data
+    form.transform(data => ({ ...data, _method: 'PUT' }))
+        .post(route('employees.update', props.employee.id), options)
   }
 
   const handleReset = () => {
