@@ -431,11 +431,19 @@
     department_id: props.employee.department_id != null ? String(props.employee.department_id) : '',
     manager_id: props.employee.manager_id != null ? String(props.employee.manager_id) : '',
     job_title: props.employee.job_title != null ? String(props.employee.job_title) : '',
-    join_date: props.employee.join_date ? new Date(props.employee.join_date).toISOString().split('T')[0] : '',
+    join_date: (() => {
+      if (!props.employee.join_date) return ''
+      const d = new Date(props.employee.join_date)
+      return isNaN(d.getTime()) ? '' : d.toISOString().split('T')[0]
+    })(),
     contract_type: props.employee.contract_type != null ? String(props.employee.contract_type) : '',
 
     // Personal Information
-    date_of_birth: props.employee.date_of_birth ? new Date(props.employee.date_of_birth).toISOString().split('T')[0] : '',
+    date_of_birth: (() => {
+      if (!props.employee.date_of_birth) return ''
+      const d = new Date(props.employee.date_of_birth)
+      return isNaN(d.getTime()) ? '' : d.toISOString().split('T')[0]
+    })(),
     gender: props.employee.gender || '',
     phone: props.employee.phone || '',
     personal_email: props.employee.personal_email || '',
@@ -545,32 +553,26 @@
       variant: 'primary',
       icon: CheckIcon,
       loadingLabel: 'Updating Employee...',
-      disabled: !isFormValid.value || !hasChanges.value
+      disabled: !isFormValid.value
     }
   ])
 
-  // Form validation
+  // Only block submit if name is explicitly cleared (backend handles other validation)
   const isFormValid = computed(() => {
-    // Check required fields for employment info (Admin, HR, Manager can edit)
-    const employmentInfoValid = !canEditEmploymentInfo.value || (
-      !!form.department_id &&
-      !!(form.job_title || '').toString().trim() &&
-      !!(form.employee_code || '').toString().trim() &&
-      !!(form.join_date || '').toString().trim() &&
-      !!(form.contract_type || '').toString().trim()
-    )
-
-    // Check required fields for personal info (Admin, HR, or self can edit)
-    const personalInfoValid = !canEditPersonalInfo.value || !!(form.name || '').toString().trim()
-
-    return employmentInfoValid && personalInfoValid
+    if (!canEditPersonalInfo.value) return true
+    return !!(form.name || '').toString().trim()
   })
 
   // Check if form has changes
   const hasChanges = computed(() => {
     const str = (v) => (v != null ? String(v) : '')
-    const originalJoinDate = props.employee.join_date ? new Date(props.employee.join_date).toISOString().split('T')[0] : ''
-    const originalDOB = props.employee.date_of_birth ? new Date(props.employee.date_of_birth).toISOString().split('T')[0] : ''
+    const safeDate = (v) => {
+      if (!v) return ''
+      const d = new Date(v)
+      return isNaN(d.getTime()) ? '' : d.toISOString().split('T')[0]
+    }
+    const originalJoinDate = safeDate(props.employee.join_date)
+    const originalDOB = safeDate(props.employee.date_of_birth)
 
     return form.name !== str(props.employee.user?.name) ||
       form.department_id !== str(props.employee.department_id) ||
