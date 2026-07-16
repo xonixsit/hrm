@@ -229,7 +229,13 @@ class SkillTestReviewController extends Controller
 
             $fileName = 'skill_test_results_' . now()->format('Y-m-d_H-i-s') . '.xlsx';
 
-            return Excel::download(new SkillTestResultsExport($testId, $reviewStatus), $fileName);
+            $response = Excel::download(new SkillTestResultsExport($testId, $reviewStatus), $fileName);
+            
+            // Ensure proper headers for file download
+            $response->headers->set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            $response->headers->set('Content-Disposition', 'attachment; filename="' . $fileName . '"');
+            
+            return $response;
         } catch (\Exception $e) {
             Log::error('Export failed: ' . $e->getMessage());
             return back()->with('error', 'Export failed: ' . $e->getMessage());
