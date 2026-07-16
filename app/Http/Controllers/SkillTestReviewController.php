@@ -221,13 +221,18 @@ class SkillTestReviewController extends Controller
      */
     public function export(Request $request)
     {
-        $this->authorize('review', SkillTest::class);
+        try {
+            $this->authorize('review', SkillTest::class);
 
-        $testId = $request->query('test_id');
-        $reviewStatus = $request->query('review_status');
+            $testId = $request->query('test_id');
+            $reviewStatus = $request->query('review_status');
 
-        $fileName = 'skill_test_results_' . now()->format('Y-m-d_H-i-s') . '.xlsx';
+            $fileName = 'skill_test_results_' . now()->format('Y-m-d_H-i-s') . '.xlsx';
 
-        return Excel::download(new SkillTestResultsExport($testId, $reviewStatus), $fileName);
+            return Excel::download(new SkillTestResultsExport($testId, $reviewStatus), $fileName);
+        } catch (\Exception $e) {
+            Log::error('Export failed: ' . $e->getMessage());
+            return back()->with('error', 'Export failed: ' . $e->getMessage());
+        }
     }
 }

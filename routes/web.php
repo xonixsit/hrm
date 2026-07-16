@@ -824,10 +824,10 @@ Route::middleware('auth')->group(function () {
 
         // Review routes (Admin/HR only)
         Route::get('/reviews', [\App\Http\Controllers\SkillTestReviewController::class, 'index'])->name('reviews.index');
+        Route::get('/reviews/export', [\App\Http\Controllers\SkillTestReviewController::class, 'export'])->name('reviews.export')->withoutMiddleware([\App\Http\Middleware\HandleInertiaRequests::class]);
         Route::get('/reviews/{testResponse}', [\App\Http\Controllers\SkillTestReviewController::class, 'show'])->name('reviews.show');
         Route::post('/reviews/{testResponse}/answers/{answer}', [\App\Http\Controllers\SkillTestReviewController::class, 'reviewAnswer'])->name('reviews.answer');
         Route::post('/reviews/{testResponse}/finalize', [\App\Http\Controllers\SkillTestReviewController::class, 'finalize'])->name('reviews.finalize');
-        Route::get('/reviews/export', [\App\Http\Controllers\SkillTestReviewController::class, 'export'])->name('reviews.export');
     });
 
     // TaxGPT routes
