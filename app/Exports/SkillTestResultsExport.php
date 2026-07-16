@@ -50,12 +50,24 @@ class SkillTestResultsExport implements FromCollection, WithHeadings, WithMappin
      */
     public function map($response): array
     {
+        // Handle department - could be string or object
+        $department = $response->employee->department;
+        if (is_array($department) || is_object($department)) {
+            $department = is_array($department) ? ($department['name'] ?? json_encode($department)) : ($department->name ?? json_encode($department));
+        }
+        
+        // Handle position - could be string or object
+        $position = $response->employee->position;
+        if (is_array($position) || is_object($position)) {
+            $position = is_array($position) ? ($position['name'] ?? json_encode($position)) : ($position->name ?? json_encode($position));
+        }
+        
         return [
             $response->id,
             $response->employee->getFullName(),
             $response->employee->user->email ?? 'N/A',
-            $response->employee->department ?? 'N/A',
-            $response->employee->position ?? 'N/A',
+            $department ?? 'N/A',
+            $position ?? 'N/A',
             $response->skillTest->name,
             $response->skillTest->category,
             $response->skillTest->difficulty_level,
