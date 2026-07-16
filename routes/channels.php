@@ -28,3 +28,15 @@ Broadcast::channel('attendance.global', function ($user) {
     // Only admins and managers can listen to global attendance updates
     return $user->hasRole(['Admin', 'Manager', 'HR']);
 });
+
+// Private channel for team messaging conversations
+Broadcast::channel('conversation.{conversationId}', function ($user, $conversationId) {
+    $conversation = \App\Models\Conversation::find($conversationId);
+    
+    if (!$conversation) {
+        return false;
+    }
+    
+    // User can only listen if they are part of the conversation
+    return $conversation->user_one_id === $user->id || $conversation->user_two_id === $user->id;
+});

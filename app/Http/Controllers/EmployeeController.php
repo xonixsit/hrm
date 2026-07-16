@@ -344,8 +344,8 @@ class EmployeeController extends Controller
             'manager_id' => $canEditEmploymentInfo ? 'nullable|exists:users,id' : 'sometimes',
             'job_title' => $canEditEmploymentInfo ? 'required|string|max:255' : 'sometimes',
             'employee_code' => $canEditEmploymentInfo ? 'required|unique:employees,employee_code,' . $employee->id : 'sometimes',
-            'join_date' => $canEditEmploymentInfo ? 'required|date' : 'sometimes',
-            'contract_type' => $canEditEmploymentInfo ? 'required|string' : 'sometimes',
+            'join_date' => $canEditEmploymentInfo ? 'nullable|date' : 'sometimes',
+            'contract_type' => $canEditEmploymentInfo ? 'nullable|string' : 'sometimes',
             'employment_type' => $canEditEmploymentInfo ? 'nullable|in:full_time,part_time,contract,intern,consultant' : 'sometimes',
             'work_location' => $canEditEmploymentInfo ? 'nullable|string|max:255' : 'sometimes',
             'profile_pic' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120', // 5MB max
@@ -387,26 +387,29 @@ class EmployeeController extends Controller
 
         // Handle profile picture upload
         if ($request->hasFile('profile_pic')) {
-            // Delete old profile picture if exists
-            if ($employee->profile_pic) {
-                $oldPath = public_path($employee->profile_pic);
-                if (file_exists($oldPath)) {
-                    unlink($oldPath);
+            try {
+                // Delete old profile picture if exists
+                if ($employee->profile_pic) {
+                    $oldPath = public_path($employee->profile_pic);
+                    if (file_exists($oldPath)) {
+                        unlink($oldPath);
+                    }
                 }
+
+                $file = $request->file('profile_pic');
+                $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+                $destinationPath = public_path('images/profile-pictures');
+
+                if (!file_exists($destinationPath)) {
+                    mkdir($destinationPath, 0755, true);
+                }
+
+                $file->move($destinationPath, $filename);
+                $validated['profile_pic'] = 'images/profile-pictures/' . $filename;
+            } catch (\Exception $e) {
+                \Log::error('Profile picture upload failed in update: ' . $e->getMessage());
+                return back()->withErrors(['profile_pic' => 'Profile picture upload failed: ' . $e->getMessage()]);
             }
-            
-            // Store new profile picture in public/images/profile-pictures/
-            $file = $request->file('profile_pic');
-            $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
-            $destinationPath = public_path('images/profile-pictures');
-            
-            // Create directory if it doesn't exist
-            if (!file_exists($destinationPath)) {
-                mkdir($destinationPath, 0755, true);
-            }
-            
-            $file->move($destinationPath, $filename);
-            $validated['profile_pic'] = 'images/profile-pictures/' . $filename;
         }
 
         // Update employee record

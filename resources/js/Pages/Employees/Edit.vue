@@ -660,34 +660,53 @@
   }
 
   const handleSubmit = () => {
-    const options = {
-      preserveScroll: true,
-      forceFormData: !!form.profile_pic,
-      onSuccess: () => {
-        previewImage.value = null
-        form.profile_pic = null
-      },
-      onError: (errors) => {
-        console.error('Form submission errors:', errors)
-        showNotification({
-          type: 'error',
-          title: 'Update Failed',
-          message: 'Please check the form for errors and try again.'
-        })
-        const firstErrorField = Object.keys(errors)[0]
-        if (firstErrorField) {
-          const element = document.querySelector(`[name="${firstErrorField}"]`)
-          if (element) {
-            element.scrollIntoView({ behavior: 'smooth', block: 'center' })
-            element.focus()
-          }
+    const onError = (errors) => {
+      console.error('Form submission errors:', errors)
+      showNotification({
+        type: 'error',
+        title: 'Update Failed',
+        message: 'Please check the form for errors and try again.'
+      })
+      const firstErrorField = Object.keys(errors)[0]
+      if (firstErrorField) {
+        const element = document.querySelector(`[name="${firstErrorField}"]`)
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+          element.focus()
         }
       }
     }
 
-    // Always POST with _method: PUT — Laravel can't parse PUT multipart/form-data
-    form.transform(data => ({ ...data, _method: 'PUT' }))
-        .post(route('employees.update', props.employee.id), options)
+    if (form.profile_pic) {
+      // File upload: use FormData via router.post with method spoofing
+      const formData = new FormData()
+      formData.append('_method', 'PUT')
+      formData.append('profile_pic', form.profile_pic)
+
+      // Append all other form fields
+      const data = form.data()
+      Object.keys(data).forEach(key => {
+        if (key !== 'profile_pic' && data[key] !== null && data[key] !== undefined) {
+          formData.append(key, data[key])
+        }
+      })
+
+      router.post(route('employees.update', props.employee.id), formData, {
+        preserveScroll: true,
+        onSuccess: () => {
+          previewImage.value = null
+          form.profile_pic = null
+        },
+        onError
+      })
+    } else {
+      // No file: plain PUT via Inertia form
+      form.put(route('employees.update', props.employee.id), {
+        preserveScroll: true,
+        onSuccess: () => {},
+        onError
+      })
+    }
   }
 
   const handleReset = () => {

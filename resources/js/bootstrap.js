@@ -17,11 +17,35 @@ if (token) {
  * allows your team to easily build robust real-time web applications.
  */
 
-// Only initialize Echo if Pusher credentials are available
+// Try Reverb first, fall back to Pusher
+const reverbKey = import.meta.env.VITE_REVERB_APP_KEY;
 const pusherKey = import.meta.env.VITE_PUSHER_APP_KEY;
 const pusherCluster = import.meta.env.VITE_PUSHER_APP_CLUSTER ?? 'mt1';
 
-if (pusherKey) {
+if (reverbKey) {
+    // Initialize Echo with Reverb
+    import('laravel-echo').then(({ default: Echo }) => {
+        window.Echo = new Echo({
+            broadcaster: 'reverb',
+            key: reverbKey,
+            wsHost: import.meta.env.VITE_REVERB_HOST ?? '127.0.0.1',
+            wsPort: import.meta.env.VITE_REVERB_PORT ?? 8080,
+            wssPort: import.meta.env.VITE_REVERB_PORT ?? 8080,
+            forceTLS: (import.meta.env.VITE_REVERB_SCHEME ?? 'http') === 'https',
+            enabledTransports: ['ws', 'wss'],
+            auth: {
+                headers: {
+                    'X-CSRF-TOKEN': token?.content,
+                },
+            },
+        });
+        console.log('✅ Laravel Echo initialized with Reverb');
+    }).catch(error => {
+        console.warn('⚠️ Failed to load Laravel Echo:', error);
+        window.Echo = null;
+    });
+} else if (pusherKey) {
+    // Fall back to Pusher
     import('laravel-echo').then(({ default: Echo }) => {
         import('pusher-js').then(({ default: Pusher }) => {
             window.Pusher = Pusher;
@@ -42,20 +66,18 @@ if (pusherKey) {
                 },
             });
 
-            //console.log('✅ Laravel Echo initialized with Pusher');
+            console.log('✅ Laravel Echo initialized with Pusher');
         }).catch(error => {
             console.warn('⚠️ Failed to load Pusher:', error);
-            //console.log('📝 Run: npm install pusher-js');
+            window.Echo = null;
         });
     }).catch(error => {
         console.warn('⚠️ Failed to load Laravel Echo:', error);
-        //console.log('📝 Run: npm install laravel-echo');
+        window.Echo = null;
     });
 } else {
-    console.warn('⚠️ Pusher credentials not found. Real-time features disabled.');
-    //console.log('📝 Add VITE_PUSHER_APP_KEY to your .env file to enable real-time features.');
-    
-    // Set Echo to null so components can check for its availability
+    console.warn('⚠️ No broadcasting credentials found. Real-time features disabled.');
+    console.log('📝 Add VITE_REVERB_APP_KEY or VITE_PUSHER_APP_KEY to your .env file to enable real-time features.');
     window.Echo = null;
 }
 

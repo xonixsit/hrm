@@ -192,6 +192,112 @@
               </div>
             </FormSection>
 
+            <!-- Break Time Information Section -->
+            <FormSection title="Break Time Information" description="Edit break time details (useful when employees forget to end break)">
+              <div class="space-y-6">
+                <!-- Total Break Minutes -->
+                <FormField
+                  label="Total Break Minutes"
+                  :error="form.errors.total_break_minutes"
+                  description="Total break time in minutes (auto-calculated from sessions)"
+                >
+                  <input
+                    v-model.number="form.total_break_minutes"
+                    type="number"
+                    min="0"
+                    step="1"
+                    class="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                    :class="{ 'border-red-500': form.errors.total_break_minutes }"
+                    @input="handleBreakTimeChange"
+                  />
+                </FormField>
+
+                <!-- Break Sessions -->
+                <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                  <div class="flex justify-between items-center mb-4">
+                    <h4 class="font-medium text-gray-900">Break Sessions</h4>
+                    <button
+                      type="button"
+                      @click="addBreakSession"
+                      class="inline-flex items-center px-3 py-1.5 bg-teal-600 text-white text-sm font-medium rounded-md hover:bg-teal-700 transition-colors"
+                    >
+                      <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                      </svg>
+                      Add Session
+                    </button>
+                  </div>
+
+                  <div v-if="form.break_sessions.length === 0" class="text-center py-4 text-gray-500 text-sm">
+                    No break sessions recorded
+                  </div>
+
+                  <div v-else class="space-y-3">
+                    <div
+                      v-for="(session, index) in form.break_sessions"
+                      :key="index"
+                      class="bg-white rounded-lg p-3 border border-gray-200"
+                    >
+                      <div class="flex justify-between items-start mb-2">
+                        <span class="text-sm font-medium text-gray-700">Session {{ index + 1 }}</span>
+                        <button
+                          type="button"
+                          @click="removeBreakSession(index)"
+                          class="text-red-600 hover:text-red-800 text-sm"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                      <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Start Time</label>
+                          <input
+                            v-model="session.start"
+                            type="datetime-local"
+                            class="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                            @change="updateSessionDuration(index)"
+                          />
+                        </div>
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">End Time</label>
+                          <input
+                            v-model="session.end"
+                            type="datetime-local"
+                            class="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                            @change="updateSessionDuration(index)"
+                          />
+                        </div>
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Duration (minutes)</label>
+                          <input
+                            v-model.number="session.duration_minutes"
+                            type="number"
+                            min="0"
+                            step="1"
+                            class="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                            @input="handleBreakTimeChange"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Break Time Warning -->
+                <div v-if="breakTimeWarning" class="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <div class="flex items-start">
+                    <svg class="w-5 h-5 text-yellow-400 mt-0.5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                    </svg>
+                    <div>
+                      <h4 class="text-sm font-medium text-yellow-800">Break Time Warning</h4>
+                      <p class="text-sm text-yellow-700 mt-1">{{ breakTimeWarning }}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </FormSection>
+
             <!-- Additional Information Section -->
             <FormSection title="Additional Information" description="Add notes or comments about this attendance record">
               <FormField
@@ -298,14 +404,16 @@ const form = useForm({
   clock_in: formatDateTimeForInput(props.attendance.clock_in),
   clock_out: formatDateTimeForInput(props.attendance.clock_out),
   notes: props.attendance.notes || '',
+  total_break_minutes: props.attendance.total_break_minutes || 0,
+  break_sessions: props.attendance.break_sessions || [],
 });
 
 // Duration calculation functions
 const calculateWorkDuration = () => {
-  if (!props.attendance.clock_in) return '0h 0m';
+  if (!form.clock_in) return '0h 0m';
   
-  const clockIn = new Date(props.attendance.clock_in);
-  const clockOut = props.attendance.clock_out ? new Date(props.attendance.clock_out) : null;
+  const clockIn = new Date(form.clock_in);
+  const clockOut = form.clock_out ? new Date(form.clock_out) : null;
   
   if (isNaN(clockIn.getTime())) {
     return '0h 0m';
@@ -323,8 +431,8 @@ const calculateWorkDuration = () => {
   // Calculate total minutes
   const totalMinutes = Math.floor((clockOut - clockIn) / (1000 * 60));
   
-  // Subtract break minutes
-  const breakMinutes = props.attendance.total_break_minutes || 0;
+  // Subtract break minutes from form data
+  const breakMinutes = form.total_break_minutes || 0;
   const workMinutes = Math.max(0, totalMinutes - breakMinutes);
   
   const hours = Math.floor(workMinutes / 60);
@@ -334,34 +442,25 @@ const calculateWorkDuration = () => {
 };
 
 const calculateBreakDuration = () => {
-  const breakMinutes = props.attendance.total_break_minutes || 0;
+  const breakMinutes = form.total_break_minutes || 0;
   
-  // Add current break if on break
-  let totalBreakMinutes = breakMinutes;
-  if (props.attendance.on_break && props.attendance.current_break_start) {
-    const breakStart = new Date(props.attendance.current_break_start);
-    const now = new Date();
-    const currentBreakMinutes = Math.floor((now - breakStart) / (1000 * 60));
-    totalBreakMinutes += currentBreakMinutes;
-  }
-  
-  const hours = Math.floor(totalBreakMinutes / 60);
-  const minutes = totalBreakMinutes % 60;
+  const hours = Math.floor(breakMinutes / 60);
+  const minutes = breakMinutes % 60;
   
   return `${hours}h ${minutes}m`;
 };
 
 // Computed properties
 const workDuration = computed(() => {
-  return props.attendance.work_duration_formatted || calculateWorkDuration();
+  return calculateWorkDuration();
 });
 
 const breakDuration = computed(() => {
-  return props.attendance.break_duration_formatted || calculateBreakDuration();
+  return calculateBreakDuration();
 });
 
 const breakSessionsCount = computed(() => {
-  return props.attendance.break_sessions_count || (props.attendance.break_sessions || []).length;
+  return form.break_sessions.length;
 });
 
 const breadcrumbs = computed(() => [
@@ -420,6 +519,60 @@ const timeValidationWarning = computed(() => {
   return null;
 });
 
+const breakTimeWarning = computed(() => {
+  if (!form.clock_in || !form.clock_out) return null;
+  
+  const clockIn = new Date(form.clock_in);
+  const clockOut = new Date(form.clock_out);
+  const totalWorkMinutes = (clockOut - clockIn) / (1000 * 60);
+  
+  if (form.total_break_minutes > totalWorkMinutes) {
+    return 'Break time cannot exceed total work duration.';
+  }
+  
+  if (form.total_break_minutes > 0 && form.break_sessions.length === 0) {
+    return 'Break time is set but no break sessions are recorded. Consider adding break sessions for better tracking.';
+  }
+  
+  return null;
+});
+
+// Break time management functions
+const addBreakSession = () => {
+  const newSession = {
+    start: formatDateTimeForInput(new Date().toISOString()),
+    end: '',
+    duration_minutes: 0
+  };
+  form.break_sessions.push(newSession);
+};
+
+const removeBreakSession = (index) => {
+  form.break_sessions.splice(index, 1);
+  handleBreakTimeChange();
+};
+
+const updateSessionDuration = (index) => {
+  const session = form.break_sessions[index];
+  if (session.start && session.end) {
+    const startTime = new Date(session.start);
+    const endTime = new Date(session.end);
+    if (!isNaN(startTime.getTime()) && !isNaN(endTime.getTime()) && endTime > startTime) {
+      session.duration_minutes = Math.floor((endTime - startTime) / (1000 * 60));
+    }
+  }
+  handleBreakTimeChange();
+};
+
+const handleBreakTimeChange = () => {
+  // Auto-calculate total break minutes from sessions
+  if (form.break_sessions.length > 0) {
+    form.total_break_minutes = form.break_sessions.reduce((total, session) => {
+      return total + (session.duration_minutes || 0);
+    }, 0);
+  }
+};
+
 // Event handlers
 const handleFormAction = (action) => {
   switch (action.id) {
@@ -463,4 +616,9 @@ watch(() => form.clock_out, (newValue) => {
     }
   }
 });
+
+// Watch for break time changes to update work duration display
+watch(() => [form.total_break_minutes, form.break_sessions], () => {
+  // Trigger reactivity for computed properties
+}, { deep: true });
 </script>

@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\SkillTest;
 use App\Models\TestResponse;
 use App\Models\Answer;
+use App\Exports\SkillTestResultsExport;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Log;
+use Maatwebsite\Excel\Facades\Excel;
 
 class SkillTestReviewController extends Controller
 {
@@ -212,5 +214,20 @@ class SkillTestReviewController extends Controller
             Log::error('Failed to finalize review: ' . $e->getMessage());
             return response()->json(['error' => $e->getMessage()], 400);
         }
+    }
+
+    /**
+     * Export test results to Excel
+     */
+    public function export(Request $request)
+    {
+        $this->authorize('review', SkillTest::class);
+
+        $testId = $request->query('test_id');
+        $reviewStatus = $request->query('review_status');
+
+        $fileName = 'skill_test_results_' . now()->format('Y-m-d_H-i-s') . '.xlsx';
+
+        return Excel::download(new SkillTestResultsExport($testId, $reviewStatus), $fileName);
     }
 }

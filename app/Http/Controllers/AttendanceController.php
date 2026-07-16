@@ -764,6 +764,11 @@ class AttendanceController extends Controller
             'clock_in' => 'required|date',
             'clock_out' => 'nullable|date|after:clock_in',
             'notes' => 'nullable|string',
+            'total_break_minutes' => 'nullable|integer|min:0',
+            'break_sessions' => 'nullable|array',
+            'break_sessions.*.start' => 'required|date',
+            'break_sessions.*.end' => 'nullable|date|after:break_sessions.*.start',
+            'break_sessions.*.duration_minutes' => 'nullable|integer|min:0',
         ]);
 
         // Parse datetime strings as local time (no timezone conversion)
@@ -775,11 +780,41 @@ class AttendanceController extends Controller
             $validated['clock_out'] = \Carbon\Carbon::parse($validated['clock_out'])->tz(config('app.timezone'));
         }
 
+        // Handle break sessions if provided
+        if (isset($validated['break_sessions'])) {
+            $breakSessions = [];
+            foreach ($validated['break_sessions'] as $session) {
+                $breakSessions[] = [
+                    'start' => \Carbon\Carbon::parse($session['start'])->tz(config('app.timezone'))->toISOString(),
+                    'end' => isset($session['end']) ? \Carbon\Carbon::parse($session['end'])->tz(config('app.timezone'))->toISOString() : null,
+                    'duration_minutes' => $session['duration_minutes'] ?? 0
+                ];
+            }
+            $validated['break_sessions'] = $breakSessions;
+        }
+
+        // If break time is being modified, recalculate work minutes
+        $breakTimeModified = isset($validated['total_break_minutes']) || isset($validated['break_sessions']);
+        
+        if ($breakTimeModified && isset($validated['clock_out'])) {
+            // Calculate total break minutes from sessions if not explicitly provided
+            if (!isset($validated['total_break_minutes']) && isset($validated['break_sessions'])) {
+                $validated['total_break_minutes'] = collect($validated['break_sessions'])->sum('duration_minutes');
+            }
+            
+            // Recalculate work minutes
+            $clockIn = \Carbon\Carbon::parse($validated['clock_in']);
+            $clockOut = \Carbon\Carbon::parse($validated['clock_out']);
+            $totalMinutes = $clockIn->diffInMinutes($clockOut);
+            $breakMinutes = $validated['total_break_minutes'] ?? 0;
+            $validated['work_minutes'] = max(0, $totalMinutes - $breakMinutes);
+        }
+
         $attendance->update($validated);
         $attendance->edited_by = Auth::id();
         $attendance->save();
 
-        $this->logAudit('Attendance Updated', 'Updated attendance ID: ' . $attendance->id);
+        $this->logAudit('Attendance Updated', 'Updated attendance ID: ' . $attendance->id . ($breakTimeModified ? ' (break time modified)' : ''));
         return redirect()->route('attendances.index')->with('success', 'Attendance updated.');
     }
 

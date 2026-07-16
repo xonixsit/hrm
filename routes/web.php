@@ -27,6 +27,7 @@ use App\Http\Controllers\CompetencyAnalyticsController;
 use App\Http\Controllers\OrganizationalAnalyticsController;
 use App\Http\Controllers\SkillTestController;
 use App\Http\Controllers\ProfilePictureController;
+use App\Http\Controllers\TeamMessagingController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
@@ -105,6 +106,31 @@ Route::middleware('auth')->group(function () {
         return Inertia::render('AnimationDemo');
     })->name('animation.demo');
     Route::get('my-profile', [EmployeeController::class, 'myProfile'])->name('employees.my-profile');
+    
+    // Team Messaging Routes
+    Route::prefix('team-messaging')->group(function () {
+        Route::get('/', [TeamMessagingController::class, 'index'])->name('team-messaging.index');
+        Route::post('/', [TeamMessagingController::class, 'store'])->name('team-messaging.store');
+        Route::get('/{conversation}', [TeamMessagingController::class, 'show'])->name('team-messaging.show');
+        Route::post('/{conversation}/messages', [TeamMessagingController::class, 'sendMessage'])->name('team-messaging.send');
+        Route::get('/{conversation}/messages', [TeamMessagingController::class, 'getMessages'])->name('team-messaging.messages');
+        Route::delete('/messages/{message}', [TeamMessagingController::class, 'deleteMessage'])->name('team-messaging.delete-message');
+    });
+
+    // Chat System API Routes (using Laravel Chat System package)
+    Route::prefix('api/chat')->group(function () {
+        Route::get('/conversations', function () {
+            return response()->json([
+                'conversations' => \Binkode\ChatSystem\Models\Conversation::with(['participants', 'messages' => function($query) {
+                        $query->latest()->limit(1);
+                    }])
+                    ->whereHas('participants', function($query) {
+                        $query->where('user_id', auth()->id());
+                    })
+                    ->get()
+            ]);
+        })->name('api.chat.conversations');
+    });
     
     // Employee Management Routes - Restricted to Admin, HR, and Manager roles
     Route::middleware(['role:Admin|HR|Manager'])->group(function () {
@@ -801,6 +827,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/reviews/{testResponse}', [\App\Http\Controllers\SkillTestReviewController::class, 'show'])->name('reviews.show');
         Route::post('/reviews/{testResponse}/answers/{answer}', [\App\Http\Controllers\SkillTestReviewController::class, 'reviewAnswer'])->name('reviews.answer');
         Route::post('/reviews/{testResponse}/finalize', [\App\Http\Controllers\SkillTestReviewController::class, 'finalize'])->name('reviews.finalize');
+        Route::get('/reviews/export', [\App\Http\Controllers\SkillTestReviewController::class, 'export'])->name('reviews.export');
     });
 
     // TaxGPT routes

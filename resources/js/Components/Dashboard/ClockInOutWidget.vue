@@ -266,7 +266,8 @@ const attendance = {
   realTimeEnabled: ref(true),
   notificationsEnabled: ref(true),
   dailyGoal: ref(8),
-  breakGoal: ref(1)
+  breakGoal: ref(1),
+  completedBreakSessions: ref([])
 }
 
 // Real-time state
@@ -281,7 +282,7 @@ const breakStartTime = ref(null)
 
 
 
-// Break time calculation (same as floating widget)
+// Break time calculation (same as floating widget - using local calculation for accuracy)
 const breakTimeFromFloatingWidget = computed(() => {
   // If currently on break, show current break session duration
   if (attendance.onBreak.value && breakStartTime.value) {
@@ -298,18 +299,23 @@ const breakTimeFromFloatingWidget = computed(() => {
     return `${hours}h ${minutes}m ${seconds}s`
   }
   
-  // Otherwise show accumulated break time from backend
-  const todaysBreakTime = attendance.todaysSummary.value?.breakTime || '0h 0m'
+  // Calculate total break time from completed sessions (local calculation for accuracy)
+  let totalMinutes = 0
   
-  // Parse and add seconds for consistency
-  const breakTimeMatch = todaysBreakTime.match(/(\d+)h\s*(\d+)m/)
-  if (breakTimeMatch) {
-    const hours = parseInt(breakTimeMatch[1])
-    const minutes = parseInt(breakTimeMatch[2])
-    return `${hours}h ${minutes}m 0s`
-  }
+  // Add completed break sessions
+  attendance.completedBreakSessions.value.forEach(session => {
+    if (session.start && session.end) {
+      const start = new Date(session.start)
+      const end = new Date(session.end)
+      const diffMs = end - start
+      totalMinutes += Math.floor(diffMs / (1000 * 60))
+    }
+  })
   
-  return '0h 0m 0s'
+  const hours = Math.floor(totalMinutes / 60)
+  const minutes = totalMinutes % 60
+  
+  return `${hours}h ${minutes}m 0s`
 })
 
 // Timer for real-time updates
@@ -332,6 +338,20 @@ const syncWithFloatingWidget = () => {
         const breakWithSeconds = breakValue.includes('s') ? breakValue : breakValue + ' 0s'
         mainBreakTime.textContent = breakWithSeconds
       }
+    }
+    
+    // Also sync completed break sessions from floating widget
+    try {
+      const storedState = localStorage.getItem('floating-attendance-state')
+      if (storedState) {
+        const state = JSON.parse(storedState)
+        if (state.completedBreakSessions && Array.isArray(state.completedBreakSessions)) {
+          attendance.completedBreakSessions.value = state.completedBreakSessions
+          //console.log('🔄 Synced completed break sessions from floating widget:', state.completedBreakSessions.length)
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to sync break sessions from floating widget:', error)
     }
   }
 }
@@ -464,30 +484,24 @@ const updateWorkDuration = () => {
     realTimeBreakDuration.value = `${hours}h ${minutes}m ${seconds}s`
     //console.log('Current break duration updated to:', realTimeBreakDuration.value)
   } else {
-    // Show total break time from today's summary (accumulated breaks)
-    const todaysBreakTime = attendance.todaysSummary.value?.breakTime || '0h 0m'
+    // Calculate total break time from completed sessions (local calculation for accuracy)
+    let totalMinutes = 0
     
-    // //console.log('🔍 Getting break time from summary:', {
-    //   todaysBreakTime,
-    //   fullSummary: attendance.todaysSummary.value,
-    //   onBreak: attendance.onBreak.value,
-    //   breakStartTime: breakStartTime.value
-    // })
+    // Add completed break sessions
+    attendance.completedBreakSessions.value.forEach(session => {
+      if (session.start && session.end) {
+        const start = new Date(session.start)
+        const end = new Date(session.end)
+        const diffMs = end - start
+        totalMinutes += Math.floor(diffMs / (1000 * 60))
+      }
+    })
     
-    // Parse the break time string (e.g., "1h 30m") and add seconds for consistency
-    const breakTimeMatch = todaysBreakTime.match(/(\d+)h\s*(\d+)m/)
-    if (breakTimeMatch) {
-      const hours = parseInt(breakTimeMatch[1])
-      const minutes = parseInt(breakTimeMatch[2])
-      realTimeBreakDuration.value = `${hours}h ${minutes}m 0s`
-      //console.log('✅ Parsed break time successfully:', realTimeBreakDuration.value)
-    } else {
-      // If no break time in summary, show 0 but make it visible
-      realTimeBreakDuration.value = '0h 0m 0s'
-      //console.log('⚠️ No break time found or failed to parse, showing 0:', todaysBreakTime)
-    }
+    const hours = Math.floor(totalMinutes / 60)
+    const minutes = totalMinutes % 60
+    realTimeBreakDuration.value = `${hours}h ${minutes}m 0s`
     
-    //console.log('📊 Final break duration set to:', realTimeBreakDuration.value, 'from source:', todaysBreakTime)
+    //console.log('📊 Final break duration set to:', realTimeBreakDuration.value, 'from local sessions')
   }
 }
 
@@ -589,6 +603,23 @@ const handleBreak = async () => {
     
     if (attendance.onBreak.value) {
       //console.log('Ending break...')
+      
+      // Save completed break session locally
+      if (breakStartTime.value) {
+        const completedBreak = {
+          start: breakStartTime.value,
+          end: new Date().toISOString(),
+          isOngoing: false
+        }
+        
+        // Add to completed breaks array
+        attendance.completedBreakSessions.value = [
+          ...attendance.completedBreakSessions.value,
+          completedBreak
+        ]
+        
+        //console.log('💾 Saved completed break session locally:', completedBreak)
+      }
       
       // Make API call to end break using Axios (handles CSRF automatically)
       const response = await window.axios.post('/api/attendance/break-end', {
@@ -786,6 +817,16 @@ const fetchCurrentStatus = async () => {
       attendance.clockInTime.value = data.clock_in_time || null
       breakStartTime.value = data.break_start_time || null
       
+      // Load break sessions from server data (for accurate local calculation)
+      if (data.break_sessions && Array.isArray(data.break_sessions)) {
+        attendance.completedBreakSessions.value = data.break_sessions.map(session => ({
+          start: session.start,
+          end: session.end,
+          isOngoing: false
+        }))
+        //console.log('📊 Loaded break sessions from API:', attendance.completedBreakSessions.value.length)
+      }
+      
       // Update today's summary with API data
       if (data.todays_summary) {
         attendance.todaysSummary.value = {
@@ -801,7 +842,8 @@ const fetchCurrentStatus = async () => {
       //   clockedIn: attendance.clockedIn.value,
       //   onBreak: attendance.onBreak.value,
       //   clockInTime: attendance.clockInTime.value,
-      //   breakTime: attendance.todaysSummary.value.breakTime
+      //   breakTime: attendance.todaysSummary.value.breakTime,
+      //   completedBreakSessions: attendance.completedBreakSessions.value.length
       // })
       
       // Update work duration if clocked in
