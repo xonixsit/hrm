@@ -18,7 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\SetTimezone::class,
             \App\Http\Middleware\HandleInertiaRequests::class,
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
-            // \App\Http\Middleware\TrackUserPresence::class, // Disabled until broadcasting server is running
+            // \App\Http\Middleware\TrackUserPresence::class, // Disabled - using HTTP polling only
         ]);
 
         // Register Spatie Permission middleware

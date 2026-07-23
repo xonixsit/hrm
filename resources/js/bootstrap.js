@@ -11,76 +11,31 @@ if (token) {
     console.error('CSRF token not found: Please ensure the CSRF token is properly set.');
 }
 
-/**
- * Echo exposes an expressive API for subscribing to channels and listening
- * for events that are broadcast by Laravel. Echo and event broadcasting
- * allows your team to easily build robust real-time web applications.
- */
+import Echo from 'laravel-echo';
+import Pusher from 'pusher-js';
 
-// Try Reverb first, fall back to Pusher
-const reverbKey = import.meta.env.VITE_REVERB_APP_KEY;
-const pusherKey = import.meta.env.VITE_PUSHER_APP_KEY;
-const pusherCluster = import.meta.env.VITE_PUSHER_APP_CLUSTER ?? 'mt1';
+window.Pusher = Pusher;
 
-if (reverbKey) {
-    // Initialize Echo with Reverb
-    import('laravel-echo').then(({ default: Echo }) => {
+try {
+    const key = import.meta.env.VITE_REVERB_APP_KEY || import.meta.env.VITE_PUSHER_APP_KEY;
+    if (key) {
+        const scheme = import.meta.env.VITE_REVERB_SCHEME ?? 'http';
+        const useTLS = scheme === 'https';
         window.Echo = new Echo({
             broadcaster: 'reverb',
-            key: reverbKey,
-            wsHost: import.meta.env.VITE_REVERB_HOST ?? '127.0.0.1',
+            key: key,
+            wsHost: import.meta.env.VITE_REVERB_HOST || import.meta.env.VITE_PUSHER_HOST || window.location.hostname,
             wsPort: import.meta.env.VITE_REVERB_PORT ?? 8080,
             wssPort: import.meta.env.VITE_REVERB_PORT ?? 8080,
-            forceTLS: (import.meta.env.VITE_REVERB_SCHEME ?? 'http') === 'https',
-            enabledTransports: ['ws', 'wss'],
-            auth: {
-                headers: {
-                    'X-CSRF-TOKEN': token?.content,
-                },
-            },
+            forceTLS: useTLS,
+            enabledTransports: useTLS ? ['wss'] : ['ws'],
         });
-        console.log('✅ Laravel Echo initialized with Reverb');
-    }).catch(error => {
-        console.warn('⚠️ Failed to load Laravel Echo:', error);
-        window.Echo = null;
-    });
-} else if (pusherKey) {
-    // Fall back to Pusher
-    import('laravel-echo').then(({ default: Echo }) => {
-        import('pusher-js').then(({ default: Pusher }) => {
-            window.Pusher = Pusher;
-
-            window.Echo = new Echo({
-                broadcaster: 'pusher',
-                key: pusherKey,
-                cluster: pusherCluster,
-                wsHost: import.meta.env.VITE_PUSHER_HOST ? import.meta.env.VITE_PUSHER_HOST : `ws-${pusherCluster}.pusherapp.com`,
-                wsPort: import.meta.env.VITE_PUSHER_PORT ?? 80,
-                wssPort: import.meta.env.VITE_PUSHER_PORT ?? 443,
-                forceTLS: (import.meta.env.VITE_PUSHER_SCHEME ?? 'https') === 'https',
-                enabledTransports: ['ws', 'wss'],
-                auth: {
-                    headers: {
-                        'X-CSRF-TOKEN': token?.content,
-                    },
-                },
-            });
-
-            console.log('✅ Laravel Echo initialized with Pusher');
-        }).catch(error => {
-            console.warn('⚠️ Failed to load Pusher:', error);
-            window.Echo = null;
-        });
-    }).catch(error => {
-        console.warn('⚠️ Failed to load Laravel Echo:', error);
-        window.Echo = null;
-    });
-} else {
-    console.warn('⚠️ No broadcasting credentials found. Real-time features disabled.');
-    console.log('📝 Add VITE_REVERB_APP_KEY or VITE_PUSHER_APP_KEY to your .env file to enable real-time features.');
-    window.Echo = null;
+    }
+} catch (e) {
+    console.warn('[Echo] WebSockets initialization warning:', e);
 }
 
+// Export removed – Echo is attached to window
 // Add axios interceptors to handle response errors safely
 axios.interceptors.response.use(
   (response) => {

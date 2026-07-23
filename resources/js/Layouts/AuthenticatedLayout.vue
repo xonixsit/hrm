@@ -85,7 +85,7 @@
             ? 'bg-gray-800/50 border-gray-700/50 shadow-lg shadow-gray-900/20' 
             : 'bg-white/80 border-gray-200/60 shadow-lg shadow-gray-900/10'
         ]" role="banner" aria-label="Page header">
-                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                <div class="w-full px-4 sm:px-6 lg:px-8 py-4">
                     <!-- Enhanced header with consistent styling -->
                     <div :class="[
             'flex items-center justify-between gap-4',
@@ -125,8 +125,14 @@
 
             <!-- Main Content Area with Unified Spacing System -->
             <main id="main-content" class="relative flex-1" role="main" aria-label="Main content" tabindex="-1">
+                <!-- Full-width slot bypass: when #fullWidth slot provided, skip all containers -->
+                <template v-if="slots.fullWidth">
+                    <slot name="fullWidth" />
+                </template>
+                <!-- Normal content container -->
+                <template v-else>
                 <!-- Content Container with Consistent Design System -->
-                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <div class="w-full px-4 sm:px-6 lg:px-8 py-6">
                     <!-- Content wrapper with unified styling -->
                     <div :class="[
             'relative transition-all duration-200',
@@ -145,6 +151,7 @@
                         </div>
                     </div>
                 </div>
+                </template>
             </main>
         </div>
 

@@ -31,12 +31,24 @@ Broadcast::channel('attendance.global', function ($user) {
 
 // Private channel for team messaging conversations
 Broadcast::channel('conversation.{conversationId}', function ($user, $conversationId) {
-    $conversation = \App\Models\Conversation::find($conversationId);
-    
-    if (!$conversation) {
-        return false;
-    }
-    
-    // User can only listen if they are part of the conversation
-    return $conversation->user_one_id === $user->id || $conversation->user_two_id === $user->id;
+    return \DB::table('conversation_users')
+        ->where('conversation_id', $conversationId)
+        ->where('user_id', $user->id)
+        ->exists();
+});
+
+// Per-user private channel for sidebar unread count updates
+Broadcast::channel('user.{userId}', function ($user, $userId) {
+    return (int) $user->id === (int) $userId;
+});
+
+// Presence channel for real-time user status
+Broadcast::channel('presence.users', function ($user) {
+    // All authenticated users can join the presence channel
+    return [
+        'id' => $user->id,
+        'name' => $user->name,
+        'email' => $user->email,
+        'profile_picture' => $user->employee->profile_pic ?? null,
+    ];
 });

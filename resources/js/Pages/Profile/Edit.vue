@@ -221,8 +221,8 @@ const breadcrumbs = computed(() => [
                 <div class="bg-gradient-to-r from-primary-50 to-primary-100 px-6 py-4 border-b border-neutral-200 rounded-t-lg">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center space-x-4">
-                            <!-- Profile Picture with Upload Overlay -->
-                            <div :key="avatarKey" class="relative group">
+                            <!-- Profile Picture (view only — contact HR to update) -->
+                            <div :key="avatarKey" class="relative">
                                 <div v-if="employeeData?.profile_pic" class="w-16 h-16 rounded-full overflow-hidden border-2 border-primary-200 flex-shrink-0">
                                     <img 
                                         :src="`/${employeeData.profile_pic}`" 
@@ -235,23 +235,6 @@ const breadcrumbs = computed(() => [
                                         {{ getInitials(user.name) }}
                                     </span>
                                 </div>
-                                <!-- Upload Overlay -->
-                                <button 
-                                    @click="$refs.profilePicInput.click()"
-                                    class="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center cursor-pointer"
-                                >
-                                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                                    </svg>
-                                </button>
-                                <!-- Hidden File Input -->
-                                <input 
-                                    ref="profilePicInput"
-                                    type="file"
-                                    accept="image/*"
-                                    class="hidden"
-                                    @change="handleProfilePicChange"
-                                />
                             </div>
                             <div>
                                 <h3 class="text-xl font-semibold text-neutral-900">{{ user.name }}</h3>

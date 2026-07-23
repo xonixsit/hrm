@@ -85,12 +85,15 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { usePage } from '@inertiajs/vue3'
 import { 
   ChevronUpIcon, 
   ChevronDownIcon,
   PlayIcon, 
   PauseIcon 
 } from '@heroicons/vue/24/outline'
+
+const page = usePage()
 
 // State with localStorage persistence
 const isExpanded = ref(false) // Will be set based on clock-in status
@@ -533,72 +536,45 @@ const handleStorageChange = (event) => {
 
 // Listen for attendance updates via Laravel Echo
 const handleAttendanceUpdate = (data) => {
-  //console.log('FloatingWidget: Received attendance update via Echo:', data)
-  
-  // Update local state immediately for responsive UI
   attendance.value.clockedIn = data.clocked_in
   attendance.value.onBreak = data.on_break
   attendance.value.clockInTime = data.clock_in_time
-  
-  // Update break start time
+
   if (data.on_break && data.break_start_time) {
     breakStartTime.value = data.break_start_time
   } else if (!data.on_break) {
     breakStartTime.value = null
   }
-  
-  // Save to localStorage for persistence
+
   saveStateToStorage()
-  
-  // Update timer immediately
-  updateTimer()
-  
-  // Update expanded state based on new clock-in status
   updateExpandedState()
-  
-  // //console.log('FloatingWidget: State updated via Echo:', {
-  //   clockedIn: attendance.value.clockedIn,
-  //   onBreak: attendance.value.onBreak,
-  //   clockInTime: attendance.value.clockInTime,
-  //   breakStartTime: breakStartTime.value,
-  //   isExpanded: isExpanded.value
-  // })
 }
 
 // Fallback: Listen for custom attendance state change events (legacy support)
 const handleAttendanceStateChange = (event) => {
-  //console.log('FloatingWidget: Received attendance state change (legacy):', event.detail)
-  
   const { clockedIn, onBreak, clockInTime, breakStartTime: eventBreakStartTime } = event.detail
-  
+
   // Update local state immediately for responsive UI
   attendance.value.clockedIn = clockedIn
   attendance.value.onBreak = onBreak
   attendance.value.clockInTime = clockInTime
-  
+
   // Ensure we use the same break start time as the main dashboard
   if (onBreak && eventBreakStartTime) {
     breakStartTime.value = eventBreakStartTime
   } else if (!onBreak) {
     breakStartTime.value = null
   }
-  
+
   // Save to localStorage for persistence
   saveStateToStorage()
-  
-  // Update timer immediately
-  updateTimer()
-  
+
   // Update expanded state based on new clock-in status
   updateExpandedState()
-  
-  // //console.log('FloatingWidget: State updated (legacy):', {
-  //   clockedIn: attendance.value.clockedIn,
-  //   onBreak: attendance.value.onBreak,
-  //   breakStartTime: breakStartTime.value,
-  //   eventBreakStartTime: eventBreakStartTime,
-  //   isExpanded: isExpanded.value
-  // })
+
+  // NOTE: Do NOT call updateTimer() here — updateTimer already runs on its
+  // own interval and calls broadcastCurrentStatus(), which dispatches this
+  // same event, causing an infinite loop.
 }
 
 // Broadcast attendance updates to other components
@@ -699,26 +675,17 @@ onMounted(async () => {
   timerInterval = setInterval(updateTimer, 1000) // Update every second
   
   // Subscribe to Laravel Echo attendance updates
-  if (window.Echo) {
-    // Get current user's employee ID from the page props or API
-    try {
-      const userResponse = await window.axios.get('/api/user')
-      const employeeId = userResponse.data?.employee?.id
-      
-      if (employeeId) {
-        // Subscribe to private channel for this employee
-        window.Echo.private(`attendance.${employeeId}`)
-          .listen('.attendance.updated', handleAttendanceUpdate)
-        
-        //console.log(`FloatingWidget: Subscribed to Echo channel attendance.${employeeId}`)
-      } else {
-        console.warn('FloatingWidget: No employee ID found for Echo subscription')
-      }
-    } catch (error) {
-      console.error('FloatingWidget: Failed to get user data for Echo subscription:', error)
+  const echoInstance = await window.EchoReady
+  if (echoInstance) {
+    // Get employee ID directly from Inertia shared props — no API call needed
+    const employeeId = page.props.auth?.user?.employee?.id
+
+    if (employeeId) {
+      echoInstance.private(`attendance.${employeeId}`)
+        .listen('.attendance.updated', handleAttendanceUpdate)
+    } else {
+      console.warn('FloatingWidget: No employee ID in page props for Echo subscription')
     }
-  } else {
-    console.warn('FloatingWidget: Echo not available')
   }
   
   // Listen for attendance updates from other components (legacy)

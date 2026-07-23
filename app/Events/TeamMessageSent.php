@@ -2,36 +2,25 @@
 
 namespace App\Events;
 
-use App\Models\TeamMessage;
+use Binkode\ChatSystem\Models\Message;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Broadcasting\PresenceChannel;
 use Illuminate\Broadcasting\PrivateChannel;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class TeamMessageSent implements ShouldBroadcast
+class TeamMessageSent implements ShouldBroadcastNow
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    public $queue = 'default';
+    public Message $message;
 
-    public $message;
-
-    /**
-     * Create a new event instance.
-     */
-    public function __construct(TeamMessage $message)
+    public function __construct(Message $message)
     {
         $this->message = $message;
     }
 
-    /**
-     * Get the channels the event should broadcast on.
-     *
-     * @return array<int, \Illuminate\Broadcasting\Channel>
-     */
     public function broadcastOn(): array
     {
         return [
@@ -41,23 +30,19 @@ class TeamMessageSent implements ShouldBroadcast
 
     public function broadcastWith(): array
     {
+        $sender = \App\Models\User::with('employee')->find($this->message->user_id);
+
         return [
             'id' => $this->message->id,
             'conversation_id' => $this->message->conversation_id,
-            'sender_id' => $this->message->sender_id,
             'message' => $this->message->message,
-            'is_read' => $this->message->is_read,
+            'sender_id' => $this->message->user_id,
+            'sender' => $sender ? [
+                'id' => $sender->id,
+                'name' => $sender->name,
+                'profile_picture' => $sender->profile_picture,
+            ] : null,
             'created_at' => $this->message->created_at,
-            'sender' => [
-                'id' => $this->message->sender->id,
-                'name' => $this->message->sender->name,
-                'profile_picture' => $this->message->sender->profile_picture,
-            ],
         ];
-    }
-
-    public function broadcastAs(): string
-    {
-        return 'TeamMessageSent';
     }
 }

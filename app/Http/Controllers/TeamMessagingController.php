@@ -2,331 +2,290 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\MessageRead;
+use App\Events\NewConversationMessage;
+use App\Events\TeamMessageSent;
 use App\Models\User;
+use App\Services\MessagingService;
 use Binkode\ChatSystem\Models\Conversation;
 use Binkode\ChatSystem\Models\Message;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class TeamMessagingController extends Controller
 {
+    public function __construct(private MessagingService $messaging) {}
+    // ─── Page load ────────────────────────────────────────────────────────────
+
     public function index()
     {
-        $user = Auth::user();
-        
-        // Get conversations using Laravel Chat System
-        $conversationIds = \DB::table('conversation_users')
-            ->where('user_id', $user->id)
-            ->pluck('conversation_id');
-        
+        $user            = Auth::user();
+        $conversationIds = $this->messaging->conversationIdsFor($user->id);
+        $unreadMap       = $this->messaging->bulkUnreadCounts($conversationIds, $user->id);
+
         $conversations = Conversation::whereIn('id', $conversationIds)
             ->get()
-            ->map(function ($conversation) use ($user) {
-                // Get the other user from conversation_users table
-                $otherUserId = \DB::table('conversation_users')
-                    ->where('conversation_id', $conversation->id)
-                    ->where('user_id', '!=', $user->id)
-                    ->value('user_id');
-                
-                $otherUser = $otherUserId ? User::find($otherUserId) : null;
-                
-                // Get last message
-                $lastMessage = Message::where('conversation_id', $conversation->id)
+            ->map(function (Conversation $conv) use ($user, $unreadMap) {
+                $otherUserId = $this->messaging->otherParticipantId($conv->id, $user->id);
+                $otherUser   = $otherUserId ? User::with('employee')->find($otherUserId) : null;
+                $lastMessage = Message::where('conversation_id', $conv->id)
+                    ->where('type', 'user')
                     ->latest()
                     ->first();
-                
+
                 return [
-                    'id' => $conversation->id,
-                    'other_user' => $otherUser ? [
-                        'id' => $otherUser->id,
-                        'name' => $otherUser->name,
-                        'email' => $otherUser->email,
-                        'profile_picture' => $otherUser->profile_picture,
+                    'id'           => $conv->id,
+                    'other_user'   => $otherUser ? [
+                        'id'              => $otherUser->id,
+                        'name'            => $otherUser->name,
+                        'email'           => $otherUser->email,
+                        'profile_picture' => $otherUser->employee->profile_pic ?? null,
                     ] : null,
                     'last_message' => $lastMessage ? [
-                        'id' => $lastMessage->id,
-                        'message' => $lastMessage->message,
-                        'sender_id' => $lastMessage->user_id,
+                        'id'         => $lastMessage->id,
+                        'message'    => $lastMessage->message,
+                        'sender_id'  => $lastMessage->user_id,
                         'created_at' => $lastMessage->created_at,
                     ] : null,
-                    'last_message_at' => $conversation->updated_at,
-                    'unread_count' => $this->getUnreadCount($conversation, $user->id),
+                    'unread_count' => $unreadMap[$conv->id] ?? 0,
                 ];
             });
-        
-        // Get all users for starting new conversations
+
         $users = User::where('id', '!=', $user->id)
             ->with('employee')
             ->get()
-            ->map(function ($user) {
-                return [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'profile_picture' => $user->profile_picture,
-                    'employee' => $user->employee ? [
-                        'id' => $user->employee->id,
-                        'department' => $user->employee->department,
-                        'position' => $user->employee->position,
-                    ] : null,
-                ];
-            });
+            ->map(fn(User $u) => $this->formatUser($u));
 
         return Inertia::render('TeamMessaging/Index', [
             'conversations' => $conversations,
-            'users' => $users,
+            'users'         => $users,
         ]);
     }
 
-    public function show(Conversation $conversation)
-    {
-        $user = Auth::user();
-        
-        // Check if user is part of this conversation
-        $isParticipant = \DB::table('conversation_users')
-            ->where('conversation_id', $conversation->id)
-            ->where('user_id', $user->id)
-            ->exists();
-        
-        if (!$isParticipant) {
-            abort(403);
-        }
-
-        // Get the other user from conversation_users table
-        $otherUserId = \DB::table('conversation_users')
-            ->where('conversation_id', $conversation->id)
-            ->where('user_id', '!=', $user->id)
-            ->value('user_id');
-        
-        $otherUser = $otherUserId ? User::find($otherUserId) : null;
-
-        // Mark messages as read using Chat System events
-        $unreadMessages = Message::where('conversation_id', $conversation->id)
-            ->where('user_id', '!=', $user->id)
-            ->whereDoesntHave('chatEvents', function($query) use ($user) {
-                $query->where('type', 'read')
-                      ->where('maker_id', $user->id);
-            })
-            ->get();
-
-        foreach ($unreadMessages as $message) {
-            \Binkode\ChatSystem\Models\ChatEvent::create([
-                'message_id' => $message->id,
-                'type' => 'read',
-                'maker_id' => $user->id,
-                'maker_type' => get_class($user)
-            ]);
-        }
-
-        // Get all messages
-        $messages = Message::where('conversation_id', $conversation->id)
-            ->orderBy('created_at', 'asc')
-            ->get();
-        
-        // Load users manually since Message model doesn't have user relationship
-        $userIds = $messages->pluck('user_id')->unique();
-        $users = User::whereIn('id', $userIds)->get()->keyBy('id');
-
-        return Inertia::render('TeamMessaging/Show', [
-            'conversation' => [
-                'id' => $conversation->id,
-                'other_user' => $otherUser ? [
-                    'id' => $otherUser->id,
-                    'name' => $otherUser->name,
-                    'email' => $otherUser->email,
-                    'profile_picture' => $otherUser->profile_picture,
-                ] : null,
-            ],
-            'messages' => $messages->map(function ($message) use ($users) {
-                $user = $users->get($message->user_id);
-                return [
-                    'id' => $message->id,
-                    'message' => $message->message,
-                    'sender_id' => $message->user_id,
-                    'sender' => $user ? [
-                        'id' => $user->id,
-                        'name' => $user->name,
-                        'profile_picture' => $user->profile_picture,
-                    ] : null,
-                    'is_read' => $message->chatEvents()->where('type', 'read')->exists(),
-                    'created_at' => $message->created_at,
-                ];
-            }),
-        ]);
-    }
+    // ─── Create conversation ──────────────────────────────────────────────────
 
     public function store(Request $request)
     {
-        $request->validate([
-            'user_id' => 'required|exists:users,id',
-        ]);
+        $request->validate(['user_id' => 'required|exists:users,id']);
 
-        $user = Auth::user();
-        $otherUserId = $request->user_id;
+        $user        = Auth::user();
+        $otherUserId = (int) $request->user_id;
 
         if ($user->id === $otherUserId) {
-            return back()->with('error', 'You cannot start a conversation with yourself.');
+            return response()->json(['error' => 'Cannot start a conversation with yourself.'], 400);
         }
 
-        // Check if conversation already exists
-        $existingConversation = Conversation::whereHas('participants', function($query) use ($user) {
-                $query->where('user_id', $user->id);
-            })
-            ->whereHas('participants', function($query) use ($otherUserId) {
-                $query->where('user_id', $otherUserId);
-            })
+        $existing = Conversation::whereHas('participants', fn($q) => $q->where('user_id', $user->id))
+            ->whereHas('participants', fn($q) => $q->where('user_id', $otherUserId))
             ->where('type', 'private')
             ->first();
 
-        if ($existingConversation) {
-            return redirect()->route('team-messaging.show', $existingConversation->id);
+        if ($existing) {
+            return response()->json(['conversation_id' => $existing->id]);
         }
 
-        // Create new private conversation using Chat System models
-        $conversation = Conversation::create([
+        $conv = Conversation::create([
             'user_id' => $user->id,
-            'name' => $user->name . ' & ' . User::find($otherUserId)->name,
-            'type' => 'private'
+            'name'    => $user->name . ' & ' . User::find($otherUserId)->name,
+            'type'    => 'private',
         ]);
 
-        // Add participants using DB table
-        \DB::table('conversation_users')->insert([
-            ['user_id' => $user->id, 'conversation_id' => $conversation->id],
-            ['user_id' => $otherUserId, 'conversation_id' => $conversation->id]
+        DB::table('conversation_users')->insert([
+            ['user_id' => $user->id,    'conversation_id' => $conv->id, 'created_at' => now(), 'updated_at' => now()],
+            ['user_id' => $otherUserId, 'conversation_id' => $conv->id, 'created_at' => now(), 'updated_at' => now()],
         ]);
 
-        return redirect()->route('team-messaging.show', $conversation->id);
+        return response()->json(['conversation_id' => $conv->id]);
     }
 
-    public function sendMessage(Request $request, Conversation $conversation)
-    {
-        $request->validate([
-            'message' => 'required|string|max:5000',
-        ]);
-
-        $user = Auth::user();
-        
-        // Check if user is part of this conversation
-        $isParticipant = \DB::table('conversation_users')
-            ->where('conversation_id', $conversation->id)
-            ->where('user_id', $user->id)
-            ->exists();
-        
-        if (!$isParticipant) {
-            abort(403);
-        }
-
-        // Send message using Chat System models
-        $message = Message::create([
-            'conversation_id' => $conversation->id,
-            'user_id' => $user->id,
-            'message' => $request->message,
-            'type' => 'user'
-        ]);
-
-        // Return updated messages for immediate display
-        $messages = Message::where('conversation_id', $conversation->id)
-            ->orderBy('created_at', 'asc')
-            ->get();
-        
-        // Load users manually since Message model doesn't have user relationship
-        $userIds = $messages->pluck('user_id')->unique();
-        $users = User::whereIn('id', $userIds)->get()->keyBy('id');
-        
-        return back()->with([
-            'messages' => $messages->map(function ($message) use ($users) {
-                $user = $users->get($message->user_id);
-                return [
-                    'id' => $message->id,
-                    'message' => $message->message,
-                    'sender_id' => $message->user_id,
-                    'sender' => $user ? [
-                        'id' => $user->id,
-                        'name' => $user->name,
-                        'profile_picture' => $user->profile_picture,
-                    ] : null,
-                    'is_read' => $message->chatEvents()->where('type', 'read')->exists(),
-                    'created_at' => $message->created_at,
-                ];
-            })
-        ]);
-    }
+    // ─── Load messages + mark read ────────────────────────────────────────────
 
     public function getMessages(Conversation $conversation)
     {
         $user = Auth::user();
-        
-        // Check if user is part of this conversation
-        $isParticipant = \DB::table('conversation_users')
-            ->where('conversation_id', $conversation->id)
-            ->where('user_id', $user->id)
-            ->exists();
-        
-        if (!$isParticipant) {
-            abort(403);
+
+        abort_unless($this->messaging->isParticipant($conversation->id, $user->id), 403);
+
+        // Mark read in one bulk insert — returns newly read message IDs
+        $newlyRead = $this->messaging->markConversationRead(
+            $conversation->id,
+            $user->id,
+            get_class($user)
+        );
+
+        // Broadcast blue-tick update to the conversation channel so sender sees it instantly
+        if (!empty($newlyRead)) {
+            try {
+                broadcast(new MessageRead($conversation->id, $user->id, $newlyRead));
+            } catch (\Exception $e) {
+                \Log::warning('[WS] MessageRead broadcast failed: ' . $e->getMessage());
+            }
         }
 
-        $messages = Message::where('conversation_id', $conversation->id)
-            ->orderBy('created_at', 'asc')
-            ->get();
-        
-        // Load users manually since Message model doesn't have user relationship
-        $userIds = $messages->pluck('user_id')->unique();
-        $users = User::whereIn('id', $userIds)->get()->keyBy('id');
-
         return response()->json([
-            'messages' => $messages->map(function ($message) use ($users) {
-                $user = $users->get($message->user_id);
-                return [
-                    'id' => $message->id,
-                    'message' => $message->message,
-                    'sender_id' => $message->user_id,
-                    'sender' => $user ? [
-                        'id' => $user->id,
-                        'name' => $user->name,
-                        'profile_picture' => $user->profile_picture,
-                    ] : null,
-                    'is_read' => $message->chatEvents()->where('type', 'read')->exists(),
-                    'created_at' => $message->created_at,
-                ];
-            }),
+            'messages' => $this->messaging->messagesForConversation($conversation->id),
         ]);
     }
+
+    // ─── Send message ─────────────────────────────────────────────────────────
+
+    public function sendMessage(Request $request, Conversation $conversation)
+    {
+        $request->validate(['message' => 'required|string|max:5000']);
+
+        $user = Auth::user();
+
+        abort_unless($this->messaging->isParticipant($conversation->id, $user->id), 403);
+
+        $message = Message::create([
+            'conversation_id' => $conversation->id,
+            'user_id'         => $user->id,
+            'message'         => $request->message,
+            'type'            => 'user',
+        ]);
+
+        $payload     = $this->messaging->formatMessage($message);
+        $recipientId = $this->messaging->otherParticipantId($conversation->id, $user->id);
+
+        try {
+            // 1. Push full message to the open conversation channel (both participants)
+            broadcast(new TeamMessageSent($message));
+
+            // 2. Push unread-count increment to recipient's personal channel (sidebar badge)
+            if ($recipientId) {
+                broadcast(new NewConversationMessage([
+                    'conversation_id' => $conversation->id,
+                    'sender_id'       => $user->id,
+                    'sender_name'     => $user->name,
+                    'message'         => $request->message,
+                    'created_at'      => $message->created_at,
+                ], $recipientId));
+            }
+        } catch (\Exception $e) {
+            \Log::warning('[WS] sendMessage broadcast failed: ' . $e->getMessage());
+        }
+
+        // Return only the new message — not the full history
+        return response()->json(['message' => $payload]);
+    }
+
+    // ─── Unread counts (lightweight polling fallback) ─────────────────────────
+
+    public function unreadCounts()
+    {
+        $user  = Auth::user();
+        $ids   = $this->messaging->conversationIdsFor($user->id);
+        $counts = $this->messaging->bulkUnreadCounts($ids, $user->id);
+
+        // Also return the latest unread message per conversation so the
+        // frontend can show notification content without a separate request
+        $previews = [];
+        foreach ($ids as $convId) {
+            if (($counts[$convId] ?? 0) > 0) {
+                $latestUnread = Message::where('conversation_id', $convId)
+                    ->where('user_id', '!=', $user->id)
+                    ->whereNotExists(function ($q) use ($user) {
+                        $q->select(DB::raw(1))
+                          ->from('chat_events')
+                          ->whereColumn('chat_events.made_id', 'messages.id')
+                          ->where('chat_events.made_type', 'Binkode\ChatSystem\Models\Message')
+                          ->where('chat_events.type', 'read')
+                          ->where('chat_events.maker_id', $user->id)
+                          ->where('chat_events.maker_type', get_class($user));
+                    })
+                    ->latest()
+                    ->first();
+
+                if ($latestUnread) {
+                    $sender = User::find($latestUnread->user_id);
+                    $previews[$convId] = [
+                        'sender_id'   => $latestUnread->user_id,
+                        'sender_name' => $sender?->name ?? 'Someone',
+                        'sender_avatar' => $sender ? ($sender->employee->profile_pic ?? null) : null,
+                        'message'     => $latestUnread->message,
+                    ];
+                }
+            }
+        }
+
+        return response()->json([
+            'unread_counts'   => $counts,
+            'unread_previews' => $previews,
+        ]);
+    }
+
+    // ─── Online users ─────────────────────────────────────────────────────────
+
+    public function getOnlineUsers()
+    {
+        $cutoff = now()->subMinutes(2)->getTimestamp();
+
+        $ids = DB::table('sessions')
+            ->whereNotNull('user_id')
+            ->where('last_activity', '>=', $cutoff)
+            ->pluck('user_id')
+            ->unique()
+            ->values()
+            ->toArray();
+
+        return response()->json(['online_users' => $ids]);
+    }
+
+    // ─── Delete message ───────────────────────────────────────────────────────
 
     public function deleteMessage(Message $message)
     {
         $user = Auth::user();
-        
-        // Only allow users to delete their own messages
-        if ($message->author_id !== $user->id) {
-            abort(403);
-        }
 
-        // Only allow deletion within 1 minute of sending
+        // Fix: table uses user_id not author_id
+        abort_unless($message->user_id === $user->id, 403);
+
         if ($message->created_at->diffInSeconds(now()) > 60) {
-            return response()->json(['error' => 'Message can only be deleted within 1 minute of sending'], 403);
+            return response()->json(['error' => 'Messages can only be deleted within 1 minute of sending.'], 403);
         }
 
-        // Create delete event using Chat System models
         \Binkode\ChatSystem\Models\ChatEvent::create([
-            'message_id' => $message->id,
-            'type' => 'delete',
-            'maker_id' => $user->id,
-            'maker_type' => get_class($user)
+            'made_id'    => $message->id,
+            'made_type'  => get_class($message),
+            'type'       => 'delete',
+            'all'        => 0,
+            'maker_id'   => $user->id,
+            'maker_type' => get_class($user),
         ]);
 
         return response()->json(['success' => true]);
     }
 
-    private function getUnreadCount($conversation, $userId)
+    // ─── Helpers ──────────────────────────────────────────────────────────────
+
+    private function formatUser(User $user): array
     {
-        return Message::where('conversation_id', $conversation->id)
-            ->where('user_id', '!=', $userId)
-            ->whereDoesntHave('chatEvents', function($query) use ($userId) {
-                $query->where('type', 'read')
-                      ->where('maker_id', $userId);
-            })
-            ->count();
+        $department = $user->employee->department ?? null;
+        if (is_array($department) || is_object($department)) {
+            $department = is_array($department)
+                ? ($department['name'] ?? json_encode($department))
+                : ($department->name ?? json_encode($department));
+        }
+
+        $position = $user->employee->position ?? null;
+        if (is_array($position) || is_object($position)) {
+            $position = is_array($position)
+                ? ($position['name'] ?? json_encode($position))
+                : ($position->name ?? json_encode($position));
+        }
+
+        return [
+            'id'              => $user->id,
+            'name'            => $user->name,
+            'email'           => $user->email,
+            'profile_picture' => $user->employee->profile_pic ?? null,
+            'employee'        => $user->employee ? [
+                'id'         => $user->employee->id,
+                'department' => $department,
+                'position'   => $position,
+            ] : null,
+        ];
     }
 }

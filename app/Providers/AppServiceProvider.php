@@ -23,7 +23,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Completely disable broadcasting to prevent Pusher errors
+        // We'll use custom HTTP polling instead
     }
 
     /**

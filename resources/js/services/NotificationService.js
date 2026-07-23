@@ -78,34 +78,8 @@ class NotificationService {
    * Schedule clock-in reminder
    */
   scheduleClockInReminder(time = '09:00') {
-    const reminderId = 'clock-in-reminder'
-    
-    // Clear existing reminder
-    this.clearReminder(reminderId)
-    
-    const scheduleTime = this.parseTime(time)
-    const now = new Date()
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-    const reminderTime = new Date(today.getTime() + scheduleTime)
-    
-    // If time has passed today, schedule for tomorrow
-    if (reminderTime <= now) {
-      reminderTime.setDate(reminderTime.getDate() + 1)
-    }
-    
-    const timeoutId = setTimeout(() => {
-      this.showClockInReminder()
-      // Schedule for next day
-      this.scheduleClockInReminder(time)
-    }, reminderTime.getTime() - now.getTime())
-    
-    this.reminders.set(reminderId, {
-      timeoutId,
-      scheduledTime: reminderTime,
-      type: 'clock-in'
-    })
-    
-    //console.log(`Clock-in reminder scheduled for ${reminderTime.toLocaleString()}`)
+    // Clock-in reminder desktop notifications disabled
+    this.clearReminder('clock-in-reminder')
   }
 
   /**
@@ -187,28 +161,7 @@ class NotificationService {
    * Show clock-in reminder notification
    */
   showClockInReminder() {
-    const title = 'Time to Clock In!'
-    const message = 'Don\'t forget to clock in for your work day.'
-    
-    this.showNotification(title, {
-      body: message,
-      tag: 'clock-in-reminder',
-      actions: [
-        { action: 'clock-in', title: 'Clock In Now' },
-        { action: 'dismiss', title: 'Dismiss' }
-      ]
-    })
-    
-    this.showInAppNotification({
-      type: 'clock_in_reminder',
-      title,
-      message,
-      variant: 'info',
-      actions: [
-        { id: 'clock-in', label: 'Clock In', variant: 'primary' },
-        { id: 'dismiss', label: 'Dismiss', variant: 'secondary' }
-      ]
-    })
+    // Clock-in reminder desktop notifications disabled
   }
 
   /**

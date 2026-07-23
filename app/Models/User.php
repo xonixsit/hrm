@@ -28,6 +28,15 @@ class User extends Authenticatable implements IChatEventMaker
     ];
 
     /**
+     * The accessors to append to the model's array form.
+     *
+     * @var list<string>
+     */
+    protected $appends = [
+        'profile_picture',
+    ];
+
+    /**
      * The attributes that should be hidden for serialization.
      *
      * @var list<string>
@@ -128,5 +137,10 @@ class User extends Authenticatable implements IChatEventMaker
     public function chatEventMakers(\Illuminate\Database\Eloquent\Model $model = null, $id = null, $type = null, $made_id = null, $made_type = null)
     {
         return $this->morphMany(\Binkode\ChatSystem\Models\ChatEvent::class, 'maker');
+    }
+
+    public function getProfilePictureAttribute()
+    {
+        return $this->employee->profile_pic ?? null;
     }
 }

@@ -1,6 +1,7 @@
 <script setup>
+console.log('TeamMessaging Show.vue script setup loaded');
 import { ref, onMounted, onUnmounted, nextTick, computed, watch } from 'vue';
-import { Head, router, usePage } from '@inertiajs/vue3';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { useTheme } from '@/composables/useTheme';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import Icon from '@/Components/Base/Icon.vue';
@@ -28,6 +29,17 @@ const transformedMessages = computed(() => {
 
 const messageInput = ref('');
 const messagesContainer = ref(null);
+const chatContainer = ref(null);
+const chatHeight = ref('600px');
+
+// Measure available height after mount so the chat box fills exactly the space
+const updateChatHeight = () => {
+    if (chatContainer.value) {
+        const rect = chatContainer.value.getBoundingClientRect();
+        const available = window.innerHeight - rect.top - 16; // 16px bottom gap
+        chatHeight.value = Math.max(available, 400) + 'px';
+    }
+};
 const localMessages = ref([...transformedMessages.value]);
 const showEmojiPicker = ref(false);
 const showAttachments = ref(false);
@@ -39,17 +51,32 @@ let channel = null;
 let typingTimeout = null;
 let pollingInterval = null;
 
-onMounted(() => {
-    scrollToBottom();
-    setupRealtimeConnection();
-    
-    // Fallback polling for new messages every 2 seconds (reduced from 5)
+onMounted(async () => {
+    console.log('Component mounted, setting up chat');
+    updateChatHeight();
+    window.addEventListener('resize', updateChatHeight);
+    scrollToBottom(false); // instant on first load
+    await setupRealtimeConnection();
+
+    console.log('Starting initial message load');
+    try {
+        await checkForNewMessages();
+        console.log('Initial message load completed');
+    } catch (error) {
+        console.error('Initial message load failed:', error);
+    }
+
+    // Polling for new messages every 2 seconds
+    console.log('Setting up polling interval');
     pollingInterval = setInterval(() => {
+        console.log('Polling interval triggered');
         checkForNewMessages();
     }, 2000);
+    console.log('Polling interval set up successfully');
 });
 
 onUnmounted(() => {
+    window.removeEventListener('resize', updateChatHeight);
     if (channel) {
         channel.stopListening('.TeamMessageSent');
         channel.stopListening('.typing');
@@ -65,57 +92,35 @@ onUnmounted(() => {
     }
 });
 
-const setupRealtimeConnection = () => {
-    if (window.Echo) {
-        echo = window.Echo;
-
-        console.log('Setting up real-time connection for conversation:', props.conversation.id);
-        console.log('Echo available:', !!window.Echo);
-        console.log('Echo config:', {
-            key: import.meta.env.VITE_REVERB_APP_KEY,
-            host: import.meta.env.VITE_REVERB_HOST || '127.0.0.1',
-            port: import.meta.env.VITE_REVERB_PORT || 8080,
-        });
-
-        channel = echo.private(`conversation.${props.conversation.id}`);
-
-        channel.listen('.TeamMessageSent', (e) => {
-            console.log('Received message via WebSocket:', e);
-            localMessages.value.push(e);
-            lastMessageCount.value = localMessages.value.length;
-            nextTick(() => scrollToBottom());
-        }).error((error) => {
-            console.error('WebSocket error:', error);
-        });
-
-        channel.listen('.typing', (e) => {
-            if (e.user_id !== page.props.auth.user.id) {
-                isTyping.value = true;
-                clearTimeout(typingTimeout);
-                typingTimeout = setTimeout(() => {
-                    isTyping.value = false;
-                }, 3000);
-            }
-        });
-    } else {
-        console.warn('Echo is not available. Real-time features disabled.');
-    }
+const setupRealtimeConnection = async () => {
+    console.log('Real-time WebSocket disabled - using HTTP polling for chat');
+    // No WebSocket setup needed - using HTTP polling instead
 };
 
+const isSending = ref(false);
+
 const checkForNewMessages = async () => {
+    if (isSending.value) return;
+    
     try {
+        console.log('Polling for messages...');
         const response = await axios.get(route('team-messaging.messages', props.conversation.id));
+        console.log('Polling response:', response.data);
         const newMessages = response.data.messages.map(msg => ({
             ...msg,
             message: msg.message || msg.body,
             sender_id: msg.sender_id || msg.author_id,
             sender: msg.sender || msg.author
         }));
-        
-        if (newMessages.length > lastMessageCount.value) {
-            console.log('Found new messages via polling:', newMessages.length - lastMessageCount.value);
-            localMessages.value = newMessages;
-            lastMessageCount.value = newMessages.length;
+
+        console.log('Current message count:', lastMessageCount.value, 'New message count:', newMessages.length);
+
+        const realLocalMsgs = localMessages.value.filter(m => !m.isTemp);
+        if (newMessages.length > realLocalMsgs.length) {
+            console.log('Found new messages via polling:', newMessages.length - realLocalMsgs.length);
+            const tempMsgs = localMessages.value.filter(m => m.isTemp);
+            localMessages.value = [...newMessages, ...tempMsgs];
+            lastMessageCount.value = localMessages.value.length;
             nextTick(() => scrollToBottom());
         }
     } catch (error) {
@@ -123,21 +128,26 @@ const checkForNewMessages = async () => {
     }
 };
 
-const scrollToBottom = () => {
+const scrollToBottom = (smooth = true) => {
     if (messagesContainer.value) {
-        messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight;
+        messagesContainer.value.scrollTo({
+            top: messagesContainer.value.scrollHeight,
+            behavior: smooth ? 'smooth' : 'instant'
+        });
     }
 };
 
-const sendMessage = () => {
-    if (!messageInput.value.trim()) return;
+const sendMessage = async () => {
+    if (!messageInput.value.trim() || isSending.value) return;
 
     const message = messageInput.value;
     messageInput.value = '';
+    isSending.value = true;
 
     // Optimistic UI update - add message immediately
+    const tempId = 'temp-' + Date.now();
     const tempMessage = {
-        id: 'temp-' + Date.now(),
+        id: tempId,
         conversation_id: props.conversation.id,
         sender_id: page.props.auth.user.id,
         message: message,
@@ -155,34 +165,34 @@ const sendMessage = () => {
     lastMessageCount.value = localMessages.value.length;
     nextTick(() => scrollToBottom());
 
-    // Send to server
-    router.post(route('team-messaging.send', props.conversation.id), {
-        message: message,
-    }, {
-        preserveScroll: true,
-        onSuccess: (responsePage) => {
-            // Replace temp message with real message from server
-            const tempIndex = localMessages.value.findIndex(m => m.id === tempMessage.id);
-            if (tempIndex !== -1) {
-                localMessages.value.splice(tempIndex, 1);
-            }
+    try {
+        const response = await axios.post(route('team-messaging.send', props.conversation.id), {
+            message: message,
+        });
+
+        if (response.data && response.data.messages) {
+            const serverMsgs = response.data.messages.map(msg => ({
+                ...msg,
+                message: msg.message || msg.body,
+                sender_id: msg.sender_id || msg.author_id,
+                sender: msg.sender || msg.author
+            }));
             
-            // Reload all messages from server to ensure consistency
-            if (responsePage.props.messages) {
-                localMessages.value = responsePage.props.messages;
-                lastMessageCount.value = localMessages.value.length;
-                nextTick(() => scrollToBottom());
-            }
-        },
-        onError: () => {
-            // Remove temp message if send failed
-            const tempIndex = localMessages.value.findIndex(m => m.id === tempMessage.id);
-            if (tempIndex !== -1) {
-                localMessages.value.splice(tempIndex, 1);
-            }
-            messageInput.value = message; // Restore message text
-        },
-    });
+            // Seamlessly update messages without dropping sent message
+            localMessages.value = serverMsgs;
+            lastMessageCount.value = localMessages.value.length;
+        }
+        nextTick(() => scrollToBottom());
+    } catch (error) {
+        console.error('Error sending message:', error);
+        const tempIndex = localMessages.value.findIndex(m => m.id === tempId);
+        if (tempIndex !== -1) {
+            localMessages.value.splice(tempIndex, 1);
+        }
+        messageInput.value = message;
+    } finally {
+        isSending.value = false;
+    }
 };
 
 const formatTime = (date) => {
@@ -281,56 +291,50 @@ const broadcastTyping = () => {
     <Head :title="`${conversation.other_user.name}`" />
 
     <AuthenticatedLayout>
-        <template #header>
-            <div class="flex items-center gap-4">
-                <Link :href="route('team-messaging.index')" class="flex items-center gap-2 hover:opacity-75 transition-opacity">
+        <div
+            ref="chatContainer"
+            :class="[
+                'rounded-xl border flex flex-col overflow-hidden',
+                isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+            ]"
+            :style="{ height: chatHeight }"
+        >
+            <!-- Chat Header (other user info inside the chat box) -->
+            <div :class="[
+                'flex items-center gap-3 px-5 py-4 border-b flex-shrink-0',
+                isDark ? 'border-gray-700' : 'border-gray-200'
+            ]">
+                <Link :href="route('team-messaging.index')" class="flex-shrink-0 p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
                     <Icon name="ArrowLeft" class="w-5 h-5" />
                 </Link>
-                <div class="flex items-center gap-3 flex-1">
-                    <div class="relative">
-                        <div v-if="getProfilePicture(conversation.other_user)" class="w-10 h-10 rounded-full overflow-hidden ring-2 ring-teal-500/30">
-                            <img :src="getProfilePicture(conversation.other_user)" :alt="conversation.other_user.name" class="w-full h-full object-cover" />
-                        </div>
-                        <div v-else :class="[
-                            'w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold ring-2 ring-teal-500/30',
-                            isDark ? 'bg-gradient-to-br from-teal-500 to-cyan-500 text-white' : 'bg-gradient-to-br from-teal-500 to-cyan-500 text-white'
-                        ]">
-                            {{ getInitials(conversation.other_user.name) }}
-                        </div>
-                        <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2" :class="isDark ? 'border-gray-800' : 'border-white'"></div>
+                <div class="relative flex-shrink-0">
+                    <div v-if="getProfilePicture(conversation.other_user)" class="w-10 h-10 rounded-full overflow-hidden ring-2 ring-teal-500/30">
+                        <img :src="getProfilePicture(conversation.other_user)" :alt="conversation.other_user.name" class="w-full h-full object-cover" />
                     </div>
-                    <div class="flex-1">
-                        <h1 class="text-lg font-semibold">{{ conversation.other_user.name }}</h1>
-                        <p :class="[
-                            'text-sm',
-                            isDark ? 'text-gray-400' : 'text-gray-500'
-                        ]">
-                            {{ isTyping ? 'Typing...' : 'Active now' }}
-                        </p>
-                    </div>
+                    <div v-else :class="[
+                        'w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold',
+                        'bg-gradient-to-br from-teal-500 to-cyan-500 text-white'
+                    ]">{{ getInitials(conversation.other_user.name) }}</div>
+                    <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2" :class="isDark ? 'border-gray-800' : 'border-white'"></div>
                 </div>
-                <div class="flex items-center gap-2">
-                    <BaseButton variant="ghost" size="sm">
-                        <Icon name="Phone" class="w-5 h-5" />
-                    </BaseButton>
-                    <BaseButton variant="ghost" size="sm">
-                        <Icon name="Video" class="w-5 h-5" />
-                    </BaseButton>
-                    <BaseButton variant="ghost" size="sm">
-                        <Icon name="MoreVertical" class="w-5 h-5" />
-                    </BaseButton>
+                <div class="flex-1 min-w-0">
+                    <h2 class="text-base font-semibold truncate">{{ conversation.other_user.name }}</h2>
+                    <p class="text-xs" :class="isDark ? 'text-gray-400' : 'text-gray-500'">
+                        {{ isTyping ? 'Typing...' : 'Active now' }}
+                    </p>
+                </div>
+                <div class="flex items-center gap-1 flex-shrink-0">
+                    <BaseButton variant="ghost" size="sm"><Icon name="Phone" class="w-5 h-5" /></BaseButton>
+                    <BaseButton variant="ghost" size="sm"><Icon name="Video" class="w-5 h-5" /></BaseButton>
+                    <BaseButton variant="ghost" size="sm"><Icon name="MoreVertical" class="w-5 h-5" /></BaseButton>
                 </div>
             </div>
-        </template>
 
-        <div :class="[
-            'rounded-xl border flex flex-col h-[calc(100vh-250px)]',
-            isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-        ]">
-            <!-- Messages Container -->
-            <div 
+            <!-- Messages — scrollable area between header and input -->
+            <div
                 ref="messagesContainer"
-                class="flex-1 overflow-y-auto p-8 space-y-4"
+                class="flex-1 overflow-y-auto min-h-0 p-6 space-y-4"
+                style="scroll-behavior: smooth;"
             >
                 <div v-if="localMessages.length === 0" class="flex flex-col items-center justify-center h-full">
                     <div :class="[

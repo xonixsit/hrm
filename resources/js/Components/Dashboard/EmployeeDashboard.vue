@@ -559,20 +559,20 @@ const progressStartPosition = computed(() => {
 
 const progressWidth = computed(() => {
   if (!isClockedIn.value || !attendanceState.value.clockInTime) {
-    console.log('❌ Progress width = 0: Not clocked in or no clock-in time');
+    // console.log('❌ Progress width = 0: Not clocked in or no clock-in time');
     return 0;
   }
   
   // Parse current server time
   if (!currentTime.value) {
-    console.log('❌ Progress width = 0: No current time');
+    // console.log('❌ Progress width = 0: No current time');
     return 0;
   }
   
   try {
     const timeMatch = currentTime.value.match(/(\d+):(\d+):(\d+)\s*(AM|PM)/i);
     if (!timeMatch) {
-      console.log('❌ Progress width = 0: Could not parse time:', currentTime.value);
+      // console.log('❌ Progress width = 0: Could not parse time:', currentTime.value);
       return 0;
     }
     
@@ -607,14 +607,14 @@ const progressWidth = computed(() => {
     const clockInHour = clockInServerTime.getUTCHours();
     const clockInMinute = clockInServerTime.getUTCMinutes();
     
-    console.log('⏰ Time info:', {
-      currentTime: currentTime.value,
-      currentHour,
-      currentMinute,
-      clockInTime: attendanceState.value.clockInTime,
-      clockInHour,
-      clockInMinute
-    });
+    // console.log('⏰ Time info:', {
+    //   currentTime: currentTime.value,
+    //   currentHour,
+    //   currentMinute,
+    //   clockInTime: attendanceState.value.clockInTime,
+    //   clockInHour,
+    //   clockInMinute
+    // });
     
     // Calculate positions on timeline (7 AM to 7 PM)
     const getTimelinePosition = (hour, minute) => {
@@ -631,11 +631,11 @@ const progressWidth = computed(() => {
     
     const width = Math.max(0, currentPos - startPos);
     
-    console.log('📊 Progress calculation:', {
-      startPos: startPos.toFixed(2) + '%',
-      currentPos: currentPos.toFixed(2) + '%',
-      width: width.toFixed(2) + '%'
-    });
+    // console.log('📊 Progress calculation:', {
+    //   startPos: startPos.toFixed(2) + '%',
+    //   currentPos: currentPos.toFixed(2) + '%',
+    //   width: width.toFixed(2) + '%'
+    // });
     
     // Width is the difference between current position and start position
     return width;

@@ -959,4 +959,19 @@
     checkAndShowBirthdayPopup();
     checkFirstLogin();
   });
+
+  // Example: place inside <script setup> or mounted() of a component
+window.EchoReady?.then((echo) => {
+    if (!echo) {
+        console.warn('Echo not initialized – cannot listen to events');
+        return;
+    }
+
+    // Public channel – works without auth, perfect for quick testing
+    echo.channel('public-test')
+        .listen('.TestEvent', (payload) => {
+            console.log('📡 Public TestEvent received 👉', payload);
+        });
+});
+
 </script>
