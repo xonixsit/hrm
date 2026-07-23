@@ -1,7 +1,6 @@
 <script setup>
-import { computed, ref, watch } from 'vue';
+import { computed, ref } from 'vue';
 import { Head } from '@inertiajs/vue3';
-import confetti from 'canvas-confetti';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import PageLayout from '@/Components/Layout/PageLayout.vue';
 import FormLayout from '@/Components/Forms/FormLayout.vue';
@@ -17,159 +16,22 @@ import {
 } from '@heroicons/vue/24/outline';
 
 const props = defineProps({
-    mustVerifyEmail: {
-        type: Boolean,
-    },
-    status: {
-        type: String,
-    },
-    employee: {
-        type: Object,
-        default: null,
-    },
-    user: {
-        type: Object,
-        required: true,
-    },
+    mustVerifyEmail: { type: Boolean },
+    status: { type: String },
+    employee: { type: Object, default: null },
+    user: { type: Object, required: true },
 });
 
 const employeeData = ref(props.employee);
-const uploadProgress = ref(0);
-const uploadMessage = ref('');
-const avatarKey = ref(0);
-
-// Watch for changes to force re-render
-watch(() => employeeData.value?.profile_pic, (newVal) => {
-  avatarKey.value++;
-}, { deep: true });
-
 const hasEmployeeProfile = computed(() => !!employeeData.value);
 
-const handlePictureUpdated = (data) => {
-  if (employeeData.value) {
-    employeeData.value.profile_pic = data.path;
-  }
-};
-
-const handleProfilePicChange = (event) => {
-  const file = event.target.files?.[0];
-  if (!file) return;
-
-  // Validate file type
-  if (!file.type.startsWith('image/')) {
-    uploadMessage.value = 'Please select a valid image file.';
-    setTimeout(() => { uploadMessage.value = ''; }, 3000);
-    return;
-  }
-
-  // Validate file size (5MB)
-  if (file.size > 5 * 1024 * 1024) {
-    uploadMessage.value = 'File size must be less than 5MB.';
-    setTimeout(() => { uploadMessage.value = ''; }, 3000);
-    return;
-  }
-
-  uploadProgress.value = 0;
-  uploadMessage.value = 'Uploading...';
-
-  const formData = new FormData();
-  formData.append('profile_pic', file);
-
-  const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
-  const xhr = new XMLHttpRequest();
-
-  xhr.upload.addEventListener('progress', (event) => {
-    if (event.lengthComputable) {
-      uploadProgress.value = Math.round((event.loaded / event.total) * 100);
-    }
-  });
-
-  xhr.addEventListener('load', () => {
-    try {
-      const response = JSON.parse(xhr.responseText);
-      if (xhr.status === 200 && response.success) {
-        uploadMessage.value = 'Profile picture updated!';
-        uploadProgress.value = 0;
-        
-        // Immediately update the avatar with the new image
-        if (employeeData.value) {
-          employeeData.value.profile_pic = response.profile_pic.replace('/', '');
-        }
-
-        // Trigger confetti animation
-        triggerConfetti();
-
-        setTimeout(() => {
-          uploadMessage.value = '';
-          // Reload page to update user menu
-          window.location.reload();
-        }, 2000);
-      } else {
-        uploadMessage.value = response.error || response.message || 'Upload failed.';
-        uploadProgress.value = 0;
-        setTimeout(() => { uploadMessage.value = ''; }, 3000);
-      }
-    } catch (e) {
-      console.error('Parse error:', e, 'Response:', xhr.responseText);
-      uploadMessage.value = 'Server error: ' + xhr.responseText.substring(0, 100);
-      uploadProgress.value = 0;
-      setTimeout(() => { uploadMessage.value = ''; }, 3000);
-    }
-  });
-
-  xhr.addEventListener('error', () => {
-    uploadMessage.value = 'Network error.';
-    uploadProgress.value = 0;
-  });
-
-  xhr.open('POST', route('profile.upload-picture'));
-  xhr.setRequestHeader('X-CSRF-TOKEN', csrfToken || '');
-  xhr.setRequestHeader('Accept', 'application/json');
-  xhr.send(formData);
-};
-
-const triggerConfetti = () => {
-  const duration = 2000;
-  const animationEnd = Date.now() + duration;
-
-  const randomInRange = (min, max) => {
-    return Math.random() * (max - min) + min;
-  };
-
-  const interval = setInterval(() => {
-    const timeLeft = animationEnd - Date.now();
-
-    if (timeLeft <= 0) {
-      return clearInterval(interval);
-    }
-
-    const particleCount = 50 * (timeLeft / duration);
-
-    confetti({
-      particleCount,
-      angle: randomInRange(55, 125),
-      spread: randomInRange(50, 70),
-      origin: { x: randomInRange(0.1, 0.9), y: Math.random() - 0.2 },
-      colors: ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981'],
-    });
-  }, 250);
-};
-
 const getInitials = (name) => {
-  return name
-    .split(' ')
-    .map(word => word.charAt(0).toUpperCase())
-    .join('')
-    .substring(0, 2);
+  return name.split(' ').map(w => w.charAt(0).toUpperCase()).join('').substring(0, 2);
 };
 
 const formatDate = (date) => {
   if (!date) return 'Not provided';
-  return new Date(date).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
+  return new Date(date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 };
 
 const calculateYearsOfService = () => {
@@ -178,25 +40,13 @@ const calculateYearsOfService = () => {
   const today = new Date();
   const years = today.getFullYear() - joinDate.getFullYear();
   const months = today.getMonth() - joinDate.getMonth();
-  
-  if (years === 0) {
-    return months <= 0 ? 'Less than a month' : `${months} month${months > 1 ? 's' : ''}`;
-  }
-  
+  if (years === 0) return months <= 0 ? 'Less than a month' : `${months} month${months > 1 ? 's' : ''}`;
   return `${years} year${years > 1 ? 's' : ''}`;
 };
 
 const formatEmploymentType = (type) => {
   if (!type) return 'Full Time';
-  
-  const typeMap = {
-    'full_time': 'Full Time',
-    'part_time': 'Part Time',
-    'contract': 'Contract',
-    'intern': 'Intern',
-    'consultant': 'Consultant'
-  };
-  
+  const typeMap = { full_time: 'Full Time', part_time: 'Part Time', contract: 'Contract', intern: 'Intern', consultant: 'Consultant' };
   return typeMap[type] || type;
 };
 
@@ -243,16 +93,6 @@ const breadcrumbs = computed(() => [
                                     <span class="text-xs text-neutral-500">Employee ID:</span>
                                     <span class="text-xs font-mono bg-neutral-200 px-2 py-0.5 rounded">{{ employeeData.employee_code || 'N/A' }}</span>
                                     <span class="text-xs bg-primary-100 text-primary-700 px-2 py-0.5 rounded">{{ employeeData.department?.name || 'No Department' }}</span>
-                                </div>
-                                <!-- Upload Progress and Message -->
-                                <div v-if="uploadProgress > 0 || uploadMessage" class="mt-3 space-y-2">
-                                    <div v-if="uploadMessage" class="text-xs font-medium text-primary-600">{{ uploadMessage }}</div>
-                                    <div v-if="uploadProgress > 0" class="w-full bg-neutral-200 rounded-full h-1.5 overflow-hidden">
-                                        <div
-                                            class="bg-gradient-to-r from-primary-500 to-primary-600 h-full transition-all duration-300"
-                                            :style="{ width: uploadProgress + '%' }"
-                                        ></div>
-                                    </div>
                                 </div>
                             </div>
                         </div>

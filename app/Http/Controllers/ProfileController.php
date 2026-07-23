@@ -116,58 +116,10 @@ class ProfileController extends Controller
     }
 
     /**
-     * Upload profile picture
+     * Profile picture upload disabled — managed by Admin/HR only via employee edit.
      */
     public function uploadProfilePic(Request $request)
     {
-        $request->validate([
-            'profile_pic' => 'required|image|mimes:jpeg,png,jpg,gif|max:5120', // 5MB max
-        ]);
-
-        $user = $request->user();
-        $employee = $user->employee;
-
-        if (!$employee) {
-            return response()->json([
-                'success' => false,
-                'error' => 'Employee profile not found.'
-            ], 404);
-        }
-
-        try {
-            // Delete old profile picture if exists
-            if ($employee->profile_pic) {
-                $oldPath = public_path($employee->profile_pic);
-                if (file_exists($oldPath)) {
-                    unlink($oldPath);
-                }
-            }
-
-            // Store new profile picture in public/images/profile-pictures/
-            $file = $request->file('profile_pic');
-            $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
-            $destinationPath = public_path('images/profile-pictures');
-            
-            // Create directory if it doesn't exist
-            if (!file_exists($destinationPath)) {
-                mkdir($destinationPath, 0755, true);
-            }
-            
-            $file->move($destinationPath, $filename);
-            $path = 'images/profile-pictures/' . $filename;
-
-            // Update employee record
-            $employee->update(['profile_pic' => $path]);
-
-            return response()->json([
-                'success' => true,
-                'profile_pic' => '/' . $path,
-                'message' => 'Profile picture uploaded successfully.'
-            ]);
-        } catch (\Exception $e) {
-            \Log::error('Profile picture upload failed: ' . $e->getMessage());
-            
-            return back()->withErrors(['profile_pic' => 'Failed to upload file. Please try again.']);
-        }
+        abort(403, 'Profile picture updates are managed by Admin or HR.');
     }
 }

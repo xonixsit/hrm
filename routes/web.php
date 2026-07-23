@@ -94,7 +94,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::patch('/profile/employee', [ProfileController::class, 'updateEmployee'])->name('profile.update-employee');
-    Route::post('/profile/upload-picture', [ProfileController::class, 'uploadProfilePic'])->name('profile.upload-picture');
+    // profile.upload-picture route removed — profile picture updates are managed by Admin/HR only
 
     // Form Layout Demo
     Route::get('/form-layout-demo', function () {
