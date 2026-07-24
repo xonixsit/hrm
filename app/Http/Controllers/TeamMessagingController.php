@@ -220,12 +220,12 @@ class TeamMessagingController extends Controller
 
     public function getOnlineUsers()
     {
-        // Active session cutoff — 3 minutes covers the 10s poll with margin
-        $sessionCutoff = now()->subMinutes(3)->getTimestamp();
-        // Chat-active cutoff — 35s covers the 30s heartbeat with margin
-        $chatCutoff = now()->subSeconds(35);
+        // Inactive cutoff — 30 minutes: user has an active session but not on chat page
+        $sessionCutoff = now()->subMinutes(30)->getTimestamp();
+        // Active cutoff — 45s: user is on the chat page (heartbeat every 30s)
+        $chatCutoff = now()->subSeconds(45);
 
-        // All users with an active session
+        // All users with a recent session
         $activeSessions = DB::table('sessions')
             ->whereNotNull('user_id')
             ->where('last_activity', '>=', $sessionCutoff)
@@ -235,30 +235,39 @@ class TeamMessagingController extends Controller
             ->values()
             ->toArray();
 
-        // Users who sent a chat heartbeat recently (on chat page)
-        $chatActive = DB::table('chat_heartbeats')
-            ->where('last_seen', '>=', $chatCutoff)
-            ->pluck('user_id')
-            ->unique()
-            ->map(fn($id) => (int) $id)
-            ->values()
-            ->toArray();
+        // Users actively on the chat page (sent heartbeat recently)
+        $chatActive = [];
+        try {
+            $chatActive = DB::table('chat_heartbeats')
+                ->where('last_seen', '>=', $chatCutoff)
+                ->pluck('user_id')
+                ->unique()
+                ->map(fn($id) => (int) $id)
+                ->values()
+                ->toArray();
+        } catch (\Exception $e) {
+            // chat_heartbeats table may not exist yet in some environments
+            \Log::warning('chat_heartbeats query failed: ' . $e->getMessage());
+        }
 
         return response()->json([
-            'active'   => $chatActive,                                                         // green
-            'inactive' => array_values(array_diff($activeSessions, $chatActive)),              // orange
-            // offline = everyone else (frontend infers this)
+            'active'   => $chatActive,
+            'inactive' => array_values(array_diff($activeSessions, $chatActive)),
         ]);
     }
 
     public function heartbeat()
     {
         $user = Auth::user();
-        DB::table('chat_heartbeats')->upsert(
-            [['user_id' => $user->id, 'last_seen' => now()]],
-            ['user_id'],
-            ['last_seen']
-        );
+        try {
+            DB::table('chat_heartbeats')->upsert(
+                [['user_id' => $user->id, 'last_seen' => now()]],
+                ['user_id'],
+                ['last_seen']
+            );
+        } catch (\Exception $e) {
+            \Log::warning('Heartbeat upsert failed: ' . $e->getMessage());
+        }
         return response()->json(['ok' => true]);
     }
 
