@@ -1,8 +1,9 @@
 <script setup>
-    import { computed, useSlots, onMounted } from 'vue';
+    import { computed, useSlots, onMounted, ref } from 'vue';
     import NavigationErrorDisplay from '@/Components/NavigationErrorDisplay.vue';
     import IntegratedTopNav from '@/Components/Navigation/IntegratedTopNav.vue';
     import NotificationContainer from '@/Components/Notifications/NotificationContainer.vue';
+    import ChatToast from '@/Components/Notifications/ChatToast.vue';
     import FloatingAttendanceWidget from '@/Components/Navigation/FloatingAttendanceWidget.vue';
     import LiveRegion from '@/Components/Accessibility/LiveRegion.vue';
     import AppFooter from '@/Components/Layout/AppFooter.vue';
@@ -12,6 +13,7 @@
     import { useReminder } from '@/composables/useReminder';
     import { useWorkReportReminder } from '@/composables/useWorkReportReminder';
     import { useFlashMessages } from '@/composables/useFlashMessages';
+    import { useChatNotifications, setChatToastRef } from '@/composables/useChatNotifications';
 
     const slots = useSlots();
     const { hasRole, getAuthError } = useAuth();
@@ -20,9 +22,15 @@
     useReminder();
     useWorkReportReminder();
     useFlashMessages();
+    const { unreadTotal } = useChatNotifications();
 
+    // Wire the global toast component into the notification composable
+    const chatToastRef = ref(null);
     onMounted(() => {
         initializeTheme();
+        if (chatToastRef.value) {
+            setChatToastRef(chatToastRef.value);
+        }
     });
 
     const authError = computed(() => getAuthError());
@@ -57,6 +65,12 @@
 
         <!-- Notification Container -->
         <NotificationContainer />
+
+        <!-- Global Chat Toast — shows new message notifications from any page -->
+        <ChatToast ref="chatToastRef" />
+
+        <!-- Chat Toast Notifications -->
+        <ChatToast ref="chatToastRef" />
 
         <!-- Floating Attendance Widget (hidden for admins) -->
         <FloatingAttendanceWidget v-if="!hasRole('Admin')" />

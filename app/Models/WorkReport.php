@@ -29,6 +29,8 @@ class WorkReport extends Model
         'date' => 'date',
     ];
 
+    protected $appends = ['date_formatted'];
+
     /**
      * Get the date formatted for frontend to avoid timezone issues
      */

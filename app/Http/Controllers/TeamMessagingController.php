@@ -220,17 +220,46 @@ class TeamMessagingController extends Controller
 
     public function getOnlineUsers()
     {
-        $cutoff = now()->subMinutes(2)->getTimestamp();
+        // Active session cutoff — 3 minutes covers the 10s poll with margin
+        $sessionCutoff = now()->subMinutes(3)->getTimestamp();
+        // Chat-active cutoff — 35s covers the 30s heartbeat with margin
+        $chatCutoff = now()->subSeconds(35);
 
-        $ids = DB::table('sessions')
+        // All users with an active session
+        $activeSessions = DB::table('sessions')
             ->whereNotNull('user_id')
-            ->where('last_activity', '>=', $cutoff)
+            ->where('last_activity', '>=', $sessionCutoff)
             ->pluck('user_id')
             ->unique()
+            ->map(fn($id) => (int) $id)
             ->values()
             ->toArray();
 
-        return response()->json(['online_users' => $ids]);
+        // Users who sent a chat heartbeat recently (on chat page)
+        $chatActive = DB::table('chat_heartbeats')
+            ->where('last_seen', '>=', $chatCutoff)
+            ->pluck('user_id')
+            ->unique()
+            ->map(fn($id) => (int) $id)
+            ->values()
+            ->toArray();
+
+        return response()->json([
+            'active'   => $chatActive,                                                         // green
+            'inactive' => array_values(array_diff($activeSessions, $chatActive)),              // orange
+            // offline = everyone else (frontend infers this)
+        ]);
+    }
+
+    public function heartbeat()
+    {
+        $user = Auth::user();
+        DB::table('chat_heartbeats')->upsert(
+            [['user_id' => $user->id, 'last_seen' => now()]],
+            ['user_id'],
+            ['last_seen']
+        );
+        return response()->json(['ok' => true]);
     }
 
     // ─── Delete message ───────────────────────────────────────────────────────

@@ -111,6 +111,7 @@ Route::middleware('auth')->group(function () {
     Route::prefix('team-messaging')->group(function () {
         Route::get('/', [TeamMessagingController::class, 'index'])->name('team-messaging.index');
         Route::get('/online-users', [TeamMessagingController::class, 'getOnlineUsers'])->name('team-messaging.online-users');
+        Route::post('/heartbeat', [TeamMessagingController::class, 'heartbeat'])->name('team-messaging.heartbeat');
         Route::get('/unread-counts', [TeamMessagingController::class, 'unreadCounts'])->name('team-messaging.unread-counts');
         Route::post('/', [TeamMessagingController::class, 'store'])->name('team-messaging.store');
         Route::get('/{conversation}', [TeamMessagingController::class, 'show'])->name('team-messaging.show');

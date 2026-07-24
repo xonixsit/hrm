@@ -10,6 +10,7 @@ import BaseInput from '@/Components/Base/BaseInput.vue';
 import axios from 'axios';
 import data from '@emoji-mart/data';
 import { Picker } from 'emoji-mart';
+import { markConversationReadGlobal } from '@/composables/useChatNotifications';
 
 const { isDark } = useTheme();
 const page = usePage();
@@ -32,7 +33,32 @@ const messageInput = ref('');
 const loadingMessages = ref(false);
 const showEmojiPicker = ref(false);
 const isTyping = ref(false);
-const onlineUsers = ref({});
+const onlineUsers = ref({}); // kept for legacy compat — use userStatuses instead
+const userStatuses = ref({}); // { userId: 'active' | 'inactive' | 'offline' }
+
+const getUserStatus = (userId) => userStatuses.value[userId] || 'offline';
+const isUserOnline  = (userId) => getUserStatus(userId) !== 'offline'; // inactive + active both count as "online" for sorting
+
+const statusDotClass = (userId) => {
+    const s = getUserStatus(userId);
+    if (s === 'active')   return 'bg-emerald-500';
+    if (s === 'inactive') return 'bg-orange-400';
+    return 'bg-slate-400';
+};
+
+const statusTextClass = (userId) => {
+    const s = getUserStatus(userId);
+    if (s === 'active')   return 'text-emerald-500';
+    if (s === 'inactive') return 'text-orange-400';
+    return isDark.value ? 'text-gray-500' : 'text-slate-400';
+};
+
+const statusLabel = (userId) => {
+    const s = getUserStatus(userId);
+    if (s === 'active')   return 'Active';
+    if (s === 'inactive') return 'Inactive';
+    return 'Offline';
+};
 const hoveredUserId = ref(null);
 const hoverCardPosition = ref({ top: 0, left: 0 });
 const hideHoverCardTimeout = ref(null);
@@ -327,6 +353,7 @@ const selectConversation = async (conversationId) => {
         locallyReadConversationIds.value.push(conversationId);
     }
     stopTitleFlash();
+    markConversationReadGlobal(conversationId); // sync global notification suppression
     
     try {
         const response = await axios.get(route('team-messaging.messages', conversationId));
@@ -437,16 +464,10 @@ const getInitials = (name) => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
 };
 
-const isUserOnline = (userId) => {
-    return !!onlineUsers.value[userId];
-};
-
-const getUserStatus = (userId) => {
-    return isUserOnline(userId) ? 'online' : 'offline';
-};
-
 const getStatusColor = (status) => {
-    return status === 'online' ? 'bg-green-500' : 'bg-gray-400';
+    if (status === 'active')   return 'bg-emerald-500';
+    if (status === 'inactive') return 'bg-orange-400';
+    return 'bg-slate-400';
 };
 
 const getSelectedUser = () => {
@@ -525,17 +546,41 @@ onMounted(async () => {
         }
     });
 
+    // Auto-open conversation if redirected from a notification toast
+    const urlParams = new URLSearchParams(window.location.search);
+    const openUserId = parseInt(urlParams.get('open_user'));
+    if (openUserId) {
+        // Clean the URL without reloading
+        window.history.replaceState({}, '', window.location.pathname);
+        // Wait for conversations to be available, then open
+        const target = props.conversations.find(c => c.other_user?.id === openUserId);
+        if (target) {
+            startConversation(openUserId);
+        } else {
+            // Start a new conversation with that user
+            startConversation(openUserId);
+        }
+    }
+
     checkForOnlineUsers();
     checkForNewConversations(); // fetch fresh counts immediately, don't wait 5s
     
     requestNotificationPermission();
     document.addEventListener('visibilitychange', onVisibilityChange);
     document.addEventListener('click', closeEmojiOnOutsideClick);
-    
+
+    // Send heartbeat immediately — marks this user as "active" on chat page
+    sendHeartbeat();
+
     // Poll for online statuses every 10 seconds
     setInterval(() => {
         checkForOnlineUsers();
     }, 10000);
+
+    // Heartbeat every 30s to maintain "active" status while on this page
+    setInterval(() => {
+        sendHeartbeat();
+    }, 30000);
 
     // Socket: listen on personal channel for new messages → update unread counts instantly
     const currentUserId = page.props.auth.user.id;
@@ -584,15 +629,23 @@ onUnmounted(() => {
 const checkForOnlineUsers = async () => {
     try {
         const response = await axios.get(route('team-messaging.online-users'));
-        if (response.data && response.data.online_users) {
-            const onlineObj = {};
-            response.data.online_users.forEach(id => {
-                onlineObj[id] = true;
-            });
-            onlineUsers.value = onlineObj;
-        }
+        const active   = response.data.active   || [];
+        const inactive = response.data.inactive || [];
+
+        const map = {};
+        active.forEach(id   => { map[parseInt(id)] = 'active'; });
+        inactive.forEach(id => { map[parseInt(id)] = 'inactive'; });
+        userStatuses.value = map;
     } catch (error) {
         console.error('Error polling for online users:', error);
+    }
+};
+
+const sendHeartbeat = async () => {
+    try {
+        await axios.post(route('team-messaging.heartbeat'));
+    } catch (e) {
+        // silent — heartbeat failure is non-critical
     }
 };
 
@@ -843,7 +896,7 @@ watch(messages, () => {
                                 <span
                                     class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2"
                                     :class="[
-                                        isUserOnline(user.id) ? 'bg-emerald-500' : 'bg-slate-400',
+                                        statusDotClass(user.id),
                                         isDark ? 'border-gray-900' : 'border-white'
                                     ]"
                                 ></span>
@@ -864,8 +917,8 @@ watch(messages, () => {
                                 <p class="text-xs truncate mt-0.5" :class="isDark ? 'text-gray-400' : 'text-slate-500'">
                                     {{ user.employee?.department || user.email }}
                                     <span class="mx-1">•</span>
-                                    <span :class="isUserOnline(user.id) ? 'text-emerald-500' : isDark ? 'text-gray-500' : 'text-slate-400'">
-                                        {{ isUserOnline(user.id) ? 'Online' : 'Offline' }}
+                                    <span :class="statusTextClass(user.id)">
+                                        {{ statusLabel(user.id) }}
                                     </span>
                                 </p>
                             </div>
@@ -941,13 +994,12 @@ watch(messages, () => {
                                 {{ getInitials(getSelectedUser()?.name) }}
                             </div>
                             <span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2"
-                                :class="[isUserOnline(getSelectedUser()?.id) ? 'bg-emerald-500' : 'bg-slate-400', isDark ? 'border-gray-800' : 'border-white']"/>
+                                :class="[statusDotClass(getSelectedUser()?.id), isDark ? 'border-gray-800' : 'border-white']"/>
                         </div>
                         <div class="flex-1 min-w-0">
                             <p class="text-sm font-semibold truncate" :class="isDark ? 'text-white' : 'text-slate-800'">{{ getSelectedUser()?.name }}</p>
-                            <p class="text-xs" :class="isUserOnline(getSelectedUser()?.id) ? 'text-emerald-500' : isDark ? 'text-gray-400' : 'text-slate-400'">
-                                {{ isUserOnline(getSelectedUser()?.id) ? 'Online' : 'Offline' }}
-                                <span v-if="!isUserOnline(getSelectedUser()?.id)" class="ml-1">• Last seen 2 hours ago</span>
+                            <p class="text-xs" :class="statusTextClass(getSelectedUser()?.id)">
+                                {{ statusLabel(getSelectedUser()?.id) }}
                             </p>
                         </div>
                         <div class="flex items-center gap-1 flex-shrink-0">
@@ -1173,7 +1225,7 @@ watch(messages, () => {
                             {{ getInitials(props.users.find(u => u.id === hoveredUserId)?.name) }}
                         </div>
                         <span class="absolute bottom-1 right-1 w-3.5 h-3.5 rounded-full border-2 border-white"
-                            :class="isUserOnline(hoveredUserId) ? 'bg-emerald-500' : 'bg-slate-400'"/>
+                            :class="statusDotClass(hoveredUserId)"/>
                     </div>
 
                     <!-- Name + email -->
@@ -1214,10 +1266,9 @@ watch(messages, () => {
                     <!-- Status badge -->
                     <div class="flex items-center gap-2 mb-4">
                         <span class="w-2 h-2 rounded-full flex-shrink-0"
-                            :class="isUserOnline(hoveredUserId) ? 'bg-emerald-500' : 'bg-slate-400'"/>
-                        <span class="text-xs font-medium"
-                            :class="isUserOnline(hoveredUserId) ? 'text-emerald-600' : isDark ? 'text-gray-400' : 'text-slate-500'">
-                            {{ isUserOnline(hoveredUserId) ? 'Active now' : 'Offline' }}
+                            :class="statusDotClass(hoveredUserId)"/>
+                        <span class="text-xs font-medium" :class="statusTextClass(hoveredUserId)">
+                            {{ statusLabel(hoveredUserId) }}
                         </span>
                     </div>
 
@@ -1287,7 +1338,7 @@ watch(messages, () => {
                                     {{ getInitials(user.name) }}
                                 </div>
                                 <span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2"
-                                    :class="[isUserOnline(user.id) ? 'bg-emerald-500' : 'bg-slate-400', isDark ? 'border-gray-800' : 'border-white']"/>
+                                    :class="[statusDotClass(user.id), isDark ? 'border-gray-800' : 'border-white']"/>
                             </div>
                             <div class="flex-1 min-w-0">
                                 <p class="text-sm font-medium truncate" :class="isDark ? 'text-white' : 'text-slate-800'">{{ user.name }}</p>

@@ -63,12 +63,14 @@ if (typeof window !== 'undefined') {
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
+    // Unregister old/stale service workers but keep sw-notifications.js
     navigator.serviceWorker.getRegistrations().then(registrations => {
-      const unregisterPromises = registrations.map(registration => registration.unregister());
-      return Promise.all(unregisterPromises);
-    }).catch(err => {
-      //console.log('ServiceWorker unregister failed: ', err);
-    });
+      registrations.forEach(reg => {
+        if (!reg.active?.scriptURL?.includes('sw-notifications')) {
+          reg.unregister();
+        }
+      });
+    }).catch(() => {});
   });
 }
 
