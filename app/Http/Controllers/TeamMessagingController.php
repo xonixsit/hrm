@@ -220,9 +220,9 @@ class TeamMessagingController extends Controller
 
     public function getOnlineUsers()
     {
-        // Inactive cutoff — 30 minutes: user has an active session but not on chat page
+        // Inactive cutoff — 30 minutes
         $sessionCutoff = now()->subMinutes(30)->getTimestamp();
-        // Active cutoff — 45s: user is on the chat page (heartbeat every 30s)
+        // Chat-active cutoff — 45s (heartbeat every 30s)
         $chatCutoff = now()->subSeconds(45);
 
         // All users with a recent session
@@ -235,7 +235,7 @@ class TeamMessagingController extends Controller
             ->values()
             ->toArray();
 
-        // Users actively on the chat page (sent heartbeat recently)
+        // Users on chat page (heartbeat)
         $chatActive = [];
         try {
             $chatActive = DB::table('chat_heartbeats')
@@ -246,13 +246,29 @@ class TeamMessagingController extends Controller
                 ->values()
                 ->toArray();
         } catch (\Exception $e) {
-            // chat_heartbeats table may not exist yet in some environments
             \Log::warning('chat_heartbeats query failed: ' . $e->getMessage());
         }
 
+        // Users clocked in today — treat as active (green) regardless of chat page
+        $clockedInUserIds = DB::table('attendances')
+            ->join('employees', 'attendances.employee_id', '=', 'employees.id')
+            ->whereDate('attendances.date', today())
+            ->where('attendances.status', 'clocked_in')
+            ->pluck('employees.user_id')
+            ->unique()
+            ->map(fn($id) => (int) $id)
+            ->values()
+            ->toArray();
+
+        // Merge: chat heartbeat OR clocked-in = active (green)
+        $active = array_values(array_unique(array_merge($chatActive, $clockedInUserIds)));
+
+        // Inactive = has session but not active
+        $inactive = array_values(array_diff($activeSessions, $active));
+
         return response()->json([
-            'active'   => $chatActive,
-            'inactive' => array_values(array_diff($activeSessions, $chatActive)),
+            'active'   => $active,
+            'inactive' => $inactive,
         ]);
     }
 
