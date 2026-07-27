@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useTheme } from '@/composables/useTheme';
+import { openFloatingChat } from '@/composables/useFloatingChat';
 
 const { isDark } = useTheme();
 const mounted = ref(false);
@@ -31,11 +32,14 @@ const dismiss = (id) => {
 
 const openChat = (toast) => {
     dismiss(toast.id);
-    // Navigate to messaging page with the sender's user ID so the chat auto-opens
-    const url = toast.senderUserId
-        ? `/team-messaging?open_user=${toast.senderUserId}`
-        : '/team-messaging';
-    window.location.href = url;
+    if (toast.senderUserId) {
+        openFloatingChat(
+            { id: toast.senderUserId, name: toast.senderName, profile_picture: resolveAvatar(toast.avatar) },
+            null
+        );
+    } else {
+        window.location.href = '/team-messaging';
+    }
 };
 
 defineExpose({ add });

@@ -65,6 +65,11 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
               <span class="hidden xl:inline">{{ item.label }}</span>
+              <!-- Unread badge for Messages -->
+              <span
+                v-if="item.route === 'team-messaging.index' && unreadTotal > 0"
+                class="ml-0.5 min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center"
+              >{{ unreadTotal > 99 ? '99+' : unreadTotal }}</span>
             </a>
 
             <!-- Assessment Menu -->
@@ -428,6 +433,7 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { router, usePage } from '@inertiajs/vue3'
 import { useAuth } from '@/composables/useAuth.js'
 import { useTheme } from '@/composables/useTheme.js'
+import { unreadTotal } from '@/composables/useChatNotifications'
 
 const props = defineProps({
   currentRoute: {
@@ -459,8 +465,8 @@ const mainNavItems = computed(() => {
     { route: 'dashboard', label: 'Dashboard' },
     { route: 'attendances.index', label: 'Time Tracking' },
     { route: 'leaves.index', label: 'Leave Applications' },
+    { route: 'team-messaging.index', label: 'Messages' },
   ]
-  // Check if taxgpt route exists in Ziggy before adding
   const ziggyRoutes = window?.Ziggy?.routes ?? {}
   if (ziggyRoutes['taxgpt.index']) {
     items.push({ route: 'taxgpt.index', label: 'TaxGPT' })

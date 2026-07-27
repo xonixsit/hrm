@@ -69,9 +69,6 @@
         <!-- Global Chat Toast — shows new message notifications from any page -->
         <ChatToast ref="chatToastRef" />
 
-        <!-- Chat Toast Notifications -->
-        <ChatToast ref="chatToastRef" />
-
         <!-- Floating Attendance Widget (hidden for admins) -->
         <FloatingAttendanceWidget v-if="!hasRole('Admin')" />
 

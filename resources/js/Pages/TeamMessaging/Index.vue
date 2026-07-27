@@ -11,6 +11,7 @@ import axios from 'axios';
 import data from '@emoji-mart/data';
 import { Picker } from 'emoji-mart';
 import { markConversationReadGlobal } from '@/composables/useChatNotifications';
+import { openFloatingChat } from '@/composables/useFloatingChat';
 
 const { isDark } = useTheme();
 const page = usePage();
@@ -875,7 +876,7 @@ watch(messages, () => {
                             @click="startConversation(user.id)"
                             @mouseenter="handleUserHover($event, user.id)"
                             @mouseleave="handleUserLeave"
-                            class="flex items-center gap-3 px-3 py-3 cursor-pointer transition-colors border-l-[3px]"
+                            class="group flex items-center gap-3 px-3 py-3 cursor-pointer transition-colors border-l-[3px]"
                             :class="(selectedUserId === user.id || (getSelectedUser() && getSelectedUser().id === user.id))
                                 ? isDark
                                     ? 'bg-gray-700/80 border-teal-500'
@@ -923,11 +924,27 @@ watch(messages, () => {
                                 </p>
                             </div>
 
-                            <!-- Unread badge -->
-                            <span
-                                v-if="filteredConversations.find(c => c.other_user?.id === user.id)?.id && getUnreadCount(filteredConversations.find(c => c.other_user?.id === user.id).id) > 0 && !isConvRead(filteredConversations.find(c => c.other_user?.id === user.id).id)"
-                                class="flex-shrink-0 w-5 h-5 rounded-full bg-teal-500 text-white text-[10px] font-bold flex items-center justify-center"
-                            >{{ getUnreadCount(filteredConversations.find(c => c.other_user?.id === user.id).id) }}</span>
+                            <!-- Unread badge + pop-out button -->
+                            <div class="flex items-center gap-1 flex-shrink-0">
+                                <!-- Unread count -->
+                                <span
+                                    v-if="filteredConversations.find(c => c.other_user?.id === user.id)?.id && getUnreadCount(filteredConversations.find(c => c.other_user?.id === user.id).id) > 0 && !isConvRead(filteredConversations.find(c => c.other_user?.id === user.id).id)"
+                                    class="w-5 h-5 rounded-full bg-teal-500 text-white text-[10px] font-bold flex items-center justify-center"
+                                >{{ getUnreadCount(filteredConversations.find(c => c.other_user?.id === user.id).id) }}</span>
+
+                                <!-- Pop-out button (visible on hover) -->
+                                <button
+                                    @click.stop="openFloatingChat(user, filteredConversations.find(c => c.other_user?.id === user.id)?.id ?? null)"
+                                    class="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-md"
+                                    :class="isDark ? 'text-gray-400 hover:text-teal-400 hover:bg-gray-600' : 'text-slate-400 hover:text-teal-500 hover:bg-slate-200'"
+                                    title="Open mini chat"
+                                >
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

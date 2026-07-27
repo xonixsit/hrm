@@ -3,9 +3,10 @@ import './bootstrap';
 
 import { createInertiaApp, router } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
-import { createApp, h } from 'vue';
+import { createApp, h, defineComponent } from 'vue';
 import { ZiggyVue } from '../../vendor/tightenco/ziggy';
 import { conflictDetector } from '@/services/NavigationConflictDetector.js';
+import FloatingChat from '@/Components/Chat/FloatingChat.vue';
 
 // Define process.env for compatibility with code that uses it
 try {
@@ -110,6 +111,14 @@ createInertiaApp({
         
         // Initialize accessibility features
         initializeAccessibility();
+
+        // Mount the persistent FloatingChat app on a dedicated element
+        // This lives OUTSIDE Inertia's render cycle so it never unmounts on navigation
+        const floatEl = document.createElement('div');
+        floatEl.id = 'floating-chat-root';
+        document.body.appendChild(floatEl);
+        const floatApp = createApp({ render: () => h(FloatingChat) }).use(ZiggyVue);
+        floatApp.mount(floatEl);
         
         return app.mount(el);
     },
