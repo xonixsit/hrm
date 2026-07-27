@@ -345,7 +345,6 @@ class EmployeeController extends Controller
             'job_title' => $canEditEmploymentInfo ? 'required|string|max:255' : 'sometimes',
             'employee_code' => $canEditEmploymentInfo ? 'required|unique:employees,employee_code,' . $employee->id : 'sometimes',
             'join_date' => $canEditEmploymentInfo ? 'nullable|date' : 'sometimes',
-            'contract_type' => $canEditEmploymentInfo ? 'nullable|string' : 'sometimes',
             'employment_type' => $canEditEmploymentInfo ? 'nullable|in:full_time,part_time,contract,intern,consultant' : 'sometimes',
             'work_location' => $canEditEmploymentInfo ? 'nullable|string|max:255' : 'sometimes',
             'profile_pic' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120', // 5MB max

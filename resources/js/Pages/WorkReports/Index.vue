@@ -1211,10 +1211,15 @@
         sortable: true,
         formatter: (value) => {
           if (!value) return '';
-          // Parse date safely without timezone issues
-          const [year, month, day] = value.split('-');
-          const date = new Date(year, month - 1, day);
-          return date.toLocaleDateString();
+          // Handle both ISO strings and YYYY-MM-DD
+          const datePart = typeof value === 'string' && value.includes('T')
+            ? value.split('T')[0]
+            : value;
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(datePart)) return datePart;
+          const [year, month, day] = datePart.split('-').map(Number);
+          return new Date(year, month - 1, day).toLocaleDateString('en-US', {
+            year: 'numeric', month: 'short', day: 'numeric'
+          });
         }
       },
       {

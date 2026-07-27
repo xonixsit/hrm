@@ -194,12 +194,6 @@
                 :disabled="!canEditEmploymentInfo" />
             </FormField>
 
-            <FormField label="Contract Type" :error="form.errors.contract_type" help="Type of employment contract">
-              <BaseSelect v-model="form.contract_type" :options="contractTypeOptions"
-                :error="!!form.errors.contract_type" placeholder="Select contract type"
-                :disabled="!canEditEmploymentInfo" />
-            </FormField>
-
             <FormField label="Employment Type" :error="form.errors.employment_type" help="Type of employment">
               <BaseSelect v-model="form.employment_type" :options="employmentTypes"
                 :error="!!form.errors.employment_type" placeholder="Select employment type"
@@ -428,8 +422,8 @@
 
     // Employee Basic Information
     employee_code: props.employee.employee_code != null ? String(props.employee.employee_code) : '',
-    department_id: props.employee.department_id != null ? String(props.employee.department_id) : '',
-    manager_id: props.employee.manager_id != null ? String(props.employee.manager_id) : '',
+    department_id: props.employee.department_id != null ? Number(props.employee.department_id) : '',
+    manager_id: props.employee.manager_id != null ? Number(props.employee.manager_id) : '',
     job_title: props.employee.job_title != null ? String(props.employee.job_title) : '',
     join_date: (() => {
       if (!props.employee.join_date) return ''
@@ -575,12 +569,11 @@
     const originalDOB = safeDate(props.employee.date_of_birth)
 
     return form.name !== str(props.employee.user?.name) ||
-      form.department_id !== str(props.employee.department_id) ||
-      form.manager_id !== str(props.employee.manager_id) ||
+      form.department_id !== Number(props.employee.department_id) ||
+      form.manager_id !== Number(props.employee.manager_id) ||
       form.job_title !== str(props.employee.job_title) ||
       form.employee_code !== str(props.employee.employee_code) ||
       form.join_date !== originalJoinDate ||
-      form.contract_type !== str(props.employee.contract_type) ||
       form.date_of_birth !== originalDOB ||
       form.gender !== str(props.employee.gender) ||
       form.phone !== str(props.employee.phone) ||
