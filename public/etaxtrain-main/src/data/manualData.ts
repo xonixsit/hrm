@@ -242,7 +242,6 @@ export const MANUAL_PAGES: ManualPage[] = [
       '• A Green Card holder who applied and got (permanent resident) is someone who has been granted authorization to live and work in the United States on a permanent basis.',
       '• A Green Card, officially known as a Permanent Resident Card, is an identification card issued by the U.S. government that grants foreign nationals’ lawful permanent residency in the United States. Here’s a comprehensive overview of the Green Card.',
       '• The Green Card is a significant legal status that provides individuals with many rights and opportunities in the U.S., as well as a potential pathway to U.S. citizenship. However, it requires adherence to immigration laws and responsibilities to maintain and utilize the benefits effectively.',
-      'TYPE OF FILING STATUS',
     ],
   },
   {

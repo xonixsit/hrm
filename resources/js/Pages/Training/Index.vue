@@ -9,6 +9,7 @@ import TrainingReview     from './Partials/ReviewSession.vue';
 import TrainingManual     from './Partials/ManualLibrary.vue';
 import TrainingQuiz       from './Partials/QuizRecall.vue';
 import TrainingAnalytics  from './Partials/Analytics.vue';
+import PresentationMode   from './Partials/PresentationMode.vue';
 
 const { isDark } = useTheme();
 
@@ -24,6 +25,7 @@ const props = defineProps({
 const activeTab         = ref('review'); // 'review', 'manual', 'quiz', 'analytics'
 const reviewMode        = ref('overview'); // 'overview' | 'session'
 const showDrawer        = ref(false);
+const showPresentation  = ref(false);
 const selectedModuleId  = ref(null);
 const selectedPageNum   = ref(null);
 const localProgressMap  = ref({ ...props.progressMap || {} });
@@ -181,8 +183,14 @@ function finishReview()    { reviewMode.value = 'overview'; }
                         </button>
                     </nav>
 
-                    <!-- CTAs positioned right after Progress & Analytics -->
+                    <!-- CTAs -->
                     <div class="flex items-center gap-2 shrink-0 px-1">
+                        <!-- Presentation launch button -->
+                        <button @click="showPresentation = true"
+                            class="px-3.5 py-2 font-bold rounded-lg text-xs transition-all flex items-center gap-1.5 border shadow-sm whitespace-nowrap"
+                            :class="isDark ? 'bg-gray-700 border-gray-600 text-purple-300 hover:bg-gray-600' : 'bg-purple-50 border-purple-200 text-purple-700 hover:bg-purple-100'">
+                            🎬 <span>Presentation</span>
+                        </button>
                         <button @click="startReview"
                             class="px-3.5 py-2 bg-gradient-to-r from-teal-600 to-teal-500 hover:from-teal-700 hover:to-teal-600 text-white font-bold rounded-lg text-xs shadow-sm transition-all flex items-center gap-1.5 whitespace-nowrap">
                             ✨ <span>{{ dueCards.length ? `Start Review (${dueCards.length} Due)` : 'Start Review' }}</span>
@@ -341,6 +349,16 @@ function finishReview()    { reviewMode.value = 'overview'; }
             </div>
         </PageLayout>
     </AuthenticatedLayout>
+
+    <!-- Fullscreen Presentation overlay (outside PageLayout, covers everything) -->
+    <Teleport to="body">
+        <PresentationMode
+            v-if="showPresentation"
+            :pages="pages"
+            :modules="modules"
+            :is-dark="isDark"
+            @exit="showPresentation = false" />
+    </Teleport>
 </template>
 
 <style scoped>

@@ -94,8 +94,8 @@ function selectPage(n) {
             <!-- Page jump -->
             <div class="flex items-center gap-1.5">
                 <button :disabled="activePage !== null && activePage <= 1" @click="selectPage(activePage !== null ? activePage-1 : 1)"
-                    class="p-2.5 rounded-xl border disabled:opacity-40 transition-colors"
-                    :class="isDark ? 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600' : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'">◀</button>
+                    class="p-2 rounded-xl border disabled:opacity-40 transition-colors shrink-0"
+                    :class="isDark ? 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-teal-50 hover:text-teal-600'">◀</button>
                 <select :value="activePage"
                     @change="e => selectPage(parseInt(e.target.value))"
                     class="flex-1 px-3 py-2.5 text-xs rounded-xl border focus:outline-none focus:border-teal-500"
@@ -103,8 +103,8 @@ function selectPage(n) {
                     <option v-for="p in pages" :key="p.page_number" :value="p.page_number">Page {{ p.page_number }}: {{ p.title }}</option>
                 </select>
                 <button :disabled="activePage !== null && activePage >= 26" @click="selectPage(activePage !== null ? activePage+1 : 2)"
-                    class="p-2.5 rounded-xl border disabled:opacity-40 transition-colors"
-                    :class="isDark ? 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600' : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'">▶</button>
+                    class="p-2 rounded-xl border disabled:opacity-40 transition-colors shrink-0"
+                    :class="isDark ? 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-teal-50 hover:text-teal-600'">▶</button>
             </div>
         </div>
 
@@ -172,52 +172,118 @@ function selectPage(n) {
                 <USAMapEmbed v-if="page.page_number === 2 && para === 'USA STATES'" :is-dark="isDark" class="mt-2" />
             </template>
 
-            <!-- Questions summary -->
-            <div v-if="cardsForPage(page.page_number).length" class="mt-4 pt-4 border-t space-y-3" :class="isDark ? 'border-gray-700' : 'border-slate-200'">
-                <div class="flex items-center justify-between text-xs">
-                    <span class="font-bold text-teal-600 flex items-center gap-1">✅ Practice Questions:</span>
+            <!-- Practice Questions Section -->
+            <div v-if="cardsForPage(page.page_number).length"
+                class="mt-6 rounded-2xl border overflow-hidden"
+                :class="isDark ? 'border-gray-700' : 'border-slate-200'">
+
+                <!-- Section header — matches reference -->
+                <div class="flex items-center justify-between px-5 py-4 border-b"
+                    :class="isDark ? 'bg-gray-750 border-gray-700' : 'bg-white border-slate-100'">
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-xl flex items-center justify-center text-teal-600"
+                            :class="isDark ? 'bg-teal-900/40' : 'bg-teal-50'">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="font-extrabold text-sm" :class="isDark ? 'text-white' : 'text-slate-900'">Practice Questions</p>
+                            <p class="text-xs" :class="isDark ? 'text-gray-400' : 'text-slate-500'">Test your knowledge of the concepts on this page</p>
+                        </div>
+                    </div>
                     <button @click="practicePageNum = page.page_number"
-                        class="px-3 py-1 rounded-lg text-white font-bold text-[11px] flex items-center gap-1 hover:opacity-90 transition-all"
+                        class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-xs font-bold shadow-sm transition-all hover:opacity-90"
                         style="background:linear-gradient(135deg,#006970,#00a9b4)">
-                        ✨ Start Practice
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M8 5v14l11-7z"/>
+                        </svg>
+                        Start Practice
                     </button>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+
+                <!-- Question cards -->
+                <div class="divide-y" :class="isDark ? 'divide-gray-700' : 'divide-slate-100'">
                     <div v-for="card in cardsForPage(page.page_number)" :key="card.card_key"
-                        class="p-3.5 rounded-xl border space-y-2 text-xs"
-                        :class="isDark ? 'bg-gray-700 border-gray-600' : 'bg-white border-slate-200 shadow-sm'">
-                        <div class="flex items-center justify-between">
-                            <span class="font-extrabold" :class="isDark ? 'text-white' : 'text-slate-900'">{{ card.title }}</span>
-                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase"
-                                :class="progressMap[card.card_key]?.state === 'mastered' ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
-                                    : progressMap[card.card_key]?.state === 'review' ? 'bg-teal-100 text-teal-800 border border-teal-200'
-                                    : 'bg-amber-100 text-amber-800 border border-amber-200'">
+                        class="px-5 py-4 space-y-2"
+                        :class="isDark ? 'bg-gray-800 hover:bg-gray-750' : 'bg-white hover:bg-slate-50/60'">
+
+                        <!-- Title + state badge -->
+                        <div class="flex items-start justify-between gap-3">
+                            <p class="font-bold text-sm leading-snug" :class="isDark ? 'text-white' : 'text-slate-900'">
+                                {{ card.title }}
+                            </p>
+                            <span class="shrink-0 px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase tracking-wide"
+                                :class="progressMap[card.card_key]?.state === 'mastered'
+                                    ? 'bg-emerald-100 text-emerald-700 border border-emerald-200'
+                                    : progressMap[card.card_key]?.state === 'review'
+                                        ? 'bg-teal-100 text-teal-700 border border-teal-200'
+                                        : 'bg-amber-100 text-amber-700 border border-amber-200'">
                                 {{ progressMap[card.card_key]?.state || 'New' }}
                             </span>
                         </div>
-                        <p class="line-clamp-2" :class="isDark ? 'text-gray-400' : 'text-slate-500'">{{ card.prompt }}</p>
-                        <div class="flex items-center justify-between pt-1 border-t text-[11px]" :class="isDark ? 'border-gray-600' : 'border-slate-100'">
-                            <span :class="isDark ? 'text-gray-500' : 'text-slate-400'">Interval: {{ progressMap[card.card_key]?.interval || 1 }}d</span>
-                            <span class="font-extrabold" :class="ret(card.card_key) >= 80 ? 'text-emerald-600' : 'text-amber-600'">Retention: {{ ret(card.card_key) }}%</span>
+
+                        <!-- Prompt text -->
+                        <p class="text-sm leading-relaxed line-clamp-2" :class="isDark ? 'text-gray-400' : 'text-slate-500'">
+                            {{ card.prompt }}
+                        </p>
+
+                        <!-- Meta row: Interval · Difficulty · Retention bar -->
+                        <div class="flex items-center gap-4 pt-1 text-xs"
+                            :class="isDark ? 'text-gray-500' : 'text-slate-400'">
+                            <span class="flex items-center gap-1">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                Interval: {{ progressMap[card.card_key]?.interval || 1 }}d
+                            </span>
+                            <span class="flex items-center gap-1">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                                </svg>
+                                Difficulty: {{ progressMap[card.card_key]?.ease_factor >= 2.5 ? 'Easy' : progressMap[card.card_key]?.ease_factor >= 2.0 ? 'Medium' : 'Hard' }}
+                            </span>
+                            <div class="flex items-center gap-2 ml-auto">
+                                <span class="font-extrabold uppercase tracking-wider text-[10px]"
+                                    :class="ret(card.card_key) >= 80 ? (isDark ? 'text-teal-400' : 'text-teal-600') : 'text-amber-500'">
+                                    Retention: {{ ret(card.card_key) }}%
+                                </span>
+                                <div class="w-24 h-1.5 rounded-full overflow-hidden" :class="isDark ? 'bg-gray-700' : 'bg-slate-200'">
+                                    <div class="h-full rounded-full transition-all duration-500"
+                                        :style="`width:${ret(card.card_key)}%;background:${ret(card.card_key) >= 80 ? 'linear-gradient(135deg,#006970,#00a9b4)' : '#f59e0b'}`">
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Footer nav -->
-        <div class="px-6 py-3 border-t flex items-center justify-between text-xs font-bold"
-            :class="isDark ? 'bg-gray-750 border-gray-700' : 'bg-slate-50 border-slate-200'">
-            <button :disabled="page.page_number <= 1" @click="selectPage(page.page_number-1)"
-                class="px-3.5 py-1.5 rounded-lg border flex items-center gap-1.5 disabled:opacity-40 transition-colors"
-                :class="isDark ? 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600' : 'bg-white border-slate-300 text-slate-800 hover:bg-slate-50'">
-                ◀ P{{ page.page_number-1 }}
+        <!-- Footer nav — Prev / Next -->
+        <div class="px-6 py-4 border-t flex items-center justify-between gap-4"
+            :class="isDark ? 'bg-gray-800 border-gray-700' : 'bg-slate-50 border-slate-200'">
+            <button :disabled="page.page_number <= 1" @click="selectPage(page.page_number - 1)"
+                class="flex items-center gap-2 px-4 py-2.5 rounded-xl border text-xs font-bold disabled:opacity-40 transition-all hover:shadow-sm"
+                :class="isDark ? 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600' : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-100'">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+                <span>Previous Page (P{{ page.page_number - 1 }})</span>
             </button>
-            <span class="font-mono" :class="isDark ? 'text-gray-400' : 'text-slate-500'">Page {{ page.page_number }} of 26</span>
-            <button :disabled="page.page_number >= 26" @click="selectPage(page.page_number+1)"
-                class="px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 disabled:opacity-40 text-white hover:opacity-90 transition-all"
+
+            <span class="text-xs font-semibold" :class="isDark ? 'text-gray-400' : 'text-slate-500'">
+                Page {{ page.page_number }} of 26
+            </span>
+
+            <button :disabled="page.page_number >= 26" @click="selectPage(page.page_number + 1)"
+                class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold disabled:opacity-40 transition-all hover:opacity-90 text-white"
                 style="background:linear-gradient(135deg,#006970,#00a9b4)">
-                P{{ page.page_number+1 }} ▶
+                <span>Next Page (P{{ page.page_number + 1 }})</span>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
             </button>
         </div>
     </div>
