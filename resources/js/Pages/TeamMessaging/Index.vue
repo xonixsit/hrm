@@ -861,7 +861,7 @@ watch(messages, () => {
                 </div>
 
                 <!-- Conversation / User list -->
-                <div class="flex-1 overflow-y-auto">
+                <div class="flex-1 overflow-y-auto pr-4">
                     <div v-if="filteredUsers.length === 0" class="flex flex-col items-center justify-center h-full p-6 text-center">
                         <svg class="w-10 h-10 text-slate-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm14 2-3 3m0 0-3-3m3 3v-6"/>
@@ -869,7 +869,7 @@ watch(messages, () => {
                         <p class="text-sm text-slate-400">{{ searchQuery ? 'No users found' : activeTab === 'unread' ? 'No unread messages' : 'No users available' }}</p>
                     </div>
 
-                    <div v-else>
+                    <div v-else class="space-y-2">
                         <div
                             v-for="user in filteredUsers"
                             :key="user.id"

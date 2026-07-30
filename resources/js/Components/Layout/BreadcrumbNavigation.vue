@@ -663,11 +663,12 @@ const getTabIndex = (item, index) => {
 
 <style scoped>
 .breadcrumb-navigation {
-  @apply text-sm;
+  @apply flex items-center w-full text-sm;
+  @apply min-h-[36px];
 }
 
 .breadcrumb-list {
-  @apply flex items-center space-x-1 flex-wrap;
+  @apply flex items-center gap-1.5 flex-wrap;
 }
 
 .breadcrumb-item {
@@ -675,13 +676,13 @@ const getTabIndex = (item, index) => {
 }
 
 .breadcrumb-separator {
-  @apply w-4 h-4 text-gray-400 mx-2 flex-shrink-0;
+  @apply w-4 h-4 text-gray-400 flex-shrink-0;
 }
 
 .breadcrumb-link {
-  @apply inline-flex items-center space-x-1 px-2 py-1 rounded-md transition-colors;
+  @apply inline-flex items-center gap-1 px-2 py-1 rounded transition-all duration-200 text-sm;
   @apply text-gray-600 hover:text-teal-700;
-  @apply max-w-xs truncate;
+  @apply max-w-[200px] truncate;
 }
 
 .breadcrumb-link--clickable {
@@ -689,17 +690,18 @@ const getTabIndex = (item, index) => {
 }
 
 .breadcrumb-link--active {
-  @apply text-teal-700 font-medium;
+  @apply text-teal-700 font-semibold;
+  @apply bg-teal-50;
   @apply cursor-default;
 }
 
 .breadcrumb-link--ellipsis {
-  @apply cursor-default hover:bg-transparent hover:text-neutral-600;
-  @apply font-bold;
+  @apply cursor-default hover:bg-transparent hover:text-gray-600;
+  @apply font-bold px-1;
 }
 
 .breadcrumb-link--first .breadcrumb-icon {
-  @apply text-neutral-500;
+  @apply text-gray-500;
 }
 
 .breadcrumb-icon {
@@ -707,25 +709,25 @@ const getTabIndex = (item, index) => {
 }
 
 .breadcrumb-label {
-  @apply truncate;
+  @apply truncate leading-tight;
 }
 
 /* Responsive adjustments */
 @media (max-width: 640px) {
   .breadcrumb-navigation {
-    @apply text-xs;
+    @apply h-10 text-sm;
   }
-  
+
   .breadcrumb-separator {
-    @apply w-3 h-3 mx-1;
+    @apply w-3.5 h-3.5;
   }
-  
+
   .breadcrumb-link {
-    @apply px-1 py-0.5 max-w-24;
+    @apply px-2 py-1 max-w-[120px] text-xs;
   }
-  
+
   .breadcrumb-icon {
-    @apply w-3 h-3;
+    @apply w-3.5 h-3.5;
   }
 }
 
@@ -819,62 +821,63 @@ const getTabIndex = (item, index) => {
 
 /* Dark theme adjustments */
 .theme-dark .breadcrumb-link {
-  @apply text-neutral-400 hover:text-neutral-200;
+  @apply text-gray-400 hover:text-gray-200;
 }
 
 .theme-dark .breadcrumb-link--active {
-  @apply text-neutral-200;
+  @apply text-teal-400 font-semibold;
+  @apply bg-teal-900/30 border-teal-700/50;
 }
 
 .theme-dark .breadcrumb-link--clickable {
-  @apply hover:bg-neutral-800;
+  @apply hover:bg-teal-900/20 hover:border-teal-700/30;
 }
 
 .theme-dark .breadcrumb-link--clickable:focus {
-  @apply bg-neutral-800;
+  @apply bg-teal-900/30;
 }
 
 .theme-dark .breadcrumb-separator {
-  @apply text-neutral-600;
+  @apply text-gray-500;
 }
 
 .theme-dark .breadcrumb-link:focus {
-  @apply ring-teal-400;
+  @apply ring-teal-400 ring-offset-gray-900;
 }
 
 .theme-dark .breadcrumb-link--focused {
-  @apply ring-teal-400;
+  @apply ring-teal-400 ring-offset-gray-900;
 }
 
 .theme-dark .breadcrumb-back-button {
-  @apply hover:bg-neutral-800;
+  @apply hover:bg-gray-800;
 }
 
 .theme-dark .breadcrumb-current-label {
-  @apply text-neutral-200;
+  @apply text-gray-200;
 }
 
 .theme-dark .breadcrumb-history-toggle {
-  @apply text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800;
+  @apply text-gray-400 hover:text-gray-200 hover:bg-gray-800;
 }
 
 .theme-dark .breadcrumb-history-dropdown {
-  @apply bg-neutral-800 border-neutral-700;
+  @apply bg-gray-800 border-gray-700;
 }
 
 .theme-dark .breadcrumb-history-header {
-  @apply text-neutral-400 border-neutral-700;
+  @apply text-gray-400 border-gray-700;
 }
 
 .theme-dark .breadcrumb-history-item {
-  @apply hover:bg-neutral-700 focus:bg-neutral-700;
+  @apply hover:bg-gray-700 focus:bg-gray-700;
 }
 
 .theme-dark .breadcrumb-history-path {
-  @apply text-neutral-200;
+  @apply text-gray-200;
 }
 
 .theme-dark .breadcrumb-history-time {
-  @apply text-neutral-400;
+  @apply text-gray-400;
 }
 </style>

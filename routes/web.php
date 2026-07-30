@@ -32,12 +32,12 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
-
+use App\Http\Controllers\TrainingPageController;
 // Route to serve profile pictures (workaround for symlink issues)
 // This route bypasses the symlink and serves files directly from storage
 Route::get('/storage/profile-pictures/{filename}', [ProfilePictureController::class, 'show'])
     ->name('profile-picture.show')
-    ->middleware('web');
+    ->middleware(['web', 'auth']);
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -106,10 +106,17 @@ Route::middleware('auth')->group(function () {
         return Inertia::render('AnimationDemo');
     })->name('animation.demo');
     Route::get('my-profile', [EmployeeController::class, 'myProfile'])->name('employees.my-profile');
+Route::get('/training', [TrainingPageController::class, 'index'])->middleware(['auth'])->name('training.page');
     
+    // E-Tax Planner Training Module
+    Route::prefix('training')->name('training.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\TrainingController::class, 'index'])->name('index');
+        Route::post('/review', [\App\Http\Controllers\TrainingController::class, 'saveReview'])->name('review');
+        Route::post('/reset', [\App\Http\Controllers\TrainingController::class, 'resetProgress'])->name('reset');
+    });
+
     // Team Messaging Routes
-    Route::prefix('team-messaging')->group(function () {
-        Route::get('/', [TeamMessagingController::class, 'index'])->name('team-messaging.index');
+    Route::prefix('team-messaging')->group(function () {        Route::get('/', [TeamMessagingController::class, 'index'])->name('team-messaging.index');
         Route::get('/online-users', [TeamMessagingController::class, 'getOnlineUsers'])->name('team-messaging.online-users');
         Route::post('/heartbeat', [TeamMessagingController::class, 'heartbeat'])->name('team-messaging.heartbeat');
         Route::get('/unread-counts', [TeamMessagingController::class, 'unreadCounts'])->name('team-messaging.unread-counts');

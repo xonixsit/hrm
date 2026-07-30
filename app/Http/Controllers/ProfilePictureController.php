@@ -12,51 +12,46 @@ class ProfilePictureController extends Controller
      * Serve profile picture from storage
      * This bypasses symlink issues by serving files directly through Laravel
      */
-    public function show($filename)
+    public function show(Request $request, $filename)
     {
+        // Must be authenticated
+        if (!auth()->check()) {
+            abort(403);
+        }
+
+        $user     = auth()->user();
+        $filename = basename($filename); // prevent directory traversal
+        $path     = 'profile-pictures/' . $filename;
+
+        // Resolve which employee owns this picture
+        $employee = \App\Models\Employee::where('profile_pic', 'like', '%' . $filename)
+            ->first();
+
+        // Access: Admin/HR can see anyone's. User can only see their own.
+        $isAdminOrHR = $user->hasAnyRole(['Admin', 'HR']);
+        $isSelf      = $employee && $employee->user_id === $user->id;
+
+        if (!$isAdminOrHR && !$isSelf) {
+            abort(403, 'Access denied.');
+        }
+
         try {
-            // Prevent directory traversal attacks
-            $filename = basename($filename);
-            $path = 'profile-pictures/' . $filename;
-            
-            Log::info('Profile picture request', [
-                'filename' => $filename,
-                'path' => $path,
-                'storage_path' => storage_path('app/public/' . $path)
-            ]);
-            
-            // Check if file exists
             if (!Storage::disk('public')->exists($path)) {
-                Log::warning('Profile picture not found', [
-                    'path' => $path,
-                    'full_path' => storage_path('app/public/' . $path)
-                ]);
                 abort(404, 'Image not found');
             }
-            
-            // Get file contents
-            $file = Storage::disk('public')->get($path);
+
+            $file     = Storage::disk('public')->get($path);
             $mimeType = Storage::disk('public')->mimeType($path);
-            
-            Log::info('Profile picture served successfully', [
-                'filename' => $filename,
-                'mime_type' => $mimeType,
-                'size' => strlen($file)
-            ]);
-            
-            // Return file with proper headers
+
             return response($file, 200)
                 ->header('Content-Type', $mimeType)
-                ->header('Cache-Control', 'public, max-age=31536000')
-                ->header('Access-Control-Allow-Origin', '*');
-                
+                ->header('Cache-Control', 'private, max-age=3600');
+
         } catch (\Exception $e) {
-            Log::error('Error serving profile picture', [
+            \Log::error('Error serving profile picture', [
                 'filename' => $filename,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'error'    => $e->getMessage(),
             ]);
-            
             abort(500, 'Error loading image');
         }
     }

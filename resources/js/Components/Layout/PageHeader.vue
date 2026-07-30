@@ -1,86 +1,90 @@
 <template>
   <header :class="headerClasses">
-    <!-- Breadcrumbs -->
-    <BreadcrumbNavigation
-      v-if="breadcrumbs?.length"
-      :items="breadcrumbs"
-      class="breadcrumbs"
-    />
-
-    <!-- Main Header Content -->
-    <div class="header-main">
-      <div class="header-content">
-        <!-- Custom Header Slot -->
-        <div v-if="$slots.header" class="custom-header">
-          <slot name="header" />
-        </div>
-        
-        <!-- Default Header Content -->
-        <div v-else class="default-header">
-          <div class="title-section">
-            <h1 class="page-title">{{ title }}</h1>
-            <p v-if="subtitle" class="page-subtitle">{{ subtitle }}</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Header Actions -->
-      <div v-if="hasActions" class="header-actions">
-        <slot name="actions">
-          <div class="action-buttons">
-            <button
-              v-for="action in visibleActions"
-              :key="action.id"
-              @click="handleAction(action)"
-              :disabled="action.disabled"
-              :class="getActionClasses(action)"
-              :title="action.tooltip"
-            >
-              <!-- <component v-if="action.icon" :is="action.icon" class="action-icon text-white" /> -->
-              <span v-if="action.label && !action.iconOnly" class="action-label">{{ action.label }}</span>
-            </button>
-            
-            <!-- Overflow Menu -->
-            <div v-if="overflowActions.length" class="overflow-menu" ref="overflowMenuRef">
-              <button
-                @click="toggleOverflowMenu"
-                :class="overflowButtonClasses"
-                :aria-expanded="showOverflowMenu"
-                aria-haspopup="true"
-              >
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-                </svg>
-              </button>
-              
-              <Transition name="dropdown">
-                <div v-if="showOverflowMenu" class="overflow-dropdown">
-                  <button
-                    v-for="action in overflowActions"
-                    :key="action.id"
-                    @click="handleAction(action)"
-                    :disabled="action.disabled"
-                    class="overflow-action"
-                  >
-                    <!-- <component v-if="action.icon" :is="action.icon" class="w-4 h-4" /> -->
-                    <span>{{ action.label }}</span>
-                  </button>
-                </div>
-              </Transition>
-            </div>
-          </div>
-        </slot>
+    <!-- Breadcrumbs - Full width to match body content -->
+    <div v-if="breadcrumbs?.length" class="breadcrumbs-wrapper">
+      <div class="breadcrumbs-inner">
+        <BreadcrumbNavigation
+          :items="breadcrumbs"
+        />
       </div>
     </div>
 
-    <!-- Tab Navigation -->
-    <TabNavigation
-      v-if="tabs?.length"
-      :items="tabs"
-      :active-tab="activeTab"
-      @tab-change="handleTabChange"
-      class="header-tabs"
-    />
+    <div class="header-container">
+      <!-- Main Header Content -->
+      <div class="header-main">
+        <div class="header-content">
+          <!-- Custom Header Slot -->
+          <div v-if="$slots.header" class="custom-header">
+            <slot name="header" />
+          </div>
+
+          <!-- Default Header Content -->
+          <div v-else class="default-header">
+            <div class="title-section">
+              <h1 class="page-title">{{ title }}</h1>
+              <p v-if="subtitle" class="page-subtitle">{{ subtitle }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Header Actions -->
+        <div v-if="hasActions" class="header-actions">
+          <slot name="actions">
+            <div class="action-buttons">
+              <button
+                v-for="action in visibleActions"
+                :key="action.id"
+                @click="handleAction(action)"
+                :disabled="action.disabled"
+                :class="getActionClasses(action)"
+                :title="action.tooltip"
+              >
+                <!-- <component v-if="action.icon" :is="action.icon" class="action-icon text-white" /> -->
+                <span v-if="action.label && !action.iconOnly" class="action-label">{{ action.label }}</span>
+              </button>
+
+              <!-- Overflow Menu -->
+              <div v-if="overflowActions.length" class="overflow-menu" ref="overflowMenuRef">
+                <button
+                  @click="toggleOverflowMenu"
+                  :class="overflowButtonClasses"
+                  :aria-expanded="showOverflowMenu"
+                  aria-haspopup="true"
+                >
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                  </svg>
+                </button>
+
+                <Transition name="dropdown">
+                  <div v-if="showOverflowMenu" class="overflow-dropdown">
+                    <button
+                      v-for="action in overflowActions"
+                      :key="action.id"
+                      @click="handleAction(action)"
+                      :disabled="action.disabled"
+                      class="overflow-action"
+                    >
+                      <!-- <component v-if="action.icon" :is="action.icon" class="w-4 h-4" /> -->
+                      <span>{{ action.label }}</span>
+                    </button>
+                  </div>
+                </Transition>
+              </div>
+            </div>
+          </slot>
+        </div>
+      </div>
+
+      <!-- Tab Navigation -->
+      <TabNavigation
+        v-if="tabs?.length"
+        :items="tabs"
+        :active-tab="activeTab"
+        @tab-change="handleTabChange"
+        class="header-tabs"
+      />
+    </div>
   </header>
 </template>
 
@@ -277,21 +281,26 @@ onUnmounted(() => {
 
 <style scoped>
 .page-header {
-  @apply py-6 bg-white border-b border-neutral-200;
+  @apply bg-white border-b border-neutral-200;
 }
 
-.page-header > * {
-  @apply mx-auto max-w-7xl px-4 sm:px-6 lg:px-8;
+.breadcrumbs-wrapper {
+  @apply border-b border-neutral-100;
+  @apply bg-white;
 }
 
-/* Breadcrumbs */
-.breadcrumbs {
-  @apply mb-4;
+.breadcrumbs-inner {
+  @apply px-4 sm:px-6 lg:px-8;
+}
+
+.header-container {
+  @apply px-4 sm:px-6 lg:px-8;
+  @apply flex flex-col;
 }
 
 /* Header Main */
 .header-main {
-  @apply flex items-center justify-between gap-6 mb-6;
+  @apply flex items-center justify-between gap-6 py-4;
 }
 
 .header-content {
@@ -299,11 +308,11 @@ onUnmounted(() => {
 }
 
 .title-section {
-  @apply space-y-2;
+  @apply space-y-1;
 }
 
 .page-title {
-  @apply text-2xl sm:text-3xl font-bold text-neutral-900 leading-tight;
+  @apply text-xl sm:text-2xl font-bold text-neutral-900 leading-tight;
   @apply mb-0;
 }
 

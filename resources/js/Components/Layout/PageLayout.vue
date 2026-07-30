@@ -192,7 +192,7 @@
   const layoutClasses = computed(() => [
     'page-layout',
     'min-h-screen',
-    'bg-neutral-50',
+    'bg-white',
     {
       'has-sidebar': props.hasSidebar,
       'has-footer': props.hasFooter,
@@ -242,11 +242,12 @@
       responsive: 'px-4 sm:px-6 lg:px-8 py-6'
     };
 
-    return [
-      'content-wrapper',
-      'mx-auto max-w-7xl',
-      paddingClasses[props.padding]
-    ];
+    const baseClasses = ['content-wrapper'];
+    if (props.maxWidth !== 'full') {
+      baseClasses.push('mx-auto', 'max-w-7xl');
+    }
+    baseClasses.push(paddingClasses[props.padding]);
+    return baseClasses;
   });
 
   // Methods

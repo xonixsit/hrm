@@ -801,12 +801,12 @@ watch(() => filters.dateRange, () => {
 
 /* Metrics Grid */
 .metrics-grid {
-  @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8;
+  @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8;
 }
 
 /* Analytics Grid */
 .analytics-grid {
-  @apply grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6;
+  @apply grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8;
 }
 
 .analytics-card {
@@ -893,7 +893,7 @@ watch(() => filters.dateRange, () => {
 }
 
 .insights-grid {
-  @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4;
+  @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6;
 }
 
 .insight-card {

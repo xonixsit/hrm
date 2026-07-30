@@ -1522,19 +1522,15 @@ onUnmounted(() => {
 
 /* Stats Overview */
 .stats-overview {
-  @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4;
+  @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6;
 }
 
 .stat-card {
-  @apply bg-white rounded-lg border border-gray-200 p-4 shadow-sm flex items-center space-x-4;
+  @apply bg-white rounded-lg shadow-sm border border-gray-200 p-6;
 }
 
 .stat-icon {
-  @apply flex-shrink-0;
-}
-
-.stat-content {
-  @apply flex-1;
+  @apply w-12 h-12 rounded-lg flex items-center justify-center mb-4;
 }
 
 .stat-value {
@@ -1542,7 +1538,7 @@ onUnmounted(() => {
 }
 
 .stat-label {
-  @apply text-sm text-gray-600 font-medium;
+  @apply text-sm text-gray-600;
 }
 
 /* Quick Actions */
