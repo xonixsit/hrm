@@ -470,6 +470,7 @@ const mainNavItems = computed(() => {
     { route: 'dashboard', label: 'Dashboard' },
     { route: 'attendances.index', label: 'Time Tracking' },
     { route: 'leaves.index', label: 'Leave Applications' },
+    { route: 'training.index', label: 'Training' },
     { route: 'team-messaging.index', label: 'Messages' },
   ]
   const ziggyRoutes = window?.Ziggy?.routes ?? {}

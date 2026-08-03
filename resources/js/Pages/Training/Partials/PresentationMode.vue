@@ -6,18 +6,64 @@ const props = defineProps({ pages: Array, modules: Array, isDark: Boolean });
 const emit  = defineEmits(['exit']);
 
 // ── core state ────────────────────────────────────────────────────────────────
-const idx        = ref(0);
-const beatIdx    = ref(-1);
-const autoPlay   = ref(false);
-const sliding    = ref(false);
-const slideDir   = ref(1);
-const hovered    = ref(null);
-const showThumb  = ref(false);
-const heroKey    = ref(0);
+const idx          = ref(0);
+const beatIdx      = ref(-1);
+const autoPlay     = ref(false);
+const sliding      = ref(false);
+const slideDir     = ref(1);
+const hovered      = ref(null);
+const showThumb    = ref(false);
+const heroKey      = ref(0);
 const mapMaximized = ref(false);
-const slideEl    = ref(null);
-let   beatTimer  = null;
-let   slideTimer = null;
+const slideEl      = ref(null);
+let   beatTimer    = null;
+let   slideTimer   = null;
+
+// ── Tour ──────────────────────────────────────────────────────────────────────
+const showTour  = ref(true);
+const tourStep  = ref(0);
+const tourSteps = [
+    {
+        icon: '🎬',
+        title: 'Welcome to Presentation Mode',
+        body: 'This is your full-screen training slide deck — all 26 manual pages as animated slides. Here\'s a quick guide to get started.',
+        kbd: null,
+    },
+    {
+        icon: '⌨️',
+        title: 'Navigate Slides',
+        body: 'Use keyboard arrows or the bottom buttons to move between slides.',
+        keys: [{ k: '←', label: 'Previous slide' }, { k: '→', label: 'Next slide' }],
+        highlight: 'footer',
+    },
+    {
+        icon: '✨',
+        title: 'Reveal Content Points',
+        body: 'Each slide reveals content one point at a time. Press Space or → to show the next point. Click anywhere on the content area to reveal all at once.',
+        keys: [{ k: 'Space', label: 'Next point' }, { k: '→', label: 'Also next point' }],
+        highlight: 'content',
+    },
+    {
+        icon: '▶',
+        title: 'Auto-Play Mode',
+        body: 'Toggle Auto-Play in the top bar to automatically step through all points and advance slides every 7 seconds.',
+        keys: [{ k: 'Auto', label: 'Button in top bar' }],
+        highlight: 'topbar',
+    },
+    {
+        icon: '📋',
+        title: 'Slides Panel & Fullscreen',
+        body: 'Press T or click the panel button to open the slide list. Press F to go fullscreen. Press Esc to exit at any time.',
+        keys: [{ k: 'T', label: 'Slide panel' }, { k: 'F', label: 'Fullscreen' }, { k: 'Esc', label: 'Exit' }],
+        highlight: 'topbar',
+    },
+];
+function tourNext() {
+    if (tourStep.value < tourSteps.length - 1) { tourStep.value++; }
+    else { showTour.value = false; }
+}
+function tourPrev() { if (tourStep.value > 0) tourStep.value--; }
+function skipTour()  { showTour.value = false; }
 
 // ── computed ──────────────────────────────────────────────────────────────────
 const total       = computed(() => props.pages?.length ?? 0);
@@ -127,6 +173,12 @@ watch(allShown, shown => {
 
 // ── keyboard ──────────────────────────────────────────────────────────────────
 function onKey(e) {
+    if (showTour.value) {
+        if (e.key === 'Escape')     { skipTour(); return; }
+        if (e.key === 'ArrowRight') { e.preventDefault(); tourNext(); return; }
+        if (e.key === 'ArrowLeft')  { e.preventDefault(); tourPrev(); return; }
+        return;
+    }
     if (e.key === 'Escape') {
         if (mapMaximized.value) { mapMaximized.value = false; return; }
         emit('exit'); return;
@@ -366,8 +418,57 @@ onBeforeUnmount(()  => {
 
     <!-- keyboard hints -->
     <Transition name="fade">
-        <div v-if="idx===0 && beatIdx<1" class="kbd-hints">
+        <div v-if="idx===0 && beatIdx<1 && !showTour" class="kbd-hints">
             <kbd>← →</kbd> slides &nbsp; <kbd>Space</kbd> next point &nbsp; <kbd>T</kbd> panel &nbsp; <kbd>F</kbd> fullscreen &nbsp; <kbd>Esc</kbd> exit
+        </div>
+    </Transition>
+
+    <!-- ── TOUR OVERLAY ────────────────────────────────────────────────────── -->
+    <Transition name="tour-fade">
+        <div v-if="showTour" class="tour-overlay" @click.self="skipTour">
+            <div class="tour-card">
+                <!-- Step dots -->
+                <div class="tour-dots">
+                    <span v-for="(_, i) in tourSteps" :key="i"
+                        class="tour-dot"
+                        :class="i === tourStep ? 'dot-active' : i < tourStep ? 'dot-done' : 'dot-future'"
+                        @click="tourStep = i">
+                    </span>
+                </div>
+
+                <!-- Icon -->
+                <div class="tour-icon">{{ tourSteps[tourStep].icon }}</div>
+
+                <!-- Content -->
+                <Transition name="tour-step" mode="out-in">
+                    <div :key="tourStep" class="tour-body">
+                        <h2 class="tour-title">{{ tourSteps[tourStep].title }}</h2>
+                        <p class="tour-text">{{ tourSteps[tourStep].body }}</p>
+
+                        <!-- Key chips -->
+                        <div v-if="tourSteps[tourStep].keys" class="tour-keys">
+                            <div v-for="k in tourSteps[tourStep].keys" :key="k.k" class="tour-key-row">
+                                <kbd class="tour-kbd">{{ k.k }}</kbd>
+                                <span class="tour-key-label">{{ k.label }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </Transition>
+
+                <!-- Actions -->
+                <div class="tour-actions">
+                    <button class="tour-skip" @click="skipTour">Skip tour</button>
+                    <div class="flex items-center gap-2">
+                        <button v-if="tourStep > 0" class="tour-prev" @click="tourPrev">← Back</button>
+                        <button class="tour-next" @click="tourNext">
+                            {{ tourStep < tourSteps.length - 1 ? 'Next →' : '🚀 Start Presenting' }}
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step counter -->
+                <p class="tour-counter">{{ tourStep + 1 }} of {{ tourSteps.length }}</p>
+            </div>
         </div>
     </Transition>
 
@@ -639,6 +740,96 @@ kbd {
     padding:2px 6px;border-radius:5px;background:rgba(255,255,255,0.1);
     font-family:monospace;font-size:10px;
 }
+
+/* ── TOUR OVERLAY ────────────────────────────────────────────────────────── */
+.tour-overlay {
+    position:absolute;inset:0;z-index:200;
+    background:rgba(7,13,26,0.82);backdrop-filter:blur(6px);
+    display:flex;align-items:center;justify-content:center;padding:24px;
+}
+.tour-card {
+    width:100%;max-width:480px;border-radius:24px;padding:32px;
+    background:linear-gradient(160deg,#0a1e2e 0%,#071020 100%);
+    border:1px solid rgba(255,255,255,0.1);
+    box-shadow:0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(13,148,136,0.2);
+    display:flex;flex-direction:column;gap:20px;
+}
+.tour-dots {
+    display:flex;gap:6px;justify-content:center;
+}
+.tour-dot {
+    width:8px;height:8px;border-radius:50%;cursor:pointer;transition:all 0.25s;
+}
+.dot-active  { background:linear-gradient(135deg,#006970,#00a9b4);width:24px;border-radius:9999px; }
+.dot-done    { background:rgba(0,169,180,0.45); }
+.dot-future  { background:rgba(255,255,255,0.15); }
+
+.tour-icon {
+    font-size:40px;text-align:center;line-height:1;
+    filter:drop-shadow(0 0 20px rgba(0,169,180,0.5));
+}
+.tour-body { display:flex;flex-direction:column;gap:10px; }
+.tour-title {
+    font-size:20px;font-weight:900;color:#fff;text-align:center;
+    letter-spacing:-0.02em;line-height:1.2;
+}
+.tour-text {
+    font-size:13px;color:rgba(255,255,255,0.65);text-align:center;
+    line-height:1.7;
+}
+.tour-keys {
+    display:flex;flex-direction:column;gap:8px;
+    background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);
+    border-radius:14px;padding:14px 16px;margin-top:4px;
+}
+.tour-key-row {
+    display:flex;align-items:center;gap:10px;
+}
+.tour-kbd {
+    font-family:monospace;font-size:11px;font-weight:800;
+    padding:4px 10px;border-radius:7px;border:1px solid rgba(255,255,255,0.15);
+    background:rgba(255,255,255,0.08);color:#fff;white-space:nowrap;min-width:52px;
+    text-align:center;letter-spacing:0.05em;
+    box-shadow:0 2px 0 rgba(0,0,0,0.4);
+}
+.tour-key-label {
+    font-size:12px;color:rgba(255,255,255,0.55);font-weight:500;
+}
+.tour-actions {
+    display:flex;align-items:center;justify-content:space-between;gap:8px;
+}
+.tour-skip {
+    font-size:11px;color:rgba(255,255,255,0.3);background:transparent;
+    border:none;cursor:pointer;transition:color 0.15s;padding:4px;
+}
+.tour-skip:hover { color:rgba(255,255,255,0.6); }
+.tour-prev {
+    font-size:12px;font-weight:700;padding:8px 16px;border-radius:10px;
+    background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);
+    color:rgba(255,255,255,0.7);cursor:pointer;transition:all 0.15s;
+}
+.tour-prev:hover { background:rgba(255,255,255,0.15);color:#fff; }
+.tour-next {
+    font-size:12px;font-weight:800;padding:10px 22px;border-radius:10px;
+    background:linear-gradient(135deg,#006970,#00a9b4);
+    border:none;color:#fff;cursor:pointer;transition:all 0.15s;
+    box-shadow:0 4px 14px rgba(0,169,180,0.35);
+}
+.tour-next:hover { filter:brightness(1.1);transform:translateY(-1px); }
+.tour-counter {
+    font-size:10px;color:rgba(255,255,255,0.2);text-align:center;margin-top:-8px;
+}
+
+/* tour transitions */
+.tour-fade-enter-active { transition:opacity 0.3s,transform 0.3s cubic-bezier(.16,1,.3,1); }
+.tour-fade-leave-active { transition:opacity 0.25s ease; }
+.tour-fade-enter-from   { opacity:0;transform:scale(0.96); }
+.tour-fade-leave-to     { opacity:0; }
+
+.tour-step-enter-active { transition:all 0.3s cubic-bezier(.16,1,.3,1); }
+.tour-step-leave-active { transition:all 0.18s ease; position:absolute;width:100%; }
+.tour-step-enter-from   { opacity:0;transform:translateX(20px); }
+.tour-step-leave-to     { opacity:0;transform:translateX(-20px); }
 
 /* ── SLIDE TRANSITIONS ───────────────────────────────────────────────────── */
 .slide-fwd-enter-active,.slide-bwd-enter-active { transition:all 0.32s cubic-bezier(.4,0,.2,1); }

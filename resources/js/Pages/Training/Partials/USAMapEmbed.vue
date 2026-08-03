@@ -4,12 +4,15 @@ import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 const props = defineProps({ isDark: Boolean });
 
 const mapContainer  = ref(null);
-const selectorStrip = ref(null);          // the scrollable chip row
-const activeView    = ref('map');         // 'map' | 'tz' | 'list'
-const activeState   = ref('IL');          // currently highlighted state
-const activeTZ      = ref(null);          // selected time-zone key or null
+const fsMapContainer = ref(null);         // separate container for fullscreen map
+const selectorStrip = ref(null);
+const activeView    = ref('map');
+const activeState   = ref('IL');
+const activeTZ      = ref(null);
 let   leafletMap    = null;
-let   markers       = {};                 // { abbr: L.Marker }
+let   fsLeafletMap  = null;               // separate Leaflet instance for fullscreen
+let   markers       = {};
+let   fsMarkers     = {};
 
 // ── State data (alphabetical) ─────────────────────────────────────────────────
 const states = [
@@ -92,7 +95,7 @@ const visibleStates = computed(() => {
 function flyToTZ(zoneKey) {
     if (activeTZ.value === zoneKey) {
         activeTZ.value = null;
-        if (leafletMap) leafletMap.flyTo([39.5, -98.35], 4, { animate: true, duration: 0.8 });
+        [leafletMap, fsLeafletMap].forEach(m => m?.flyTo([39.5, -98.35], 4, { animate: true, duration: 0.8 }));
         updateMarkerIcons();
         nextTick(() => { if (selectorStrip.value) selectorStrip.value.scrollLeft = 0; });
         return;
@@ -100,16 +103,16 @@ function flyToTZ(zoneKey) {
     activeTZ.value    = zoneKey;
     activeState.value = null;
     updateMarkerIcons();
-    // scroll strip to start so filtered chips show from beginning
     nextTick(() => { if (selectorStrip.value) selectorStrip.value.scrollLeft = 0; });
 
-    if (!leafletMap || !window.L) return;
+    if (!window.L) return;
     const L          = window.L;
     const zoneAbbrs  = tzZones[zoneKey] || [];
     const zoneStates = states.filter(s => zoneAbbrs.includes(s.abbr));
     if (!zoneStates.length) return;
     const bounds = L.latLngBounds(zoneStates.map(s => [s.lat, s.lng]));
-    leafletMap.flyToBounds(bounds.pad(0.25), { animate: true, duration: 0.9 });
+    if (leafletMap)   leafletMap.flyToBounds(bounds.pad(0.25), { animate: true, duration: 0.9 });
+    if (fsLeafletMap) fsLeafletMap.flyToBounds(bounds.pad(0.25), { animate: true, duration: 0.9 });
 }
 
 // ── Hover pan (no state change, no popup) ────────────────────────────────────
@@ -118,11 +121,12 @@ function hoverToState(s) {
     // debounce slightly so quick mouse sweeps don't thrash
     clearTimeout(hoverTimer);
     hoverTimer = setTimeout(() => {
-        if (!leafletMap || activeState.value === s.abbr) return;
-        leafletMap.flyTo([s.lat, s.lng], 5, { animate: true, duration: 0.45 });
-        // highlight marker temporarily
-        const m = markers[s.abbr];
-        if (m && window.L) {
+        if (activeState.value === s.abbr) return;
+        // fly both maps
+        if (leafletMap)   leafletMap.flyTo([s.lat, s.lng], 5, { animate: true, duration: 0.45 });
+        if (fsLeafletMap) fsLeafletMap.flyTo([s.lat, s.lng], 5, { animate: true, duration: 0.45 });
+        // highlight marker temporarily on both
+        if (window.L) {
             const L = window.L;
             const hoverIcon = L.divIcon({
                 className: '',
@@ -131,28 +135,36 @@ function hoverToState(s) {
                     border:3px solid #fff;border-radius:50%;
                     width:32px;height:32px;display:flex;align-items:center;justify-content:center;
                     font-size:8px;font-weight:900;color:white;font-family:monospace;
-                    box-shadow:0 4px 14px rgba(0,0,0,0.5);
-                    transition:all 0.2s;
+                    box-shadow:0 4px 14px rgba(0,0,0,0.5);transition:all 0.2s;
                 ">${s.abbr}</div>`,
                 iconSize:[32,32], iconAnchor:[16,16],
             });
-            m.setIcon(hoverIcon);
+            if (markers[s.abbr])   markers[s.abbr].setIcon(hoverIcon);
+            if (fsMarkers[s.abbr]) fsMarkers[s.abbr].setIcon(hoverIcon);
         }
     }, 60);
 }
 
 function leaveState(s) {
     clearTimeout(hoverTimer);
-    // restore original icon
-    if (window.L && markers[s.abbr]) markers[s.abbr].setIcon(makeIcon(window.L, s.abbr));
-    // pan back to active state, or full USA if none
-    if (!leafletMap) return;
-    if (activeState.value) {
-        const active = states.find(st => st.abbr === activeState.value);
-        if (active) leafletMap.flyTo([active.lat, active.lng], 6, { animate: true, duration: 0.5 });
-    } else {
-        leafletMap.flyTo([39.5, -98.35], 4, { animate: true, duration: 0.5 });
+    // restore original icon on both maps
+    if (window.L) {
+        const icon = makeIconFor(window.L, s.abbr);
+        if (markers[s.abbr])   markers[s.abbr].setIcon(icon);
+        if (fsMarkers[s.abbr]) fsMarkers[s.abbr].setIcon(icon);
     }
+    // pan back to active state, or full USA if none
+    const panBack = (map) => {
+        if (!map) return;
+        if (activeState.value) {
+            const active = states.find(st => st.abbr === activeState.value);
+            if (active) map.flyTo([active.lat, active.lng], 6, { animate: true, duration: 0.5 });
+        } else {
+            map.flyTo([39.5, -98.35], 4, { animate: true, duration: 0.5 });
+        }
+    };
+    panBack(leafletMap);
+    panBack(fsLeafletMap);
 }
 
 // ── Selector strip: hover arrow = butter-smooth rAF scroll ───────────────────
@@ -179,53 +191,25 @@ function stopScroll() {
 // ── Fly map to state & set active ─────────────────────────────────────────────
 function flyToState(s) {
     activeState.value = s.abbr;
-    activeTZ.value    = null;          // clear TZ filter when picking a specific state
-    // scroll the chip into view in the strip
+    activeTZ.value    = null;
     const chip = selectorStrip.value?.querySelector(`[data-abbr="${s.abbr}"]`);
     chip?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-    // fly map
-    if (leafletMap) {
-        leafletMap.flyTo([s.lat, s.lng], 6, { animate: true, duration: 0.8 });
-        const m = markers[s.abbr];
+    const fly = (map, mkrs) => {
+        if (!map) return;
+        map.flyTo([s.lat, s.lng], 6, { animate: true, duration: 0.8 });
+        const m = mkrs[s.abbr];
         if (m) setTimeout(() => m.openPopup(), 900);
-    }
+    };
+    fly(leafletMap, markers);
+    fly(fsLeafletMap, fsMarkers);
+    syncMarkersAll();
 }
 
 // ── Leaflet bootstrap ─────────────────────────────────────────────────────────
 async function initMap() {
     if (!mapContainer.value) return;
-
-    if (!document.getElementById('leaflet-css')) {
-        const link  = document.createElement('link');
-        link.id     = 'leaflet-css';
-        link.rel    = 'stylesheet';
-        link.href   = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-        document.head.appendChild(link);
-    }
-    if (!window.L) {
-        await new Promise((res, rej) => {
-            const s   = document.createElement('script');
-            s.src     = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-            s.onload  = res;
-            s.onerror = rej;
-            document.head.appendChild(s);
-        });
-    }
-
-    const L = window.L;
     if (leafletMap) { leafletMap.remove(); leafletMap = null; markers = {}; }
-
-    leafletMap = L.map(mapContainer.value, {
-        center: [39.5, -98.35], zoom: 4,
-        zoomControl: true, attributionControl: true, preferCanvas: true,
-    });
-
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 18,
-        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-    }).addTo(leafletMap);
-
-    buildMarkers(L);
+    await initLeafletIn(mapContainer.value, false);
 }
 
 function markerColor(abbr) {
@@ -233,23 +217,31 @@ function markerColor(abbr) {
     return abbr === activeState.value ? '#004d52' : '#006970';
 }
 
+// Sync icon updates across both map instances
+function syncMarkersAll() {
+    if (!window.L) return;
+    const L = window.L;
+    states.forEach(s => {
+        const icon = makeIconFor(L, s.abbr);
+        if (markers[s.abbr])   markers[s.abbr].setIcon(icon);
+        if (fsMarkers[s.abbr]) fsMarkers[s.abbr].setIcon(icon);
+    });
+}
+
 function buildMarkers(L) {
     Object.values(markers).forEach(m => m.remove());
     markers = {};
-
     states.forEach(s => {
-        const icon = makeIcon(L, s.abbr);
+        const icon = makeIconFor(L, s.abbr);
         const m = L.marker([s.lat, s.lng], { icon })
             .addTo(leafletMap)
             .bindPopup(popupHtml(s), { maxWidth: 160 });
-
-        // clicking marker also activates the chip
-        m.on('click', () => { activeState.value = s.abbr; });
+        m.on('click', () => { activeState.value = s.abbr; syncMarkersAll(); });
         markers[s.abbr] = m;
     });
 }
 
-function makeIcon(L, abbr) {
+function makeIconFor(L, abbr) {
     const inActiveTZ = activeTZ.value ? (tzZones[activeTZ.value] || []).includes(abbr) : true;
     const color      = markerColor(abbr);
     const active     = abbr === activeState.value;
@@ -286,49 +278,107 @@ function switchTab(id) {
         activeTZ.value    = null;
         activeState.value = null;
         updateMarkerIcons();
-        nextTick(() => {
-            if (selectorStrip.value) selectorStrip.value.scrollLeft = 0;
-        });
-        if (leafletMap) {
-            leafletMap.flyTo([39.5, -98.35], 4, { animate: true, duration: 0.8 });
-        }
-        if (window.L && leafletMap) refreshMarkers();
+        nextTick(() => { if (selectorStrip.value) selectorStrip.value.scrollLeft = 0; });
+        [leafletMap, fsLeafletMap].forEach(m => m?.flyTo([39.5, -98.35], 4, { animate: true, duration: 0.8 }));
+        if (window.L) refreshMarkers();
     } else if (id === 'tz') {
-        if (window.L && leafletMap) refreshMarkers();
+        if (window.L) refreshMarkers();
     }
 }
 
 function refreshMarkers() {
-    if (!window.L || !leafletMap) return;
-    buildMarkers(window.L);
+    if (!window.L) return;
+    const L = window.L;
+    if (leafletMap)   buildMarkers(L);
+    if (fsLeafletMap) {
+        // rebuild FS markers too
+        Object.values(fsMarkers).forEach(m => m.remove());
+        fsMarkers = {};
+        states.forEach(s => {
+            const icon = makeIconFor(L, s.abbr);
+            const m = L.marker([s.lat, s.lng], { icon })
+                .addTo(fsLeafletMap).bindPopup(popupHtml(s), { maxWidth: 160 });
+            m.on('click', () => { activeState.value = s.abbr; syncMarkersAll(); });
+            fsMarkers[s.abbr] = m;
+        });
+    }
 }
 
 // Re-render marker icons when activeState changes (highlight update)
 function updateMarkerIcons() {
-    if (!window.L || !leafletMap) return;
-    const L = window.L;
-    states.forEach(s => {
-        const m = markers[s.abbr];
-        if (m) m.setIcon(makeIcon(L, s.abbr));
-    });
+    syncMarkersAll();
 }
 
 onMounted(() => { initMap(); });
 onBeforeUnmount(() => {
-    if (leafletMap) { leafletMap.remove(); leafletMap = null; }
+    if (leafletMap)   { leafletMap.remove();   leafletMap   = null; }
+    if (fsLeafletMap) { fsLeafletMap.remove(); fsLeafletMap = null; }
     clearTimeout(hoverTimer);
     stopScroll();
+    window.removeEventListener('keydown', onFSKey);
 });
 
 // ── Self-contained fullscreen ─────────────────────────────────────────────────
 const mapFS = ref(false);
-function openFS()  { mapFS.value = true; nextTick(() => { if (leafletMap) leafletMap.invalidateSize(); }); }
-function closeFS() { mapFS.value = false; nextTick(() => { if (leafletMap) leafletMap.invalidateSize(); }); }
+
+async function openFS() {
+    mapFS.value = true;
+    await nextTick();
+    // init a fresh Leaflet map in the FS container
+    if (!fsMapContainer.value) return;
+    if (fsLeafletMap) { fsLeafletMap.remove(); fsLeafletMap = null; fsMarkers = {}; }
+    await initLeafletIn(fsMapContainer.value, true);
+}
+function closeFS() {
+    mapFS.value = false;
+    if (fsLeafletMap) { fsLeafletMap.remove(); fsLeafletMap = null; fsMarkers = {}; }
+}
 function onFSKey(e) { if (e.key === 'Escape') closeFS(); }
 watch(mapFS, v => {
     if (v) window.addEventListener('keydown', onFSKey);
     else   window.removeEventListener('keydown', onFSKey);
 });
+
+// ── Shared Leaflet factory ────────────────────────────────────────────────────
+async function initLeafletIn(container, isFS = false) {
+    if (!window.L) {
+        if (!document.getElementById('leaflet-css')) {
+            const link = document.createElement('link');
+            link.id = 'leaflet-css'; link.rel = 'stylesheet';
+            link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+            document.head.appendChild(link);
+        }
+        await new Promise((res, rej) => {
+            const s = document.createElement('script');
+            s.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+            s.onload = res; s.onerror = rej;
+            document.head.appendChild(s);
+        });
+    }
+    const L = window.L;
+    const map = L.map(container, {
+        center: [39.5, -98.35], zoom: isFS ? 4 : 4,
+        zoomControl: true, attributionControl: true, preferCanvas: true,
+    });
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 18,
+        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    }).addTo(map);
+
+    // build markers on this map instance
+    const mkrs = {};
+    states.forEach(s => {
+        const icon = makeIconFor(L, s.abbr);
+        const m = L.marker([s.lat, s.lng], { icon })
+            .addTo(map)
+            .bindPopup(popupHtml(s), { maxWidth: 160 });
+        m.on('click', () => { activeState.value = s.abbr; syncMarkersAll(); });
+        mkrs[s.abbr] = m;
+    });
+
+    if (isFS) { fsLeafletMap = map; fsMarkers = mkrs; }
+    else       { leafletMap  = map; markers   = mkrs; }
+}
 </script>
 
 <template>
@@ -581,7 +631,7 @@ watch(mapFS, v => {
                     </div>
                     <!-- Map -->
                     <div v-show="activeView !== 'list'" class="map-fs-map-wrap">
-                        <div ref="mapContainer" style="width:100%;height:100%;z-index:1;"></div>
+                        <div ref="fsMapContainer" style="width:100%;height:100%;z-index:1;"></div>
                     </div>
                     <!-- TZ legend -->
                     <div v-if="activeView === 'tz'" class="map-fs-tz-legend">
