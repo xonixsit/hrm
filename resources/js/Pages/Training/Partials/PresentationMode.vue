@@ -13,7 +13,8 @@ const sliding    = ref(false);
 const slideDir   = ref(1);
 const hovered    = ref(null);
 const showThumb  = ref(false);
-const heroKey    = ref(0);        // incremented after slide settles → re-mounts hero
+const heroKey    = ref(0);
+const mapMaximized = ref(false);
 const slideEl    = ref(null);
 let   beatTimer  = null;
 let   slideTimer = null;
@@ -85,7 +86,22 @@ function prev()      { goTo(idx.value - 1, -1); }
 function nextBeat()  { if (beatIdx.value < beats.value.length - 1) beatIdx.value++; else next(); }
 function prevBeat()  { if (beatIdx.value > 0) beatIdx.value--; else prev(); }
 
-// ── autoplay ──────────────────────────────────────────────────────────────────
+// ── Scroll + highlight latest beat ───────────────────────────────────────────
+watch(beatIdx, (newIdx) => {
+    if (newIdx < 0) return;
+    nextTick(() => {
+        if (!slideEl.value) return;
+        const el = slideEl.value.querySelector(`[data-beat="${newIdx}"]`);
+        if (!el) return;
+        // smooth scroll into view within the beats-area container
+        el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        // flash highlight
+        el.classList.remove('beat-flash');
+        void el.offsetWidth; // force reflow to restart animation
+        el.classList.add('beat-flash');
+        setTimeout(() => el.classList.remove('beat-flash'), 800);
+    });
+});
 watch(autoPlay, v => {
     if (!v) {
         clearTimeout(slideTimer);
@@ -111,7 +127,10 @@ watch(allShown, shown => {
 
 // ── keyboard ──────────────────────────────────────────────────────────────────
 function onKey(e) {
-    if (e.key === 'Escape')                         { emit('exit'); return; }
+    if (e.key === 'Escape') {
+        if (mapMaximized.value) { mapMaximized.value = false; return; }
+        emit('exit'); return;
+    }
     if (e.key === 'ArrowRight' || e.key === ' ')    { e.preventDefault(); nextBeat(); }
     if (e.key === 'ArrowLeft')                      { e.preventDefault(); prevBeat(); }
     if (e.key === 'f' || e.key === 'F')             { toggleFS(); }
@@ -210,12 +229,13 @@ onBeforeUnmount(()  => {
             </div>
 
             <!-- content beats -->
-            <div ref="slideEl" class="beats-area" @click="nextBeat">
+            <div ref="slideEl" class="beats-area">
                 <TransitionGroup name="beat" tag="div" class="beats-list">
                     <template v-for="beat in visible" :key="beat.id">
 
                         <!-- HEADING -->
                         <div v-if="beat.type==='heading'" class="beat-heading"
+                            :data-beat="beat.id"
                             :style="`transition-delay:${beat.id * 30}ms`">
                             <div class="beat-rule" :style="`background:linear-gradient(90deg,${accent},transparent)`"></div>
                             <span class="beat-heading-text" :style="`color:${accent};border-color:${accent}40;background:${accent}12`">
@@ -226,6 +246,7 @@ onBeforeUnmount(()  => {
 
                         <!-- BULLET -->
                         <div v-else-if="beat.type==='bullet'" class="beat-bullet"
+                            :data-beat="beat.id"
                             :style="`transition-delay:${beat.id * 30}ms`">
                             <span class="bullet-dot" :style="`background:${accent};box-shadow:0 0 8px ${accent}80`"></span>
                             <p class="beat-bullet-text">{{ beat.text.replace(/^[•❖\-]\s*/,'') }}</p>
@@ -233,13 +254,28 @@ onBeforeUnmount(()  => {
 
                         <!-- NORMAL -->
                         <div v-else class="beat-normal"
+                            :data-beat="beat.id"
                             :style="`transition-delay:${beat.id * 30}ms`">
                             <p class="beat-normal-text">{{ beat.text }}</p>
                         </div>
 
                         <!-- page 2 map -->
-                        <div v-if="page?.page_number===2 && beat.text==='USA STATES'" :key="'map'" class="mt-3">
-                            <USAMapEmbed :is-dark="true"/>
+                        <div v-if="page?.page_number===2 && beat.text==='USA STATES'" :key="'map'" class="mt-3 map-inline-wrap" @click.stop>
+                            <!-- Expand button -->
+                            <div class="map-expand-bar">
+                                <span class="map-expand-label">🗺 United States Map</span>
+                                <button class="map-expand-btn" @click.stop="mapMaximized = true" title="Maximize map">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/>
+                                    </svg>
+                                    <span class="text-xs font-bold">Expand</span>
+                                </button>
+                            </div>
+                            <!-- Inline preview (shorter height) -->
+                            <div class="map-inline-preview pointer-events-auto">
+                                <USAMapEmbed :is-dark="true"/>
+                            </div>
                         </div>
 
                     </template>
@@ -334,6 +370,36 @@ onBeforeUnmount(()  => {
             <kbd>← →</kbd> slides &nbsp; <kbd>Space</kbd> next point &nbsp; <kbd>T</kbd> panel &nbsp; <kbd>F</kbd> fullscreen &nbsp; <kbd>Esc</kbd> exit
         </div>
     </Transition>
+
+    <!-- ── MAP FULLSCREEN OVERLAY ──────────────────────────────────────────── -->
+    <Teleport to="body">
+        <Transition name="map-zoom">
+            <div v-if="mapMaximized"
+                class="map-fullscreen-overlay"
+                @click.self="mapMaximized = false">
+                <div class="map-fullscreen-panel" @click.stop>
+                    <!-- Header bar -->
+                    <div class="map-fs-header">
+                        <div class="flex items-center gap-2 text-white">
+                            <span class="text-base">🗺</span>
+                            <span class="font-extrabold text-sm">United States — 50 States Map &amp; Regional Coverage</span>
+                        </div>
+                        <button class="map-fs-close" @click="mapMaximized = false" title="Minimize (Esc)">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 9V4H4m0 0l5 5M4 4l5 5m6-5h5m0 0v5m0-5l-5 5M4 20h5m0 0v-5m0 5l-5-5m16 5h-5m0 0v-5m0 5l5-5"/>
+                            </svg>
+                            <span class="text-xs font-bold">Minimize</span>
+                        </button>
+                    </div>
+                    <!-- Full map -->
+                    <div class="map-fs-body">
+                        <USAMapEmbed :is-dark="true"/>
+                    </div>
+                </div>
+            </div>
+        </Transition>
+    </Teleport>
 
 </div>
 </template>
@@ -605,4 +671,80 @@ kbd {
 .fade-enter-active { transition:opacity 0.3s; }
 .fade-leave-active { transition:opacity 0.8s; }
 .fade-enter-from,.fade-leave-to { opacity:0; }
+
+/* ── BEAT FLASH HIGHLIGHT ────────────────────────────────────────────────── */
+@keyframes beat-flash-anim {
+    0%   { outline: 2px solid var(--accent, #0d9488); outline-offset: 0px; background: rgba(13,148,136,0.18); }
+    50%  { outline: 2px solid var(--accent, #0d9488); outline-offset: 3px; }
+    100% { outline: 2px solid transparent; outline-offset: 6px; background: transparent; }
+}
+.beat-flash {
+    animation: beat-flash-anim 0.8s cubic-bezier(.4,0,.2,1) forwards !important;
+}
+
+/* ── MAP INLINE WRAPPER ──────────────────────────────────────────────────── */
+.map-inline-wrap { border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,0.1); }
+
+.map-expand-bar {
+    display:flex;align-items:center;justify-content:space-between;
+    padding:8px 14px;background:rgba(7,13,26,0.85);backdrop-filter:blur(8px);
+    border-bottom:1px solid rgba(255,255,255,0.08);
+}
+.map-expand-label { font-size:11px;font-weight:700;color:rgba(255,255,255,0.6); }
+.map-expand-btn {
+    display:flex;align-items:center;gap:6px;padding:5px 12px;border-radius:8px;
+    background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);
+    color:rgba(255,255,255,0.8);cursor:pointer;transition:all 0.15s;
+}
+.map-expand-btn:hover { background:rgba(255,255,255,0.18);color:#fff; }
+
+/* limit inline map height */
+.map-inline-preview {
+    max-height:320px;
+    overflow:hidden;
+    position:relative;
+}
+
+/* ── MAP FULLSCREEN OVERLAY ──────────────────────────────────────────────── */
+.map-fullscreen-overlay {
+    position:fixed;inset:0;z-index:99999;
+    background:rgba(0,0,0,0.80);backdrop-filter:blur(10px);
+    display:flex;align-items:stretch;justify-content:stretch;
+    padding:12px;
+    overflow:hidden;
+}
+.map-fullscreen-panel {
+    width:100%;height:100%;
+    border-radius:16px;overflow:hidden;display:flex;flex-direction:column;
+    border:1px solid rgba(255,255,255,0.12);
+    background:#070d1a;box-shadow:0 32px 80px rgba(0,0,0,0.6);
+}
+.map-fs-header {
+    display:flex;align-items:center;justify-content:space-between;
+    padding:12px 20px;flex-shrink:0;border-bottom:1px solid rgba(255,255,255,0.08);
+    background:rgba(7,13,26,0.95);
+    position:sticky;top:0;z-index:10;
+}
+.map-fs-close {
+    display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:8px;
+    background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);
+    color:rgba(255,255,255,0.7);cursor:pointer;transition:all 0.15s;
+}
+.map-fs-close:hover { background:rgba(255,255,255,0.18);color:#fff; }
+.map-fs-body {
+    flex:1;overflow-y:auto;overflow-x:hidden;
+    scrollbar-width:thin;
+    scrollbar-color:rgba(255,255,255,0.15) transparent;
+    display:flex;flex-direction:column;
+}
+.map-fs-body > * { flex:1; }
+.map-fs-body::-webkit-scrollbar { width:5px; }
+.map-fs-body::-webkit-scrollbar-track { background:transparent; }
+.map-fs-body::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.15);border-radius:9999px; }
+
+/* map-zoom transition */
+.map-zoom-enter-active { transition:all 0.3s cubic-bezier(.16,1,.3,1); }
+.map-zoom-leave-active { transition:all 0.2s ease; }
+.map-zoom-enter-from { opacity:0;transform:scale(0.92); }
+.map-zoom-leave-to   { opacity:0;transform:scale(0.95); }
 </style>

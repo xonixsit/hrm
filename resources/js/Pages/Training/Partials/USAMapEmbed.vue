@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue';
 
 const props = defineProps({ isDark: Boolean });
 
@@ -82,33 +82,98 @@ function getTZ(abbr)      { for (const [z,l] of Object.entries(tzZones)) if (l.i
 function getTZColor(abbr) { return tzColors[getTZ(abbr)]; }
 function getTZLabel(abbr) { return tzLabels[getTZ(abbr)]; }
 
-// ── Fly map to fit all states in a time zone ──────────────────────────────────
+// ── Filtered states for chip strip ───────────────────────────────────────────
+const visibleStates = computed(() => {
+    if (activeTZ.value && tzZones[activeTZ.value]) {
+        return states.filter(s => tzZones[activeTZ.value].includes(s.abbr));
+    }
+    return states;
+});
 function flyToTZ(zoneKey) {
-    // Toggle: clicking active zone deselects it
     if (activeTZ.value === zoneKey) {
         activeTZ.value = null;
         if (leafletMap) leafletMap.flyTo([39.5, -98.35], 4, { animate: true, duration: 0.8 });
         updateMarkerIcons();
+        nextTick(() => { if (selectorStrip.value) selectorStrip.value.scrollLeft = 0; });
         return;
     }
-    activeTZ.value = zoneKey;
+    activeTZ.value    = zoneKey;
     activeState.value = null;
     updateMarkerIcons();
+    // scroll strip to start so filtered chips show from beginning
+    nextTick(() => { if (selectorStrip.value) selectorStrip.value.scrollLeft = 0; });
 
     if (!leafletMap || !window.L) return;
-    const L         = window.L;
-    const zoneAbbrs = tzZones[zoneKey] || [];
+    const L          = window.L;
+    const zoneAbbrs  = tzZones[zoneKey] || [];
     const zoneStates = states.filter(s => zoneAbbrs.includes(s.abbr));
     if (!zoneStates.length) return;
-
-    // Build bounds from all states in this zone
     const bounds = L.latLngBounds(zoneStates.map(s => [s.lat, s.lng]));
     leafletMap.flyToBounds(bounds.pad(0.25), { animate: true, duration: 0.9 });
 }
 
-// ── Selector strip scroll ─────────────────────────────────────────────────────
+// ── Hover pan (no state change, no popup) ────────────────────────────────────
+let hoverTimer = null;
+function hoverToState(s) {
+    // debounce slightly so quick mouse sweeps don't thrash
+    clearTimeout(hoverTimer);
+    hoverTimer = setTimeout(() => {
+        if (!leafletMap || activeState.value === s.abbr) return;
+        leafletMap.flyTo([s.lat, s.lng], 5, { animate: true, duration: 0.45 });
+        // highlight marker temporarily
+        const m = markers[s.abbr];
+        if (m && window.L) {
+            const L = window.L;
+            const hoverIcon = L.divIcon({
+                className: '',
+                html: `<div style="
+                    background:${getTZColor(s.abbr)};
+                    border:3px solid #fff;border-radius:50%;
+                    width:32px;height:32px;display:flex;align-items:center;justify-content:center;
+                    font-size:8px;font-weight:900;color:white;font-family:monospace;
+                    box-shadow:0 4px 14px rgba(0,0,0,0.5);
+                    transition:all 0.2s;
+                ">${s.abbr}</div>`,
+                iconSize:[32,32], iconAnchor:[16,16],
+            });
+            m.setIcon(hoverIcon);
+        }
+    }, 60);
+}
+
+function leaveState(s) {
+    clearTimeout(hoverTimer);
+    // restore original icon
+    if (window.L && markers[s.abbr]) markers[s.abbr].setIcon(makeIcon(window.L, s.abbr));
+    // pan back to active state, or full USA if none
+    if (!leafletMap) return;
+    if (activeState.value) {
+        const active = states.find(st => st.abbr === activeState.value);
+        if (active) leafletMap.flyTo([active.lat, active.lng], 6, { animate: true, duration: 0.5 });
+    } else {
+        leafletMap.flyTo([39.5, -98.35], 4, { animate: true, duration: 0.5 });
+    }
+}
+
+// ── Selector strip: hover arrow = butter-smooth rAF scroll ───────────────────
+let rafId = null;
+const SCROLL_SPEED = 0.6; // px per frame (~36px/s at 60fps — slow drift)
+
 function scrollStrip(dir) {
     selectorStrip.value?.scrollBy({ left: dir * 260, behavior: 'smooth' });
+}
+function startScroll(dir) {
+    stopScroll();
+    const el = selectorStrip.value;
+    if (!el) return;
+    const step = () => {
+        el.scrollLeft += dir * SCROLL_SPEED;
+        rafId = requestAnimationFrame(step);
+    };
+    rafId = requestAnimationFrame(step);
+}
+function stopScroll() {
+    if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
 }
 
 // ── Fly map to state & set active ─────────────────────────────────────────────
@@ -215,6 +280,24 @@ function popupHtml(s) {
     </div>`;
 }
 
+function switchTab(id) {
+    activeView.value = id;
+    if (id === 'map') {
+        activeTZ.value    = null;
+        activeState.value = null;
+        updateMarkerIcons();
+        nextTick(() => {
+            if (selectorStrip.value) selectorStrip.value.scrollLeft = 0;
+        });
+        if (leafletMap) {
+            leafletMap.flyTo([39.5, -98.35], 4, { animate: true, duration: 0.8 });
+        }
+        if (window.L && leafletMap) refreshMarkers();
+    } else if (id === 'tz') {
+        if (window.L && leafletMap) refreshMarkers();
+    }
+}
+
 function refreshMarkers() {
     if (!window.L || !leafletMap) return;
     buildMarkers(window.L);
@@ -231,7 +314,21 @@ function updateMarkerIcons() {
 }
 
 onMounted(() => { initMap(); });
-onBeforeUnmount(() => { if (leafletMap) { leafletMap.remove(); leafletMap = null; } });
+onBeforeUnmount(() => {
+    if (leafletMap) { leafletMap.remove(); leafletMap = null; }
+    clearTimeout(hoverTimer);
+    stopScroll();
+});
+
+// ── Self-contained fullscreen ─────────────────────────────────────────────────
+const mapFS = ref(false);
+function openFS()  { mapFS.value = true; nextTick(() => { if (leafletMap) leafletMap.invalidateSize(); }); }
+function closeFS() { mapFS.value = false; nextTick(() => { if (leafletMap) leafletMap.invalidateSize(); }); }
+function onFSKey(e) { if (e.key === 'Escape') closeFS(); }
+watch(mapFS, v => {
+    if (v) window.addEventListener('keydown', onFSKey);
+    else   window.removeEventListener('keydown', onFSKey);
+});
 </script>
 
 <template>
@@ -249,6 +346,16 @@ onBeforeUnmount(() => { if (leafletMap) { leafletMap.remove(); leafletMap = null
         <div class="flex items-center gap-2 text-xs shrink-0">
             <span class="px-2.5 py-1 rounded-md bg-white/20 font-bold">50 States</span>
             <span class="px-2.5 py-1 rounded-md bg-white/20 font-bold">DC &amp; 6 Time Zones</span>
+            <!-- Fullscreen toggle -->
+            <button @click="openFS"
+                class="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white/15 hover:bg-white/30 font-bold transition-all"
+                title="Expand fullscreen">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/>
+                </svg>
+                <span>Expand</span>
+            </button>
         </div>
     </div>
 
@@ -257,7 +364,7 @@ onBeforeUnmount(() => { if (leafletMap) { leafletMap.remove(); leafletMap = null
         :class="isDark ? 'bg-gray-750 border-gray-700' : 'bg-slate-50 border-slate-200'">
         <button v-for="v in [{id:'map',label:'🗺 States Map'},{id:'tz',label:'🕐 Time Zones'},{id:'list',label:'📋 State List'}]"
             :key="v.id"
-            @click="activeView = v.id; if(v.id !== 'tz') { activeTZ = null; } if(v.id !== 'list') refreshMarkers()"
+            @click="switchTab(v.id)"
             class="px-3 py-1.5 rounded-lg transition-all"
             :class="activeView === v.id ? 'text-white shadow-sm' : isDark ? 'text-gray-300 hover:bg-gray-700' : 'text-slate-600 hover:bg-slate-200'"
             :style="activeView === v.id ? 'background:linear-gradient(135deg,#006970,#00a9b4)' : ''">
@@ -279,40 +386,38 @@ onBeforeUnmount(() => { if (leafletMap) { leafletMap.remove(); leafletMap = null
                 </span>
             </div>
             <span class="hidden sm:block italic" :class="isDark ? 'text-gray-500' : 'text-slate-400'">
-                Hover arrows to scroll • Click state to locate on OpenStreetMap
+                Hover arrows to scroll • Click state to locate on map
             </span>
         </div>
 
-        <!-- Strip row: left arrow | chips | right arrow -->
+        <!-- Strip row: arrows + chips -->
         <div class="flex items-center gap-1 px-3 py-2">
-            <!-- Left arrow -->
-            <button @click="scrollStrip(-1)"
-                class="shrink-0 w-7 h-7 rounded-lg border flex items-center justify-center transition-colors hover:shadow-sm"
+
+            <!-- Left arrow — hover to auto-scroll -->
+            <button @mouseenter="startScroll(-1)" @mouseleave="stopScroll" @click="scrollStrip(-1)"
+                class="shrink-0 w-7 h-7 rounded-lg border flex items-center justify-center transition-colors hover:shadow-sm z-10"
                 :class="isDark ? 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600' : 'bg-white border-slate-300 text-slate-600 hover:bg-slate-100'">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/>
                 </svg>
             </button>
 
-            <!-- Chips row -->
+            <!-- Chips -->
             <div ref="selectorStrip"
-                class="flex items-center gap-1.5 overflow-x-auto flex-1 [scrollbar-width:none] py-0.5"
-                style="-ms-overflow-style:none;">
+                class="flex items-center gap-1.5 overflow-x-auto flex-1 py-0.5"
+                style="scrollbar-width:none;-ms-overflow-style:none;">
                 <button
-                    v-for="s in states"
-                    :key="s.abbr"
-                    :data-abbr="s.abbr"
+                    v-for="s in visibleStates" :key="s.abbr" :data-abbr="s.abbr"
                     @click="flyToState(s); updateMarkerIcons()"
-                    class="shrink-0 flex items-center gap-0 rounded-lg border overflow-hidden transition-all text-xs font-semibold hover:shadow-sm"
+                    @mouseenter="hoverToState(s)" @mouseleave="leaveState(s)"
+                    class="shrink-0 flex items-center gap-0 rounded-lg border overflow-hidden transition-all text-xs font-semibold hover:shadow-md"
                     :class="activeState === s.abbr
-                        ? 'border-teal-600 shadow-md ring-1 ring-teal-500'
-                        : isDark ? 'border-gray-600 hover:border-teal-700' : 'border-slate-300 hover:border-teal-400'">
-                    <!-- Abbr pill -->
+                        ? 'border-teal-600 shadow-md ring-1 ring-teal-500 scale-105'
+                        : isDark ? 'border-gray-600 hover:border-teal-500' : 'border-slate-300 hover:border-teal-400'">
                     <span class="px-2 py-1.5 font-extrabold text-white text-[11px] leading-none"
                         :style="`background:${activeState === s.abbr ? 'linear-gradient(135deg,#006970,#00a9b4)' : getTZColor(s.abbr)}`">
                         {{ s.abbr }}
                     </span>
-                    <!-- Full name -->
                     <span class="px-2 py-1.5 whitespace-nowrap leading-none"
                         :class="activeState === s.abbr
                             ? isDark ? 'bg-teal-900/40 text-teal-200' : 'bg-teal-50 text-teal-800'
@@ -322,9 +427,9 @@ onBeforeUnmount(() => { if (leafletMap) { leafletMap.remove(); leafletMap = null
                 </button>
             </div>
 
-            <!-- Right arrow -->
-            <button @click="scrollStrip(1)"
-                class="shrink-0 w-7 h-7 rounded-lg border flex items-center justify-center transition-colors hover:shadow-sm"
+            <!-- Right arrow — hover to auto-scroll -->
+            <button @mouseenter="startScroll(1)" @mouseleave="stopScroll" @click="scrollStrip(1)"
+                class="shrink-0 w-7 h-7 rounded-lg border flex items-center justify-center transition-colors hover:shadow-sm z-10"
                 :class="isDark ? 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600' : 'bg-white border-slate-300 text-slate-600 hover:bg-slate-100'">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
@@ -416,9 +521,161 @@ onBeforeUnmount(() => { if (leafletMap) { leafletMap.remove(); leafletMap = null
         </div>
     </div>
 </div>
+
+<!-- ── Fullscreen overlay (Teleport to body) ─────────────────────────────── -->
+<Teleport to="body">
+    <Transition name="map-fs-zoom">
+        <div v-if="mapFS"
+            class="map-fs-overlay"
+            @click.self="closeFS">
+            <div class="map-fs-panel" @click.stop>
+                <!-- Header -->
+                <div class="map-fs-hdr">
+                    <div class="flex items-center gap-2 text-white">
+                        <span>🗺️</span>
+                        <span class="font-extrabold text-sm">United States — 50 States Map &amp; Regional Coverage</span>
+                    </div>
+                    <button class="map-fs-close-btn" @click="closeFS" title="Minimize (Esc)">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 9V4H4m0 0l5 5M4 4l5 5m6-5h5m0 0v5m0-5l-5 5M4 20h5m0 0v-5m0 5l-5-5m16 5h-5m0 0v-5m0 5l5-5"/>
+                        </svg>
+                        <span class="text-xs font-bold">Minimize</span>
+                    </button>
+                </div>
+                <!-- Tabs row (reuse same view tabs) -->
+                <div class="map-fs-tabs">
+                    <button v-for="v in [{id:'map',label:'🗺 States Map'},{id:'tz',label:'🕐 Time Zones'},{id:'list',label:'📋 State List'}]"
+                        :key="v.id" @click="switchTab(v.id)"
+                        class="map-fs-tab"
+                        :class="activeView === v.id ? 'map-fs-tab-active' : ''">
+                        {{ v.label }}
+                    </button>
+                </div>
+                <!-- Body — reuse map container via same ref -->
+                <div class="map-fs-body">
+                    <!-- strip -->
+                    <div class="map-fs-strip-wrap border-b" :class="isDark ? 'border-gray-700 bg-gray-800' : 'border-slate-200 bg-white'">
+                        <div class="flex items-center gap-1 px-3 py-2">
+                            <button @mouseenter="startScroll(-1)" @mouseleave="stopScroll" @click="scrollStrip(-1)"
+                                class="shrink-0 w-7 h-7 rounded-lg border flex items-center justify-center"
+                                :class="isDark ? 'bg-gray-700 border-gray-600 text-gray-300' : 'bg-white border-slate-300 text-slate-600'">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+                            </button>
+                            <div ref="selectorStrip" class="flex items-center gap-1.5 overflow-x-auto flex-1 py-0.5" style="scrollbar-width:none">
+                                <button v-for="s in visibleStates" :key="s.abbr" :data-abbr="s.abbr"
+                                    @click="flyToState(s); updateMarkerIcons()" @mouseenter="hoverToState(s)" @mouseleave="leaveState(s)"
+                                    class="shrink-0 flex items-center gap-0 rounded-lg border overflow-hidden text-xs font-semibold hover:shadow-md"
+                                    :class="activeState === s.abbr ? 'border-teal-600 ring-1 ring-teal-500' : isDark ? 'border-gray-600' : 'border-slate-300'">
+                                    <span class="px-2 py-1.5 font-extrabold text-white text-[11px]"
+                                        :style="`background:${activeState === s.abbr ? 'linear-gradient(135deg,#006970,#00a9b4)' : getTZColor(s.abbr)}`">{{ s.abbr }}</span>
+                                    <span class="px-2 py-1.5 whitespace-nowrap" :class="isDark ? 'bg-gray-700 text-gray-300' : 'bg-white text-slate-700'">{{ s.name }}</span>
+                                </button>
+                            </div>
+                            <button @mouseenter="startScroll(1)" @mouseleave="stopScroll" @click="scrollStrip(1)"
+                                class="shrink-0 w-7 h-7 rounded-lg border flex items-center justify-center"
+                                :class="isDark ? 'bg-gray-700 border-gray-600 text-gray-300' : 'bg-white border-slate-300 text-slate-600'">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Map -->
+                    <div v-show="activeView !== 'list'" class="map-fs-map-wrap">
+                        <div ref="mapContainer" style="width:100%;height:100%;z-index:1;"></div>
+                    </div>
+                    <!-- TZ legend -->
+                    <div v-if="activeView === 'tz'" class="map-fs-tz-legend">
+                        <button v-for="tz in [{key:'eastern',name:'Eastern (EST)',color:'#0ea5e9',cities:'NY, DC, Miami'},{key:'central',name:'Central (CST)',color:'#10b981',cities:'Chicago, Dallas'},{key:'mountain',name:'Mountain (MST)',color:'#f59e0b',cities:'Denver, Phoenix'},{key:'pacific',name:'Pacific (PST)',color:'#8b5cf6',cities:'L.A., Seattle'},{key:'alaska',name:'Alaska (AKT)',color:'#06b6d4',cities:'Anchorage'},{key:'hawaii',name:'Hawaii (HAST)',color:'#ec4899',cities:'Honolulu'}]"
+                            :key="tz.key" @click="flyToTZ(tz.key)"
+                            class="map-fs-tz-card" :class="activeTZ===tz.key ? 'tz-card-active' : ''"
+                            :style="activeTZ===tz.key ? `border-color:${tz.color}` : ''">
+                            <span class="tz-dot" :style="`background:${tz.color};box-shadow:${activeTZ===tz.key ? '0 0 0 3px '+tz.color+'33' : 'none'}`"></span>
+                            <div>
+                                <div class="font-extrabold text-[11px]" :class="isDark ? 'text-white' : 'text-slate-800'" :style="activeTZ===tz.key ? `color:${tz.color}` : ''">{{ tz.name }}</div>
+                                <div class="text-[10px]" :class="isDark ? 'text-gray-400' : 'text-slate-500'">{{ tz.cities }}</div>
+                            </div>
+                        </button>
+                    </div>
+                    <!-- List -->
+                    <div v-if="activeView === 'list'" class="p-4 overflow-y-auto" :class="isDark ? 'bg-gray-800' : 'bg-white'">
+                        <div class="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-7 gap-2">
+                            <button v-for="s in states" :key="s.abbr" @click="switchTab('map'); flyToState(s); updateMarkerIcons()"
+                                class="flex items-center gap-2 px-2 py-1.5 rounded-xl border text-xs font-semibold"
+                                :class="isDark ? 'bg-gray-700 border-gray-600 text-gray-200' : 'bg-white border-slate-200 text-slate-800'">
+                                <span class="w-7 h-4 rounded text-[9px] font-extrabold text-white flex items-center justify-center shrink-0"
+                                    :style="`background:${getTZColor(s.abbr)}`">{{ s.abbr }}</span>
+                                <span class="truncate">{{ s.name }}</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </Transition>
+</Teleport>
 </template>
 
 <style scoped>
 /* Hide scrollbar on the chip strip */
 div[ref="selectorStrip"]::-webkit-scrollbar { display: none; }
+
+/* ── Fullscreen overlay ───────────────────────────────────────────────────── */
+.map-fs-overlay {
+    position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.80);
+    backdrop-filter:blur(10px);display:flex;align-items:stretch;
+    justify-content:stretch;padding:12px;overflow:hidden;
+}
+.map-fs-panel {
+    width:100%;height:100%;border-radius:16px;overflow:hidden;
+    display:flex;flex-direction:column;border:1px solid rgba(255,255,255,0.12);
+    background:#070d1a;box-shadow:0 32px 80px rgba(0,0,0,0.6);
+}
+.map-fs-hdr {
+    display:flex;align-items:center;justify-content:space-between;
+    padding:10px 18px;flex-shrink:0;border-bottom:1px solid rgba(255,255,255,0.08);
+    background:linear-gradient(135deg,#006970,#00a9b4);
+}
+.map-fs-close-btn {
+    display:flex;align-items:center;gap:6px;padding:5px 12px;border-radius:8px;
+    background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.2);
+    color:#fff;cursor:pointer;transition:all 0.15s;
+}
+.map-fs-close-btn:hover { background:rgba(255,255,255,0.25); }
+.map-fs-tabs {
+    display:flex;gap:6px;padding:8px 14px;flex-shrink:0;
+    border-bottom:1px solid rgba(255,255,255,0.07);background:rgba(7,13,26,0.9);
+}
+.map-fs-tab {
+    padding:5px 14px;border-radius:8px;font-size:11px;font-weight:700;
+    color:rgba(255,255,255,0.5);border:none;cursor:pointer;transition:all 0.15s;
+    background:transparent;
+}
+.map-fs-tab:hover { background:rgba(255,255,255,0.08);color:#fff; }
+.map-fs-tab-active { background:linear-gradient(135deg,#006970,#00a9b4) !important;color:#fff !important; }
+.map-fs-body {
+    flex:1;display:flex;flex-direction:column;overflow:hidden;
+}
+.map-fs-strip-wrap { flex-shrink:0; }
+.map-fs-map-wrap {
+    flex:1;min-height:0;
+}
+.map-fs-tz-legend {
+    flex-shrink:0;display:grid;grid-template-columns:repeat(6,1fr);gap:8px;
+    padding:12px 16px;border-top:1px solid rgba(255,255,255,0.07);
+    background:rgba(7,13,26,0.9);
+}
+.map-fs-tz-card {
+    display:flex;align-items:flex-start;gap:8px;padding:10px 12px;
+    border-radius:12px;border:1px solid rgba(255,255,255,0.08);
+    background:rgba(255,255,255,0.04);cursor:pointer;transition:all 0.15s;text-align:left;
+}
+.map-fs-tz-card:hover { background:rgba(255,255,255,0.08); }
+.tz-card-active { background:rgba(255,255,255,0.1) !important;border-width:2px !important; }
+.tz-dot { width:12px;height:12px;border-radius:50%;flex-shrink:0;margin-top:2px;transition:all 0.2s; }
+
+/* transition */
+.map-fs-zoom-enter-active { transition:all 0.3s cubic-bezier(.16,1,.3,1); }
+.map-fs-zoom-leave-active { transition:all 0.2s ease; }
+.map-fs-zoom-enter-from   { opacity:0;transform:scale(0.94); }
+.map-fs-zoom-leave-to     { opacity:0;transform:scale(0.96); }
 </style>

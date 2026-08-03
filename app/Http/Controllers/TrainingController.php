@@ -116,34 +116,19 @@ class TrainingController extends Controller
         $s = TrainingUserStats::firstOrCreate([
             'user_id' => $userId
         ], [
-            'streak_days' => 1,
-            'last_active_date' => $today,
-            'total_reviews' => 0,
-            'correct_reviews' => 0,
-            'daily_goal_cards' => 10,
-            'reviews_today_count' => 0,
-            'last_review_date' => null,
+            'streak_days'        => 1,
+            'last_active_date'   => $today,
+            'total_reviews'      => 0,
+            'correct_reviews'    => 0,
+            'daily_goal_cards'   => 10,
+            'reviews_today_count'=> 0,
+            'last_review_date'   => null,
         ]);
 
-        // Reset daily count if new day
-        if ($s->last_review_date !== $today) {
+        // Reset daily count display if it's a new day (don't persist here)
+        if ($s->last_review_date && $s->last_review_date !== $today) {
             $s->reviews_today_count = 0;
         }
-
-        // Streak logic
-        if ($s->last_active_date) {
-            $lastActive = Carbon::parse($s->last_active_date)->startOfDay();
-            $diff = Carbon::now()->startOfDay()->diffInDays($lastActive, false);
-            if ($diff === 1) {
-                $s->streak_days += 1; // consecutive day
-            } elseif ($diff > 1) {
-                $s->streak_days = 1; // missed a day, reset
-            }
-            // if $diff == 0, same day, keep streak unchanged
-        }
-
-        $s->last_active_date = $today;
-        $s->save();
 
         return $s->toArray();
     }
@@ -152,6 +137,21 @@ class TrainingController extends Controller
     {
         $today = now()->toDateString();
         $s     = TrainingUserStats::firstOrCreate(['user_id' => $userId]);
+
+        // ── Streak logic (only here, only persisted here) ─────────────────
+        if ($s->last_active_date && $s->last_active_date !== $today) {
+            $lastActive = Carbon::parse($s->last_active_date)->startOfDay();
+            $diff       = (int) Carbon::now()->startOfDay()->diffInDays($lastActive);
+            if ($diff === 1) {
+                $s->streak_days = ($s->streak_days ?? 1) + 1; // consecutive day
+            } else {
+                $s->streak_days = 1; // missed days → reset
+            }
+        } elseif (!$s->last_active_date) {
+            $s->streak_days = 1;
+        }
+        // same day → keep streak unchanged
+
         $s->total_reviews++;
         if ($rating >= 3) $s->correct_reviews++;
         $s->reviews_today_count = ($s->last_review_date === $today)
