@@ -46,9 +46,19 @@ class SM2Service
         $stability = max(1, (int) round($newInterval * 1.1));
 
         $newState = $progress['state'] ?? 'new';
-        if ($rating === 1)           $newState = 'learning';
-        elseif ($newInterval >= 21) $newState = 'mastered';
-        elseif ($newRepetitionCount >= 1) $newState = 'review';
+        if ($rating === 1) {
+            // Failed — back to learning
+            $newState = 'learning';
+        } elseif ($newInterval >= 21) {
+            // Long interval — mastered
+            $newState = 'mastered';
+        } elseif ($newRepetitionCount <= 2) {
+            // Seen 1–2 times — still learning
+            $newState = 'learning';
+        } else {
+            // Seen 3+ times with decent interval — in review
+            $newState = 'review';
+        }
 
         $retrievabilityBefore = $this->calculateRetrievability($progress);
 
