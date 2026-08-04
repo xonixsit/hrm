@@ -656,6 +656,10 @@ Route::get('/training', [TrainingPageController::class, 'index'])->middleware(['
         Route::post('roles/{user}/assign', [RoleController::class, 'assignRole'])->name('roles.assign');
         Route::post('roles/{user}/remove', [RoleController::class, 'removeRole'])->name('roles.remove');
         
+        // Message Monitor (Admin read-only)
+        Route::get('message-monitor', [App\Http\Controllers\Admin\MessageMonitorController::class, 'index'])->name('message-monitor.index');
+        Route::get('message-monitor/export', [App\Http\Controllers\Admin\MessageMonitorController::class, 'export'])->name('message-monitor.export');
+
         // Broadcast Management
         Route::resource('broadcasts', BroadcastController::class);
         Route::post('broadcasts/test-email', [BroadcastController::class, 'sendTestEmail'])->name('broadcasts.test-email');
