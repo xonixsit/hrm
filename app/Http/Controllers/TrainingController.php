@@ -138,19 +138,20 @@ class TrainingController extends Controller
         $today = now()->toDateString();
         $s     = TrainingUserStats::firstOrCreate(['user_id' => $userId]);
 
-        // ── Streak logic (only here, only persisted here) ─────────────────
-        if ($s->last_active_date && $s->last_active_date !== $today) {
-            $lastActive = Carbon::parse($s->last_active_date)->startOfDay();
-            $diff       = (int) Carbon::now()->startOfDay()->diffInDays($lastActive);
+        // ── Streak: only increments when user actually completes a review ──
+        if ($s->last_active_date !== $today) {
+            $diff = $s->last_active_date
+                ? (int) Carbon::parse($s->last_active_date)->startOfDay()
+                              ->diffInDays(Carbon::now()->startOfDay())
+                : 999;
+
             if ($diff === 1) {
                 $s->streak_days = ($s->streak_days ?? 1) + 1; // consecutive day
-            } else {
-                $s->streak_days = 1; // missed days → reset
+            } elseif ($diff > 1) {
+                $s->streak_days = 1; // missed days — reset
             }
-        } elseif (!$s->last_active_date) {
-            $s->streak_days = 1;
+            // diff === 0: same day, keep unchanged
         }
-        // same day → keep streak unchanged
 
         $s->total_reviews++;
         if ($rating >= 3) $s->correct_reviews++;

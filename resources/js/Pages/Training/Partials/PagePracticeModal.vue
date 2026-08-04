@@ -1,5 +1,5 @@
 ﻿<script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 const props = defineProps({ pageNumber: Number, pageTitle: String, cards: Array, progressMap: Object, isDark: Boolean });
 const emit = defineEmits(['save-review', 'close']);
 
@@ -8,6 +8,10 @@ const currentIndex = ref(0);
 const isRevealed = ref(false);
 const selected = ref(null);
 const submitted = ref(false);
+
+// Lock page scroll while modal is open
+onMounted(()        => { document.body.style.overflow = 'hidden'; });
+onBeforeUnmount(()  => { document.body.style.overflow = ''; });
 const quizScore = ref(0);
 
 const card = computed(() => props.cards[currentIndex.value]);
@@ -56,8 +60,9 @@ function optStyle(opt) {
 </script>
 
 <template>
-<div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm overflow-y-auto">
-<div class="bg-white w-full max-w-2xl rounded-2xl border border-slate-200 shadow-2xl overflow-hidden my-8 flex flex-col max-h-[90vh]">
+<Teleport to="body">
+<div class="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm">
+<div class="bg-white w-full max-w-2xl rounded-2xl border border-slate-200 shadow-2xl overflow-hidden flex flex-col" style="height:calc(100vh - 2rem);max-height:calc(100vh - 2rem)">
 
     <!-- Header -->
     <div class="text-white p-5 border-b border-teal-800 flex items-center justify-between shrink-0" style="background:linear-gradient(135deg,#006970,#00a9b4)">
@@ -102,12 +107,38 @@ function optStyle(opt) {
         <!-- Completed -->
         <div v-else-if="currentIndex >= cards.length" class="text-center py-8 space-y-5">
             <div class="w-16 h-16 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto text-3xl">🏆</div>
-            <h4 class="text-2xl font-extrabold text-slate-900">Page {{ pageNumber }} Practice Complete!</h4>
-            <p class="text-xs text-slate-600">You reviewed all {{ cards.length }} questions!</p>
-            <p v-if="mode==='quiz'" class="text-sm font-bold text-emerald-700">Score: {{ quizScore }} / {{ cards.length }}</p>
-            <div class="flex gap-3 pt-2">
-                <button @click="restart" class="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs">Restart</button>
-                <button @click="emit('close')" class="flex-1 py-2.5 rounded-xl text-white font-bold text-xs hover:opacity-90 transition-all" style="background:linear-gradient(135deg,#006970,#00a9b4)">Close</button>
+            <h4 class="text-2xl font-extrabold text-slate-900">
+                {{ mode === 'flashcard' ? 'SM-2 Review Complete!' : 'Quiz Complete!' }}
+            </h4>
+            <p class="text-xs text-slate-600">You went through all {{ cards.length }} questions.</p>
+            <p v-if="mode==='quiz'" class="text-sm font-bold"
+                :class="quizScore === cards.length ? 'text-emerald-600' : quizScore >= cards.length * 0.7 ? 'text-teal-600' : 'text-amber-600'">
+                Score: {{ quizScore }} / {{ cards.length }}
+                {{ quizScore === cards.length ? ' 🎯 Perfect!' : quizScore >= cards.length * 0.7 ? ' ✅ Good job!' : ' 📚 Keep practicing!' }}
+            </p>
+
+            <!-- Cross-navigation -->
+            <div class="rounded-xl border border-slate-200 p-4 bg-slate-50 text-left space-y-2">
+                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                    {{ mode === 'flashcard' ? 'Now test your recall:' : 'Reinforce with spaced repetition:' }}
+                </p>
+                <button
+                    @click="restart(); mode = mode === 'flashcard' ? 'quiz' : 'flashcard'"
+                    class="w-full py-3 rounded-xl text-white font-bold text-sm flex items-center justify-center gap-2 hover:opacity-90 transition-all"
+                    style="background:linear-gradient(135deg,#006970,#00a9b4)">
+                    {{ mode === 'flashcard' ? '❓ Switch to Multiple Choice Quiz' : '⚡ Switch to SM-2 Flashcard Review' }}
+                </button>
+            </div>
+
+            <div class="flex gap-3">
+                <button @click="restart()"
+                    class="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs transition-all">
+                    🔁 Restart {{ mode === 'flashcard' ? 'SM-2' : 'Quiz' }}
+                </button>
+                <button @click="emit('close')"
+                    class="flex-1 py-2.5 rounded-xl border border-slate-300 text-slate-600 font-bold text-xs hover:bg-slate-50 transition-all">
+                    ✕ Close
+                </button>
             </div>
         </div>
 
@@ -176,4 +207,5 @@ function optStyle(opt) {
     </div>
 </div>
 </div>
+</Teleport>
 </template>

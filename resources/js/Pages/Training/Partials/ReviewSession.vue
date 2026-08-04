@@ -2,7 +2,7 @@
 import { ref, computed } from 'vue';
 
 const props = defineProps({ queueCards: Array, progressMap: Object, isDark: Boolean });
-const emit  = defineEmits(['save-review', 'finish', 'go-to-page']);
+const emit  = defineEmits(['save-review', 'finish', 'go-to-page', 'go-to-quiz']);
 
 const currentIndex   = ref(0);
 const isRevealed     = ref(false);
@@ -48,11 +48,21 @@ const intervals = computed(() => predictIntervals(props.progressMap[currentCard.
         <div class="text-5xl mb-4">🏆</div>
         <h2 class="text-2xl font-extrabold mb-2" :class="isDark ? 'text-white' : 'text-slate-900'">Daily Review Complete!</h2>
         <p class="text-sm mb-6" :class="isDark ? 'text-gray-300' : 'text-slate-600'">You reviewed <strong>{{ sessionCount }} items</strong> today!</p>
-        <button @click="emit('finish')"
-            class="px-6 py-2.5 text-white font-bold rounded-xl text-sm transition-all hover:opacity-90"
-            style="background:linear-gradient(135deg,#006970,#00a9b4)">
-            ← Back to Modules
-        </button>
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <button @click="emit('finish')"
+                class="px-6 py-2.5 rounded-xl text-sm font-bold border transition-all"
+                :class="isDark ? 'bg-gray-700 border-gray-600 text-gray-200 hover:bg-gray-600' : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'">
+                ← Back to Modules
+            </button>
+            <button @click="emit('go-to-quiz')"
+                class="px-6 py-2.5 text-white font-bold rounded-xl text-sm transition-all hover:opacity-90 flex items-center gap-2"
+                style="background:linear-gradient(135deg,#006970,#00a9b4)">
+                ❓ Try Practice Quiz
+            </button>
+        </div>
+        <p class="text-xs mt-4 font-medium" :class="isDark ? 'text-gray-500' : 'text-slate-400'">
+            Test your recall with multiple-choice questions
+        </p>
     </div>
 
     <!-- Active card -->

@@ -54,11 +54,20 @@ const dueCards = computed(() => {
     });
 });
 
+// Overall mastery = % of cards that have reached 'mastered' state
+const overallMastery = computed(() => {
+    const total = (props.flashcards || []).length;
+    if (!total) return 0;
+    return Math.round((stateCounts.value.mastered / total) * 100);
+});
+
+// avgRetrievability is for the Stats drawer (retention %, not mastery %)
 const avgRetrievability = computed(() => {
     const cards = props.flashcards || [];
-    const total = cards.length || 1;
-    const sum   = cards.reduce((s, c) => s + calculateRetrievability(localProgressMap.value[c.card_key]), 0);
-    return Math.round(sum / total);
+    const reviewed = cards.filter(c => localProgressMap.value[c.card_key]?.last_reviewed_at);
+    if (!reviewed.length) return 0;
+    const sum = reviewed.reduce((s, c) => s + calculateRetrievability(localProgressMap.value[c.card_key]), 0);
+    return Math.round(sum / reviewed.length);
 });
 
 const stateCounts = computed(() => {
@@ -68,6 +77,12 @@ const stateCounts = computed(() => {
         counts[state] = (counts[state] || 0) + 1;
     });
     return counts;
+});
+
+// Est. time left: unmastered cards × 0.2h per card (12 min average per card)
+const estTimeLeft = computed(() => {
+    const unmastered = (props.flashcards?.length || 0) - (stateCounts.value.mastered || 0);
+    return Math.max(0, Math.round(unmastered * 0.2));
 });
 
 // ── Save review (API + local update) ─────────────────────────────────────────
@@ -144,10 +159,10 @@ function finishReview()    { reviewMode.value = 'overview'; }
             <template #actions>
                 <div class="flex items-center gap-3">
                     <div v-for="stat in [
-                        { label:'TOTAL MODULES',    value:'12 Units',                                icon:'📚', iconColor:'text-teal-600'   },
-                        { label:'STUDY STREAK',     value:(localStats.streak_days||1)+' Days',       icon:'🔥', iconColor:'text-orange-500'  },
-                        { label:'OVERALL MASTERY',  value:avgRetrievability+'%',                     icon:'✅', iconColor:'text-emerald-600' },
-                        { label:'EST. TIME LEFT',   value:Math.max(0,Math.round(((props.flashcards?.length||0) - (stateCounts?.mastered||0)) * 0.2))+' Hours', icon:'⏱', iconColor:'text-teal-500' },
+                        { label:'TOTAL MODULES',    value:'12 Units',                          icon:'📚', iconColor:'text-teal-600'   },
+                        { label:'STUDY STREAK',     value:(localStats.streak_days||1)+' Days', icon:'🔥', iconColor:'text-orange-500'  },
+                        { label:'OVERALL MASTERY',  value:overallMastery+'%',                  icon:'✅', iconColor:'text-emerald-600' },
+                        { label:'EST. TIME LEFT',   value:estTimeLeft+' Hours',                icon:'⏱', iconColor:'text-teal-500'   },
                     ]" :key="stat.label"
                         class="hidden sm:flex items-center gap-3 px-4 py-2.5 rounded-xl border shadow-sm min-w-[130px]"
                         :class="isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-slate-200'">
@@ -224,7 +239,8 @@ function finishReview()    { reviewMode.value = 'overview'; }
                             :progress-map="localProgressMap" :is-dark="isDark"
                             @save-review="saveReview"
                             @finish="finishReview"
-                            @go-to-page="goToPage" />
+                            @go-to-page="goToPage"
+                            @go-to-quiz="activeTab = 'quiz'" />
                     </template>
 
                     <!-- Manual Tab -->
@@ -238,7 +254,8 @@ function finishReview()    { reviewMode.value = 'overview'; }
                     <TrainingQuiz v-else-if="activeTab === 'quiz'"
                         :flashcards="flashcards" :progress-map="localProgressMap" :is-dark="isDark"
                         @save-review="saveReview"
-                        @go-to-page="goToPage" />
+                        @go-to-page="goToPage"
+                        @go-to-review="startReview" />
 
                     <!-- Analytics Tab -->
                     <TrainingAnalytics v-else-if="activeTab === 'analytics'"

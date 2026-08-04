@@ -1,7 +1,7 @@
 ﻿<script setup>
 import { ref, computed } from 'vue';
 const props = defineProps({ flashcards: Array, progressMap: Object, isDark: Boolean });
-const emit  = defineEmits(['save-review', 'go-to-page']);
+const emit  = defineEmits(['save-review', 'go-to-page', 'go-to-review']);
 
 const quizCards    = computed(() => props.flashcards.slice(0, 15));
 const currentIndex = ref(0);
@@ -48,10 +48,30 @@ function optStyle(opt) {
         :class="isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-slate-200'">
         <div class="text-5xl">🏆</div>
         <h2 class="text-2xl font-extrabold" :class="isDark ? 'text-white' : 'text-slate-900'">Quiz Complete!</h2>
-        <p class="text-sm" :class="isDark ? 'text-gray-300' : 'text-slate-600'">Score: <strong class="text-emerald-600">{{ score }} / {{ quizCards.length }}</strong></p>
-        <button @click="restart" class="px-6 py-2.5 text-white font-bold rounded-xl text-sm hover:opacity-90 transition-all" style="background:linear-gradient(135deg,#006970,#00a9b4)">
-            Restart Quiz
-        </button>
+        <p class="text-sm" :class="isDark ? 'text-gray-300' : 'text-slate-600'">
+            Score: <strong class="text-emerald-600">{{ score }} / {{ quizCards.length }}</strong>
+        </p>
+        <!-- Score feedback -->
+        <p class="text-xs font-medium px-4" :class="isDark ? 'text-gray-400' : 'text-slate-500'">
+            {{ score === quizCards.length ? '🎯 Perfect score! You know this content well.' :
+               score >= quizCards.length * 0.7 ? '✅ Good recall! Keep reviewing to reinforce.' :
+               '📚 Keep studying — the SM-2 review will help build retention.' }}
+        </p>
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <button @click="restart"
+                class="px-6 py-2.5 rounded-xl text-sm font-bold border transition-all"
+                :class="isDark ? 'bg-gray-700 border-gray-600 text-gray-200 hover:bg-gray-600' : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'">
+                🔁 Retry Quiz
+            </button>
+            <button @click="emit('go-to-review')"
+                class="px-6 py-2.5 text-white font-bold rounded-xl text-sm hover:opacity-90 transition-all flex items-center gap-2"
+                style="background:linear-gradient(135deg,#006970,#00a9b4)">
+                ⚡ Start SM-2 Review
+            </button>
+        </div>
+        <p class="text-xs font-medium" :class="isDark ? 'text-gray-500' : 'text-slate-400'">
+            SM-2 review schedules cards based on your memory strength
+        </p>
     </div>
 
     <template v-else>
