@@ -33,10 +33,13 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use App\Http\Controllers\TrainingPageController;
-// Route to serve profile pictures (workaround for symlink issues)
-// This route bypasses the symlink and serves files directly from storage
+// Route to serve profile pictures — auth + role guarded (Admin/HR/self only)
 Route::get('/storage/profile-pictures/{filename}', [ProfilePictureController::class, 'show'])
     ->name('profile-picture.show')
+    ->middleware(['web', 'auth']);
+
+Route::get('/images/profile-pictures/{filename}', [ProfilePictureController::class, 'show'])
+    ->name('profile-picture.show-images')
     ->middleware(['web', 'auth']);
 
 Route::get('/', function () {

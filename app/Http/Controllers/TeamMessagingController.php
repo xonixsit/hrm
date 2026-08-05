@@ -220,12 +220,12 @@ class TeamMessagingController extends Controller
 
     public function getOnlineUsers()
     {
-        // Inactive cutoff — 30 minutes
-        $sessionCutoff = now()->subMinutes(30)->getTimestamp();
+        // Session cutoff — 15 minutes (tighter than before)
+        $sessionCutoff = now()->subMinutes(15)->getTimestamp();
         // Chat-active cutoff — 45s (heartbeat every 30s)
         $chatCutoff = now()->subSeconds(45);
 
-        // All users with a recent session
+        // Users with a genuinely recent session (last 15 min)
         $activeSessions = DB::table('sessions')
             ->whereNotNull('user_id')
             ->where('last_activity', '>=', $sessionCutoff)
@@ -235,9 +235,14 @@ class TeamMessagingController extends Controller
             ->values()
             ->toArray();
 
-        // Users on chat page (heartbeat)
+        // Users on chat page right now (heartbeat within 45s)
         $chatActive = [];
         try {
+            // First clean up stale heartbeats older than 2 minutes
+            DB::table('chat_heartbeats')
+                ->where('last_seen', '<', now()->subMinutes(2))
+                ->delete();
+
             $chatActive = DB::table('chat_heartbeats')
                 ->where('last_seen', '>=', $chatCutoff)
                 ->pluck('user_id')
@@ -249,23 +254,25 @@ class TeamMessagingController extends Controller
             \Log::warning('chat_heartbeats query failed: ' . $e->getMessage());
         }
 
-        // Users clocked in today — treat as active (green) regardless of chat page
+        // Users currently clocked in — must ALSO have an active session
         $clockedInUserIds = DB::table('attendances')
             ->join('employees', 'attendances.employee_id', '=', 'employees.id')
             ->whereDate('attendances.date', today())
             ->where('attendances.status', 'clocked_in')
+            ->whereIn('employees.user_id', $activeSessions) // must be logged in
             ->pluck('employees.user_id')
             ->unique()
             ->map(fn($id) => (int) $id)
             ->values()
             ->toArray();
 
-        // Merge: chat heartbeat OR clocked-in = active (green)
+        // Active (green) = on chat page OR (clocked-in AND has active session)
         $active = array_values(array_unique(array_merge($chatActive, $clockedInUserIds)));
 
-        // Inactive = has session but not active
+        // Inactive (orange) = has recent session but not active
         $inactive = array_values(array_diff($activeSessions, $active));
 
+        // Offline = everyone else (not in active or inactive)
         return response()->json([
             'active'   => $active,
             'inactive' => $inactive,

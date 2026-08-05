@@ -742,6 +742,31 @@ const formatFullTime = (date) => {
     return new Date(date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 };
 
+// Date separator helpers
+const formatDateSeparator = (date) => {
+    if (!date) return '';
+    const d     = new Date(date);
+    const today = new Date();
+    const yesterday = new Date(); yesterday.setDate(today.getDate() - 1);
+    const isToday     = d.toDateString() === today.toDateString();
+    const isYesterday = d.toDateString() === yesterday.toDateString();
+    if (isToday)     return 'Today';
+    if (isYesterday) return 'Yesterday';
+    return d.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: d.getFullYear() !== today.getFullYear() ? 'numeric' : undefined });
+};
+
+const getMessageDateKey = (date) => {
+    if (!date) return '';
+    return new Date(date).toDateString();
+};
+
+const shouldShowDateSeparator = (messages, index) => {
+    if (index === 0) return true;
+    const prev = getMessageDateKey(messages[index - 1]?.created_at);
+    const curr = getMessageDateKey(messages[index]?.created_at);
+    return prev !== curr;
+};
+
 watch(selectedConversation, (newVal) => {
     if (currentEchoChannel && window.Echo) {
         window.Echo.leave(`conversation.${currentEchoChannel}`);
@@ -1043,15 +1068,19 @@ watch(messages, () => {
 
                         <!-- Message list -->
                         <template v-else>
-                            <!-- Date divider -->
-                            <div class="flex items-center gap-3 my-2">
-                                <div class="flex-1 h-px" :class="isDark ? 'bg-gray-700' : 'bg-slate-100'"></div>
-                                <span class="text-xs font-medium px-3" :class="isDark ? 'text-gray-400' : 'text-slate-400'">Today</span>
-                                <div class="flex-1 h-px" :class="isDark ? 'bg-gray-700' : 'bg-slate-100'"></div>
-                            </div>
+                            <div v-for="(message, index) in messages" :key="message.id">
+                                <!-- Dynamic date separator -->
+                                <div v-if="shouldShowDateSeparator(messages, index)"
+                                    class="flex items-center gap-3 my-3">
+                                    <div class="flex-1 h-px" :class="isDark ? 'bg-gray-700' : 'bg-slate-100'"></div>
+                                    <span class="text-xs font-medium px-3 py-0.5 rounded-full"
+                                        :class="isDark ? 'bg-gray-700 text-gray-400' : 'bg-slate-100 text-slate-500'">
+                                        {{ formatDateSeparator(message.created_at) }}
+                                    </span>
+                                    <div class="flex-1 h-px" :class="isDark ? 'bg-gray-700' : 'bg-slate-100'"></div>
+                                </div>
 
-                            <div v-for="(message, index) in messages" :key="message.id"
-                                class="flex gap-2 items-end"
+                            <div class="flex gap-2 items-end"
                                 :class="message.sender_id === page.props.auth.user.id ? 'flex-row-reverse' : 'flex-row'">
 
                                 <!-- Avatar — shown on outside edge -->
@@ -1125,6 +1154,7 @@ watch(messages, () => {
                                     </div>
                                 </div>
                             </div>
+                            </div> <!-- close v-for wrapper -->
                         </template>
                     </div>
 
