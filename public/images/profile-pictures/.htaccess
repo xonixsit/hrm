@@ -1,3 +1,0 @@
-# Deny direct access — all profile pictures must be served through Laravel
-Order Deny,Allow
-Deny from all
