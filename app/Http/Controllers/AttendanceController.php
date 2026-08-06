@@ -296,14 +296,6 @@ class AttendanceController extends Controller
             'status' => 'clocked_out'
         ]);
 
-        // Clear heartbeat so they appear offline/inactive immediately on messaging
-        try {
-            \Illuminate\Support\Facades\DB::table('chat_heartbeats')
-                ->where('user_id', auth()->id())
-                ->delete();
-        } catch (\Exception $e) {}
-
-
         // Synchronize with timesheet
         $timesheetResult = $this->syncAttendanceToTimesheet($attendance);
 
