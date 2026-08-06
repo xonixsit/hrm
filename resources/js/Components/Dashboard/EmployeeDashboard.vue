@@ -196,7 +196,7 @@
     </div>
 
     <!-- Break Sessions Debug (Development) - Always Visible for Debugging -->
-    <div class="debug-section" style="margin-top: 2rem; padding: 1rem; background: #f3f4f6; border-radius: 0.5rem;">
+    <!-- <div class="debug-section" style="margin-top: 2rem; padding: 1rem; background: #f3f4f6; border-radius: 0.5rem;">
       <h3 class="section-title">Progress Bar Debug Info</h3>
       <div class="debug-content" style="font-size: 0.875rem;">
         <div class="debug-item" style="margin-bottom: 0.5rem;">
@@ -227,7 +227,7 @@
           <strong>Condition Check:</strong> isClockedIn={{ isClockedIn }}, progressWidth={{ progressWidth }}, should show={{ isClockedIn && progressWidth > 0 }}
         </div>
       </div>
-    </div>
+    </div> -->
 
     <!-- Birthday Notifications -->
     <div class="birthday-section">

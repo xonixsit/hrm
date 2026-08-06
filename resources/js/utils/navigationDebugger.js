@@ -520,8 +520,8 @@ class NavigationDebugger {
     // Copy to clipboard if available
     if (navigator.clipboard) {
       navigator.clipboard.writeText(JSON.stringify(exportData, null, 2))
-        .then(() => //console.log('✅ Debug data copied to clipboard'))
-        .catch(() => //console.log('❌ Failed to copy to clipboard'))
+        .then(() => console.log('✅ Debug data copied to clipboard'))
+        .catch(() => console.log('❌ Failed to copy to clipboard'))
     }
     
     return exportData

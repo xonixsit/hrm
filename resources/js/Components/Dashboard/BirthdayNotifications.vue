@@ -1,9 +1,9 @@
 <template>
     <div v-if="showNotifications" class="space-y-4">
         <!-- Debug: Show if component is rendering -->
-        <div class="text-xs text-gray-500 p-2 bg-gray-100 rounded mb-2">
+        <!-- <div class="text-xs text-gray-500 p-2 bg-gray-100 rounded mb-2">
             Debug: todaysBirthdays={{ todaysBirthdays?.length || 0 }}, currentUser={{ currentUserBirthday?.user?.name || 'none' }}, upcoming={{ upcomingBirthdays?.length || 0 }}
-        </div>
+        </div> -->
         
         <!-- Today's Birthdays -->
         <div v-if="todaysBirthdays && todaysBirthdays.length > 0" class="bg-gradient-to-r from-pink-50 to-purple-50 border border-pink-200 rounded-lg p-4">

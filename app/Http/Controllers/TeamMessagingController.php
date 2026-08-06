@@ -238,11 +238,6 @@ class TeamMessagingController extends Controller
         // Users on chat page right now (heartbeat within 45s)
         $chatActive = [];
         try {
-            // First clean up stale heartbeats older than 2 minutes
-            DB::table('chat_heartbeats')
-                ->where('last_seen', '<', now()->subMinutes(2))
-                ->delete();
-
             $chatActive = DB::table('chat_heartbeats')
                 ->where('last_seen', '>=', $chatCutoff)
                 ->pluck('user_id')
