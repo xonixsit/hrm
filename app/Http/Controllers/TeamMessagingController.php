@@ -254,12 +254,11 @@ class TeamMessagingController extends Controller
             \Log::warning('chat_heartbeats query failed: ' . $e->getMessage());
         }
 
-        // Users currently clocked in — must ALSO have an active session
+        // Users currently clocked in — show as active regardless of session age
         $clockedInUserIds = DB::table('attendances')
             ->join('employees', 'attendances.employee_id', '=', 'employees.id')
             ->whereDate('attendances.date', today())
             ->where('attendances.status', 'clocked_in')
-            ->whereIn('employees.user_id', $activeSessions) // must be logged in
             ->pluck('employees.user_id')
             ->unique()
             ->map(fn($id) => (int) $id)
