@@ -170,6 +170,8 @@ class DashboardController extends Controller
                 'notInterested' => $workReportsData['notInterested'],
                 'avgPerformanceScore' => $performanceData['avgScore'],
                 'performanceTrend' => $performanceData['trend'],
+                // Messaging
+                'totalMessages' => \Binkode\ChatSystem\Models\Message::where('type', 'user')->count(),
                 // Attendance tracking
                 'clockedInCount' => $attendanceTracking['clockedInCount'],
                 'missedClockInCount' => $attendanceTracking['missedClockInCount'],

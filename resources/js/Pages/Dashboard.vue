@@ -88,11 +88,11 @@
           :statusText="(adminStats.successfulCalls || 0) > 100 ? 'Excellent' : (adminStats.successfulCalls || 0) > 50 ? 'Good' : 'Needs Focus'"
           route="work-reports.leaderboard" :loading="loading" />
 
-        <UnifiedStatsCard :value="(adminStats.avgPerformanceScore || 0) + '%'" label="Avg Performance"
-          description="Team score" :icon="AcademicCapIcon" variant="info" :trend="adminStats.performanceTrend || 0"
-          :status="(adminStats.avgPerformanceScore || 0) > 85 ? 'excellent' : (adminStats.avgPerformanceScore || 0) > 70 ? 'good' : 'warning'"
-          :statusText="(adminStats.avgPerformanceScore || 0) > 85 ? 'Excellent' : (adminStats.avgPerformanceScore || 0) > 70 ? 'Good' : 'Needs Improvement'"
-          route="performance.reports" :loading="loading" />
+        <UnifiedStatsCard :value="adminStats.totalMessages || 0" label="Total Messages"
+          description="All team conversations" :icon="ChatBubbleLeftRightIcon" variant="info"
+          :status="(adminStats.totalMessages || 0) > 0 ? 'good' : 'warning'"
+          :statusText="(adminStats.totalMessages || 0) > 0 ? 'Active' : 'No messages'"
+          route="admin.message-monitor.index" :loading="loading" />
       </div>
 
       <!-- Main Content Grid -->
@@ -488,6 +488,7 @@
     UsersIcon,
     ExclamationTriangleIcon,
     AcademicCapIcon,
+    ChatBubbleLeftRightIcon,
     CheckCircleIcon,
     ArrowPathIcon,
     ChevronRightIcon,

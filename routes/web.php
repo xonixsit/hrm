@@ -328,6 +328,13 @@ Route::get('/training', [TrainingPageController::class, 'index'])->middleware(['
         ]);
     })->name('debug.leave.data');
     Route::resource('feedbacks', FeedbackController::class);
+    
+    // Ideas / Brainstorm
+    Route::get('ideas', [App\Http\Controllers\IdeaController::class, 'index'])->name('ideas.index');
+    Route::post('ideas', [App\Http\Controllers\IdeaController::class, 'store'])->name('ideas.store');
+    Route::post('ideas/{idea}/vote', [App\Http\Controllers\IdeaController::class, 'vote'])->name('ideas.vote');
+    Route::patch('ideas/{idea}/status', [App\Http\Controllers\IdeaController::class, 'updateStatus'])->name('ideas.status');
+    Route::delete('ideas/{idea}', [App\Http\Controllers\IdeaController::class, 'destroy'])->name('ideas.destroy');
 
     Route::get('/reports/attendance/pdf', [ReportController::class, 'attendancePdf'])->name('reports.attendance.pdf');
     Route::get('/reports/attendance/excel', [ReportController::class, 'attendanceExcel'])->name('reports.attendance.excel');

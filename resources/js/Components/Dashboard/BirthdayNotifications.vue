@@ -42,9 +42,22 @@
                             <p class="text-sm text-gray-500">{{ employee.job_title || 'Employee' }}</p>
                         </div>
                     </div>
-                    <div class="text-right">
+                    <div class="text-right flex flex-col items-end gap-1.5">
                         <div class="text-lg">🎂</div>
                         <p v-if="employee.age" class="text-xs text-gray-500">{{ employee.age }} years</p>
+                        <!-- Wish button — hidden for self -->
+                        <button
+                            v-if="!isCurrentUser(employee)"
+                            @click="sendBirthdayWish(employee)"
+                            :disabled="sendingUsers[employee.user_id ?? employee.user?.id] || wishedUsers[employee.user_id ?? employee.user?.id]"
+                            class="mt-1 inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold transition-all"
+                            :class="wishedUsers[employee.user_id ?? employee.user?.id]
+                                ? 'bg-green-100 text-green-700 cursor-default'
+                                : 'bg-pink-500 hover:bg-pink-600 text-white disabled:opacity-60'">
+                            <span v-if="sendingUsers[employee.user_id ?? employee.user?.id]">Sending…</span>
+                            <span v-else-if="wishedUsers[employee.user_id ?? employee.user?.id]">✓ Wished!</span>
+                            <span v-else>🎉 Wish Happy Birthday</span>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -118,84 +131,64 @@
 
 <script setup>
 import { computed, ref } from 'vue'
+import axios from 'axios'
 
 const props = defineProps({
-    todaysBirthdays: {
-        type: Array,
-        default: () => []
-    },
-    upcomingBirthdays: {
-        type: Array,
-        default: () => []
-    },
-    stats: {
-        type: Object,
-        default: null
-    },
-    systemTimezone: {
-        type: String,
-        default: 'UTC'
-    },
-    currentUserBirthday: {
-        type: Object,
-        default: null
-    }
+    todaysBirthdays:    { type: Array,  default: () => [] },
+    upcomingBirthdays:  { type: Array,  default: () => [] },
+    stats:              { type: Object, default: null },
+    systemTimezone:     { type: String, default: 'UTC' },
+    currentUserBirthday:{ type: Object, default: null },
 })
 
 const showAllUpcoming = ref(false)
 
-const showNotifications = computed(() => {
-    // Always show the widget (it will display appropriate message if no birthdays)
-    const hasData = props.todaysBirthdays?.length > 0 || 
-                    props.upcomingBirthdays?.length > 0 || 
-                    props.currentUserBirthday;
-    
-    console.log('🎂 BirthdayNotifications: Props received:', {
-        todaysBirthdays: props.todaysBirthdays,
-        upcomingBirthdays: props.upcomingBirthdays,
-        currentUserBirthday: props.currentUserBirthday,
-        stats: props.stats,
-        hasData: hasData
-    });
-    return true
-})
+// Track which users have already been wished (keyed by employee.user_id)
+const wishedUsers  = ref({})   // { userId: true }
+const sendingUsers = ref({})   // { userId: true }
 
-const displayedUpcomingBirthdays = computed(() => {
-    if (showAllUpcoming.value) {
-        return props.upcomingBirthdays
+async function sendBirthdayWish(employee) {
+    const userId = employee.user_id ?? employee.user?.id
+    if (!userId || wishedUsers.value[userId]) return
+    sendingUsers.value[userId] = true
+    try {
+        // 1. Get or create conversation
+        const convRes = await axios.post(route('team-messaging.store'), { user_id: userId })
+        const convId  = convRes.data.conversation_id
+        if (!convId) throw new Error('No conversation id returned')
+
+        // 2. Send birthday message
+        await axios.post(route('team-messaging.send', { conversation: convId }), {
+            message: `🎉 Happy Birthday ${employee.user?.name?.split(' ')[0] || ''}! Wishing you a wonderful day! 🎂`,
+        })
+        wishedUsers.value[userId] = true
+    } catch (e) {
+        console.error('[Birthday Wish] Failed:', e)
+    } finally {
+        sendingUsers.value[userId] = false
     }
-    return props.upcomingBirthdays.slice(0, 3)
-})
+}
+
+const showNotifications = computed(() => true)
+
+const displayedUpcomingBirthdays = computed(() =>
+    showAllUpcoming.value ? props.upcomingBirthdays : props.upcomingBirthdays.slice(0, 3)
+)
 
 const getInitials = (name) => {
     if (!name) return 'U'
-    return name
-        .split(' ')
-        .map(word => word.charAt(0).toUpperCase())
-        .join('')
-        .substring(0, 2)
+    return name.split(' ').map(w => w.charAt(0).toUpperCase()).join('').substring(0, 2)
 }
 
 const isCurrentUser = (employee) => {
-    // Check if this employee is the current user by comparing with currentUserBirthday
-    if (currentUserBirthday && employee.id === currentUserBirthday.id) {
-        return true
-    }
-    // Fallback: if currentUserBirthday is not set, we can't determine if it's the current user
-    // So we'll just return false and let the employee show without highlighting
+    if (props.currentUserBirthday && employee.id === props.currentUserBirthday.id) return true
     return false
 }
 
 const formatBirthdayDate = (date) => {
-    // Parse date as local date to avoid timezone issues
-    const [year, month, day] = date.split('-').map(Number);
-    const localDate = new Date(year, month - 1, day); // month is 0-indexed in JS
-    
-    return localDate.toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        timeZone: props.systemTimezone || 'UTC'
-    })
+    const [year, month, day] = date.split('-').map(Number)
+    const localDate = new Date(year, month - 1, day)
+    return localDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
 const formatDaysUntil = (days) => {

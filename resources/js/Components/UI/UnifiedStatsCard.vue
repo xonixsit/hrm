@@ -9,6 +9,8 @@
         : 'bg-white border border-gray-100 shadow-sm backdrop-blur-sm',
       // Shadow
       'hover:shadow-md hover:-translate-y-0.5',
+      // Clickable ring hint
+      clickable && route && (isDark ? 'hover:border-teal-700/60' : 'hover:border-teal-200 hover:shadow-teal-50'),
       // Border radius and padding
       'rounded-2xl p-5 sm:p-6',
     ]" @click="handleClick" :role="clickable ? 'button' : undefined" :tabindex="clickable ? '0' : undefined"
@@ -114,6 +116,18 @@
           Loading...
         </span>
       </div>
+    </div>
+
+    <!-- Clickable arrow indicator -->
+    <div v-if="clickable && route && !loading"
+      :class="[
+        'absolute bottom-4 right-4 w-6 h-6 rounded-full flex items-center justify-center',
+        'opacity-0 group-hover:opacity-100 transition-all duration-200 transform group-hover:translate-x-0.5',
+        isDark ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-500',
+      ]">
+      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
+      </svg>
     </div>
 
     <!-- Urgent Indicator -->

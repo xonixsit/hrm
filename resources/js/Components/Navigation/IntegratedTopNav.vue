@@ -513,6 +513,7 @@ const moreNavItems = computed(() => {
     const items = [
       { route: 'skill-tests.my-tests', label: 'My Tests', category: 'regular' },
       { route: 'work-reports.index', label: 'Work Reports', category: 'regular' },
+      // { route: 'ideas.index', label: 'Share Ideas', category: 'regular' },
       { route: 'feedbacks.index', label: 'Feedback', category: 'regular' },
       { route: 'employee-handbook', label: 'Employee Handbook', category: 'regular' },
       { route: 'support.index', label: 'Support', category: 'regular' }
@@ -533,7 +534,7 @@ const moreNavItems = computed(() => {
       items.push(
         { route: 'skill-tests.index', label: 'Skill Tests', category: 'admin' },
         { route: 'skill-tests.reviews.index', label: 'Test Reviews', category: 'admin' },
-        // { route: 'admin.message-monitor.index', label: '💬 Message Center', category: 'admin' },
+        { route: 'admin.message-monitor.index', label: 'Message Center', category: 'admin' },
         { route: 'admin.roles.index', label: 'Role Management', category: 'admin' },
         { route: 'admin.system-settings.index', label: 'System Settings', category: 'admin' },
         { route: 'leave-types.index', label: 'Leave Policies', category: 'admin' },

@@ -4,7 +4,6 @@ import { Head, router } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import PageLayout from '@/Components/Layout/PageLayout.vue';
 import { useTheme } from '@/composables/useTheme';
-
 const { isDark } = useTheme();
 
 const props = defineProps({
@@ -34,6 +33,16 @@ function applyFilters() {
         to_user:    toUser.value    || undefined,
         keyword:    keyword.value   || undefined,
     }, { preserveScroll: true, preserveState: true });
+}
+
+const refreshing = ref(false);
+function refresh() {
+    refreshing.value = true;
+    router.reload({
+        preserveScroll: true,
+        preserveState:  true,
+        onFinish: () => { refreshing.value = false; },
+    });
 }
 
 const exportUrl = computed(() => {
@@ -214,6 +223,23 @@ function userName(id) {
                 <!-- ── Table ─────────────────────────────────────────────── -->
                 <div class="rounded-2xl border overflow-hidden"
                     :class="isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-slate-200'">
+
+                    <!-- Table toolbar -->
+                    <div class="flex items-center justify-between px-5 py-3 border-b"
+                        :class="isDark ? 'border-gray-700 bg-gray-750' : 'border-slate-200 bg-slate-50'">
+                        <span class="text-xs font-semibold" :class="isDark ? 'text-gray-400' : 'text-slate-500'">
+                            {{ messages.total }} message{{ messages.total !== 1 ? 's' : '' }} found
+                        </span>
+                        <button @click="refresh" :disabled="refreshing"
+                            class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold border transition-all disabled:opacity-60"
+                            :class="isDark ? 'bg-gray-700 border-gray-600 text-teal-300 hover:bg-gray-600' : 'bg-white border-teal-200 text-teal-700 hover:bg-teal-50'">
+                            <svg class="w-3.5 h-3.5" :class="refreshing ? 'animate-spin' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                            </svg>
+                            {{ refreshing ? 'Refreshing…' : 'Refresh' }}
+                        </button>
+                    </div>
 
                     <!-- Table head -->
                     <div class="grid grid-cols-12 gap-0 border-b text-[11px] font-extrabold uppercase tracking-wider"
