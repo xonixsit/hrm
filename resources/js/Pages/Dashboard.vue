@@ -304,6 +304,23 @@
     <div v-else class="employee-layout">
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
+        <!-- Idea Box floating trigger -->
+        <div class="lg:col-span-3">
+          <div class="flex justify-end mb-2 pt-0">
+            <div class="relative inline-flex items-end">
+              <!-- Cartoon freely outside button — no size restriction -->
+              <img src="/images/getanidea.svg" alt="Get an Idea"
+                class="absolute transition-transform group-hover:scale-105 pointer-events-none z-10"
+                style="width:90px;height:90px;bottom:0;left:-70px;" />
+              <button @click="showIdeaBox = true"
+                class="group flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white shadow-md hover:shadow-lg transition-all hover:-translate-y-0.5"
+                style="background:linear-gradient(135deg,#006970,#00a9b4)">
+                Share an Idea
+              </button>
+            </div>
+          </div>
+        </div>
+
         <!-- Main Dashboard Content -->
         <div class="lg:col-span-3">
           <EmployeeDashboard :stats="employeeStats" :personal-activities="personalActivities" :my-tasks="myTasks"
@@ -318,6 +335,19 @@
         <!-- </div> -->
       </div>
     </div>
+
+    <!-- Idea Box Modal -->
+    <Teleport to="body">
+        <IdeaBoxModal v-if="showIdeaBox" :categories="{
+            lead_conversion:  'Lead Conversion',
+            sales_strategy:   'Sales Strategy',
+            client_retention: 'Client Retention',
+            tax_consultation: 'Tax Consultation',
+            payment_process:  'Payment Process',
+            team_process:     'Team Process',
+            other:            'Other',
+        }" @close="showIdeaBox = false" />
+    </Teleport>
 
     <!-- Rejection Modal -->
     <div v-if="showRejectionModal" class="fixed inset-0 z-50 overflow-y-auto">
@@ -458,6 +488,7 @@
 
   import ManagerDashboard from '@/Components/Dashboard/ManagerDashboard.vue';
   import EmployeeDashboard from '@/Components/Dashboard/EmployeeDashboard.vue';
+  import IdeaBoxModal from '@/Components/IdeaBox/IdeaBoxModal.vue';
   import ApprovalModal from '@/Components/Dashboard/ApprovalModal.vue';
 
   // Widget Components
@@ -590,6 +621,7 @@
 
   // Reactive data
   const loading = ref(false);
+  const showIdeaBox = ref(false);
   const showRejectionModal = ref(false);
   const rejectionItem = ref(null);
   const rejectionReason = ref('');
@@ -885,9 +917,10 @@
 
   // Check if user should see video on first login
   const checkFirstLogin = () => {
+    // Auto-show disabled — video can be triggered manually via "Watch Training Video" button
+    return;
     const hasWatched = localStorage.getItem('objection_crusher_video_watched');
     if (!hasWatched) {
-      // Show video modal after a short delay
       setTimeout(() => {
         showVideoModal.value = true;
         document.body.style.overflow = 'hidden';
