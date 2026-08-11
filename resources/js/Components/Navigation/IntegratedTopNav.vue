@@ -513,7 +513,7 @@ const moreNavItems = computed(() => {
     const items = [
       { route: 'skill-tests.my-tests', label: 'My Tests', category: 'regular' },
       { route: 'work-reports.index', label: 'Work Reports', category: 'regular' },
-      // { route: 'ideas.index', label: 'Share Ideas', category: 'regular' },
+      { route: 'ideas.index', label: 'Share Ideas', category: 'regular' },
       { route: 'feedbacks.index', label: 'Feedback', category: 'regular' },
       { route: 'employee-handbook', label: 'Employee Handbook', category: 'regular' },
       { route: 'support.index', label: 'Support', category: 'regular' }
