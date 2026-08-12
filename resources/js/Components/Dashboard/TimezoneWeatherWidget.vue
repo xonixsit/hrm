@@ -122,8 +122,9 @@ const updateTime = () => {
     day: 'numeric'
   });
   
-  // Get timezone info
-  timezoneName.value = props.systemTimezone || 'UTC';
+  // Get timezone info — show only city name
+  const rawTz = props.systemTimezone || 'UTC';
+  timezoneName.value = rawTz.includes('/') ? rawTz.split('/').pop().replace(/_/g, ' ') : rawTz;
   
   // Get timezone offset
   const offset = now.getTimezoneOffset();
@@ -196,7 +197,9 @@ const fetchWeather = async () => {
     
     // Update timezone info from API
     if (timezoneData?.timezone?.tz_id) {
-      timezoneName.value = timezoneData.timezone.tz_id;
+      // Show only the city part (after the last /)
+      const tzId = timezoneData.timezone.tz_id;
+      timezoneName.value = tzId.includes('/') ? tzId.split('/').pop().replace(/_/g, ' ') : tzId;
       const offset = timezoneData.timezone.utc_offset_hours;
       const sign = offset >= 0 ? '+' : '';
       timezoneOffset.value = `UTC${sign}${offset}`;

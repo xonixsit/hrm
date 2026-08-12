@@ -332,6 +332,7 @@ Route::get('/training', [TrainingPageController::class, 'index'])->middleware(['
     // Ideas / Brainstorm
     Route::get('ideas', [App\Http\Controllers\IdeaController::class, 'index'])->name('ideas.index');
     Route::post('ideas', [App\Http\Controllers\IdeaController::class, 'store'])->name('ideas.store');
+    Route::patch('ideas/{idea}', [App\Http\Controllers\IdeaController::class, 'update'])->name('ideas.update');
     Route::post('ideas/{idea}/vote', [App\Http\Controllers\IdeaController::class, 'vote'])->name('ideas.vote');
     Route::patch('ideas/{idea}/status', [App\Http\Controllers\IdeaController::class, 'updateStatus'])->name('ideas.status');
     Route::delete('ideas/{idea}', [App\Http\Controllers\IdeaController::class, 'destroy'])->name('ideas.destroy');

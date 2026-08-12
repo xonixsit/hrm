@@ -52,6 +52,21 @@ function vote(idea) {
     router.post(route('ideas.vote', idea.id), {}, { preserveScroll: true });
 }
 
+// ── Edit own idea ─────────────────────────────────────────────────────────────
+const editingOwnIdea = ref(null);
+const editForm       = ref({ title: '', description: '', category: 'lead_conversion' });
+
+function openEditIdea(idea) {
+    editingOwnIdea.value = idea;
+    editForm.value = { title: idea.title, description: idea.description, category: idea.category };
+}
+function saveEdit() {
+    router.patch(route('ideas.update', editingOwnIdea.value.id), editForm.value, {
+        preserveScroll: true,
+        onSuccess: () => { editingOwnIdea.value = null; },
+    });
+}
+
 // ── Status update (admin) ─────────────────────────────────────────────────────
 const editingIdea  = ref(null);
 const statusForm   = ref({ status: '', admin_notes: '' });
@@ -305,18 +320,26 @@ function initials(name) {
                                     👍 {{ idea.vote_count || idea.votes }}
                                 </span>
 
+                                <!-- Edit own idea (pending/under_review only) -->
+                                <button v-if="idea.user_id === user?.id && ['pending','under_review'].includes(idea.status)"
+                                    @click="openEditIdea(idea)"
+                                    class="px-2.5 py-1 rounded-lg text-xs font-bold border transition-all"
+                                    :class="isDark ? 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'">
+                                    Edit
+                                </button>
+
                                 <!-- Admin status editor -->
                                 <button v-if="isManager" @click="openStatusEditor(idea)"
                                     class="px-2.5 py-1 rounded-lg text-xs font-bold border transition-all"
                                     :class="isDark ? 'bg-gray-700 border-gray-600 text-teal-300 hover:bg-gray-600' : 'bg-teal-50 border-teal-200 text-teal-700 hover:bg-teal-100'">
-                                    ✏️ Review
+                                    Review
                                 </button>
 
                                 <!-- Delete -->
                                 <button v-if="idea.user_id === user?.id || isManager" @click="deleteIdea(idea)"
-                                    class="px-2 py-1 rounded-lg text-xs border transition-all"
-                                    :class="isDark ? 'bg-gray-700 border-gray-600 text-red-400 hover:bg-red-900/30' : 'bg-white border-slate-200 text-red-500 hover:bg-red-50'">
-                                    🗑
+                                    class="px-2.5 py-1 rounded-lg text-xs font-bold border transition-all"
+                                    :class="isDark ? 'bg-gray-700 border-gray-600 text-red-400 hover:bg-red-900/30' : 'bg-white border-red-200 text-red-500 hover:bg-red-50'">
+                                    Delete
                                 </button>
                             </div>
                         </div>
@@ -357,7 +380,7 @@ function initials(name) {
     <Teleport to="body">
         <Transition name="fade">
             <div v-if="editingIdea" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm">
-                <div class="w-full max-w-md rounded-2xl border shadow-2xl overflow-hidden"
+                <div class="w-full max-w-lg rounded-2xl border shadow-2xl overflow-hidden"
                     :class="isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-slate-200'">
                     <!-- Header -->
                     <div class="px-5 py-4 border-b text-white" style="background:linear-gradient(135deg,#006970,#00a9b4)">
@@ -365,6 +388,25 @@ function initials(name) {
                         <p class="text-xs text-white/70 truncate mt-0.5">{{ editingIdea.title }}</p>
                     </div>
                     <div class="p-5 space-y-4">
+                        <!-- Full idea content (read-only) -->
+                        <div class="rounded-xl border p-3.5 space-y-2"
+                            :class="isDark ? 'bg-gray-750 border-gray-600' : 'bg-slate-50 border-slate-200'">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded border"
+                                    :class="isDark ? 'bg-teal-900/30 border-teal-700 text-teal-300' : 'bg-teal-50 border-teal-200 text-teal-700'">
+                                    {{ categories[editingIdea.category] || editingIdea.category }}
+                                </span>
+                                <span class="text-[10px]" :class="isDark ? 'text-gray-400' : 'text-slate-500'">
+                                    by {{ editingIdea.user?.name }}
+                                </span>
+                            </div>
+                            <h4 class="font-bold text-sm" :class="isDark ? 'text-white' : 'text-slate-900'">
+                                {{ editingIdea.title }}
+                            </h4>
+                            <p class="text-xs leading-relaxed" :class="isDark ? 'text-gray-300' : 'text-slate-600'">
+                                {{ editingIdea.description }}
+                            </p>
+                        </div>
                         <div>
                             <label class="text-[11px] font-bold block mb-1" :class="isDark ? 'text-gray-300' : 'text-slate-700'">Status</label>
                             <select v-model="statusForm.status"
@@ -388,6 +430,57 @@ function initials(name) {
                                 Save
                             </button>
                             <button @click="editingIdea = null"
+                                class="px-4 py-2.5 rounded-xl text-sm font-bold border transition-all"
+                                :class="isDark ? 'bg-gray-700 border-gray-600 text-gray-300' : 'bg-white border-slate-300 text-slate-600'">
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </Transition>
+    </Teleport>
+
+    <!-- ── Edit Own Idea Modal ───────────────────────────────────────────── -->
+    <Teleport to="body">
+        <Transition name="fade">
+            <div v-if="editingOwnIdea" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm">
+                <div class="w-full max-w-lg rounded-2xl border shadow-2xl overflow-hidden"
+                    :class="isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-slate-200'">
+                    <div class="px-5 py-4 border-b text-white" style="background:linear-gradient(135deg,#006970,#00a9b4)">
+                        <h3 class="font-extrabold text-sm">Edit Your Idea</h3>
+                        <p class="text-xs text-white/70 mt-0.5">Only editable while Pending or Under Review</p>
+                    </div>
+                    <div class="p-5 space-y-4">
+                        <div>
+                            <label class="text-[11px] font-bold block mb-1" :class="isDark ? 'text-gray-300' : 'text-slate-700'">Title *</label>
+                            <input v-model="editForm.title" maxlength="200" type="text"
+                                class="w-full px-3 py-2.5 text-sm rounded-xl border focus:outline-none focus:border-teal-500"
+                                :class="isDark ? 'bg-gray-700 border-gray-600 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'"
+                                @paste.prevent @copy.prevent />
+                        </div>
+                        <div>
+                            <label class="text-[11px] font-bold block mb-1" :class="isDark ? 'text-gray-300' : 'text-slate-700'">Category *</label>
+                            <select v-model="editForm.category"
+                                class="w-full px-3 py-2.5 text-sm rounded-xl border focus:outline-none focus:border-teal-500"
+                                :class="isDark ? 'bg-gray-700 border-gray-600 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'">
+                                <option v-for="(label, key) in categories" :key="key" :value="key">{{ label }}</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[11px] font-bold block mb-1" :class="isDark ? 'text-gray-300' : 'text-slate-700'">Description *</label>
+                            <textarea v-model="editForm.description" rows="5" maxlength="2000"
+                                class="w-full px-3 py-2.5 text-sm rounded-xl border focus:outline-none focus:border-teal-500 resize-none"
+                                :class="isDark ? 'bg-gray-700 border-gray-600 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'">
+                            </textarea>
+                        </div>
+                        <div class="flex gap-2">
+                            <button @click="saveEdit"
+                                class="flex-1 py-2.5 rounded-xl text-sm font-bold text-white hover:opacity-90"
+                                style="background:linear-gradient(135deg,#006970,#00a9b4)">
+                                Save Changes
+                            </button>
+                            <button @click="editingOwnIdea = null"
                                 class="px-4 py-2.5 rounded-xl text-sm font-bold border transition-all"
                                 :class="isDark ? 'bg-gray-700 border-gray-600 text-gray-300' : 'bg-white border-slate-300 text-slate-600'">
                                 Cancel

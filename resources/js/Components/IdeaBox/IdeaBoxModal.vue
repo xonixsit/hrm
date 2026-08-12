@@ -73,7 +73,9 @@ onBeforeUnmount(() => {
 const charCount      = computed(() => description.value.length);
 const canSend        = computed(() => title.value.trim().length >= 3 && description.value.trim().length >= 20);
 const activeCatLabel = computed(() => {
-    return props.categories?.[category.value] || category.value;
+    const full = props.categories?.[category.value] || category.value;
+    // Show full label including emoji in pill
+    return full;
 });
 </script>
 
@@ -85,7 +87,9 @@ const activeCatLabel = computed(() => {
 
             <!-- Header -->
             <div class="paper-header">
-                <span class="paper-label">Idea Box</span>
+                <span class="paper-label">
+                    <img src="/images/getanidea.svg" alt="" style="display:inline-block;vertical-align:middle;width:28px;height:28px;margin-right:6px;" />Idea Box
+                </span>
                 <button @click="close" class="paper-close" title="Close">
                     <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
                         <path d="M1 1l10 10M11 1L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>

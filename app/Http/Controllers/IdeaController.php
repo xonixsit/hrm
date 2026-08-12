@@ -88,6 +88,22 @@ class IdeaController extends Controller
         return back()->with('success', 'Your idea has been submitted! Thank you for contributing.');
     }
 
+    // ── Update own idea ───────────────────────────────────────────────────────
+    public function update(Request $request, Idea $idea)
+    {
+        abort_unless($idea->user_id === Auth::id(), 403);
+        abort_unless(in_array($idea->status, ['pending', 'under_review']), 422);
+
+        $validated = $request->validate([
+            'title'       => 'required|string|max:200',
+            'description' => 'required|string|min:20|max:2000',
+            'category'    => 'required|in:' . implode(',', array_keys(Idea::$categories)),
+        ]);
+
+        $idea->update($validated);
+        return back()->with('success', 'Your idea has been updated.');
+    }
+
     // ── Vote / un-vote ────────────────────────────────────────────────────────
     public function vote(Idea $idea)
     {

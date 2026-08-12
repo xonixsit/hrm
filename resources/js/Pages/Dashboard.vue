@@ -339,13 +339,13 @@
     <!-- Idea Box Modal -->
     <Teleport to="body">
         <IdeaBoxModal v-if="showIdeaBox" :categories="{
-            lead_conversion:  'Lead Conversion',
-            sales_strategy:   'Sales Strategy',
-            client_retention: 'Client Retention',
-            tax_consultation: 'Tax Consultation',
-            payment_process:  'Payment Process',
-            team_process:     'Team Process',
-            other:            'Other',
+            lead_conversion:  '📞 Lead Conversion',
+            sales_strategy:   '📈 Sales Strategy',
+            client_retention: '🤝 Client Retention',
+            tax_consultation: '🧾 Tax Consultation',
+            payment_process:  '💳 Payment Process',
+            team_process:     '👥 Team Process',
+            other:            '💡 Other',
         }" @close="showIdeaBox = false" />
     </Teleport>
 
