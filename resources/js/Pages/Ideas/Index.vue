@@ -335,8 +335,8 @@ function initials(name) {
                                     Review
                                 </button>
 
-                                <!-- Delete -->
-                                <button v-if="idea.user_id === user?.id || isManager" @click="deleteIdea(idea)"
+                                <!-- Delete — own idea only, not admin -->
+                                <button v-if="idea.user_id === user?.id" @click="deleteIdea(idea)"
                                     class="px-2.5 py-1 rounded-lg text-xs font-bold border transition-all"
                                     :class="isDark ? 'bg-gray-700 border-gray-600 text-red-400 hover:bg-red-900/30' : 'bg-white border-red-200 text-red-500 hover:bg-red-50'">
                                     Delete
@@ -471,7 +471,8 @@ function initials(name) {
                             <label class="text-[11px] font-bold block mb-1" :class="isDark ? 'text-gray-300' : 'text-slate-700'">Description *</label>
                             <textarea v-model="editForm.description" rows="5" maxlength="2000"
                                 class="w-full px-3 py-2.5 text-sm rounded-xl border focus:outline-none focus:border-teal-500 resize-none"
-                                :class="isDark ? 'bg-gray-700 border-gray-600 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'">
+                                :class="isDark ? 'bg-gray-700 border-gray-600 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'"
+                                @paste.prevent @copy.prevent>
                             </textarea>
                         </div>
                         <div class="flex gap-2">

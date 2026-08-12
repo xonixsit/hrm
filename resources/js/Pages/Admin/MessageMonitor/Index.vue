@@ -6,6 +6,11 @@ import PageLayout from '@/Components/Layout/PageLayout.vue';
 import { useTheme } from '@/composables/useTheme';
 const { isDark } = useTheme();
 
+// ── Message preview modal ─────────────────────────────────────────────────────
+const viewingMsg = ref(null);
+function openMsg(msg) { viewingMsg.value = msg; }
+function closeMsg()   { viewingMsg.value = null; }
+
 const props = defineProps({
     messages: Object,   // paginated
     users:    Array,
@@ -293,8 +298,14 @@ function userName(id) {
                             </div>
 
                             <!-- Message -->
-                            <div class="col-span-6 px-4 py-3.5 flex items-center">
-                                <p class="leading-relaxed" :class="isDark ? 'text-gray-200' : 'text-slate-800'">{{ truncate(msg.message) }}</p>
+                            <div class="col-span-6 px-4 py-3.5 flex items-center gap-2">
+                                <p class="leading-relaxed flex-1" :class="isDark ? 'text-gray-200' : 'text-slate-800'">{{ truncate(msg.message) }}</p>
+                                <button v-if="msg.message && msg.message.length > 80"
+                                    @click="openMsg(msg)"
+                                    class="shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-md border transition-all"
+                                    :class="isDark ? 'border-teal-700 text-teal-400 hover:bg-teal-900/30' : 'border-teal-200 text-teal-600 hover:bg-teal-50'">
+                                    View
+                                </button>
                             </div>
 
                             <!-- Date -->
@@ -334,4 +345,49 @@ function userName(id) {
             </div>
         </PageLayout>
     </AuthenticatedLayout>
+
+    <!-- ── Full Message Modal ────────────────────────────────────────────── -->
+    <Teleport to="body">
+        <Transition name="msg-fade">
+            <div v-if="viewingMsg"
+                class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm"
+                @click.self="closeMsg">
+                <div class="w-full max-w-lg rounded-2xl border shadow-2xl overflow-hidden flex flex-col"
+                    style="max-height:80vh"
+                    :class="isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-slate-200'">
+                    <!-- Header -->
+                    <div class="px-5 py-4 border-b flex items-center justify-between"
+                        :class="isDark ? 'border-gray-700 bg-gray-750' : 'border-slate-200 bg-slate-50'">
+                        <div class="min-w-0">
+                            <p class="text-xs font-bold" :class="isDark ? 'text-white' : 'text-slate-900'">
+                                {{ viewingMsg.sender_name }} → {{ viewingMsg.recipient_name }}
+                            </p>
+                            <p class="text-[10px] mt-0.5" :class="isDark ? 'text-gray-400' : 'text-slate-500'">
+                                {{ formatDT(viewingMsg.created_at) }}
+                            </p>
+                        </div>
+                        <button @click="closeMsg"
+                            class="w-7 h-7 rounded-full flex items-center justify-center border transition-all shrink-0"
+                            :class="isDark ? 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-100'">
+                            <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
+                                <path d="M1 1l10 10M11 1L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <!-- Body -->
+                    <div class="p-5">
+                        <p class="text-sm leading-relaxed whitespace-pre-wrap"
+                            :class="isDark ? 'text-gray-200' : 'text-slate-800'">{{ viewingMsg.message }}</p>
+                    </div>
+                </div>
+            </div>
+        </Transition>
+    </Teleport>
 </template>
+
+<style scoped>
+.msg-fade-enter-active { transition: opacity 0.2s, transform 0.25s cubic-bezier(.16,1,.3,1); }
+.msg-fade-leave-active { transition: opacity 0.15s ease; }
+.msg-fade-enter-from   { opacity:0; transform:scale(0.95); }
+.msg-fade-leave-to     { opacity:0; }
+</style>
