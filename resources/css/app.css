@@ -5,6 +5,30 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Modern emoji font — overrides the ugly OS default ──────────────────────
+   Noto Color Emoji is loaded via Google Fonts in app.blade.php.
+   We list it after the UI fonts so text renders in Figtree/Inter
+   but emoji codepoints fall through to Noto Color Emoji.            */
+:root {
+  --font-emoji: 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji',
+                'Twemoji Mozilla', 'Android Emoji', sans-serif;
+}
+
+/* Apply to every element so emoji look consistent everywhere */
+* {
+  font-family: inherit;
+}
+
+body {
+  font-family: 'Figtree', 'Inter', system-ui, sans-serif, var(--font-emoji);
+}
+
+/* Explicit emoji class for inline emoji spans */
+.emoji {
+  font-family: var(--font-emoji);
+  font-style: normal;
+}
+
 /* Accessibility Enhancements */
 
 /* High Contrast Mode Support */

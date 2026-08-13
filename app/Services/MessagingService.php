@@ -16,6 +16,8 @@ use Illuminate\Support\Facades\DB;
  */
 class MessagingService
 {
+    // ─── Conversation helpers ─────────────────────────────────────────────────
+
     /**
      * Get all conversation IDs for a user.
      */
@@ -39,6 +41,19 @@ class MessagingService
     }
 
     /**
+     * Check whether a user is a participant in a conversation.
+     */
+    public function isParticipant(int $conversationId, int $userId): bool
+    {
+        return DB::table('conversation_users')
+            ->where('conversation_id', $conversationId)
+            ->where('user_id', $userId)
+            ->exists();
+    }
+
+    // ─── Unread counts ────────────────────────────────────────────────────────
+
+    /**
      * Bulk unread counts for all conversations of a user — single query.
      * Returns [ conversationId => count ]
      */
@@ -48,7 +63,6 @@ class MessagingService
             return [];
         }
 
-        // Count messages not sent by the user that have no 'read' ChatEvent from this user
         $rows = DB::table('messages')
             ->select('conversation_id', DB::raw('COUNT(*) as unread'))
             ->whereIn('conversation_id', $conversationIds)
@@ -71,6 +85,8 @@ class MessagingService
         }
         return $map;
     }
+
+    // ─── Read receipts ────────────────────────────────────────────────────────
 
     /**
      * Mark all unread messages in a conversation as read by the user.
@@ -96,8 +112,8 @@ class MessagingService
             return [];
         }
 
-        $now = now();
-        $inserts = array_map(fn($id) => [
+        $now     = now();
+        $inserts = array_map(fn ($id) => [
             'made_id'    => $id,
             'made_type'  => 'Binkode\ChatSystem\Models\Message',
             'type'       => 'read',
@@ -108,14 +124,15 @@ class MessagingService
             'updated_at' => $now,
         ], $unread);
 
-        // Insert all read events in one query
         DB::table('chat_events')->insert($inserts);
 
         return $unread;
     }
 
+    // ─── Message fetching ─────────────────────────────────────────────────────
+
     /**
-     * Fetch all messages in a conversation with sender data, in one query.
+     * Fetch all messages in a conversation with sender data.
      */
     public function messagesForConversation(int $conversationId): array
     {
@@ -128,10 +145,9 @@ class MessagingService
             return [];
         }
 
-        $userIds  = $messages->pluck('user_id')->unique()->toArray();
-        $users    = User::whereIn('id', $userIds)->get()->keyBy('id');
+        $userIds = $messages->pluck('user_id')->unique()->toArray();
+        $users   = User::whereIn('id', $userIds)->get()->keyBy('id');
 
-        // Determine which messages have been read by anyone other than the sender
         $readMsgIds = DB::table('chat_events')
             ->whereIn('made_id', $messages->pluck('id'))
             ->where('made_type', 'Binkode\ChatSystem\Models\Message')
@@ -178,14 +194,34 @@ class MessagingService
         ];
     }
 
+    // ─── Company group ────────────────────────────────────────────────────────
+
     /**
-     * Check whether a user is a participant in a conversation.
+     * Add a user to the default Company group if they aren't already a member.
+     * Safe to call multiple times — idempotent.
      */
-    public function isParticipant(int $conversationId, int $userId): bool
+    public static function addToCompanyGroup(int $userId): void
     {
-        return DB::table('conversation_users')
-            ->where('conversation_id', $conversationId)
+        $group = Conversation::where('is_default', true)
+            ->where('type', 'group')
+            ->first();
+
+        if (! $group) {
+            return; // Company group not created yet — run chat:ensure-company-group
+        }
+
+        $already = DB::table('conversation_users')
+            ->where('conversation_id', $group->id)
             ->where('user_id', $userId)
             ->exists();
+
+        if (! $already) {
+            DB::table('conversation_users')->insert([
+                'user_id'         => $userId,
+                'conversation_id' => $group->id,
+                'created_at'      => now(),
+                'updated_at'      => now(),
+            ]);
+        }
     }
 }

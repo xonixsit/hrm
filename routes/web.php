@@ -119,11 +119,20 @@ Route::get('/training', [TrainingPageController::class, 'index'])->middleware(['
     });
 
     // Team Messaging Routes
-    Route::prefix('team-messaging')->group(function () {        Route::get('/', [TeamMessagingController::class, 'index'])->name('team-messaging.index');
+    Route::prefix('team-messaging')->group(function () {
+        Route::get('/', [TeamMessagingController::class, 'index'])->name('team-messaging.index');
         Route::get('/online-users', [TeamMessagingController::class, 'getOnlineUsers'])->name('team-messaging.online-users');
         Route::post('/heartbeat', [TeamMessagingController::class, 'heartbeat'])->name('team-messaging.heartbeat');
         Route::get('/unread-counts', [TeamMessagingController::class, 'unreadCounts'])->name('team-messaging.unread-counts');
         Route::post('/', [TeamMessagingController::class, 'store'])->name('team-messaging.store');
+        // Group routes
+        Route::post('/groups', [TeamMessagingController::class, 'createGroup'])->name('team-messaging.groups.create');
+        Route::patch('/groups/{conversation}', [TeamMessagingController::class, 'updateGroup'])->name('team-messaging.groups.update');
+        Route::delete('/groups/{conversation}', [TeamMessagingController::class, 'deleteGroup'])->name('team-messaging.groups.delete');
+        Route::post('/groups/{conversation}/members', [TeamMessagingController::class, 'addMember'])->name('team-messaging.groups.add-member');
+        Route::delete('/groups/{conversation}/members', [TeamMessagingController::class, 'removeMember'])->name('team-messaging.groups.remove-member');
+        Route::get('/groups/{conversation}/members', [TeamMessagingController::class, 'groupMembers'])->name('team-messaging.groups.members');
+        // Existing
         Route::get('/{conversation}', [TeamMessagingController::class, 'show'])->name('team-messaging.show');
         Route::post('/{conversation}/messages', [TeamMessagingController::class, 'sendMessage'])->name('team-messaging.send');
         Route::get('/{conversation}/messages', [TeamMessagingController::class, 'getMessages'])->name('team-messaging.messages');

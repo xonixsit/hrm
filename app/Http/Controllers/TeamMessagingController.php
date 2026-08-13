@@ -27,17 +27,36 @@ class TeamMessagingController extends Controller
 
         $conversations = Conversation::whereIn('id', $conversationIds)
             ->get()
+            // Pin the default group first, then the rest by latest message
+            ->sortByDesc(fn ($c) => [$c->is_default ? 1 : 0])
+            ->values()
             ->map(function (Conversation $conv) use ($user, $unreadMap) {
-                $otherUserId = $this->messaging->otherParticipantId($conv->id, $user->id);
-                $otherUser   = $otherUserId ? User::with('employee')->find($otherUserId) : null;
+                $isGroup = $conv->type === 'group';
+
+                if ($isGroup) {
+                    $participantCount = DB::table('conversation_users')
+                        ->where('conversation_id', $conv->id)->count();
+                    $otherUser = null;
+                } else {
+                    $otherUserId = $this->messaging->otherParticipantId($conv->id, $user->id);
+                    $otherUser   = $otherUserId ? User::with('employee')->find($otherUserId) : null;
+                    $participantCount = 2;
+                }
+
                 $lastMessage = Message::where('conversation_id', $conv->id)
                     ->where('type', 'user')
                     ->latest()
                     ->first();
 
                 return [
-                    'id'           => $conv->id,
-                    'other_user'   => $otherUser ? [
+                    'id'                => $conv->id,
+                    'name'              => $conv->name,
+                    'type'              => $conv->type,
+                    'is_group'          => $isGroup,
+                    'is_default'        => (bool) $conv->is_default,
+                    'is_creator'        => $conv->user_id === $user->id,
+                    'participant_count' => $participantCount,
+                    'other_user'        => !$isGroup && $otherUser ? [
                         'id'              => $otherUser->id,
                         'name'            => $otherUser->name,
                         'email'           => $otherUser->email,
@@ -61,6 +80,124 @@ class TeamMessagingController extends Controller
         return Inertia::render('TeamMessaging/Index', [
             'conversations' => $conversations,
             'users'         => $users,
+        ]);
+    }
+
+    // ─── Create group conversation ────────────────────────────────────────────
+
+    public function createGroup(Request $request)
+    {
+        $request->validate([
+            'name'     => 'required|string|max:100',
+            'user_ids' => 'required|array|min:1',
+            'user_ids.*' => 'exists:users,id',
+        ]);
+
+        $user    = Auth::user();
+        $members = array_unique(array_merge([$user->id], $request->user_ids));
+
+        $conv = Conversation::create([
+            'user_id' => $user->id,
+            'name'    => $request->name,
+            'type'    => 'group',
+        ]);
+
+        $inserts = array_map(fn($uid) => [
+            'user_id'         => $uid,
+            'conversation_id' => $conv->id,
+            'created_at'      => now(),
+            'updated_at'      => now(),
+        ], $members);
+        DB::table('conversation_users')->insert($inserts);
+
+        return response()->json(['conversation_id' => $conv->id, 'name' => $conv->name]);
+    }
+
+    // ─── Update group name ────────────────────────────────────────────────────
+
+    public function updateGroup(Request $request, Conversation $conversation)
+    {
+        abort_unless($conversation->type === 'group', 400);
+        abort_unless($this->messaging->isParticipant($conversation->id, Auth::id()), 403);
+        abort_if($conversation->is_default, 403, 'The Company group cannot be renamed.');
+
+        $request->validate(['name' => 'required|string|max:100']);
+        $conversation->update(['name' => $request->name]);
+
+        return response()->json(['ok' => true]);
+    }
+
+    // ─── Add member to group ──────────────────────────────────────────────────
+
+    public function addMember(Request $request, Conversation $conversation)
+    {
+        abort_unless($conversation->type === 'group', 400);
+        abort_unless($conversation->user_id === Auth::id(), 403); // only creator
+
+        $request->validate(['user_id' => 'required|exists:users,id']);
+
+        $exists = DB::table('conversation_users')
+            ->where('conversation_id', $conversation->id)
+            ->where('user_id', $request->user_id)
+            ->exists();
+
+        if (!$exists) {
+            DB::table('conversation_users')->insert([
+                'user_id'         => $request->user_id,
+                'conversation_id' => $conversation->id,
+                'created_at'      => now(),
+                'updated_at'      => now(),
+            ]);
+        }
+
+        return response()->json(['ok' => true]);
+    }
+
+    // ─── Remove member from group ─────────────────────────────────────────────
+
+    public function removeMember(Request $request, Conversation $conversation)
+    {
+        abort_unless($conversation->type === 'group', 400);
+        $user = Auth::user();
+        // Creator can remove anyone; members can remove themselves
+        $targetId = (int) $request->user_id;
+        abort_unless($conversation->user_id === $user->id || $targetId === $user->id, 403);
+
+        DB::table('conversation_users')
+            ->where('conversation_id', $conversation->id)
+            ->where('user_id', $targetId)
+            ->delete();
+
+        return response()->json(['ok' => true]);
+    }
+
+    // ─── Delete group ─────────────────────────────────────────────────────────
+
+    public function deleteGroup(Conversation $conversation)
+    {
+        abort_unless($conversation->type === 'group', 400);
+        abort_unless($conversation->user_id === Auth::id(), 403);
+        abort_if($conversation->is_default, 403, 'The Company group cannot be deleted.');
+
+        $conversation->delete();
+        return response()->json(['ok' => true]);
+    }
+
+    // ─── Get group members ────────────────────────────────────────────────────
+
+    public function groupMembers(Conversation $conversation)
+    {
+        abort_unless($this->messaging->isParticipant($conversation->id, Auth::id()), 403);
+
+        $members = DB::table('conversation_users')
+            ->join('users', 'users.id', '=', 'conversation_users.user_id')
+            ->where('conversation_users.conversation_id', $conversation->id)
+            ->select('users.id', 'users.name', 'users.email')
+            ->get();
+
+        return response()->json([
+            'members'    => $members,
+            'creator_id' => $conversation->user_id,
         ]);
     }
 
@@ -150,10 +287,8 @@ class TeamMessagingController extends Controller
         $recipientId = $this->messaging->otherParticipantId($conversation->id, $user->id);
 
         try {
-            // 1. Push full message to the open conversation channel (both participants)
             broadcast(new TeamMessageSent($message));
 
-            // 2. Push unread-count increment to recipient's personal channel (sidebar badge)
             if ($recipientId) {
                 broadcast(new NewConversationMessage([
                     'conversation_id' => $conversation->id,

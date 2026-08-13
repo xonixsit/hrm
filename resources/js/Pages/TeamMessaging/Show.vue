@@ -8,6 +8,8 @@ import Icon from '@/Components/Base/Icon.vue';
 import BaseButton from '@/Components/Base/BaseButton.vue';
 import BaseInput from '@/Components/Base/BaseInput.vue';
 import axios from 'axios';
+import data from '@emoji-mart/data';
+import { Picker } from 'emoji-mart';
 
 const { isDark } = useTheme();
 const page = usePage();
@@ -264,11 +266,30 @@ const toggleMessageActions = (messageId) => {
     showActions.value = showActions.value === messageId ? null : messageId;
 };
 
-const emojis = ['😀', '😂', '😍', '👍', '👎', '❤️', '🎉', '🔥', '💯', '🙏'];
+// ── Emoji picker (emoji-mart) ─────────────────────────────────────────────────
+const emojiPickerRef   = ref(null);
+const emojiButtonRef   = ref(null);
 
-const addEmoji = (emoji) => {
-    messageInput.value += emoji;
-    showEmojiPicker.value = false;
+const toggleEmojiPicker = () => {
+    showEmojiPicker.value = !showEmojiPicker.value;
+    if (showEmojiPicker.value) {
+        nextTick(() => {
+            if (emojiPickerRef.value && !emojiPickerRef.value.firstChild) {
+                const picker = new Picker({
+                    data,
+                    theme: isDark.value ? 'dark' : 'light',
+                    onEmojiSelect: (emoji) => {
+                        messageInput.value += emoji.native;
+                        showEmojiPicker.value = false;
+                    },
+                    onClickOutside: () => {
+                        showEmojiPicker.value = false;
+                    },
+                });
+                emojiPickerRef.value.appendChild(picker);
+            }
+        });
+    }
 };
 
 // Watch for typing to broadcast typing indicator
@@ -460,12 +481,15 @@ const broadcastTyping = () => {
                             <Icon name="Paperclip" class="w-5 h-5" />
                         </button>
                         <button 
-                            @click="showEmojiPicker = !showEmojiPicker"
+                            @click="toggleEmojiPicker"
+                            ref="emojiButtonRef"
                             :class="[
                                 'h-11 w-11 flex items-center justify-center rounded-lg transition-colors',
-                                isDark 
-                                    ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
-                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                showEmojiPicker
+                                    ? 'text-teal-500'
+                                    : isDark 
+                                        ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
+                                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                             ]"
                         >
                             <Icon name="Smile" class="w-5 h-5" />
@@ -486,20 +510,15 @@ const broadcastTyping = () => {
                             rows="1"
                         ></textarea>
                         
-                        <!-- Emoji Picker -->
-                        <div v-if="showEmojiPicker" :class="[
-                            'absolute bottom-full left-0 mb-2 p-3 rounded-xl shadow-xl grid grid-cols-5 gap-2 z-10',
-                            isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
-                        ]">
-                            <button
-                                v-for="emoji in emojis"
-                                :key="emoji"
-                                @click="addEmoji(emoji)"
-                                class="text-2xl hover:scale-125 transition-transform p-1"
-                            >
-                                {{ emoji }}
-                            </button>
-                        </div>
+                        <!-- emoji-mart picker — teleported so it's never clipped -->
+                        <Teleport to="body">
+                            <div
+                                v-if="showEmojiPicker"
+                                ref="emojiPickerRef"
+                                class="fixed z-[300]"
+                                style="bottom:80px;left:50%;transform:translateX(-50%);"
+                            ></div>
+                        </Teleport>
                     </div>
                     
                     <button 

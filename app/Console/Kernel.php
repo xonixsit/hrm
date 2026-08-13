@@ -12,6 +12,12 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
+        // Sync Company group chat membership daily (picks up any gaps)
+        $schedule->command('chat:ensure-company-group')
+                 ->dailyAt('00:30')
+                 ->withoutOverlapping()
+                 ->runInBackground();
+
         // Send daily digests at 9:00 AM every day
         $schedule->command('notifications:send-daily-digests')
                  ->dailyAt('09:00')

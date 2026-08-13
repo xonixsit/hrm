@@ -35,6 +35,11 @@
       </div>
     </template>
 
+    <!-- ── Independence Day Banner — shown for all roles ──────────────── -->
+    <div class="mb-6">
+      <IndependenceDayBanner />
+    </div>
+
     <!-- Main Dashboard Content -->
     <div v-if="isAdmin" class="space-y-6">
 
@@ -489,6 +494,7 @@
   import ManagerDashboard from '@/Components/Dashboard/ManagerDashboard.vue';
   import EmployeeDashboard from '@/Components/Dashboard/EmployeeDashboard.vue';
   import IdeaBoxModal from '@/Components/IdeaBox/IdeaBoxModal.vue';
+  import IndependenceDayBanner from '@/Components/Dashboard/IndependenceDayBanner.vue';
   import ApprovalModal from '@/Components/Dashboard/ApprovalModal.vue';
 
   // Widget Components

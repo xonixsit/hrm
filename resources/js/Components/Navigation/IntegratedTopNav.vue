@@ -2,7 +2,6 @@
   <!-- Integrated Top Navigation with Better Visual Cohesion -->
   <nav :class="[
     'w-full transition-all duration-200 sticky top-0 z-50',
-    // Enhanced background with brand colors matching Xonobics logo (teal/cyan theme)
     isDark 
       ? 'bg-gradient-to-r from-gray-900 via-gray-900 to-gray-800 border-b border-gray-700 shadow-lg shadow-gray-900/20' 
       : 'bg-gradient-to-r from-teal-500 via-teal-600 to-cyan-600 border-b border-teal-700/60 shadow-lg shadow-teal-900/20 backdrop-blur-sm'

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Employee;
 use App\Models\Department;
 use App\Models\User;
+use App\Services\MessagingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
@@ -237,6 +238,13 @@ class EmployeeController extends Controller
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
+        }
+
+        // Auto-add new employee to the default Company group chat
+        try {
+            MessagingService::addToCompanyGroup($user->id);
+        } catch (\Throwable $e) {
+            Log::warning('Failed to add new employee to Company group chat: ' . $e->getMessage());
         }
 
         $this->logAudit('Employee Created', 'Created employee: ' . $employee->employee_code);
@@ -582,7 +590,16 @@ class EmployeeController extends Controller
         
         // Also restore the associated user account
         $employee->user()->withTrashed()->restore();
-        
+
+        // Re-add to Company group chat on restore
+        try {
+            if ($employee->user_id) {
+                MessagingService::addToCompanyGroup($employee->user_id);
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Failed to add restored employee to Company group chat: ' . $e->getMessage());
+        }
+
         $this->logAudit('Employee Restored', 'Restored employee: ' . $employee->employee_code);
         return back()->with('success', 'Employee has been restored successfully.');
     }
