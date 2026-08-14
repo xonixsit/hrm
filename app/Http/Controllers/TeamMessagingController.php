@@ -191,9 +191,17 @@ class TeamMessagingController extends Controller
 
         $members = DB::table('conversation_users')
             ->join('users', 'users.id', '=', 'conversation_users.user_id')
+            ->leftJoin('employees', 'employees.user_id', '=', 'users.id')
             ->where('conversation_users.conversation_id', $conversation->id)
-            ->select('users.id', 'users.name', 'users.email')
-            ->get();
+            ->whereNull('employees.deleted_at')
+            ->select('users.id', 'users.name', 'users.email', 'employees.profile_pic')
+            ->get()
+            ->map(fn($m) => [
+                'id'              => $m->id,
+                'name'            => $m->name,
+                'email'           => $m->email,
+                'profile_picture' => $m->profile_pic ?? null,
+            ]);
 
         return response()->json([
             'members'    => $members,

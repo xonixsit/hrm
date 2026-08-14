@@ -1543,9 +1543,19 @@ watch(messages, () => {
                                         class="flex items-center gap-2.5 px-2 py-2 rounded-lg"
                                         :class="isDark ? 'hover:bg-gray-700' : 'hover:bg-slate-50'"
                                     >
-                                        <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold text-white flex-shrink-0"
-                                            style="background: linear-gradient(135deg, #006970, #00a9b4)">
-                                            {{ getInitials(member.name) }}
+                                        <!-- Avatar with photo or initials fallback -->
+                                        <div class="w-8 h-8 rounded-full flex-shrink-0 overflow-hidden">
+                                            <img
+                                                v-if="getProfilePicture(member)"
+                                                :src="getProfilePicture(member)"
+                                                :alt="member.name"
+                                                class="w-full h-full object-cover"
+                                            />
+                                            <div v-else
+                                                class="w-full h-full flex items-center justify-center text-xs font-semibold text-white"
+                                                style="background: linear-gradient(135deg, #006970, #00a9b4)">
+                                                {{ getInitials(member.name) }}
+                                            </div>
                                         </div>
                                         <div class="flex-1 min-w-0">
                                             <p class="text-sm font-medium truncate" :class="isDark ? 'text-white' : 'text-slate-800'">
