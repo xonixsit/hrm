@@ -1,76 +1,84 @@
 <script setup>
-import { ref, watch, computed } from 'vue';
+import { ref, computed } from 'vue';
 import { Head, router } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import PageLayout from '@/Components/Layout/PageLayout.vue';
 import { useTheme } from '@/composables/useTheme';
 const { isDark } = useTheme();
 
-// ── Message preview modal ─────────────────────────────────────────────────────
-const viewingMsg = ref(null);
-function openMsg(msg) { viewingMsg.value = msg; }
-function closeMsg()   { viewingMsg.value = null; }
-
 const props = defineProps({
     messages: Object,   // paginated
     users:    Array,
+    groups:   Array,
+    tab:      String,
     filters:  Object,
     stats:    Object,
 });
 
 const breadcrumbs = [
-    { label: 'Dashboard', href: route('dashboard') },
+    { label: 'Dashboard',       href: route('dashboard') },
     { label: 'Message Monitor', href: route('admin.message-monitor.index') },
 ];
 
 // ── Filter state ──────────────────────────────────────────────────────────────
+const activeTab = ref(props.tab || 'direct');
 const fromDate  = ref(props.filters.from_date);
 const toDate    = ref(props.filters.to_date);
-const fromUser  = ref(props.filters.from_user || '');
-const toUser    = ref(props.filters.to_user   || '');
-const keyword   = ref(props.filters.keyword   || '');
+const fromUser  = ref(props.filters.from_user  || '');
+const toUser    = ref(props.filters.to_user    || '');
+const groupId   = ref(props.filters.group_id   || '');
+const keyword   = ref(props.filters.keyword    || '');
+
+function switchTab(t) {
+    activeTab.value = t;
+    toUser.value    = '';
+    groupId.value   = '';
+    applyFilters();
+}
 
 function applyFilters() {
-    router.get(route('admin.message-monitor.index'), {
-        from_date:  fromDate.value,
-        to_date:    toDate.value,
-        from_user:  fromUser.value  || undefined,
-        to_user:    toUser.value    || undefined,
-        keyword:    keyword.value   || undefined,
-    }, { preserveScroll: true, preserveState: true });
+    const params = {
+        tab:       activeTab.value,
+        from_date: fromDate.value,
+        to_date:   toDate.value,
+        keyword:   keyword.value   || undefined,
+        from_user: fromUser.value  || undefined,
+    };
+    if (activeTab.value === 'direct') {
+        params.to_user  = toUser.value  || undefined;
+    } else {
+        params.group_id = groupId.value || undefined;
+    }
+    router.get(route('admin.message-monitor.index'), params,
+        { preserveScroll: true, preserveState: true });
 }
 
 const refreshing = ref(false);
 function refresh() {
     refreshing.value = true;
-    router.reload({
-        preserveScroll: true,
-        preserveState:  true,
-        onFinish: () => { refreshing.value = false; },
-    });
+    router.reload({ preserveScroll: true, preserveState: true,
+        onFinish: () => { refreshing.value = false; } });
 }
 
 const exportUrl = computed(() => {
-    const params = new URLSearchParams();
-    params.set('from_date', fromDate.value);
-    params.set('to_date',   toDate.value);
-    if (fromUser.value) params.set('from_user', fromUser.value);
-    if (toUser.value)   params.set('to_user',   toUser.value);
-    if (keyword.value)  params.set('keyword',   keyword.value);
-    return route('admin.message-monitor.export') + '?' + params.toString();
+    const p = new URLSearchParams();
+    p.set('tab',       activeTab.value);
+    p.set('from_date', fromDate.value);
+    p.set('to_date',   toDate.value);
+    if (fromUser.value) p.set('from_user', fromUser.value);
+    if (keyword.value)  p.set('keyword',   keyword.value);
+    if (activeTab.value === 'direct' && toUser.value)  p.set('to_user',  toUser.value);
+    if (activeTab.value === 'groups' && groupId.value) p.set('group_id', groupId.value);
+    return route('admin.message-monitor.export') + '?' + p.toString();
 });
 
 function resetFilters() {
     const today = new Date().toISOString().split('T')[0];
-    fromDate.value = today;
-    toDate.value   = today;
-    fromUser.value = '';
-    toUser.value   = '';
-    keyword.value  = '';
+    fromDate.value = today; toDate.value = today;
+    fromUser.value = ''; toUser.value = ''; groupId.value = ''; keyword.value = '';
     applyFilters();
 }
 
-// Quick date presets
 function setPreset(preset) {
     const now   = new Date();
     const today = now.toISOString().split('T')[0];
@@ -89,6 +97,11 @@ function setPreset(preset) {
     applyFilters();
 }
 
+// ── Message preview modal ─────────────────────────────────────────────────────
+const viewingMsg = ref(null);
+function openMsg(msg)  { viewingMsg.value = msg; }
+function closeMsg()    { viewingMsg.value = null; }
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function formatDT(dt) {
     if (!dt) return '—';
@@ -100,8 +113,8 @@ function formatDT(dt) {
 function truncate(str, n = 80) {
     return str && str.length > n ? str.slice(0, n) + '…' : (str || '—');
 }
-function userName(id) {
-    return props.users.find(u => u.id === id)?.name || 'Unknown';
+function initials(name) {
+    return (name || '?').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
 }
 </script>
 
@@ -110,7 +123,7 @@ function userName(id) {
     <AuthenticatedLayout>
         <PageLayout
             title="Message Monitor"
-            subtitle="Admin view of all staff messages — filtered by date, sender or recipient"
+            subtitle="Admin view of staff messages — separated by Direct Messages and Group Chats"
             :breadcrumbs="breadcrumbs"
             maxWidth="full">
 
@@ -122,22 +135,45 @@ function userName(id) {
 
             <div class="space-y-5">
 
-                <!-- ── Stats row ─────────────────────────────────────────── -->
+                <!-- ── Stats ─────────────────────────────────────────────── -->
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
                     <div v-for="s in [
-                        { label:'Total Messages',  value: stats.total_messages, icon:'💬' },
-                        { label:'Active Users',    value: stats.active_users,   icon:'👥' },
-                        { label:'Date From',       value: filters.from_date,    icon:'📅' },
-                        { label:'Date To',         value: filters.to_date,      icon:'📅' },
+                        { label: 'Total Messages', value: stats.total_messages, icon: '💬' },
+                        { label: 'Active Users',   value: stats.active_users,   icon: '👥' },
+                        { label: 'Date From',      value: filters.from_date,    icon: '📅' },
+                        { label: 'Date To',        value: filters.to_date,      icon: '📅' },
                     ]" :key="s.label"
                         class="rounded-xl border px-4 py-3 flex items-center gap-3"
                         :class="isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-slate-200'">
                         <span class="text-xl">{{ s.icon }}</span>
                         <div>
-                            <p class="text-[10px] font-bold uppercase tracking-wider" :class="isDark ? 'text-gray-400' : 'text-slate-500'">{{ s.label }}</p>
-                            <p class="text-sm font-extrabold" :class="isDark ? 'text-white' : 'text-slate-900'">{{ s.value }}</p>
+                            <p class="text-[10px] font-bold uppercase tracking-wider"
+                                :class="isDark ? 'text-gray-400' : 'text-slate-500'">{{ s.label }}</p>
+                            <p class="text-sm font-extrabold"
+                                :class="isDark ? 'text-white' : 'text-slate-900'">{{ s.value }}</p>
                         </div>
                     </div>
+                </div>
+
+                <!-- ── Tabs ───────────────────────────────────────────────── -->
+                <div class="flex items-center gap-1 border-b"
+                     :class="isDark ? 'border-gray-700' : 'border-slate-200'">
+                    <button
+                        @click="switchTab('direct')"
+                        class="relative px-5 py-3 text-sm font-semibold transition-colors focus:outline-none"
+                        :class="activeTab === 'direct'
+                            ? (isDark ? 'text-teal-400 after:absolute after:bottom-0 after:inset-x-0 after:h-0.5 after:bg-teal-400' : 'text-teal-600 after:absolute after:bottom-0 after:inset-x-0 after:h-0.5 after:bg-teal-500')
+                            : (isDark ? 'text-gray-400 hover:text-gray-200' : 'text-slate-500 hover:text-slate-700')">
+                        💬 Direct Messages
+                    </button>
+                    <button
+                        @click="switchTab('groups')"
+                        class="relative px-5 py-3 text-sm font-semibold transition-colors focus:outline-none"
+                        :class="activeTab === 'groups'
+                            ? (isDark ? 'text-teal-400 after:absolute after:bottom-0 after:inset-x-0 after:h-0.5 after:bg-teal-400' : 'text-teal-600 after:absolute after:bottom-0 after:inset-x-0 after:h-0.5 after:bg-teal-500')
+                            : (isDark ? 'text-gray-400 hover:text-gray-200' : 'text-slate-500 hover:text-slate-700')">
+                        👥 Group Chats
+                    </button>
                 </div>
 
                 <!-- ── Filters ───────────────────────────────────────────── -->
@@ -155,25 +191,27 @@ function userName(id) {
                         </button>
                     </div>
 
-                    <!-- Filter inputs -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
                         <!-- From date -->
                         <div>
-                            <label class="text-[11px] font-bold block mb-1" :class="isDark ? 'text-gray-400' : 'text-slate-600'">From Date</label>
+                            <label class="text-[11px] font-bold block mb-1"
+                                :class="isDark ? 'text-gray-400' : 'text-slate-600'">From Date</label>
                             <input v-model="fromDate" type="date"
                                 class="w-full px-3 py-2 text-xs rounded-xl border focus:outline-none focus:border-teal-500"
                                 :class="isDark ? 'bg-gray-700 border-gray-600 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'" />
                         </div>
                         <!-- To date -->
                         <div>
-                            <label class="text-[11px] font-bold block mb-1" :class="isDark ? 'text-gray-400' : 'text-slate-600'">To Date</label>
+                            <label class="text-[11px] font-bold block mb-1"
+                                :class="isDark ? 'text-gray-400' : 'text-slate-600'">To Date</label>
                             <input v-model="toDate" type="date"
                                 class="w-full px-3 py-2 text-xs rounded-xl border focus:outline-none focus:border-teal-500"
                                 :class="isDark ? 'bg-gray-700 border-gray-600 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'" />
                         </div>
-                        <!-- From user -->
+                        <!-- Sender (both tabs) -->
                         <div>
-                            <label class="text-[11px] font-bold block mb-1" :class="isDark ? 'text-gray-400' : 'text-slate-600'">Sender</label>
+                            <label class="text-[11px] font-bold block mb-1"
+                                :class="isDark ? 'text-gray-400' : 'text-slate-600'">Sender</label>
                             <select v-model="fromUser"
                                 class="w-full px-3 py-2 text-xs rounded-xl border focus:outline-none focus:border-teal-500"
                                 :class="isDark ? 'bg-gray-700 border-gray-600 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'">
@@ -181,9 +219,10 @@ function userName(id) {
                                 <option v-for="u in users" :key="u.id" :value="u.id">{{ u.name }}</option>
                             </select>
                         </div>
-                        <!-- To user -->
-                        <div>
-                            <label class="text-[11px] font-bold block mb-1" :class="isDark ? 'text-gray-400' : 'text-slate-600'">Recipient</label>
+                        <!-- Recipient — direct only -->
+                        <div v-if="activeTab === 'direct'">
+                            <label class="text-[11px] font-bold block mb-1"
+                                :class="isDark ? 'text-gray-400' : 'text-slate-600'">Recipient</label>
                             <select v-model="toUser"
                                 class="w-full px-3 py-2 text-xs rounded-xl border focus:outline-none focus:border-teal-500"
                                 :class="isDark ? 'bg-gray-700 border-gray-600 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'">
@@ -191,18 +230,32 @@ function userName(id) {
                                 <option v-for="u in users" :key="u.id" :value="u.id">{{ u.name }}</option>
                             </select>
                         </div>
+                        <!-- Group filter — groups tab only -->
+                        <div v-else>
+                            <label class="text-[11px] font-bold block mb-1"
+                                :class="isDark ? 'text-gray-400' : 'text-slate-600'">Group</label>
+                            <select v-model="groupId"
+                                class="w-full px-3 py-2 text-xs rounded-xl border focus:outline-none focus:border-teal-500"
+                                :class="isDark ? 'bg-gray-700 border-gray-600 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'">
+                                <option value="">All Groups</option>
+                                <option v-for="g in groups" :key="g.id" :value="g.id">
+                                    {{ g.name }}{{ g.is_default ? ' (Company)' : '' }}
+                                </option>
+                            </select>
+                        </div>
                         <!-- Keyword -->
                         <div>
-                            <label class="text-[11px] font-bold block mb-1" :class="isDark ? 'text-gray-400' : 'text-slate-600'">Keyword</label>
-                            <input v-model="keyword" type="text" placeholder="Search message..."
+                            <label class="text-[11px] font-bold block mb-1"
+                                :class="isDark ? 'text-gray-400' : 'text-slate-600'">Keyword</label>
+                            <input v-model="keyword" type="text" placeholder="Search message…"
                                 class="w-full px-3 py-2 text-xs rounded-xl border focus:outline-none focus:border-teal-500"
                                 :class="isDark ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-500' : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400'"
                                 @keyup.enter="applyFilters" />
                         </div>
                     </div>
 
-                    <!-- Action buttons -->
-                    <div class="flex items-center gap-2">
+                    <!-- Actions -->
+                    <div class="flex items-center gap-2 flex-wrap">
                         <button @click="applyFilters"
                             class="px-5 py-2 rounded-xl text-white text-xs font-bold hover:opacity-90 transition-all"
                             style="background:linear-gradient(135deg,#006970,#00a9b4)">
@@ -213,11 +266,10 @@ function userName(id) {
                             :class="isDark ? 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600' : 'bg-white border-slate-300 text-slate-600 hover:bg-slate-50'">
                             ↺ Reset
                         </button>
-                        <!-- Export CSV -->
                         <a :href="exportUrl"
                             class="ml-auto flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold border transition-all"
                             :class="isDark ? 'bg-emerald-900/40 border-emerald-700 text-emerald-300 hover:bg-emerald-900/60' : 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100'">
-                            ⬇ Export CSV
+                            ⬇ Export {{ activeTab === 'groups' ? 'Group' : 'Direct' }} CSV
                         </a>
                         <span class="text-xs" :class="isDark ? 'text-gray-400' : 'text-slate-500'">
                             {{ messages.total }} message{{ messages.total !== 1 ? 's' : '' }} found
@@ -229,11 +281,13 @@ function userName(id) {
                 <div class="rounded-2xl border overflow-hidden"
                     :class="isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-slate-200'">
 
-                    <!-- Table toolbar -->
+                    <!-- Toolbar -->
                     <div class="flex items-center justify-between px-5 py-3 border-b"
-                        :class="isDark ? 'border-gray-700 bg-gray-750' : 'border-slate-200 bg-slate-50'">
-                        <span class="text-xs font-semibold" :class="isDark ? 'text-gray-400' : 'text-slate-500'">
-                            {{ messages.total }} message{{ messages.total !== 1 ? 's' : '' }} found
+                        :class="isDark ? 'border-gray-700' : 'border-slate-200 bg-slate-50'">
+                        <span class="text-xs font-semibold"
+                            :class="isDark ? 'text-gray-400' : 'text-slate-500'">
+                            {{ messages.total }} result{{ messages.total !== 1 ? 's' : '' }}
+                            — {{ activeTab === 'groups' ? 'Group Chats' : 'Direct Messages' }}
                         </span>
                         <button @click="refresh" :disabled="refreshing"
                             class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold border transition-all disabled:opacity-60"
@@ -246,76 +300,133 @@ function userName(id) {
                         </button>
                     </div>
 
-                    <!-- Table head -->
-                    <div class="grid grid-cols-12 gap-0 border-b text-[11px] font-extrabold uppercase tracking-wider"
-                        :class="isDark ? 'bg-gray-750 border-gray-700 text-gray-400' : 'bg-slate-50 border-slate-200 text-slate-500'">
-                        <div class="col-span-2 px-4 py-3">From</div>
-                        <div class="col-span-2 px-4 py-3">To</div>
-                        <div class="col-span-6 px-4 py-3">Message</div>
-                        <div class="col-span-2 px-4 py-3">Date & Time</div>
-                    </div>
+                    <!-- ── DIRECT MESSAGES table ───────────────────────── -->
+                    <template v-if="activeTab === 'direct'">
+                        <div class="grid grid-cols-12 border-b text-[11px] font-extrabold uppercase tracking-wider"
+                            :class="isDark ? 'bg-gray-750 border-gray-700 text-gray-400' : 'bg-slate-50 border-slate-200 text-slate-500'">
+                            <div class="col-span-2 px-4 py-3">From</div>
+                            <div class="col-span-2 px-4 py-3">To</div>
+                            <div class="col-span-6 px-4 py-3">Message</div>
+                            <div class="col-span-2 px-4 py-3">Date & Time</div>
+                        </div>
 
-                    <!-- Empty state -->
-                    <div v-if="messages.data.length === 0"
-                        class="flex flex-col items-center justify-center py-16 text-center">
-                        <p class="text-3xl mb-3">💬</p>
-                        <p class="font-bold text-sm" :class="isDark ? 'text-white' : 'text-slate-800'">No messages found</p>
-                        <p class="text-xs mt-1" :class="isDark ? 'text-gray-400' : 'text-slate-500'">Try adjusting your date range or filters</p>
-                    </div>
+                        <div v-if="messages.data.length === 0"
+                            class="flex flex-col items-center justify-center py-16 text-center">
+                            <p class="text-3xl mb-3">💬</p>
+                            <p class="font-bold text-sm" :class="isDark ? 'text-white' : 'text-slate-800'">No direct messages found</p>
+                            <p class="text-xs mt-1" :class="isDark ? 'text-gray-400' : 'text-slate-500'">Try adjusting your filters</p>
+                        </div>
 
-                    <!-- Rows -->
-                    <div v-else class="divide-y" :class="isDark ? 'divide-gray-700' : 'divide-slate-100'">
-                        <div v-for="(msg, i) in messages.data" :key="msg.id"
-                            class="grid grid-cols-12 gap-0 text-xs transition-colors"
-                            :class="[
-                                i % 2 === 0
-                                    ? isDark ? 'bg-gray-800' : 'bg-white'
-                                    : isDark ? 'bg-gray-750' : 'bg-slate-50/50',
-                                isDark ? 'hover:bg-gray-700' : 'hover:bg-teal-50/40'
-                            ]">
-
-                            <!-- From -->
-                            <div class="col-span-2 px-4 py-3.5 flex items-center gap-2">
-                                <span class="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-extrabold text-white shrink-0"
-                                    style="background:linear-gradient(135deg,#006970,#00a9b4)">
-                                    {{ msg.sender_name?.slice(0,2).toUpperCase() }}
-                                </span>
-                                <div class="min-w-0">
-                                    <p class="font-semibold truncate" :class="isDark ? 'text-white' : 'text-slate-900'">{{ msg.sender_name }}</p>
-                                    <p class="text-[10px] truncate" :class="isDark ? 'text-gray-500' : 'text-slate-400'">{{ msg.sender_email }}</p>
+                        <div v-else class="divide-y" :class="isDark ? 'divide-gray-700' : 'divide-slate-100'">
+                            <div v-for="(msg, i) in messages.data" :key="msg.id"
+                                class="grid grid-cols-12 text-xs transition-colors"
+                                :class="[
+                                    i % 2 === 0 ? (isDark ? 'bg-gray-800' : 'bg-white') : (isDark ? 'bg-gray-750' : 'bg-slate-50/50'),
+                                    isDark ? 'hover:bg-gray-700' : 'hover:bg-teal-50/40'
+                                ]">
+                                <div class="col-span-2 px-4 py-3.5 flex items-center gap-2">
+                                    <span class="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-extrabold text-white shrink-0"
+                                        style="background:linear-gradient(135deg,#006970,#00a9b4)">
+                                        {{ initials(msg.sender_name) }}
+                                    </span>
+                                    <div class="min-w-0">
+                                        <p class="font-semibold truncate" :class="isDark ? 'text-white' : 'text-slate-900'">{{ msg.sender_name }}</p>
+                                        <p class="text-[10px] truncate" :class="isDark ? 'text-gray-500' : 'text-slate-400'">{{ msg.sender_email }}</p>
+                                    </div>
                                 </div>
-                            </div>
-
-                            <!-- To -->
-                            <div class="col-span-2 px-4 py-3.5 flex items-center gap-2">
-                                <span class="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-extrabold text-white shrink-0 bg-indigo-500">
-                                    {{ msg.recipient_name?.slice(0,2).toUpperCase() }}
-                                </span>
-                                <div class="min-w-0">
-                                    <p class="font-semibold truncate" :class="isDark ? 'text-white' : 'text-slate-900'">{{ msg.recipient_name }}</p>
-                                    <p class="text-[10px] truncate" :class="isDark ? 'text-gray-500' : 'text-slate-400'">{{ msg.recipient_email }}</p>
+                                <div class="col-span-2 px-4 py-3.5 flex items-center gap-2">
+                                    <span class="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-extrabold text-white shrink-0 bg-indigo-500">
+                                        {{ initials(msg.recipient_name) }}
+                                    </span>
+                                    <div class="min-w-0">
+                                        <p class="font-semibold truncate" :class="isDark ? 'text-white' : 'text-slate-900'">{{ msg.recipient_name }}</p>
+                                        <p class="text-[10px] truncate" :class="isDark ? 'text-gray-500' : 'text-slate-400'">{{ msg.recipient_email }}</p>
+                                    </div>
                                 </div>
-                            </div>
-
-                            <!-- Message -->
-                            <div class="col-span-6 px-4 py-3.5 flex items-center gap-2">
-                                <p class="leading-relaxed flex-1" :class="isDark ? 'text-gray-200' : 'text-slate-800'">{{ truncate(msg.message) }}</p>
-                                <button v-if="msg.message && msg.message.length > 80"
-                                    @click="openMsg(msg)"
-                                    class="shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-md border transition-all"
-                                    :class="isDark ? 'border-teal-700 text-teal-400 hover:bg-teal-900/30' : 'border-teal-200 text-teal-600 hover:bg-teal-50'">
-                                    View
-                                </button>
-                            </div>
-
-                            <!-- Date -->
-                            <div class="col-span-2 px-4 py-3.5 flex items-center">
-                                <p :class="isDark ? 'text-gray-400' : 'text-slate-500'">{{ formatDT(msg.created_at) }}</p>
+                                <div class="col-span-6 px-4 py-3.5 flex items-center gap-2">
+                                    <p class="leading-relaxed flex-1" :class="isDark ? 'text-gray-200' : 'text-slate-800'">{{ truncate(msg.message) }}</p>
+                                    <button v-if="msg.message && msg.message.length > 80" @click="openMsg(msg)"
+                                        class="shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-md border transition-all"
+                                        :class="isDark ? 'border-teal-700 text-teal-400 hover:bg-teal-900/30' : 'border-teal-200 text-teal-600 hover:bg-teal-50'">
+                                        View
+                                    </button>
+                                </div>
+                                <div class="col-span-2 px-4 py-3.5 flex items-center">
+                                    <p :class="isDark ? 'text-gray-400' : 'text-slate-500'">{{ formatDT(msg.created_at) }}</p>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    </template>
 
-                    <!-- Pagination -->
+                    <!-- ── GROUP MESSAGES table ────────────────────────── -->
+                    <template v-else>
+                        <div class="grid grid-cols-12 border-b text-[11px] font-extrabold uppercase tracking-wider"
+                            :class="isDark ? 'bg-gray-750 border-gray-700 text-gray-400' : 'bg-slate-50 border-slate-200 text-slate-500'">
+                            <div class="col-span-2 px-4 py-3">Group</div>
+                            <div class="col-span-2 px-4 py-3">Sender</div>
+                            <div class="col-span-6 px-4 py-3">Message</div>
+                            <div class="col-span-2 px-4 py-3">Date & Time</div>
+                        </div>
+
+                        <div v-if="messages.data.length === 0"
+                            class="flex flex-col items-center justify-center py-16 text-center">
+                            <p class="text-3xl mb-3">👥</p>
+                            <p class="font-bold text-sm" :class="isDark ? 'text-white' : 'text-slate-800'">No group messages found</p>
+                            <p class="text-xs mt-1" :class="isDark ? 'text-gray-400' : 'text-slate-500'">Try adjusting your filters</p>
+                        </div>
+
+                        <div v-else class="divide-y" :class="isDark ? 'divide-gray-700' : 'divide-slate-100'">
+                            <div v-for="(msg, i) in messages.data" :key="msg.id"
+                                class="grid grid-cols-12 text-xs transition-colors"
+                                :class="[
+                                    i % 2 === 0 ? (isDark ? 'bg-gray-800' : 'bg-white') : (isDark ? 'bg-gray-750' : 'bg-slate-50/50'),
+                                    isDark ? 'hover:bg-gray-700' : 'hover:bg-teal-50/40'
+                                ]">
+                                <!-- Group name + badge -->
+                                <div class="col-span-2 px-4 py-3.5 flex items-center gap-2">
+                                    <span class="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-extrabold text-white shrink-0"
+                                        :style="msg.is_default_group ? 'background:linear-gradient(135deg,#b45309,#d97706)' : 'background:linear-gradient(135deg,#006970,#00a9b4)'">
+                                        {{ msg.is_default_group ? '🏢' : '👥' }}
+                                    </span>
+                                    <div class="min-w-0">
+                                        <p class="font-semibold truncate" :class="isDark ? 'text-white' : 'text-slate-900'">
+                                            {{ msg.group_name }}
+                                        </p>
+                                        <span v-if="msg.is_default_group"
+                                            class="text-[9px] px-1.5 py-0.5 rounded font-bold bg-amber-100 text-amber-700">
+                                            Company
+                                        </span>
+                                    </div>
+                                </div>
+                                <!-- Sender -->
+                                <div class="col-span-2 px-4 py-3.5 flex items-center gap-2">
+                                    <span class="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-extrabold text-white shrink-0"
+                                        style="background:linear-gradient(135deg,#6366f1,#8b5cf6)">
+                                        {{ initials(msg.sender_name) }}
+                                    </span>
+                                    <div class="min-w-0">
+                                        <p class="font-semibold truncate" :class="isDark ? 'text-white' : 'text-slate-900'">{{ msg.sender_name }}</p>
+                                        <p class="text-[10px] truncate" :class="isDark ? 'text-gray-500' : 'text-slate-400'">{{ msg.sender_email }}</p>
+                                    </div>
+                                </div>
+                                <!-- Message -->
+                                <div class="col-span-6 px-4 py-3.5 flex items-center gap-2">
+                                    <p class="leading-relaxed flex-1" :class="isDark ? 'text-gray-200' : 'text-slate-800'">{{ truncate(msg.message) }}</p>
+                                    <button v-if="msg.message && msg.message.length > 80" @click="openMsg(msg)"
+                                        class="shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-md border transition-all"
+                                        :class="isDark ? 'border-teal-700 text-teal-400 hover:bg-teal-900/30' : 'border-teal-200 text-teal-600 hover:bg-teal-50'">
+                                        View
+                                    </button>
+                                </div>
+                                <!-- Date -->
+                                <div class="col-span-2 px-4 py-3.5 flex items-center">
+                                    <p :class="isDark ? 'text-gray-400' : 'text-slate-500'">{{ formatDT(msg.created_at) }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- Pagination (shared) -->
                     <div v-if="messages.last_page > 1"
                         class="flex items-center justify-between px-5 py-3 border-t text-xs"
                         :class="isDark ? 'border-gray-700 bg-gray-800' : 'border-slate-200 bg-slate-50'">
@@ -323,17 +434,16 @@ function userName(id) {
                             Showing {{ messages.from }}–{{ messages.to }} of {{ messages.total }}
                         </span>
                         <div class="flex items-center gap-1">
-                            <a v-if="messages.prev_page_url"
-                                :href="messages.prev_page_url"
+                            <a v-if="messages.prev_page_url" :href="messages.prev_page_url"
                                 class="px-3 py-1.5 rounded-lg border font-bold transition-all"
                                 :class="isDark ? 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600' : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-100'">
                                 ← Prev
                             </a>
-                            <span class="px-3 py-1.5 font-mono font-bold" :class="isDark ? 'text-white' : 'text-slate-800'">
+                            <span class="px-3 py-1.5 font-mono font-bold"
+                                :class="isDark ? 'text-white' : 'text-slate-800'">
                                 {{ messages.current_page }} / {{ messages.last_page }}
                             </span>
-                            <a v-if="messages.next_page_url"
-                                :href="messages.next_page_url"
+                            <a v-if="messages.next_page_url" :href="messages.next_page_url"
                                 class="px-3 py-1.5 rounded-lg border font-bold transition-all"
                                 :class="isDark ? 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600' : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-100'">
                                 Next →
@@ -355,12 +465,16 @@ function userName(id) {
                 <div class="w-full max-w-lg rounded-2xl border shadow-2xl overflow-hidden flex flex-col"
                     style="max-height:80vh"
                     :class="isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-slate-200'">
-                    <!-- Header -->
                     <div class="px-5 py-4 border-b flex items-center justify-between"
-                        :class="isDark ? 'border-gray-700 bg-gray-750' : 'border-slate-200 bg-slate-50'">
+                        :class="isDark ? 'border-gray-700' : 'border-slate-200 bg-slate-50'">
                         <div class="min-w-0">
                             <p class="text-xs font-bold" :class="isDark ? 'text-white' : 'text-slate-900'">
-                                {{ viewingMsg.sender_name }} → {{ viewingMsg.recipient_name }}
+                                <template v-if="activeTab === 'groups'">
+                                    {{ viewingMsg.group_name }} · {{ viewingMsg.sender_name }}
+                                </template>
+                                <template v-else>
+                                    {{ viewingMsg.sender_name }} → {{ viewingMsg.recipient_name }}
+                                </template>
                             </p>
                             <p class="text-[10px] mt-0.5" :class="isDark ? 'text-gray-400' : 'text-slate-500'">
                                 {{ formatDT(viewingMsg.created_at) }}
@@ -374,8 +488,7 @@ function userName(id) {
                             </svg>
                         </button>
                     </div>
-                    <!-- Body -->
-                    <div class="p-5">
+                    <div class="p-5 overflow-y-auto">
                         <p class="text-sm leading-relaxed whitespace-pre-wrap"
                             :class="isDark ? 'text-gray-200' : 'text-slate-800'">{{ viewingMsg.message }}</p>
                     </div>
