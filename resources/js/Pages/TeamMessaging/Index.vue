@@ -606,6 +606,8 @@ const sendMessage = async () => {
         isSending.value = false;
     }
 };
+
+const formatTime = (date) => {
     if (!date) return '';
     const messageDate = new Date(date);
     const now = new Date();
