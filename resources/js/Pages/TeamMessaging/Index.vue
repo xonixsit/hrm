@@ -574,7 +574,7 @@ const sendMessage = async () => {
     };
     
     messages.value.push(tempMessage);
-    scrollToBottom(true);
+    scrollToBottom(true, true); // force — user just sent, always scroll down
     
     try {
         const response = await axios.post(route('team-messaging.send', selectedConversation.value), {
@@ -594,7 +594,7 @@ const sendMessage = async () => {
                 messages.value.splice(tempIndex, 1, serverMsg);
             }
         }
-        scrollToBottom(true);
+        scrollToBottom(true, true); // force after confirmed send
     } catch (error) {
         console.error('Error sending message:', error);
         const tempIndex = messages.value.findIndex(m => m.id === tempId);
@@ -606,8 +606,6 @@ const sendMessage = async () => {
         isSending.value = false;
     }
 };
-
-const formatTime = (date) => {
     if (!date) return '';
     const messageDate = new Date(date);
     const now = new Date();
@@ -899,15 +897,25 @@ const checkForNewConversations = async () => {
     }
 };
 
-const scrollToBottom = (smooth = true) => {
+const scrollToBottom = (smooth = true, force = false) => {
     nextTick(() => {
         if (messagesContainer.value) {
-            messagesContainer.value.scrollTo({
-                top: messagesContainer.value.scrollHeight,
-                behavior: smooth ? 'smooth' : 'auto'
-            });
+            // Only auto-scroll if user is already near the bottom (within 120px)
+            // or if force=true (user just sent a message)
+            if (force || isNearBottom()) {
+                messagesContainer.value.scrollTo({
+                    top: messagesContainer.value.scrollHeight,
+                    behavior: smooth ? 'smooth' : 'auto'
+                });
+            }
         }
     });
+};
+
+const isNearBottom = () => {
+    if (!messagesContainer.value) return true;
+    const { scrollTop, scrollHeight, clientHeight } = messagesContainer.value;
+    return scrollHeight - scrollTop - clientHeight < 120;
 };
 
 const formatFullTime = (date) => {
@@ -993,12 +1001,12 @@ watch(selectedConversation, (newVal) => {
             checkForNewMessages();
         }, 3000);
     }
-    scrollToBottom(false);
+    scrollToBottom(false, true); // force on conversation switch — always jump to bottom
 });
 
-// Watch for messages to scroll to bottom
+// Watch for messages to scroll to bottom — only when near bottom
 watch(messages, () => {
-    scrollToBottom(true);
+    scrollToBottom(true); // respects isNearBottom() internally
 });
 </script>
 
