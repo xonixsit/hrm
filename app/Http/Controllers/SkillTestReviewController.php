@@ -21,7 +21,7 @@ class SkillTestReviewController extends Controller
         $this->authorize('review', SkillTest::class);
 
         $query = TestResponse::with([
-            'employee.user',
+            'employee' => fn($q) => $q->withTrashed()->with(['user' => fn($q) => $q->withTrashed()]),
             'skillTest',
             'testSession',
         ])->whereNotNull('submitted_at');
@@ -41,23 +41,30 @@ class SkillTestReviewController extends Controller
         return Inertia::render('SkillTests/Review/Index', [
             'responses' => $responses->through(fn($r) => [
                 'id' => $r->id,
-                'employee' => [
-                    'id' => $r->employee->id,
+                'employee' => $r->employee ? [
+                    'id'   => $r->employee->id,
                     'name' => $r->employee->getFullName(),
+                ] : [
+                    'id'   => null,
+                    'name' => 'Deleted Employee',
                 ],
-                'test' => [
-                    'id' => $r->skillTest->id,
-                    'name' => $r->skillTest->name,
+                'test' => $r->skillTest ? [
+                    'id'            => $r->skillTest->id,
+                    'name'          => $r->skillTest->name,
                     'passing_score' => $r->skillTest->passing_score,
+                ] : [
+                    'id'            => null,
+                    'name'          => 'Deleted Test',
+                    'passing_score' => 0,
                 ],
-                'total_score' => $r->total_score,
+                'total_score'      => $r->total_score,
                 'percentage_score' => $r->percentage_score,
-                'passed' => $r->passed,
-                'review_status' => $r->review_status,
-                'submitted_at' => $r->submitted_at,
-                'time_spent' => $r->testSession?->time_spent,
+                'passed'           => $r->passed,
+                'review_status'    => $r->review_status,
+                'submitted_at'     => $r->submitted_at,
+                'time_spent'       => $r->testSession?->time_spent,
             ]),
-            'tests' => $tests,
+            'tests'   => $tests,
             'filters' => $request->only(['test_id', 'review_status']),
         ]);
     }
