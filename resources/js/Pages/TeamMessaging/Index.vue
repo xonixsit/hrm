@@ -10,7 +10,7 @@ import BaseInput from '@/Components/Base/BaseInput.vue';
 import axios from 'axios';
 import data from '@emoji-mart/data';
 import { Picker } from 'emoji-mart';
-import { markConversationReadGlobal } from '@/composables/useChatNotifications';
+import { markConversationReadGlobal, markConversationUnreadGlobal } from '@/composables/useChatNotifications';
 import { openFloatingChat } from '@/composables/useFloatingChat';
 
 const { isDark } = useTheme();
@@ -511,6 +511,18 @@ const currentConv = computed(() =>
     (props.conversations || []).find(c => c.id === selectedConversation.value) ?? null
 );
 
+// Map userId → DM conversation for O(1) lookup in the template (avoids repeated .find())
+const dmConvByUserId = computed(() => {
+    const map = {};
+    for (const c of (props.conversations || [])) {
+        if (c.other_user?.id) map[c.other_user.id] = c;
+    }
+    return map;
+});
+
+// Helper: get DM conversation ID for a user (returns null if no conversation yet)
+const dmConvId = (userId) => dmConvByUserId.value[userId]?.id ?? null;
+
 // Group conversations (type = 'group')
 const groupConversations = computed(() =>
     (props.conversations || []).filter(c => c.type === 'group' || c.is_group)
@@ -749,6 +761,7 @@ onMounted(async () => {
     requestNotificationPermission();
     document.addEventListener('visibilitychange', onVisibilityChange);
     document.addEventListener('click', closeEmojiOnOutsideClick);
+    document.addEventListener('click', closeMessageMenus);
 
     // Send heartbeat immediately — marks this user as "active" on chat page
     sendHeartbeat();
@@ -803,6 +816,7 @@ onUnmounted(() => {
         clearInterval(conversationPollingInterval);
     }
     document.removeEventListener('click', closeEmojiOnOutsideClick);
+    document.removeEventListener('click', closeMessageMenus);
     document.removeEventListener('visibilitychange', onVisibilityChange);
     stopTitleFlash();
 });
@@ -827,6 +841,50 @@ const sendHeartbeat = async () => {
         await axios.post(route('team-messaging.heartbeat'));
     } catch (e) {
         // silent — heartbeat failure is non-critical
+    }
+};
+
+// ── Per-message context menu ──────────────────────────────────────────────────
+const activeMessageMenu = ref(null); // message.id of open menu
+
+function toggleMessageMenu(id) {
+    activeMessageMenu.value = activeMessageMenu.value === id ? null : id;
+}
+
+function closeMessageMenus() {
+    activeMessageMenu.value = null;
+}
+
+// Mark conversation as unread from the message level
+// Uses the conversation of the currently selected chat
+function markUnreadFromMessage() {
+    if (selectedConversation.value) {
+        markAsUnread(selectedConversation.value);
+    }
+    activeMessageMenu.value = null;
+}
+const markingUnread = ref(null); // conversationId being processed
+
+const markAsUnread = async (conversationId) => {
+    if (!conversationId) return;
+    markingUnread.value = conversationId;
+    try {
+        await axios.post(route('team-messaging.mark-unread', conversationId));
+        const id = parseInt(conversationId);
+        // Update local state
+        localUnreadCounts.value[id] = 1;
+        locallyReadConversationIds.value = locallyReadConversationIds.value.filter(i => parseInt(i) !== id);
+        // Tell the global notification system to hold this at ≥1
+        markConversationUnreadGlobal(conversationId);
+        // Deselect if currently open so badge is visible
+        if (selectedConversation.value === conversationId) {
+            selectedConversation.value = null;
+            messages.value = [];
+        }
+    } catch (e) {
+        console.error('[markAsUnread] failed:', e);
+    } finally {
+        markingUnread.value = null;
     }
 };
 
@@ -879,13 +937,17 @@ const checkForNewConversations = async () => {
             // oldCount: what we knew before this poll
             const oldCount = isConvRead(numId) ? 0 : (localUnreadCounts.value[numId] ?? newCount);
 
+            // Don't zero out a conversation the user explicitly marked unread
+            const effectiveCount = (localUnreadCounts.value[numId] === 1 && newCount === 0)
+                ? 1
+                : newCount;
+
             // Update local map (skip if user already read it locally)
             if (!isConvRead(numId)) {
-                localUnreadCounts.value[numId] = newCount;
+                localUnreadCounts.value[numId] = effectiveCount;
             }
 
             // Only notify if count genuinely increased AND we have preview data
-            // and the conversation isn't the currently open one
             if (
                 newCount > oldCount &&
                 previews[id] &&
@@ -1092,7 +1154,7 @@ watch(messages, () => {
                                 :class="isDark ? 'text-gray-500' : 'text-slate-400'">Groups</p>
                             <div v-for="conv in groupConversations" :key="'grp-'+conv.id"
                                 @click="selectConversation(conv.id)"
-                                class="flex items-center gap-3 px-3 py-2.5 cursor-pointer transition-colors border-l-[3px] rounded-lg mx-1"
+                                class="group flex items-center gap-3 px-3 py-2.5 cursor-pointer transition-colors border-l-[3px] rounded-lg mx-1"
                                 :class="selectedConversation === conv.id
                                     ? isDark ? 'bg-teal-900/40 border-teal-500' : 'bg-teal-50 border-teal-500'
                                     : isDark ? 'border-transparent hover:bg-gray-700' : 'border-transparent hover:bg-slate-50'">
@@ -1139,6 +1201,20 @@ watch(messages, () => {
                                     class="w-5 h-5 rounded-full bg-teal-500 text-white text-[10px] font-bold flex items-center justify-center shrink-0">
                                     {{ getUnreadCount(conv.id) }}
                                 </span>
+                                <!-- Mark as unread (group) -->
+                                <button
+                                    v-else
+                                    @click.stop="markAsUnread(conv.id)"
+                                    :disabled="markingUnread === conv.id"
+                                    class="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-md shrink-0"
+                                    :class="isDark ? 'text-gray-400 hover:text-blue-400 hover:bg-gray-700' : 'text-slate-400 hover:text-blue-500 hover:bg-slate-100'"
+                                    title="Mark as unread"
+                                >
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                                    </svg>
+                                </button>
                             </div>
                             <div class="border-t my-2" :class="isDark ? 'border-gray-700' : 'border-slate-100'"></div>
                         </template>
@@ -1198,13 +1274,28 @@ watch(messages, () => {
                                 </p>
                             </div>
 
-                            <!-- Unread badge + pop-out button -->
+                            <!-- Unread badge + action buttons -->
                             <div class="flex items-center gap-1 flex-shrink-0">
-                                <!-- Unread count -->
+                                <!-- Unread badge -->
                                 <span
-                                    v-if="filteredConversations.find(c => c.other_user?.id === user.id)?.id && getUnreadCount(filteredConversations.find(c => c.other_user?.id === user.id).id) > 0 && !isConvRead(filteredConversations.find(c => c.other_user?.id === user.id).id)"
+                                    v-if="dmConvId(user.id) && getUnreadCount(dmConvId(user.id)) > 0 && !isConvRead(dmConvId(user.id))"
                                     class="w-5 h-5 rounded-full bg-teal-500 text-white text-[10px] font-bold flex items-center justify-center"
-                                >{{ getUnreadCount(filteredConversations.find(c => c.other_user?.id === user.id).id) }}</span>
+                                >{{ getUnreadCount(dmConvId(user.id)) }}</span>
+
+                                <!-- Mark as unread — always visible on hover when conversation exists -->
+                                <button
+                                    v-if="dmConvId(user.id)"
+                                    @click.stop="markAsUnread(dmConvId(user.id))"
+                                    :disabled="markingUnread === dmConvId(user.id)"
+                                    class="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-md"
+                                    :class="isDark ? 'text-gray-400 hover:text-blue-400 hover:bg-gray-600' : 'text-slate-400 hover:text-blue-500 hover:bg-slate-200'"
+                                    title="Mark as unread"
+                                >
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                                    </svg>
+                                </button>
 
                                 <!-- Pop-out button (visible on hover) -->
                                 <button
@@ -1323,6 +1414,19 @@ watch(messages, () => {
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                 </svg>
                             </button>
+                            <!-- Mark as unread (group) -->
+                            <button
+                                @click="markAsUnread(selectedConversation)"
+                                :disabled="markingUnread === selectedConversation"
+                                class="flex-shrink-0 p-2 rounded-lg transition-colors"
+                                :class="isDark ? 'text-gray-400 hover:text-blue-400 hover:bg-gray-700' : 'text-slate-400 hover:text-blue-500 hover:bg-slate-100'"
+                                title="Mark as unread"
+                            >
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                                </svg>
+                            </button>
                         </template>
 
                         <!-- DM header -->
@@ -1383,7 +1487,7 @@ watch(messages, () => {
                                     <div class="flex-1 h-px" :class="isDark ? 'bg-gray-700' : 'bg-slate-100'"></div>
                                 </div>
 
-                            <div class="flex gap-2 items-end"
+                            <div class="flex gap-2 items-end group/msg relative"
                                 :class="message.sender_id === page.props.auth.user.id ? 'flex-row-reverse' : 'flex-row'">
 
                                 <!-- Avatar — shown on outside edge -->
@@ -1398,7 +1502,7 @@ watch(messages, () => {
                                 </div>
 
                                 <!-- Bubble + timestamp -->
-                                <div class="flex flex-col max-w-[60%]"
+                                <div class="flex flex-col max-w-[60%] relative"
                                     :class="message.sender_id === page.props.auth.user.id ? 'items-end' : 'items-start'">
 
                                     <!-- Sender name — only in group chats, only for others' messages -->
@@ -1407,6 +1511,55 @@ watch(messages, () => {
                                         class="text-[11px] font-medium mb-0.5 px-1"
                                         :class="isDark ? 'text-gray-400' : 'text-slate-500'"
                                     >{{ message.sender?.name }}</p>
+
+                                    <!-- ── Hover action toolbar (Google Chat style) ── -->
+                                    <div
+                                        class="absolute -top-8 opacity-0 group-hover/msg:opacity-100 transition-opacity z-10 flex items-center gap-0.5 px-1.5 py-1 rounded-xl shadow-lg border"
+                                        :class="[
+                                            message.sender_id === page.props.auth.user.id ? 'right-0' : 'left-0',
+                                            isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-slate-200'
+                                        ]"
+                                        @click.stop
+                                    >
+                                        <!-- 3-dot button -->
+                                        <div class="relative">
+                                            <button
+                                                @click.stop="toggleMessageMenu(message.id)"
+                                                class="w-7 h-7 flex items-center justify-center rounded-lg transition-colors"
+                                                :class="isDark ? 'text-gray-400 hover:text-white hover:bg-gray-700' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'"
+                                                title="More options"
+                                            >
+                                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                                    <circle cx="12" cy="5"  r="1.5"/>
+                                                    <circle cx="12" cy="12" r="1.5"/>
+                                                    <circle cx="12" cy="19" r="1.5"/>
+                                                </svg>
+                                            </button>
+
+                                            <!-- Dropdown — anchored to the toolbar -->
+                                            <div
+                                                v-if="activeMessageMenu === message.id"
+                                                class="absolute top-full mt-1 min-w-[170px] rounded-xl shadow-xl border z-20 overflow-hidden"
+                                                :class="[
+                                                    message.sender_id === page.props.auth.user.id ? 'right-0' : 'left-0',
+                                                    isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-slate-200'
+                                                ]"
+                                                @click.stop
+                                            >
+                                                <button
+                                                    @click.stop="markUnreadFromMessage"
+                                                    class="w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors text-left"
+                                                    :class="isDark ? 'text-gray-300 hover:bg-gray-700' : 'text-slate-700 hover:bg-slate-50'"
+                                                >
+                                                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                            d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                                                    </svg>
+                                                    Mark as unread
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
 
                                     <!-- Bubble -->
                                     <div class="px-4 py-2.5 text-sm leading-relaxed break-words"
@@ -1432,34 +1585,23 @@ watch(messages, () => {
 
                                         <!-- Tick icons — only for own messages -->
                                         <template v-if="message.sender_id === page.props.auth.user.id">
-
-                                            <!-- Single gray tick: sending / undelivered -->
                                             <svg v-if="message.isTemp"
                                                 class="w-3.5 h-3.5 flex-shrink-0" :class="isDark ? 'text-gray-500' : 'text-slate-400'"
                                                 fill="currentColor" viewBox="0 0 24 24">
                                                 <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
                                             </svg>
-
-                                            <!-- Double blue tick: read -->
                                             <svg v-else-if="message.is_read"
                                                 class="w-4 h-3.5 flex-shrink-0 text-blue-500"
                                                 fill="currentColor" viewBox="0 0 16 11">
-                                                <!-- first tick (offset left) -->
                                                 <path d="M11.071.653L4.42 7.304 1.56 4.444.5 5.504l3.92 3.92 7.591-7.591z"/>
-                                                <!-- second tick (offset right) -->
                                                 <path d="M15.5.653L8.849 7.304 7.789 6.244l-1.06 1.06 2.12 2.12L16.56 1.713z"/>
                                             </svg>
-
-                                            <!-- Double gray tick: delivered but not read -->
                                             <svg v-else
                                                 class="w-4 h-3.5 flex-shrink-0" :class="isDark ? 'text-gray-500' : 'text-slate-400'"
                                                 fill="currentColor" viewBox="0 0 16 11">
-                                                <!-- first tick -->
                                                 <path d="M11.071.653L4.42 7.304 1.56 4.444.5 5.504l3.92 3.92 7.591-7.591z"/>
-                                                <!-- second tick -->
                                                 <path d="M15.5.653L8.849 7.304 7.789 6.244l-1.06 1.06 2.12 2.12L16.56 1.713z"/>
                                             </svg>
-
                                         </template>
                                     </div>
                                 </div>

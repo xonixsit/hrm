@@ -15,6 +15,7 @@ let initialized       = false;
 let lastCounts        = {};       // { convId(string): number }
 let chatToast         = null;     // ChatToast component ref
 const suppressed      = new Set();// conv IDs marked read — suppress until new msg
+const forcedUnread    = new Set();// conv IDs explicitly marked unread — hold at ≥1
 
 export const unreadTotal     = ref(0);
 export const notifPermission = ref(
@@ -151,6 +152,20 @@ async function poll() {
         const oldN = lastCounts[id] ?? newN; // first call = baseline, no notify
         total += newN;
 
+        // If user explicitly marked this conversation unread, hold count at ≥1
+        // until a genuinely new message arrives (server count increases)
+        if (forcedUnread.has(id)) {
+            if (newN > (lastCounts[id] ?? 1)) {
+                // A real new message arrived — clear the forced state
+                forcedUnread.delete(id);
+            } else {
+                // Hold at 1 — ignore server's 0
+                lastCounts[id] = Math.max(newN, 1);
+                total = total - newN + Math.max(newN, 1);
+                return;
+            }
+        }
+
         // If conversation was marked read, suppress until a genuinely new message
         if (suppressed.has(id)) {
             if (newN > 0 && newN > (lastCounts[id] ?? 0)) {
@@ -219,8 +234,23 @@ export function useChatNotifications() {
 export function markConversationReadGlobal(conversationId) {
     const id = String(conversationId);
     suppressed.add(id);
+    forcedUnread.delete(id); // clear any forced unread state
     lastCounts[id] = 0;
     unreadTotal.value = Object.values(lastCounts).reduce((s, n) => s + parseInt(n), 0);
     stopFlash();
     console.log('[Notif] Read & suppressed conv:', id);
+}
+
+// ── Mark conversation unread (explicit user action) ───────────────────────────
+export function markConversationUnreadGlobal(conversationId) {
+    const id = String(conversationId);
+    forcedUnread.add(id);
+    suppressed.delete(id); // clear read suppression
+    lastCounts[id] = 1;    // set to 1 so unreadTotal reflects it
+    let total = 0;
+    Object.keys(lastCounts).forEach(k => {
+        total += forcedUnread.has(k) ? Math.max(lastCounts[k], 1) : (lastCounts[k] || 0);
+    });
+    unreadTotal.value = total;
+    console.log('[Notif] Marked unread conv:', id);
 }

@@ -431,7 +431,38 @@ class TeamMessagingController extends Controller
         return response()->json(['ok' => true]);
     }
 
-    // ─── Delete message ───────────────────────────────────────────────────────
+    // ─── Mark conversation as unread ─────────────────────────────────────────
+
+    public function markUnread(Conversation $conversation)
+    {
+        $user = Auth::user();
+
+        abort_unless($this->messaging->isParticipant($conversation->id, $user->id), 403);
+
+        // Find the latest message NOT sent by the current user
+        $latestIncoming = Message::where('conversation_id', $conversation->id)
+            ->where('user_id', '!=', $user->id)
+            ->where('type', 'user')
+            ->whereNull('admin_deleted_at')
+            ->latest()
+            ->first();
+
+        if (! $latestIncoming) {
+            return response()->json(['ok' => true, 'message' => 'No incoming messages to mark unread']);
+        }
+
+        // Delete the read chat_event for this message by the current user
+        // This makes the unread count go back to at least 1
+        DB::table('chat_events')
+            ->where('made_id',    $latestIncoming->id)
+            ->where('made_type',  'Binkode\ChatSystem\Models\Message')
+            ->where('type',       'read')
+            ->where('maker_id',   $user->id)
+            ->where('maker_type', get_class($user))
+            ->delete();
+
+        return response()->json(['ok' => true]);
+    }
 
     public function deleteMessage(Message $message)
     {

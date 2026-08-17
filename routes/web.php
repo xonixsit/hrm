@@ -136,6 +136,7 @@ Route::get('/training', [TrainingPageController::class, 'index'])->middleware(['
         Route::get('/{conversation}', [TeamMessagingController::class, 'show'])->name('team-messaging.show');
         Route::post('/{conversation}/messages', [TeamMessagingController::class, 'sendMessage'])->name('team-messaging.send');
         Route::get('/{conversation}/messages', [TeamMessagingController::class, 'getMessages'])->name('team-messaging.messages');
+        Route::post('/{conversation}/mark-unread', [TeamMessagingController::class, 'markUnread'])->name('team-messaging.mark-unread');
         Route::delete('/messages/{message}', [TeamMessagingController::class, 'deleteMessage'])->name('team-messaging.delete-message');
     });
 
