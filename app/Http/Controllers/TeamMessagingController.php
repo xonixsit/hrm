@@ -118,7 +118,7 @@ class TeamMessagingController extends Controller
     public function updateGroup(Request $request, Conversation $conversation)
     {
         abort_unless($conversation->type === 'group', 400);
-        abort_unless($this->messaging->isParticipant($conversation->id, Auth::id()), 403);
+        abort_unless(Auth::user()->hasRole('Admin'), 403, 'Only admins can rename groups.');
         abort_if($conversation->is_default, 403, 'The Company group cannot be renamed.');
 
         $request->validate(['name' => 'required|string|max:100']);
@@ -132,7 +132,7 @@ class TeamMessagingController extends Controller
     public function addMember(Request $request, Conversation $conversation)
     {
         abort_unless($conversation->type === 'group', 400);
-        abort_unless($conversation->user_id === Auth::id(), 403); // only creator
+        abort_unless(Auth::user()->hasRole('Admin'), 403, 'Only admins can add members.');
 
         $request->validate(['user_id' => 'required|exists:users,id']);
 
@@ -176,7 +176,7 @@ class TeamMessagingController extends Controller
     public function deleteGroup(Conversation $conversation)
     {
         abort_unless($conversation->type === 'group', 400);
-        abort_unless($conversation->user_id === Auth::id(), 403);
+        abort_unless(Auth::user()->hasRole('Admin'), 403, 'Only admins can delete groups.');
         abort_if($conversation->is_default, 403, 'The Company group cannot be deleted.');
 
         $conversation->delete();

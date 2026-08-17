@@ -99,6 +99,13 @@ const currentUserIsCreator = computed(() =>
     currentGroupConv.value && groupCreatorId.value === page.props.auth.user.id
 );
 
+const currentUserIsAdmin = computed(() => {
+    const roles = page.props.auth?.user?.roles || [];
+    return Array.isArray(roles)
+        ? roles.includes('Admin')
+        : Object.values(roles).includes('Admin');
+});
+
 // Users not yet in the group (for "add member" list)
 const availableToAdd = computed(() => {
     const memberIds = new Set(groupMembers.value.map(m => m.id));
@@ -1489,9 +1496,9 @@ watch(messages, () => {
                                     <span class="text-sm flex-1 truncate" :class="isDark ? 'text-white' : 'text-slate-800'">
                                         {{ currentGroupConv?.name }}
                                     </span>
-                                    <!-- Only allow rename for non-default groups -->
+                                    <!-- Only allow rename for admins on non-default groups -->
                                     <button
-                                        v-if="!currentGroupConv?.is_default"
+                                        v-if="!currentGroupConv?.is_default && currentUserIsAdmin"
                                         @click="groupNameEdit = currentGroupConv?.name; editingGroupName = true"
                                         class="p-1 rounded transition-colors flex-shrink-0"
                                         :class="isDark ? 'text-gray-400 hover:text-teal-400' : 'text-slate-400 hover:text-teal-600'"
@@ -1592,8 +1599,8 @@ watch(messages, () => {
                                     </div>
                                 </div>
 
-                                <!-- Add member (creator only) -->
-                                <div v-if="currentUserIsCreator" class="mt-4">
+                                <!-- Add member (admin only) -->
+                                <div v-if="currentUserIsAdmin" class="mt-4">
                                     <p class="text-xs font-semibold uppercase tracking-wider mb-2"
                                         :class="isDark ? 'text-gray-400' : 'text-slate-400'">Add member</p>
                                     <div class="relative mb-2">
@@ -1633,8 +1640,8 @@ watch(messages, () => {
                                 </div>
                             </div>
 
-                            <!-- Delete group (creator only, not for default group) -->
-                            <div v-if="currentUserIsCreator && !currentGroupConv?.is_default" class="px-4 pb-4">
+                            <!-- Delete group (admin only, not for default group) -->
+                            <div v-if="currentUserIsAdmin && !currentGroupConv?.is_default" class="px-4 pb-4">
                                 <button
                                     @click="deleteGroup"
                                     class="w-full flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium text-red-600 border border-red-200 hover:bg-red-50 transition-colors"

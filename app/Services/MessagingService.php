@@ -138,6 +138,7 @@ class MessagingService
     {
         $messages = Message::where('conversation_id', $conversationId)
             ->where('type', 'user')
+            ->whereNull('admin_deleted_at')
             ->orderBy('created_at', 'asc')
             ->get();
 

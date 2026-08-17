@@ -36,9 +36,11 @@
     </template>
 
     <!-- ── Independence Day Banner — shown for all roles ──────────────── -->
+    <!-- Temporarily hidden
     <div class="mb-6">
       <IndependenceDayBanner />
     </div>
+    -->
 
     <!-- Main Dashboard Content -->
     <div v-if="isAdmin" class="space-y-6">

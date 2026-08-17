@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { Head, router } from '@inertiajs/vue3';
+import axios from 'axios';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import PageLayout from '@/Components/Layout/PageLayout.vue';
 import { useTheme } from '@/composables/useTheme';
@@ -101,6 +102,31 @@ function setPreset(preset) {
 const viewingMsg = ref(null);
 function openMsg(msg)  { viewingMsg.value = msg; }
 function closeMsg()    { viewingMsg.value = null; }
+
+// ── Admin delete ──────────────────────────────────────────────────────────────
+const deletingId  = ref(null);
+const confirmId   = ref(null); // ID waiting for confirmation
+
+function askDelete(id) {
+    confirmId.value = id;
+}
+function cancelDelete() {
+    confirmId.value = null;
+}
+async function confirmDelete(id) {
+    deletingId.value = id;
+    try {
+        await axios.delete(route('admin.message-monitor.destroy', id));
+        confirmId.value  = null;
+        viewingMsg.value = null;
+        // Reload the current page data without losing filters
+        router.reload({ preserveScroll: true, preserveState: true });
+    } catch (e) {
+        console.error('Delete failed:', e);
+    } finally {
+        deletingId.value = null;
+    }
+}
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function formatDT(dt) {
@@ -308,6 +334,7 @@ function initials(name) {
                             <div class="col-span-2 px-4 py-3">To</div>
                             <div class="col-span-6 px-4 py-3">Message</div>
                             <div class="col-span-2 px-4 py-3">Date & Time</div>
+                            <!-- Delete column hidden for now -->
                         </div>
 
                         <div v-if="messages.data.length === 0"
@@ -343,6 +370,7 @@ function initials(name) {
                                         <p class="text-[10px] truncate" :class="isDark ? 'text-gray-500' : 'text-slate-400'">{{ msg.recipient_email }}</p>
                                     </div>
                                 </div>
+                                <!-- Message col-span-6 -->
                                 <div class="col-span-6 px-4 py-3.5 flex items-center gap-2">
                                     <p class="leading-relaxed flex-1" :class="isDark ? 'text-gray-200' : 'text-slate-800'">{{ truncate(msg.message) }}</p>
                                     <button v-if="msg.message && msg.message.length > 80" @click="openMsg(msg)"
@@ -351,9 +379,11 @@ function initials(name) {
                                         View
                                     </button>
                                 </div>
+                                <!-- Date -->
                                 <div class="col-span-2 px-4 py-3.5 flex items-center">
                                     <p :class="isDark ? 'text-gray-400' : 'text-slate-500'">{{ formatDT(msg.created_at) }}</p>
                                 </div>
+                                <!-- Delete hidden for now -->
                             </div>
                         </div>
                     </template>
@@ -366,6 +396,7 @@ function initials(name) {
                             <div class="col-span-2 px-4 py-3">Sender</div>
                             <div class="col-span-6 px-4 py-3">Message</div>
                             <div class="col-span-2 px-4 py-3">Date & Time</div>
+                            <!-- Delete column hidden for now -->
                         </div>
 
                         <div v-if="messages.data.length === 0"
@@ -389,13 +420,9 @@ function initials(name) {
                                         {{ msg.is_default_group ? '🏢' : '👥' }}
                                     </span>
                                     <div class="min-w-0">
-                                        <p class="font-semibold truncate" :class="isDark ? 'text-white' : 'text-slate-900'">
-                                            {{ msg.group_name }}
-                                        </p>
+                                        <p class="font-semibold truncate" :class="isDark ? 'text-white' : 'text-slate-900'">{{ msg.group_name }}</p>
                                         <span v-if="msg.is_default_group"
-                                            class="text-[9px] px-1.5 py-0.5 rounded font-bold bg-amber-100 text-amber-700">
-                                            Company
-                                        </span>
+                                            class="text-[9px] px-1.5 py-0.5 rounded font-bold bg-amber-100 text-amber-700">Company</span>
                                     </div>
                                 </div>
                                 <!-- Sender -->
@@ -409,7 +436,7 @@ function initials(name) {
                                         <p class="text-[10px] truncate" :class="isDark ? 'text-gray-500' : 'text-slate-400'">{{ msg.sender_email }}</p>
                                     </div>
                                 </div>
-                                <!-- Message -->
+                                <!-- Message col-span-6 -->
                                 <div class="col-span-6 px-4 py-3.5 flex items-center gap-2">
                                     <p class="leading-relaxed flex-1" :class="isDark ? 'text-gray-200' : 'text-slate-800'">{{ truncate(msg.message) }}</p>
                                     <button v-if="msg.message && msg.message.length > 80" @click="openMsg(msg)"
@@ -422,6 +449,7 @@ function initials(name) {
                                 <div class="col-span-2 px-4 py-3.5 flex items-center">
                                     <p :class="isDark ? 'text-gray-400' : 'text-slate-500'">{{ formatDT(msg.created_at) }}</p>
                                 </div>
+                                <!-- Delete hidden for now -->
                             </div>
                         </div>
                     </template>
@@ -488,10 +516,18 @@ function initials(name) {
                             </svg>
                         </button>
                     </div>
-                    <div class="p-5 overflow-y-auto">
+                    <div class="p-5 overflow-y-auto modal-scroll"
+                         style="scroll-behavior:smooth;">
                         <p class="text-sm leading-relaxed whitespace-pre-wrap"
                             :class="isDark ? 'text-gray-200' : 'text-slate-800'">{{ viewingMsg.message }}</p>
                     </div>
+                    <!-- Delete from modal — hidden for now -->
+                    <!--
+                    <div class="px-5 py-3 border-t flex items-center justify-end gap-2"
+                        :class="isDark ? 'border-gray-700 bg-gray-800' : 'border-slate-100 bg-slate-50'">
+                        ...
+                    </div>
+                    -->
                 </div>
             </div>
         </Transition>
@@ -503,4 +539,26 @@ function initials(name) {
 .msg-fade-leave-active { transition: opacity 0.15s ease; }
 .msg-fade-enter-from   { opacity:0; transform:scale(0.95); }
 .msg-fade-leave-to     { opacity:0; }
+
+/* Smooth themed scrollbar inside the message view modal */
+.modal-scroll {
+    scroll-behavior: smooth;
+}
+.modal-scroll::-webkit-scrollbar {
+    width: 5px;
+}
+.modal-scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+.modal-scroll::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #0d9488, #06b6d4);
+    border-radius: 999px;
+}
+.modal-scroll::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #0f766e, #0891b2);
+}
+.modal-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: #0d9488 transparent;
+}
 </style>

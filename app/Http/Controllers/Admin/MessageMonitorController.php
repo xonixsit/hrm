@@ -53,6 +53,7 @@ class MessageMonitorController extends Controller
             ->join('users as recipient', 'recipient.id', '=', 'cu_recipient.user_id')
             ->where('m.type', 'user')
             ->where('c.type', 'private')          // ← private only
+            ->whereNull('m.admin_deleted_at')      // ← hide admin-deleted
             ->whereDate('m.created_at', '>=', $f['from_date'])
             ->whereDate('m.created_at', '<=', $f['to_date'])
             ->select(
@@ -85,6 +86,7 @@ class MessageMonitorController extends Controller
             ->join('users as sender', 'sender.id', '=', 'm.user_id')
             ->where('m.type', 'user')
             ->where('c.type', 'group')            // ← group only
+            ->whereNull('m.admin_deleted_at')      // ← hide admin-deleted
             ->whereDate('m.created_at', '>=', $f['from_date'])
             ->whereDate('m.created_at', '<=', $f['to_date'])
             ->select(
@@ -218,5 +220,19 @@ class MessageMonitorController extends Controller
         }
 
         return response()->stream($callback, 200, $headers);
+    }
+
+    // ─── Admin delete a message ───────────────────────────────────────────────
+
+    public function destroyMessage(Message $message)
+    {
+        DB::table('messages')
+            ->where('id', $message->id)
+            ->update([
+                'admin_deleted_at' => now(),
+                'admin_deleted_by' => auth()->id(),
+            ]);
+
+        return response()->json(['ok' => true]);
     }
 }
