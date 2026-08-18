@@ -397,17 +397,32 @@ class TeamMessagingController extends Controller
             ->join('employees', 'attendances.employee_id', '=', 'employees.id')
             ->whereDate('attendances.date', today())
             ->where('attendances.status', 'clocked_in')
+            ->whereNull('employees.deleted_at')
             ->pluck('employees.user_id')
             ->unique()
             ->map(fn($id) => (int) $id)
             ->values()
             ->toArray();
 
-        // Active (green) = on chat page OR (clocked-in AND has active session)
-        $active = array_values(array_unique(array_merge($chatActive, $clockedInUserIds)));
+        // Users who clocked OUT today — remove from active/inactive regardless of session
+        $clockedOutUserIds = DB::table('attendances')
+            ->join('employees', 'attendances.employee_id', '=', 'employees.id')
+            ->whereDate('attendances.date', today())
+            ->where('attendances.status', 'clocked_out')
+            ->whereNull('employees.deleted_at')
+            ->pluck('employees.user_id')
+            ->unique()
+            ->map(fn($id) => (int) $id)
+            ->values()
+            ->toArray();
 
-        // Inactive (orange) = has recent session but not active
-        $inactive = array_values(array_diff($activeSessions, $active));
+        // Active (green) = on chat page OR clocked-in AND has active session
+        // But never show clocked-out employees as active
+        $active = array_values(array_unique(array_merge($chatActive, $clockedInUserIds)));
+        $active = array_values(array_diff($active, $clockedOutUserIds));
+
+        // Inactive (orange) = has recent session but not active, and not clocked out
+        $inactive = array_values(array_diff($activeSessions, $active, $clockedOutUserIds));
 
         // Offline = everyone else (not in active or inactive)
         return response()->json([

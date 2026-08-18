@@ -1,4 +1,49 @@
 <template>
+  <!-- Profile Picture Lightbox -->
+  <Teleport to="body">
+    <Transition
+      enter-active-class="transition duration-150 ease-out"
+      enter-from-class="opacity-0 scale-95"
+      enter-to-class="opacity-100 scale-100"
+      leave-active-class="transition duration-100 ease-in"
+      leave-from-class="opacity-100 scale-100"
+      leave-to-class="opacity-0 scale-95"
+    >
+      <div
+        v-if="zoomedEmployee"
+        class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm"
+        @click.self="zoomedEmployee = null"
+        @keydown.esc="zoomedEmployee = null"
+        role="dialog"
+        aria-modal="true"
+        :aria-label="`Profile photo of ${zoomedEmployee?.name}`"
+      >
+        <div class="relative bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full mx-4 flex flex-col items-center">
+          <!-- Close button -->
+          <button
+            @click="zoomedEmployee = null"
+            class="absolute top-3 right-3 p-1.5 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
+            aria-label="Close photo"
+          >
+            <XMarkIcon class="w-5 h-5" />
+          </button>
+          <!-- Full-size photo -->
+          <img
+            :src="`/${zoomedEmployee.profile_pic}`"
+            :alt="zoomedEmployee.name"
+            class="w-full h-auto max-h-[70vh] object-contain rounded-xl shadow-xl mb-4"
+          />
+          <!-- Employee info -->
+          <div class="text-center">
+            <div class="font-semibold text-gray-900 text-base">{{ zoomedEmployee.name }}</div>
+            <div class="text-sm text-gray-500 mt-0.5">{{ zoomedEmployee.job_title }}</div>
+            <div class="text-xs text-gray-400 mt-0.5">{{ zoomedEmployee.department }}</div>
+          </div>
+        </div>
+      </div>
+    </Transition>
+  </Teleport>
+
   <UnifiedCard 
     title="Today's Attendance Tracking" 
     description="Employee clock-in status overview"
@@ -62,7 +107,7 @@
         Clocked In ({{ attendanceData.clockedInCount }})
       </button>
       <button
-        @click="activeTab = 'missed'"
+        @click="handleTabChange('missed')"
         :class="[
           'flex-1 px-3 py-2 text-sm font-medium rounded-md transition-colors',
           activeTab === 'missed' 
@@ -91,94 +136,117 @@
         class="max-h-64 overflow-y-auto custom-scrollbar"
         @scroll="handleScroll"
       >
-      <!-- Clocked In Employees -->
-      <div v-if="activeTab === 'clocked-in'" class="space-y-2">
-        <div 
-          v-if="attendanceData.clockedInEmployees.length === 0" 
-          class="text-center py-8 text-gray-500"
-        >
-          <ClockIcon class="w-12 h-12 mx-auto mb-2 text-gray-300" />
-          <p>No employees clocked in yet today</p>
-        </div>
-        <div 
-          v-for="employee in attendanceData.clockedInEmployees" 
-          :key="employee.id"
-          class="employee-card flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-100 gap-4"
-        >
-          <div class="flex items-center space-x-3 flex-1 min-w-0">
-            <div class="w-2 h-2 bg-green-400 rounded-full flex-shrink-0"></div>
-            <!-- Profile Picture -->
-            <div v-if="employee.profile_pic" class="w-8 h-8 rounded-full overflow-hidden ring-1 ring-white shadow-sm border border-gray-200 flex-shrink-0">
-              <img 
-                :src="`/${employee.profile_pic}`" 
-                :alt="employee.name"
-                class="w-full h-full object-cover"
-              />
+        <!-- Clocked In Employees -->
+        <div v-if="activeTab === 'clocked-in'" class="space-y-2">
+          <div 
+            v-if="attendanceData.clockedInEmployees.length === 0" 
+            class="text-center py-8 text-gray-500"
+          >
+            <ClockIcon class="w-12 h-12 mx-auto mb-2 text-gray-300" />
+            <p>No employees clocked in yet today</p>
+          </div>
+          <div 
+            v-for="employee in attendanceData.clockedInEmployees" 
+            :key="employee.id"
+            class="employee-card flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-100 gap-4"
+          >
+            <div class="flex items-center space-x-3 flex-1 min-w-0">
+              <div class="w-2 h-2 bg-green-400 rounded-full flex-shrink-0"></div>
+              <!-- Profile Picture with zoom -->
+              <div class="relative flex-shrink-0 group/avatar">
+                <div
+                  v-if="employee.profile_pic"
+                  class="w-8 h-8 rounded-full overflow-hidden ring-1 ring-white shadow-sm border border-gray-200 cursor-pointer"
+                  @click="zoomedEmployee = employee"
+                  :title="`View ${employee.name}'s photo`"
+                >
+                  <img 
+                    :src="`/${employee.profile_pic}`" 
+                    :alt="employee.name"
+                    class="w-full h-full object-cover"
+                  />
+                  <!-- Zoom overlay -->
+                  <div class="absolute inset-0 rounded-full bg-black/30 flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-opacity duration-150">
+                    <MagnifyingGlassPlusIcon class="w-3.5 h-3.5 text-white" />
+                  </div>
+                </div>
+                <div 
+                  v-else 
+                  class="w-8 h-8 bg-gradient-to-br from-primary-100 to-primary-200 rounded-full flex items-center justify-center ring-1 ring-white shadow-sm"
+                >
+                  <span class="text-xs font-semibold text-primary-700">{{ getInitials(employee.name) }}</span>
+                </div>
+              </div>
+              <div class="min-w-0 flex-1">
+                <div class="font-medium text-gray-900 truncate">{{ employee.name }}</div>
+                <div class="text-sm text-gray-600 truncate">
+                  {{ employee.job_title }} • {{ employee.department }}
+                </div>
+              </div>
             </div>
-            <div v-else class="w-8 h-8 bg-gradient-to-br from-primary-100 to-primary-200 rounded-full flex items-center justify-center ring-1 ring-white shadow-sm flex-shrink-0">
-              <span class="text-xs font-semibold text-primary-700">
-                {{ getInitials(employee.name) }}
-              </span>
-            </div>
-            <div class="min-w-0 flex-1">
-              <div class="font-medium text-gray-900 truncate">{{ employee.name }}</div>
-              <div class="text-sm text-gray-600 truncate">
-                {{ employee.job_title }} • {{ employee.department }}
+            <div class="text-right flex-shrink-0 min-w-[100px]">
+              <div class="text-sm font-medium text-gray-900">Clock-In : {{ getFormattedTime(employee.clock_in_time) }}</div>
+              <div class="text-xs text-gray-600 whitespace-nowrap">
+                <span v-if="employee.on_break" class="text-orange-600 ml-1">(On Break)</span>
               </div>
             </div>
           </div>
-          <div class="text-right flex-shrink-0 min-w-[100px]">
-            <div class="text-sm font-medium text-gray-900">Clock-In : {{ getFormattedTime(employee.clock_in_time) }}</div>
-            <div class="text-xs text-gray-600 whitespace-nowrap">
-              <!-- {{ employee.work_duration }} -->
-              <span v-if="employee.on_break" class="text-orange-600 ml-1">(On Break)</span>
-            </div>
-          </div>
         </div>
-      </div>
 
-      <!-- Missed Clock-in Employees -->
-      <div v-if="activeTab === 'missed'" class="space-y-2">
-        <div 
-          v-if="attendanceData.missedClockInEmployees.length === 0" 
-          class="text-center py-8 text-gray-500"
-        >
-          <CheckCircleIcon class="w-12 h-12 mx-auto mb-2 text-green-300" />
-          <p>All employees have clocked in today!</p>
-        </div>
-        <div 
-          v-for="employee in attendanceData.missedClockInEmployees" 
-          :key="employee.id"
-          class="employee-card flex items-center justify-between p-3 bg-red-50 rounded-lg border border-red-100"
-        >
-          <div class="flex items-center space-x-3">
-            <div class="w-2 h-2 bg-red-400 rounded-full flex-shrink-0"></div>
-            <!-- Profile Picture -->
-            <div v-if="employee.profile_pic" class="w-8 h-8 rounded-full overflow-hidden ring-1 ring-white shadow-sm border border-gray-200 flex-shrink-0">
-              <img 
-                :src="`/${employee.profile_pic}`" 
-                :alt="employee.name"
-                class="w-full h-full object-cover"
-              />
-            </div>
-            <div v-else class="w-8 h-8 bg-gradient-to-br from-primary-100 to-primary-200 rounded-full flex items-center justify-center ring-1 ring-white shadow-sm flex-shrink-0">
-              <span class="text-xs font-semibold text-primary-700">
-                {{ getInitials(employee.name) }}
-              </span>
-            </div>
-            <div>
-              <div class="font-medium text-gray-900">{{ employee.name }}</div>
-              <div class="text-sm text-gray-600">
-                {{ employee.job_title }} • {{ employee.department }}
+        <!-- Missed Clock-in Employees -->
+        <div v-if="activeTab === 'missed'" class="space-y-2">
+          <div 
+            v-if="attendanceData.missedClockInEmployees.length === 0" 
+            class="text-center py-8 text-gray-500"
+          >
+            <CheckCircleIcon class="w-12 h-12 mx-auto mb-2 text-green-300" />
+            <p>All employees have clocked in today!</p>
+          </div>
+          <div 
+            v-for="employee in attendanceData.missedClockInEmployees" 
+            :key="employee.id"
+            class="employee-card flex items-center justify-between p-3 bg-red-50 rounded-lg border border-red-100"
+          >
+            <div class="flex items-center space-x-3">
+              <div class="w-2 h-2 bg-red-400 rounded-full flex-shrink-0"></div>
+              <!-- Profile Picture with zoom -->
+              <div class="relative flex-shrink-0 group/avatar">
+                <div
+                  v-if="employee.profile_pic"
+                  class="w-8 h-8 rounded-full overflow-hidden ring-1 ring-white shadow-sm border border-gray-200 cursor-pointer"
+                  @click="zoomedEmployee = employee"
+                  :title="`View ${employee.name}'s photo`"
+                >
+                  <img 
+                    :src="`/${employee.profile_pic}`" 
+                    :alt="employee.name"
+                    class="w-full h-full object-cover"
+                  />
+                  <!-- Zoom overlay -->
+                  <div class="absolute inset-0 rounded-full bg-black/30 flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-opacity duration-150">
+                    <MagnifyingGlassPlusIcon class="w-3.5 h-3.5 text-white" />
+                  </div>
+                </div>
+                <div 
+                  v-else 
+                  class="w-8 h-8 bg-gradient-to-br from-primary-100 to-primary-200 rounded-full flex items-center justify-center ring-1 ring-white shadow-sm"
+                >
+                  <span class="text-xs font-semibold text-primary-700">{{ getInitials(employee.name) }}</span>
+                </div>
+              </div>
+              <div>
+                <div class="font-medium text-gray-900">{{ employee.name }}</div>
+                <div class="text-sm text-gray-600">
+                  {{ employee.job_title }} • {{ employee.department }}
+                </div>
               </div>
             </div>
-          </div>
-          <div class="text-right">
-            <div class="text-sm text-red-600 font-medium">Not clocked in</div>
-            <div class="text-xs text-gray-500">{{ employee.employee_code }}</div>
+            <div class="text-right">
+              <div class="text-sm text-red-600 font-medium">Not clocked in</div>
+              <div class="text-xs text-gray-500">{{ employee.employee_code }}</div>
+            </div>
           </div>
         </div>
-      </div>
       </div>
     </div>
 
@@ -222,7 +290,9 @@ import {
   ArrowPathIcon,
   CheckCircleIcon,
   BellIcon,
-  DocumentArrowDownIcon
+  DocumentArrowDownIcon,
+  MagnifyingGlassPlusIcon,
+  XMarkIcon,
 } from '@heroicons/vue/24/outline';
 
 const props = defineProps({
@@ -246,13 +316,13 @@ const scrollContainer = ref(null);
 const showTopFade = ref(false);
 const showBottomFade = ref(false);
 const reminderSent = ref(false);
+const zoomedEmployee = ref(null);
 
 const getAttendanceRateColor = (rate) => {
   if (rate >= 90) return 'bg-green-500';
   if (rate >= 75) return 'bg-yellow-500';
   return 'bg-red-500';
 };
-
 
 const getInitials = (name) => {
   if (!name) return '?';
@@ -265,11 +335,9 @@ const getInitials = (name) => {
 
 const getFormattedTime = (timeString) => {
   if (!timeString || timeString === 'Invalid Date') return '-';
-  
   try {
     const time = new Date(timeString);
     if (isNaN(time.getTime())) return '-';
-    
     return time.toLocaleTimeString('en-US', {
       hour: '2-digit',
       minute: '2-digit',
@@ -287,9 +355,7 @@ const refreshData = () => {
     router.reload({ 
       only: ['attendanceTracking', 'adminStats'],
       preserveScroll: true,
-      onFinish: () => {
-        loading.value = false;
-      }
+      onFinish: () => { loading.value = false; }
     });
   } catch (error) {
     console.error('Failed to refresh attendance data:', error);
@@ -299,16 +365,11 @@ const refreshData = () => {
 
 const sendReminder = async () => {
   if (props.attendanceData.missedClockInCount === 0 || reminderSent.value) return;
-  
   loading.value = true;
   try {
-    // Get fresh CSRF token
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-    
-    if (!csrfToken) {
-      throw new Error('CSRF token not found');
-    }
-    
+    if (!csrfToken) throw new Error('CSRF token not found');
+
     const response = await window.axios.post('/api/attendance/send-clock-in-reminders', {}, {
       headers: {
         'X-CSRF-TOKEN': csrfToken,
@@ -316,58 +377,30 @@ const sendReminder = async () => {
         'Content-Type': 'application/json'
       }
     });
-    
+
     if (response.data.success) {
       reminderSent.value = true;
-      // Show success message
-      const message = `✅ Clock-in reminders sent to ${response.data.count} employees. Admin confirmation email sent.`;
-      
-      // Create and show toast notification
-      const toast = document.createElement('div');
-      toast.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 transition-all duration-300';
-      toast.textContent = message;
-      document.body.appendChild(toast);
-      
-      setTimeout(() => {
-        toast.remove();
-      }, 5000);
+      showToast(`✅ Clock-in reminders sent to ${response.data.count} employees.`, 'green');
     }
   } catch (error) {
     console.error('Failed to send reminder:', error);
-    
-    let errorMessage = '❌ Failed to send reminders. Please try again.';
-    
-    // Handle specific CSRF error
     if (error.response?.status === 419) {
-      errorMessage = '❌ Session expired. Please refresh the page and try again.';
-      // Optionally refresh the page after a delay
-      setTimeout(() => {
-        window.location.reload();
-      }, 3000);
+      showToast('❌ Session expired. Please refresh the page and try again.', 'red');
+      setTimeout(() => window.location.reload(), 3000);
+    } else {
+      showToast('❌ Failed to send reminders. Please try again.', 'red');
     }
-    
-    // Show error toast
-    const toast = document.createElement('div');
-    toast.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 transition-all duration-300';
-    toast.textContent = errorMessage;
-    document.body.appendChild(toast);
-    
-    setTimeout(() => {
-      toast.remove();
-    }, 5000);
   } finally {
     loading.value = false;
   }
 };
+
 const exportReport = async () => {
   try {
     const response = await window.axios.get('/api/attendance/export-report', {
       responseType: 'blob',
-      headers: {
-        'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-      }
+      headers: { 'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }
     });
-    
     const url = window.URL.createObjectURL(new Blob([response.data]));
     const link = document.createElement('a');
     link.href = url;
@@ -382,37 +415,33 @@ const exportReport = async () => {
   }
 };
 
+const showToast = (message, color) => {
+  const toast = document.createElement('div');
+  toast.className = `fixed top-4 right-4 bg-${color}-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 transition-all duration-300`;
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 5000);
+};
+
 const handleScroll = () => {
   if (!scrollContainer.value) return;
-  
   const { scrollTop, scrollHeight, clientHeight } = scrollContainer.value;
-  
-  // Show top fade if scrolled down
   showTopFade.value = scrollTop > 10;
-  
-  // Show bottom fade if not at bottom
   showBottomFade.value = scrollTop < scrollHeight - clientHeight - 10;
 };
 
 const checkScrollable = async () => {
   await nextTick();
   if (!scrollContainer.value) return;
-  
   const { scrollHeight, clientHeight } = scrollContainer.value;
-  const isScrollable = scrollHeight > clientHeight;
-  
-  // Initially show bottom fade if content is scrollable
-  showBottomFade.value = isScrollable;
+  showBottomFade.value = scrollHeight > clientHeight;
   showTopFade.value = false;
 };
 
-// Watch for tab changes and check scrollable content
 const handleTabChange = async (tab) => {
   activeTab.value = tab;
   await checkScrollable();
 };
-
-
 
 onMounted(() => {
   checkScrollable();
@@ -454,19 +483,6 @@ onMounted(() => {
   background: #64748b;
 }
 
-/* Fade indicators */
-.custom-scrollbar::before,
-.custom-scrollbar::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 6px; /* Account for scrollbar width */
-  height: 8px;
-  pointer-events: none;
-  z-index: 10;
-  transition: opacity 0.2s ease;
-}
-
 /* Enhanced scroll indicators with better visibility */
 .scroll-fade-top {
   background: linear-gradient(to bottom, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.8) 50%, transparent 100%);
@@ -483,7 +499,7 @@ onMounted(() => {
   .custom-scrollbar::-webkit-scrollbar {
     display: none;
   }
-  
+
   .custom-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;

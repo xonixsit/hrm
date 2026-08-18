@@ -61,6 +61,20 @@ const statusLabel = (userId) => {
     return 'Offline';
 };
 const hoveredUserId = ref(null);
+const zoomedUser = ref(null); // { src, name, subtitle, meta, status } for lightbox
+const userDetailModal = ref(null); // user object for centered detail modal
+
+// Build a zoomedUser payload from any user-like object
+const openUserLightbox = (user, src) => {
+    zoomedUser.value = {
+        src: src || getProfilePicture(user),
+        name: user?.name || user?.sender?.name,
+        subtitle: user?.employee?.position || user?.job_title || null,
+        meta: user?.employee?.department || user?.department || null,
+        email: user?.email || null,
+        statusId: user?.id || null,
+    };
+};
 const hoverCardPosition = ref({ top: 0, left: 0 });
 const hideHoverCardTimeout = ref(null);
 const copiedEmail = ref(false);
@@ -1306,8 +1320,11 @@ watch(messages, () => {
                         >
                             <!-- Avatar + status dot -->
                             <div class="relative flex-shrink-0">
-                                <div v-if="getProfilePicture(user)" class="w-10 h-10 rounded-full overflow-hidden">
-                                    <img :src="getProfilePicture(user)" :alt="user.name" class="w-full h-full object-cover"/>
+                                <div v-if="getProfilePicture(user)"
+                                    class="w-10 h-10 rounded-full overflow-hidden cursor-zoom-in group/avatar"
+                                    @click.stop="openUserLightbox(user)">
+                                    <img :src="getProfilePicture(user)" :alt="user.name"
+                                        class="w-full h-full object-cover object-top transition-transform duration-200 group-hover/avatar:scale-110"/>
                                 </div>
                                 <div v-else
                                     class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold text-white"
@@ -1502,8 +1519,11 @@ watch(messages, () => {
                         <!-- DM header -->
                         <template v-else>
                             <div class="relative flex-shrink-0">
-                                <div v-if="getProfilePicture(getSelectedUser())" class="w-10 h-10 rounded-full overflow-hidden">
-                                    <img :src="getProfilePicture(getSelectedUser())" :alt="getSelectedUser()?.name" class="w-full h-full object-cover"/>
+                                <div v-if="getProfilePicture(getSelectedUser())"
+                                    class="w-10 h-10 rounded-full overflow-hidden cursor-zoom-in group/hdr"
+                                    @click.stop="openUserLightbox(getSelectedUser())">
+                                    <img :src="getProfilePicture(getSelectedUser())" :alt="getSelectedUser()?.name"
+                                        class="w-full h-full object-cover object-top transition-transform duration-200 group-hover/hdr:scale-110"/>
                                 </div>
                                 <div v-else class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold text-white"
                                     style="background: linear-gradient(135deg, #006970, #00a9b4)">
@@ -1565,8 +1585,16 @@ watch(messages, () => {
 
                                 <!-- Avatar — shown on outside edge -->
                                 <div class="flex-shrink-0">
-                                    <div v-if="getProfilePicture(message.sender)" class="w-8 h-8 rounded-full overflow-hidden">
-                                        <img :src="getProfilePicture(message.sender)" :alt="message.sender?.name" class="w-full h-full object-cover"/>
+                                    <div v-if="getProfilePicture(message.sender)"
+                                        class="w-8 h-8 rounded-full overflow-hidden cursor-pointer relative group/mavatar"
+                                        @click="openUserLightbox(message.sender)">
+                                        <img :src="getProfilePicture(message.sender)" :alt="message.sender?.name" class="w-full h-full object-cover object-top"/>
+                                        <div class="absolute inset-0 rounded-full bg-black/30 flex items-center justify-center opacity-0 group-hover/mavatar:opacity-100 transition-opacity duration-150">
+                                            <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0zm0 0l0 .01"/>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 8v6M8 11h6"/>
+                                            </svg>
+                                        </div>
                                     </div>
                                     <div v-else class="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-semibold text-white"
                                         style="background: linear-gradient(135deg, #006970, #00a9b4)">
@@ -1806,17 +1834,25 @@ watch(messages, () => {
                                         :class="isDark ? 'hover:bg-gray-700' : 'hover:bg-slate-50'"
                                     >
                                         <!-- Avatar with photo or initials fallback -->
-                                        <div class="w-8 h-8 rounded-full flex-shrink-0 overflow-hidden">
+                                        <div class="w-8 h-8 rounded-full flex-shrink-0 overflow-hidden relative group/gmavatar">
                                             <img
                                                 v-if="getProfilePicture(member)"
                                                 :src="getProfilePicture(member)"
                                                 :alt="member.name"
-                                                class="w-full h-full object-cover"
+                                                class="w-full h-full object-cover object-top cursor-pointer"
+                                                @click="openUserLightbox(member)"
                                             />
                                             <div v-else
                                                 class="w-full h-full flex items-center justify-center text-xs font-semibold text-white"
                                                 style="background: linear-gradient(135deg, #006970, #00a9b4)">
                                                 {{ getInitials(member.name) }}
+                                            </div>
+                                            <div v-if="getProfilePicture(member)"
+                                                class="absolute inset-0 rounded-full bg-black/30 flex items-center justify-center opacity-0 group-hover/gmavatar:opacity-100 transition-opacity duration-150 cursor-pointer pointer-events-none">
+                                                <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0zm0 0l0 .01"/>
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 8v6M8 11h6"/>
+                                                </svg>
                                             </div>
                                         </div>
                                         <div class="flex-1 min-w-0">
@@ -1993,13 +2029,21 @@ watch(messages, () => {
                 <div class="h-16 w-full" style="background: linear-gradient(135deg, #006970, #00a9b4)"></div>
 
                 <div class="px-5 pb-5 -mt-8">
-                    <!-- Avatar -->
+                    <!-- Avatar — click to zoom full size -->
                     <div class="relative inline-block mb-3">
                         <div v-if="getProfilePicture(props.users.find(u => u.id === hoveredUserId))"
-                            class="w-16 h-16 rounded-full overflow-hidden border-4 border-white shadow-md">
+                            class="w-16 h-16 rounded-full overflow-hidden border-4 border-white shadow-md cursor-zoom-in group/av"
+                            @click.stop="openUserLightbox(props.users.find(u => u.id === hoveredUserId))">
                             <img :src="getProfilePicture(props.users.find(u => u.id === hoveredUserId))"
                                 :alt="props.users.find(u => u.id === hoveredUserId)?.name"
-                                class="w-full h-full object-cover"/>
+                                class="w-full h-full object-cover object-top transition-transform duration-200 group-hover/av:scale-110"/>
+                            <!-- Zoom hint overlay -->
+                            <div class="absolute inset-0 rounded-full bg-black/30 opacity-0 group-hover/av:opacity-100 transition-opacity flex items-center justify-center">
+                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/>
+                                </svg>
+                            </div>
                         </div>
                         <div v-else
                             class="w-16 h-16 rounded-full border-4 border-white shadow-md flex items-center justify-center text-lg font-semibold text-white"
@@ -2079,6 +2123,57 @@ watch(messages, () => {
         </Teleport>
 
         <!-- ── NEW CHAT MODAL ──────────────────────────────── -->
+
+        <!-- ── AVATAR LIGHTBOX ──────────────────────────── -->
+        <Teleport to="body">
+            <Transition name="avatar-zoom">
+                <div v-if="zoomedUser"
+                    class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm"
+                    @click.self="zoomedUser = null"
+                >
+                    <div class="relative bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full mx-4 flex flex-col items-center"
+                        :class="isDark ? 'bg-gray-800' : 'bg-white'"
+                        @click.stop
+                    >
+                        <!-- Close -->
+                        <button
+                            @click="zoomedUser = null"
+                            class="absolute top-3 right-3 p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400 hover:text-gray-600 transition-colors"
+                            aria-label="Close"
+                        >
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
+                        <!-- Photo -->
+                        <img
+                            :src="zoomedUser.src"
+                            class="w-full h-auto max-h-[55vh] object-contain rounded-xl shadow-xl mb-4"
+                            alt="Profile photo"
+                        />
+                        <!-- User details -->
+                        <div class="text-center w-full">
+                            <div class="font-semibold text-base" :class="isDark ? 'text-white' : 'text-gray-900'">
+                                {{ zoomedUser.name }}
+                            </div>
+                            <div v-if="zoomedUser.subtitle" class="text-sm mt-0.5" :class="isDark ? 'text-gray-400' : 'text-gray-500'">
+                                {{ zoomedUser.subtitle }}
+                            </div>
+                            <div v-if="zoomedUser.meta" class="text-xs mt-0.5" :class="isDark ? 'text-gray-500' : 'text-gray-400'">
+                                {{ zoomedUser.meta }}
+                            </div>
+                            <!-- Online status -->
+                            <div v-if="zoomedUser.statusId" class="flex items-center justify-center gap-1.5 mt-2">
+                                <span class="w-2 h-2 rounded-full flex-shrink-0" :class="statusDotClass(zoomedUser.statusId)"></span>
+                                <span class="text-xs font-medium" :class="statusTextClass(zoomedUser.statusId)">
+                                    {{ statusLabel(zoomedUser.statusId) }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </Transition>
+        </Teleport>
         <Teleport to="body">
             <div v-if="showNewChatModal" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4">
                 <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="showNewChatModal = false"></div>
@@ -2113,7 +2208,7 @@ watch(messages, () => {
                             :class="isDark ? 'hover:bg-gray-700' : 'hover:bg-slate-50'">
                             <div class="relative flex-shrink-0">
                                 <div v-if="getProfilePicture(user)" class="w-10 h-10 rounded-full overflow-hidden">
-                                    <img :src="getProfilePicture(user)" :alt="user.name" class="w-full h-full object-cover"/>
+                                    <img :src="getProfilePicture(user)" :alt="user.name" class="w-full h-full object-cover object-top"/>
                                 </div>
                                 <div v-else class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold text-white"
                                     style="background: linear-gradient(135deg, #006970, #00a9b4)">
@@ -2157,7 +2252,7 @@ watch(messages, () => {
                         <div class="flex-shrink-0 relative">
                             <div v-if="toast.senderAvatar" class="w-10 h-10 rounded-full overflow-hidden">
                                 <img :src="toast.senderAvatar.startsWith('http') || toast.senderAvatar.startsWith('/') ? toast.senderAvatar : '/' + toast.senderAvatar"
-                                    class="w-full h-full object-cover" />
+                                    class="w-full h-full object-cover object-top" />
                             </div>
                             <div v-else
                                 class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold text-white"
@@ -2222,6 +2317,12 @@ watch(messages, () => {
 .scroll-btn-enter-active { transition: all 0.2s cubic-bezier(0.34,1.56,0.64,1); }
 .scroll-btn-leave-active { transition: all 0.15s ease-in; }
 .scroll-btn-enter-from, .scroll-btn-leave-to { opacity:0; transform:translateX(-50%) translateY(8px) scale(0.9); }
+
+/* ── Avatar lightbox ── */
+.avatar-zoom-enter-active { transition: all 0.2s cubic-bezier(0.34,1.56,0.64,1); }
+.avatar-zoom-leave-active { transition: all 0.15s ease-in; }
+.avatar-zoom-enter-from, .avatar-zoom-leave-to { opacity:0; }
+.avatar-zoom-enter-from img, .avatar-zoom-leave-to img { transform:scale(0.7); }
 
 /* ── Themed sleek scrollbar — user list + chat window ── */
 .chat-scroll {

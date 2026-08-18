@@ -306,12 +306,77 @@ const broadcastTyping = () => {
         });
     }
 };
+
+// ── Avatar lightbox ───────────────────────────────────────────────────────────
+const zoomedUser = ref(null); // { src, name, subtitle, meta }
+
+const openUserLightbox = (user) => {
+    const src = getProfilePicture(user);
+    if (!src) return;
+    zoomedUser.value = {
+        src,
+        name: user?.name,
+        subtitle: user?.job_title || user?.position || null,
+        meta: user?.department || user?.employee?.department || null,
+    };
+};
 </script>
 
 <template>
     <Head :title="`${conversation.other_user.name}`" />
 
     <AuthenticatedLayout>
+        <!-- Avatar Lightbox -->
+        <Teleport to="body">
+            <Transition
+                enter-active-class="transition duration-150 ease-out"
+                enter-from-class="opacity-0 scale-95"
+                enter-to-class="opacity-100 scale-100"
+                leave-active-class="transition duration-100 ease-in"
+                leave-from-class="opacity-100 scale-100"
+                leave-to-class="opacity-0 scale-95"
+            >
+                <div v-if="zoomedUser"
+                    class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm"
+                    @click.self="zoomedUser = null"
+                >
+                    <div class="relative bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full mx-4 flex flex-col items-center"
+                        :class="isDark ? 'bg-gray-800' : 'bg-white'"
+                        @click.stop
+                    >
+                        <!-- Close -->
+                        <button
+                            @click="zoomedUser = null"
+                            class="absolute top-3 right-3 p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400 hover:text-gray-600 transition-colors"
+                            aria-label="Close"
+                        >
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
+                        <!-- Photo -->
+                        <img
+                            :src="zoomedUser.src"
+                            class="w-full h-auto max-h-[55vh] object-contain rounded-xl shadow-xl mb-4"
+                            alt="Profile photo"
+                        />
+                        <!-- User details -->
+                        <div class="text-center w-full">
+                            <div class="font-semibold text-base" :class="isDark ? 'text-white' : 'text-gray-900'">
+                                {{ zoomedUser.name }}
+                            </div>
+                            <div v-if="zoomedUser.subtitle" class="text-sm mt-0.5" :class="isDark ? 'text-gray-400' : 'text-gray-500'">
+                                {{ zoomedUser.subtitle }}
+                            </div>
+                            <div v-if="zoomedUser.meta" class="text-xs mt-0.5" :class="isDark ? 'text-gray-500' : 'text-gray-400'">
+                                {{ zoomedUser.meta }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </Transition>
+        </Teleport>
+
         <div
             ref="chatContainer"
             :class="[
@@ -329,8 +394,16 @@ const broadcastTyping = () => {
                     <Icon name="ArrowLeft" class="w-5 h-5" />
                 </Link>
                 <div class="relative flex-shrink-0">
-                    <div v-if="getProfilePicture(conversation.other_user)" class="w-10 h-10 rounded-full overflow-hidden ring-2 ring-teal-500/30">
-                        <img :src="getProfilePicture(conversation.other_user)" :alt="conversation.other_user.name" class="w-full h-full object-cover" />
+                    <div v-if="getProfilePicture(conversation.other_user)"
+                        class="w-10 h-10 rounded-full overflow-hidden ring-2 ring-teal-500/30 cursor-pointer relative group/hdravatar"
+                        @click="openUserLightbox(conversation.other_user)">
+                        <img :src="getProfilePicture(conversation.other_user)" :alt="conversation.other_user.name" class="w-full h-full object-cover object-top" />
+                        <div class="absolute inset-0 rounded-full bg-black/30 flex items-center justify-center opacity-0 group-hover/hdravatar:opacity-100 transition-opacity duration-150">
+                            <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 8v6M8 11h6"/>
+                            </svg>
+                        </div>
                     </div>
                     <div v-else :class="[
                         'w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold',
@@ -396,8 +469,16 @@ const broadcastTyping = () => {
                     >
                         <!-- Avatar -->
                         <div class="flex-shrink-0">
-                            <div v-if="getProfilePicture(group.sender)" class="w-11 h-11 rounded-full overflow-hidden ring-2 ring-transparent hover:ring-teal-500/30 transition-all shadow-sm">
-                                <img :src="getProfilePicture(group.sender)" :alt="group.sender.name" class="w-full h-full object-cover" />
+                            <div v-if="getProfilePicture(group.sender)"
+                                class="w-11 h-11 rounded-full overflow-hidden ring-2 ring-transparent hover:ring-teal-500/30 transition-all shadow-sm cursor-pointer relative group/msgavatar"
+                                @click="openUserLightbox(group.sender)">
+                                <img :src="getProfilePicture(group.sender)" :alt="group.sender.name" class="w-full h-full object-cover object-top" />
+                                <div class="absolute inset-0 rounded-full bg-black/30 flex items-center justify-center opacity-0 group-hover/msgavatar:opacity-100 transition-opacity duration-150">
+                                    <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 8v6M8 11h6"/>
+                                    </svg>
+                                </div>
                             </div>
                             <div v-else :class="[
                                 'w-11 h-11 rounded-full flex items-center justify-center text-sm font-semibold ring-2 ring-transparent hover:ring-teal-500/30 transition-all shadow-sm',
