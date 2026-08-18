@@ -25,7 +25,7 @@ const searchQuery = ref('');
 const showNewChatModal = ref(false);
 const selectedUser = ref(null);
 const selectedUserId = ref(null);
-const activeTab = ref('all'); // 'all', 'unread', 'archived'
+const activeTab = ref('all'); // 'all', 'unread', 'groups'
 const sidebarCollapsed = ref(false);
 const selectedConversation = ref(null);
 const messagesContainer = ref(null);
@@ -410,6 +410,9 @@ let messagePollingInterval = null;
 let conversationPollingInterval = null;
 
 const filteredUsers = computed(() => {
+    // Groups tab — show no DM users
+    if (activeTab.value === 'groups') return [];
+
     let result = props.users;
     
     if (searchQuery.value) {
@@ -428,14 +431,27 @@ const filteredUsers = computed(() => {
         });
     }
     
-    // Sort online users to the top, then alphabetically by name
+    // Sort: 1) users with recent conversations first (by last message time desc)
+    //       2) then users with no conversation — alphabetically
     return [...result].sort((a, b) => {
-        const aOnline = isUserOnline(a.id);
-        const bOnline = isUserOnline(b.id);
-        
-        if (aOnline && !bOnline) return -1;
-        if (!aOnline && bOnline) return 1;
-        
+        const aConv = dmConvByUserId.value[a.id];
+        const bConv = dmConvByUserId.value[b.id];
+
+        const aTime = aConv?.last_message?.created_at
+            ? new Date(aConv.last_message.created_at).getTime()
+            : 0;
+        const bTime = bConv?.last_message?.created_at
+            ? new Date(bConv.last_message.created_at).getTime()
+            : 0;
+
+        // Both have conversations — sort by most recent first
+        if (aTime && bTime) return bTime - aTime;
+
+        // One has conversation, one doesn't — conversation goes first
+        if (aTime && !bTime) return -1;
+        if (!aTime && bTime) return 1;
+
+        // Neither has a conversation — alphabetical
         return a.name.localeCompare(b.name);
     });
 });
@@ -449,8 +465,7 @@ const filteredConversations = computed(() => {    let conversations = props.conv
     
     if (activeTab.value === 'unread') {
         conversations = conversations.filter(conv => getUnreadCount(conv.id) > 0);
-    }
-    
+    }    
     if (searchQuery.value) {
         const query = searchQuery.value.toLowerCase();
         conversations = conversations.filter(conv => {
@@ -856,12 +871,28 @@ function closeMessageMenus() {
 }
 
 // Mark conversation as unread from the message level
-// Uses the conversation of the currently selected chat
 function markUnreadFromMessage() {
     if (selectedConversation.value) {
         markAsUnread(selectedConversation.value);
     }
     activeMessageMenu.value = null;
+}
+
+// Mark conversation as read from the message level
+async function markReadFromMessage() {
+    if (!selectedConversation.value) return;
+    activeMessageMenu.value = null;
+    const id = parseInt(selectedConversation.value);
+    // Update local state immediately
+    localUnreadCounts.value[id] = 0;
+    if (!locallyReadConversationIds.value.includes(id)) {
+        locallyReadConversationIds.value.push(id);
+    }
+    markConversationReadGlobal(selectedConversation.value);
+    // Fire the server endpoint to persist read events
+    try {
+        await axios.get(route('team-messaging.messages', selectedConversation.value));
+    } catch (e) { /* silent */ }
 }
 const markingUnread = ref(null); // conversationId being processed
 
@@ -967,6 +998,13 @@ const checkForNewConversations = async () => {
         console.error('Error fetching unread counts:', e);
     }
 };
+
+// ── Scroll-to-bottom button ───────────────────────────────────────────────────
+const showScrollBtn = ref(false);
+
+function onMessagesScroll() {
+    showScrollBtn.value = !isNearBottom();
+}
 
 const scrollToBottom = (smooth = true, force = false) => {
     nextTick(() => {
@@ -1118,47 +1156,69 @@ watch(messages, () => {
                     </div>
                 </div>
 
-                <!-- Tabs: All / Unread -->
+                <!-- Tabs: All / Unread / Groups -->
                 <div class="flex px-4 gap-1 border-b" :class="isDark ? 'border-gray-700' : 'border-slate-100'">
+                    <!-- All tab -->
                     <button
-                        v-for="tab in ['all','unread']"
-                        :key="tab"
-                        @click="activeTab = tab"
+                        @click="activeTab = 'all'"
                         class="relative pb-3 pt-1 px-3 text-sm font-medium transition-colors"
-                        :class="activeTab === tab
+                        :class="activeTab === 'all'
+                            ? 'text-teal-600 after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-teal-500 after:rounded-full'
+                            : isDark ? 'text-gray-400 hover:text-gray-200' : 'text-slate-500 hover:text-slate-700'"
+                    >All</button>
+
+                    <!-- Unread tab -->
+                    <button
+                        @click="activeTab = 'unread'"
+                        class="relative pb-3 pt-1 px-3 text-sm font-medium transition-colors"
+                        :class="activeTab === 'unread'
                             ? 'text-teal-600 after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-teal-500 after:rounded-full'
                             : isDark ? 'text-gray-400 hover:text-gray-200' : 'text-slate-500 hover:text-slate-700'"
                     >
-                        {{ tab.charAt(0).toUpperCase() + tab.slice(1) }}
+                        Unread
                         <span
-                            v-if="tab === 'unread' && effectiveUnreadCount > 0"
+                            v-if="effectiveUnreadCount > 0"
                             class="ml-1.5 px-1.5 py-0.5 rounded-full text-xs font-semibold bg-red-500 text-white"
                         >{{ effectiveUnreadCount }}</span>
+                    </button>
+
+                    <!-- Groups tab -->
+                    <button
+                        @click="activeTab = 'groups'"
+                        class="relative pb-3 pt-1 px-3 text-sm font-medium transition-colors"
+                        :class="activeTab === 'groups'
+                            ? 'text-teal-600 after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-teal-500 after:rounded-full'
+                            : isDark ? 'text-gray-400 hover:text-gray-200' : 'text-slate-500 hover:text-slate-700'"
+                    >
+                        Groups
+                        <span v-if="groupConversations.length > 0"
+                            class="ml-1.5 px-1.5 py-0.5 rounded-full text-xs font-semibold"
+                            :class="isDark ? 'bg-gray-600 text-gray-300' : 'bg-slate-100 text-slate-600'"
+                        >{{ groupConversations.length }}</span>
                     </button>
                 </div>
 
                 <!-- Conversation / User list -->
-                <div class="flex-1 overflow-y-auto pr-4">
-                    <div v-if="filteredUsers.length === 0" class="flex flex-col items-center justify-center h-full p-6 text-center">
-                        <svg class="w-10 h-10 text-slate-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm14 2-3 3m0 0-3-3m3 3v-6"/>
-                        </svg>
-                        <p class="text-sm text-slate-400">{{ searchQuery ? 'No users found' : activeTab === 'unread' ? 'No unread messages' : 'No users available' }}</p>
-                    </div>
+                <div class="flex-1 overflow-y-auto pr-1 chat-scroll">
 
-                    <div v-else class="space-y-2">
-
-                        <!-- Company/Group conversations pinned at top -->
-                        <template v-if="groupConversations.length">
-                            <p class="px-3 pt-3 pb-1 text-[10px] font-bold uppercase tracking-wider"
-                                :class="isDark ? 'text-gray-500' : 'text-slate-400'">Groups</p>
-                            <div v-for="conv in groupConversations" :key="'grp-'+conv.id"
+                    <!-- ── Groups tab: show only group conversations ── -->
+                    <template v-if="activeTab === 'groups'">
+                        <div v-if="groupConversations.length === 0"
+                            class="flex flex-col items-center justify-center h-full p-6 text-center">
+                            <svg class="w-10 h-10 text-slate-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            </svg>
+                            <p class="text-sm" :class="isDark ? 'text-gray-400' : 'text-slate-400'">No groups yet</p>
+                        </div>
+                        <div v-else class="space-y-1 pt-2">
+                            <div v-for="conv in groupConversations" :key="'gtab-'+conv.id"
                                 @click="selectConversation(conv.id)"
                                 class="group flex items-center gap-3 px-3 py-2.5 cursor-pointer transition-colors border-l-[3px] rounded-lg mx-1"
                                 :class="selectedConversation === conv.id
                                     ? isDark ? 'bg-teal-900/40 border-teal-500' : 'bg-teal-50 border-teal-500'
                                     : isDark ? 'border-transparent hover:bg-gray-700' : 'border-transparent hover:bg-slate-50'">
-                                <!-- Group avatar: special style for the default Company group -->
+                                <!-- Avatar -->
                                 <div class="w-9 h-9 rounded-full flex items-center justify-center text-white shrink-0 relative"
                                     :style="conv.is_default
                                         ? 'background:linear-gradient(135deg,#b45309,#d97706)'
@@ -1169,55 +1229,64 @@ watch(messages, () => {
                                     <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
                                     </svg>
-                                    <!-- Pin indicator for default group -->
+                                    <!-- Star badge for default group -->
                                     <span v-if="conv.is_default"
                                         class="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-amber-400 border-2 flex items-center justify-center"
-                                        :class="isDark ? 'border-gray-800' : 'border-white'"
-                                        title="Default company group">
+                                        :class="isDark ? 'border-gray-800' : 'border-white'">
                                         <svg class="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 24 24">
                                             <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                                         </svg>
                                     </span>
                                 </div>
+                                <!-- Info -->
                                 <div class="flex-1 min-w-0">
                                     <div class="flex items-center gap-1.5">
                                         <p class="text-sm font-semibold truncate" :class="isDark ? 'text-white' : 'text-slate-800'">
                                             {{ conv.name }}
                                         </p>
                                         <span v-if="conv.is_default"
-                                            class="flex-shrink-0 text-[9px] px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider bg-amber-100 text-amber-700"
-                                            :class="isDark ? 'bg-amber-900/40 text-amber-400' : ''">
+                                            class="flex-shrink-0 text-[9px] px-1.5 py-0.5 rounded-full font-bold uppercase"
+                                            :class="isDark ? 'bg-amber-900/40 text-amber-400' : 'bg-amber-100 text-amber-700'">
                                             Company
                                         </span>
                                     </div>
-                                    <p class="text-xs truncate" :class="isDark ? 'text-gray-400' : 'text-slate-500'">
+                                    <p class="text-xs truncate mt-0.5" :class="isDark ? 'text-gray-400' : 'text-slate-500'">
                                         {{ conv.participant_count }} members
-                                        <template v-if="conv.last_message">
-                                            · {{ conv.last_message.message }}
-                                        </template>
+                                        <template v-if="conv.last_message"> · {{ conv.last_message.message }}</template>
                                     </p>
                                 </div>
-                                <span v-if="getUnreadCount(conv.id) > 0 && !isConvRead(conv.id)"
-                                    class="w-5 h-5 rounded-full bg-teal-500 text-white text-[10px] font-bold flex items-center justify-center shrink-0">
-                                    {{ getUnreadCount(conv.id) }}
-                                </span>
-                                <!-- Mark as unread (group) -->
-                                <button
-                                    v-else
-                                    @click.stop="markAsUnread(conv.id)"
-                                    :disabled="markingUnread === conv.id"
-                                    class="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-md shrink-0"
-                                    :class="isDark ? 'text-gray-400 hover:text-blue-400 hover:bg-gray-700' : 'text-slate-400 hover:text-blue-500 hover:bg-slate-100'"
-                                    title="Mark as unread"
-                                >
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                                    </svg>
-                                </button>
+                                <!-- Unread badge + mark unread -->
+                                <div class="flex items-center gap-1 shrink-0">
+                                    <span v-if="getUnreadCount(conv.id) > 0 && !isConvRead(conv.id)"
+                                        class="w-5 h-5 rounded-full bg-teal-500 text-white text-[10px] font-bold flex items-center justify-center">
+                                        {{ getUnreadCount(conv.id) }}
+                                    </span>
+                                    <button v-else
+                                        @click.stop="markAsUnread(conv.id)"
+                                        :disabled="markingUnread === conv.id"
+                                        class="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-md"
+                                        :class="isDark ? 'text-gray-400 hover:text-blue-400 hover:bg-gray-700' : 'text-slate-400 hover:text-blue-500 hover:bg-slate-100'"
+                                        title="Mark as unread">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                                        </svg>
+                                    </button>
+                                </div>
                             </div>
-                            <div class="border-t my-2" :class="isDark ? 'border-gray-700' : 'border-slate-100'"></div>
-                        </template>
+                        </div>
+                    </template>
+
+                    <!-- ── All / Unread tab: original DM + group list ── -->
+                    <template v-else>
+                    <div v-if="filteredUsers.length === 0" class="flex flex-col items-center justify-center h-full p-6 text-center">
+                        <svg class="w-10 h-10 text-slate-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm14 2-3 3m0 0-3-3m3 3v-6"/>
+                        </svg>
+                        <p class="text-sm text-slate-400">{{ searchQuery ? 'No users found' : activeTab === 'unread' ? 'No unread messages' : 'No users available' }}</p>
+                    </div>
+
+                    <div v-else class="space-y-2">
 
                         <!-- Direct messages -->
                         <div
@@ -1312,6 +1381,7 @@ watch(messages, () => {
                             </div>
                         </div>
                     </div>
+                    </template><!-- end All/Unread template -->
                 </div>
 
                 <!-- Sidebar footer -->
@@ -1455,7 +1525,10 @@ watch(messages, () => {
                 <div class="flex flex-1 min-h-0 overflow-hidden">
 
                     <!-- Messages scroll area -->
-                    <div ref="messagesContainer" class="flex-1 overflow-y-auto min-h-0 px-6 py-4 space-y-5" style="scroll-behavior:smooth;">
+                    <div ref="messagesContainer"
+                        @scroll="onMessagesScroll"
+                        class="flex-1 overflow-y-auto min-h-0 px-6 py-4 space-y-5 relative chat-scroll"
+                        style="scroll-behavior:smooth;">
 
                         <!-- Loading -->
                         <div v-if="loadingMessages" class="flex justify-center pt-8">
@@ -1546,7 +1619,22 @@ watch(messages, () => {
                                                 ]"
                                                 @click.stop
                                             >
+                                                <!-- Mark as read — only when conversation has unread -->
                                                 <button
+                                                    v-if="selectedConversation && getUnreadCount(selectedConversation) > 0"
+                                                    @click.stop="markReadFromMessage"
+                                                    class="w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors text-left"
+                                                    :class="isDark ? 'text-gray-300 hover:bg-gray-700' : 'text-slate-700 hover:bg-slate-50'"
+                                                >
+                                                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                    </svg>
+                                                    Mark as read
+                                                </button>
+                                                <!-- Mark as unread — only when conversation is fully read -->
+                                                <button
+                                                    v-else
                                                     @click.stop="markUnreadFromMessage"
                                                     class="w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors text-left"
                                                     :class="isDark ? 'text-gray-300 hover:bg-gray-700' : 'text-slate-700 hover:bg-slate-50'"
@@ -1608,6 +1696,21 @@ watch(messages, () => {
                             </div>
                             </div> <!-- close v-for wrapper -->
                         </template>
+
+                        <!-- Scroll to bottom button -->
+                        <Transition name="scroll-btn">
+                            <button
+                                v-if="showScrollBtn"
+                                @click="scrollToBottom(true, true)"
+                                class="sticky bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold text-white shadow-lg transition-all hover:opacity-90 z-10"
+                                style="background:linear-gradient(135deg,#006970,#00a9b4);"
+                            >
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+                                </svg>
+                                Latest
+                            </button>
+                        </Transition>
                     </div>
 
                     <!-- ── Group info panel (slides in when showGroupPanel is true) ── -->
@@ -2113,6 +2216,35 @@ watch(messages, () => {
 /* Group info panel slide-in */
 .slide-panel-enter-active {
     transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Scroll-to-bottom button */
+.scroll-btn-enter-active { transition: all 0.2s cubic-bezier(0.34,1.56,0.64,1); }
+.scroll-btn-leave-active { transition: all 0.15s ease-in; }
+.scroll-btn-enter-from, .scroll-btn-leave-to { opacity:0; transform:translateX(-50%) translateY(8px) scale(0.9); }
+
+/* ── Themed sleek scrollbar — user list + chat window ── */
+.chat-scroll {
+    scroll-behavior: smooth;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(13,148,136,0.35) transparent;
+}
+.chat-scroll::-webkit-scrollbar {
+    width: 4px;
+}
+.chat-scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+.chat-scroll::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(13,148,136,0.5), rgba(6,182,212,0.4));
+    border-radius: 999px;
+    transition: background 0.2s;
+}
+.chat-scroll:hover::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #0d9488, #06b6d4);
+}
+.chat-scroll::-webkit-scrollbar-thumb:active {
+    background: linear-gradient(180deg, #0f766e, #0891b2);
 }
 .slide-panel-leave-active {
     transition: all 0.18s cubic-bezier(0.4, 0, 1, 1);
