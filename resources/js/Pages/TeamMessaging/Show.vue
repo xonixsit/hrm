@@ -10,6 +10,8 @@ import BaseInput from '@/Components/Base/BaseInput.vue';
 import axios from 'axios';
 import data from '@emoji-mart/data';
 import { Picker } from 'emoji-mart';
+import RichTextEditor from '@/Components/Chat/RichTextEditor.vue';
+import ImageLightbox from '@/Components/Chat/ImageLightbox.vue';
 
 const { isDark } = useTheme();
 const page = usePage();
@@ -18,6 +20,9 @@ const props = defineProps({
     conversation: Object,
     messages: Array,
 });
+
+// Debug: Log conversation prop
+console.log('TeamMessaging Show.vue - conversation prop:', props.conversation);
 
 // Transform messages to match expected format
 const transformedMessages = computed(() => {
@@ -30,6 +35,7 @@ const transformedMessages = computed(() => {
 });
 
 const messageInput = ref('');
+const richEditorRef = ref(null); // RichTextEditor component ref
 const messagesContainer = ref(null);
 const chatContainer = ref(null);
 const chatHeight = ref('600px');
@@ -44,6 +50,11 @@ const updateChatHeight = () => {
 };
 const localMessages = ref([...transformedMessages.value]);
 const showEmojiPicker = ref(false);
+
+// Image lightbox state
+const showImageLightbox = ref(false);
+const lightboxImageSrc = ref('');
+const lightboxImageAlt = ref('');
 const showAttachments = ref(false);
 const showActions = ref(null);
 const isTyping = ref(false);
@@ -140,9 +151,15 @@ const scrollToBottom = (smooth = true) => {
 };
 
 const sendMessage = async () => {
-    if (!messageInput.value.trim() || isSending.value) return;
+    const htmlContent = richEditorRef.value?.getHTML() ?? messageInput.value;
+    const textContent = richEditorRef.value?.getTextContent() ?? messageInput.value.trim();
+    
+    // Check if there's text or images
+    const hasImages = htmlContent.includes('<img');
+    if ((!textContent && !hasImages) || isSending.value) return;
 
-    const message = messageInput.value;
+    const message = htmlContent;
+    richEditorRef.value?.clear();
     messageInput.value = '';
     isSending.value = true;
 
@@ -279,7 +296,11 @@ const toggleEmojiPicker = () => {
                     data,
                     theme: isDark.value ? 'dark' : 'light',
                     onEmojiSelect: (emoji) => {
-                        messageInput.value += emoji.native;
+                        if (richEditorRef.value) {
+                            richEditorRef.value.insertAtCursor(emoji.native);
+                        } else {
+                            messageInput.value += emoji.native;
+                        }
                         showEmojiPicker.value = false;
                     },
                     onClickOutside: () => {
@@ -320,6 +341,29 @@ const openUserLightbox = (user) => {
         meta: user?.department || user?.employee?.department || null,
     };
 };
+
+// Image lightbox functions
+const openImageLightbox = (imageSrc, imageAlt = 'Image') => {
+    lightboxImageSrc.value = imageSrc;
+    lightboxImageAlt.value = imageAlt;
+    showImageLightbox.value = true;
+};
+
+const closeImageLightbox = () => {
+    showImageLightbox.value = false;
+    lightboxImageSrc.value = '';
+    lightboxImageAlt.value = '';
+};
+
+// Handle image clicks in messages
+const handleMessageClick = (event) => {
+    if (event.target.tagName === 'IMG' && event.target.classList.contains('rt-image')) {
+        event.preventDefault();
+        event.stopPropagation();
+        openImageLightbox(event.target.src, event.target.alt);
+    }
+};
+
 </script>
 
 <template>
@@ -509,7 +553,10 @@ const openUserLightbox = (user) => {
                                     msgIndex === 0 ? 'rounded-t-2xl' : 'rounded-t-lg'
                                 ]"
                             >
-                                <p class="break-words leading-relaxed text-sm">{{ message.message }}</p>
+                                <div class="msg-body break-words text-sm leading-relaxed"
+                                    :class="!group.isOwn ? 'msg-body-incoming' : ''"
+                                    v-html="message.message"
+                                    @click="handleMessageClick"></div>
                                 
                                 <!-- Message Actions -->
                                 <div :class="[
@@ -547,77 +594,182 @@ const openUserLightbox = (user) => {
             </div>
 
             <!-- Message Input -->
-            <div class="p-6 border-t" :class="isDark ? 'border-gray-700' : 'border-gray-200'">
-                <div class="flex items-end gap-3">
-                    <div class="flex gap-2">
-                        <button 
-                            @click="showAttachments = !showAttachments"
-                            :class="[
-                                'h-11 w-11 flex items-center justify-center rounded-lg transition-colors',
-                                isDark 
-                                    ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
-                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                            ]"
-                        >
-                            <Icon name="Paperclip" class="w-5 h-5" />
-                        </button>
-                        <button 
+            <div class="p-4 border-t flex-shrink-0" :class="isDark ? 'border-gray-700' : 'border-gray-200'">
+
+                <!-- Emoji picker teleport -->
+                <Teleport to="body">
+                    <div
+                        v-if="showEmojiPicker"
+                        ref="emojiPickerRef"
+                        class="fixed z-[300]"
+                        style="bottom:80px;left:50%;transform:translateX(-50%);"
+                    ></div>
+                </Teleport>
+
+                <!-- Rich text input card -->
+                <div
+                    class="rounded-2xl border overflow-hidden transition-all duration-150"
+                    :class="isDark
+                        ? 'bg-gray-700 border-gray-600 focus-within:border-teal-500'
+                        : 'bg-white border-gray-300 focus-within:border-teal-400 focus-within:shadow-sm'"
+                >
+                    <RichTextEditor
+                        ref="richEditorRef"
+                        v-model="messageInput"
+                        placeholder="Type a message…"
+                        :isDark="isDark"
+                        :conversationId="conversation?.id"
+                        @send="sendMessage"
+                    />
+
+                    <!-- Bottom action row: emoji + send -->
+                    <div class="flex items-center justify-end gap-1 px-2 py-1.5 border-t"
+                        :class="isDark ? 'border-gray-600' : 'border-gray-200'">
+                        <button
                             @click="toggleEmojiPicker"
                             ref="emojiButtonRef"
-                            :class="[
-                                'h-11 w-11 flex items-center justify-center rounded-lg transition-colors',
-                                showEmojiPicker
-                                    ? 'text-teal-500'
-                                    : isDark 
-                                        ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
-                                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                            ]"
+                            class="p-1.5 rounded-lg transition-colors"
+                            :class="showEmojiPicker
+                                ? 'text-teal-500'
+                                : isDark ? 'text-gray-400 hover:text-teal-400' : 'text-gray-500 hover:text-teal-600'"
+                            title="Emoji"
                         >
                             <Icon name="Smile" class="w-5 h-5" />
                         </button>
+                        <button
+                            @click="sendMessage"
+                            class="h-8 w-8 flex items-center justify-center rounded-xl transition-all text-white hover:opacity-90"
+                            style="background: linear-gradient(135deg, #006970, #00a9b4)"
+                            title="Send (Enter)"
+                        >
+                            <Icon name="Send" class="w-4 h-4" />
+                        </button>
                     </div>
-                    
-                    <div class="flex-1 relative">
-                        <textarea
-                            v-model="messageInput"
-                            placeholder="Type a message..."
-                            @keypress="handleKeyPress"
-                            :class="[
-                                'w-full min-h-[44px] p-3 rounded-lg border resize-none focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all',
-                                isDark 
-                                    ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
-                                    : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-                            ]"
-                            rows="1"
-                        ></textarea>
-                        
-                        <!-- emoji-mart picker — teleported so it's never clipped -->
-                        <Teleport to="body">
-                            <div
-                                v-if="showEmojiPicker"
-                                ref="emojiPickerRef"
-                                class="fixed z-[300]"
-                                style="bottom:80px;left:50%;transform:translateX(-50%);"
-                            ></div>
-                        </Teleport>
-                    </div>
-                    
-                    <button 
-                        @click="sendMessage" 
-                        :disabled="!messageInput.trim()"
-                        :class="[
-                            'h-11 w-11 flex items-center justify-center rounded-lg transition-all',
-                            messageInput.trim()
-                                ? 'bg-gradient-to-r from-teal-500 to-cyan-500 text-white hover:opacity-90'
-                                : isDark 
-                                    ? 'bg-gray-700 text-gray-500 cursor-not-allowed' 
-                                    : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                        ]"
-                    >
-                        <Icon name="Send" class="w-5 h-5" />
-                    </button>
                 </div>
             </div>
         </div>
+
+        <!-- Image Lightbox -->
+        <ImageLightbox
+            :is-open="showImageLightbox"
+            :image-src="lightboxImageSrc"
+            :image-alt="lightboxImageAlt"
+            @close="closeImageLightbox"
+        />
     </AuthenticatedLayout>
 </template>
+
+<style scoped>
+/* ── Rich-text message rendering ── */
+.msg-body :deep(b),
+.msg-body :deep(strong) { 
+    font-weight: 700; 
+}
+
+.msg-body :deep(i),
+.msg-body :deep(em) { 
+    font-style: italic; 
+}
+
+.msg-body :deep(u) { 
+    text-decoration: underline; 
+}
+
+.msg-body :deep(s),
+.msg-body :deep(strike) { 
+    text-decoration: line-through; 
+}
+
+.msg-body :deep(blockquote) {
+    border-left: 3px solid rgba(255,255,255,0.5);
+    padding-left: 12px;
+    margin: 8px 0;
+    font-style: italic;
+    opacity: 0.9;
+}
+
+.msg-body :deep(ul) {
+    list-style-type: disc;
+    list-style-position: inside;
+    padding-left: 0;
+    margin: 6px 0;
+}
+
+.msg-body :deep(ul li) {
+    margin: 2px 0;
+    display: list-item;
+}
+
+.msg-body :deep(ol) {
+    list-style-type: decimal;
+    list-style-position: inside;
+    padding-left: 0;
+    margin: 6px 0;
+}
+
+.msg-body :deep(ol li) {
+    margin: 2px 0;
+    display: list-item;
+}
+
+.msg-body :deep(a),
+.msg-body :deep(a.rt-link) {
+    color: inherit;
+    text-decoration: underline;
+    opacity: 0.9;
+}
+
+.msg-body :deep(code),
+.msg-body :deep(code.rt-code) {
+    font-family: ui-monospace, 'Courier New', monospace;
+    background: rgba(0,0,0,0.2);
+    border-radius: 3px;
+    padding: 2px 5px;
+    font-size: 0.9em;
+}
+
+.msg-body :deep(.colored-text) {
+    /* Preserve color from inline style */
+}
+
+.msg-body :deep(span[style*="color"]) {
+    /* Preserve inline color styles */
+}
+
+.msg-body :deep(img.rt-image) {
+    max-width: 100%;
+    max-height: 300px;
+    height: auto;
+    border-radius: 8px;
+    margin: 8px 0;
+    display: block;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.msg-body :deep(img.rt-image):hover {
+    transform: scale(1.02);
+}
+
+/* Incoming messages: readable styles on light bg */
+.msg-body-incoming :deep(blockquote) {
+    border-left-color: #14b8a6;
+    opacity: 1;
+}
+
+.msg-body-incoming :deep(code),
+.msg-body-incoming :deep(code.rt-code) {
+    background: rgba(0,0,0,0.08);
+}
+
+.msg-body-incoming :deep(a),
+.msg-body-incoming :deep(a.rt-link) {
+    color: #0ea5e9;
+    text-decoration: underline;
+}
+
+/* Avatar zoom transition */
+.avatar-zoom-enter-active { transition: all 0.2s cubic-bezier(0.34,1.56,0.64,1); }
+.avatar-zoom-leave-active { transition: all 0.15s ease-in; }
+.avatar-zoom-enter-from, .avatar-zoom-leave-to { opacity: 0; }
+</style>

@@ -12,6 +12,8 @@ import data from '@emoji-mart/data';
 import { Picker } from 'emoji-mart';
 import { markConversationReadGlobal, markConversationUnreadGlobal } from '@/composables/useChatNotifications';
 import { openFloatingChat } from '@/composables/useFloatingChat';
+import RichTextEditor from '@/Components/Chat/RichTextEditor.vue';
+import ImageLightbox from '@/Components/Chat/ImageLightbox.vue';
 
 const { isDark } = useTheme();
 const page = usePage();
@@ -31,6 +33,7 @@ const selectedConversation = ref(null);
 const messagesContainer = ref(null);
 const messages = ref([]);
 const messageInput = ref('');
+const richEditorRef = ref(null); // RichTextEditor component ref
 const loadingMessages = ref(false);
 const showEmojiPicker = ref(false);
 const isTyping = ref(false);
@@ -64,6 +67,11 @@ const hoveredUserId = ref(null);
 const zoomedUser = ref(null); // { src, name, subtitle, meta, status } for lightbox
 const userDetailModal = ref(null); // user object for centered detail modal
 
+// Image lightbox state
+const showImageLightbox = ref(false);
+const lightboxImageSrc = ref('');
+const lightboxImageAlt = ref('');
+
 // Build a zoomedUser payload from any user-like object
 const openUserLightbox = (user, src) => {
     zoomedUser.value = {
@@ -75,6 +83,29 @@ const openUserLightbox = (user, src) => {
         statusId: user?.id || null,
     };
 };
+
+// Image lightbox functions
+const openImageLightbox = (imageSrc, imageAlt = 'Image') => {
+    lightboxImageSrc.value = imageSrc;
+    lightboxImageAlt.value = imageAlt;
+    showImageLightbox.value = true;
+};
+
+const closeImageLightbox = () => {
+    showImageLightbox.value = false;
+    lightboxImageSrc.value = '';
+    lightboxImageAlt.value = '';
+};
+
+// Handle image clicks in messages
+const handleMessageClick = (event) => {
+    if (event.target.tagName === 'IMG' && event.target.classList.contains('rt-image')) {
+        event.preventDefault();
+        event.stopPropagation();
+        openImageLightbox(event.target.src, event.target.alt);
+    }
+};
+
 const hoverCardPosition = ref({ top: 0, left: 0 });
 const hideHoverCardTimeout = ref(null);
 const copiedEmail = ref(false);
@@ -351,7 +382,11 @@ const toggleEmojiPicker = () => {
                     data,
                     theme: isDark.value ? 'dark' : 'light',
                     onEmojiSelect: (emoji) => {
-                        messageInput.value += emoji.native;
+                        if (richEditorRef.value) {
+                            richEditorRef.value.insertAtCursor(emoji.native);
+                        } else {
+                            messageInput.value += emoji.native;
+                        }
                         showEmojiPickerPopup.value = false;
                         nextTick(() => messageInputRef.value?.focus());
                     },
@@ -597,12 +632,22 @@ const selectConversation = async (conversationId) => {
 const isSending = ref(false);
 
 const sendMessage = async () => {
-    if (!messageInput.value.trim() || !selectedConversation.value || isSending.value) return;
+    if (!selectedConversation.value || isSending.value) return;
+
+    // Get HTML content from rich editor
+    const htmlContent = richEditorRef.value?.getHTML() ?? messageInput.value;
+    const textContent = richEditorRef.value?.getTextContent() ?? messageInput.value.trim();
+    
+    // Check if there's text or images
+    const hasImages = htmlContent.includes('<img');
+    if (!textContent && !hasImages) return;
 
     // Request notification permission on user gesture if not yet granted
     requestNotificationPermission();
-    
-    const message = messageInput.value;
+
+    const message = htmlContent;
+    // Clear input
+    richEditorRef.value?.clear();
     messageInput.value = '';
     isSending.value = true;
     
@@ -649,7 +694,12 @@ const sendMessage = async () => {
         if (tempIndex !== -1) {
             messages.value.splice(tempIndex, 1);
         }
-        messageInput.value = message;
+        // Restore message into editor on failure
+        if (richEditorRef.value) {
+            richEditorRef.value.focus();
+        } else {
+            messageInput.value = message;
+        }
     } finally {
         isSending.value = false;
     }
@@ -1689,7 +1739,10 @@ watch(messages, () => {
                                         :style="message.sender_id === page.props.auth.user.id
                                             ? 'background: linear-gradient(135deg, #004f55, #006970)'
                                             : ''">
-                                        {{ message.message }}
+                                        <div class="msg-body prose-chat break-words text-sm leading-relaxed"
+                                            :class="message.sender_id !== page.props.auth.user.id ? 'msg-body-incoming' : ''"
+                                            v-html="message.message"
+                                            @click="handleMessageClick"></div>
                                     </div>
 
                                     <!-- Timestamp + ticks -->
@@ -1952,60 +2005,58 @@ watch(messages, () => {
                             ></div>
                         </Teleport>
 
-                        <!-- Input bar -->
+                        <!-- Rich text input card -->
                         <div
-                            class="flex items-end gap-1 rounded-2xl border px-2 py-1.5 transition-all duration-150"
+                            class="rounded-2xl border overflow-hidden transition-all duration-150"
                             :class="isDark
                                 ? 'bg-gray-700 border-gray-600 focus-within:border-teal-500'
                                 : 'bg-white border-slate-200 focus-within:border-teal-400 focus-within:shadow-sm'"
                         >
-                            <!-- Emoji button -->
-                            <button
-                                ref="emojiButtonRef"
-                                type="button"
-                                @click.stop="toggleEmojiPicker"
-                                class="flex-shrink-0 self-end mb-1 p-1.5 rounded-lg transition-colors"
-                                :class="showEmojiPickerPopup
-                                    ? 'text-teal-500'
-                                    : isDark ? 'text-gray-400 hover:text-teal-400' : 'text-slate-400 hover:text-teal-500'"
-                                title="Emoji"
-                            >
-                                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                                    <circle cx="12" cy="12" r="10"/>
-                                    <path stroke-linecap="round" d="M8 13s1.5 2 4 2 4-2 4-2"/>
-                                    <circle cx="9" cy="9.5" r="1" fill="currentColor" stroke="none"/>
-                                    <circle cx="15" cy="9.5" r="1" fill="currentColor" stroke="none"/>
-                                </svg>
-                            </button>
-
-                            <!-- Textarea -->
-                            <textarea
-                                ref="messageInputRef"
+                            <!-- RichTextEditor (toolbar + contenteditable) -->
+                            <RichTextEditor
+                                ref="richEditorRef"
                                 v-model="messageInput"
-                                @keydown.enter.exact.prevent="sendMessage"
-                                @input="autoResize"
-                                placeholder="Type a message..."
-                                rows="1"
-                                style="border: none; outline: none; box-shadow: none; background: transparent; resize: none;"
-                                class="flex-1 text-sm leading-5 py-1.5 max-h-32 overflow-y-auto w-full"
-                                :class="isDark ? 'text-white placeholder-gray-500' : 'text-slate-800 placeholder-slate-400'"
-                            ></textarea>
+                                placeholder="Type a message…"
+                                :isDark="isDark"
+                                :conversationId="selectedConversation"
+                                @send="sendMessage"
+                            />
 
-                            <!-- Send button -->
-                            <button
-                                type="button"
-                                @click="sendMessage"
-                                :disabled="!messageInput.trim()"
-                                class="flex-shrink-0 self-end mb-1 w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-150"
-                                :class="messageInput.trim()
-                                    ? 'text-white hover:opacity-90'
-                                    : isDark ? 'text-gray-600 cursor-not-allowed' : 'text-slate-300 cursor-not-allowed'"
-                                :style="messageInput.trim() ? 'background: linear-gradient(135deg, #006970, #00a9b4)' : ''"
-                            >
-                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
-                                </svg>
-                            </button>
+                            <!-- Bottom action bar: emoji + send -->
+                            <div class="flex items-center justify-end gap-1 px-2 py-1.5 border-t"
+                                :class="isDark ? 'border-gray-600' : 'border-slate-100'">
+                                <!-- Emoji -->
+                                <button
+                                    ref="emojiButtonRef"
+                                    type="button"
+                                    @click.stop="toggleEmojiPicker"
+                                    class="p-1.5 rounded-lg transition-colors"
+                                    :class="showEmojiPickerPopup
+                                        ? 'text-teal-500'
+                                        : isDark ? 'text-gray-400 hover:text-teal-400' : 'text-slate-400 hover:text-teal-500'"
+                                    title="Emoji (opens picker)"
+                                >
+                                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                        <circle cx="12" cy="12" r="10"/>
+                                        <path stroke-linecap="round" d="M8 13s1.5 2 4 2 4-2 4-2"/>
+                                        <circle cx="9" cy="9.5" r="1" fill="currentColor" stroke="none"/>
+                                        <circle cx="15" cy="9.5" r="1" fill="currentColor" stroke="none"/>
+                                    </svg>
+                                </button>
+
+                                <!-- Send button -->
+                                <button
+                                    type="button"
+                                    @click="sendMessage"
+                                    class="w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-150 text-white hover:opacity-90"
+                                    style="background: linear-gradient(135deg, #006970, #00a9b4)"
+                                    title="Send (Enter)"
+                                >
+                                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div><!-- end main body flex row -->
@@ -2289,6 +2340,14 @@ watch(messages, () => {
             </div>
         </Teleport>
 
+        <!-- Image Lightbox -->
+        <ImageLightbox
+            :is-open="showImageLightbox"
+            :image-src="lightboxImageSrc"
+            :image-alt="lightboxImageAlt"
+            @close="closeImageLightbox"
+        />
+
     </AuthenticatedLayout>
 </template>
 
@@ -2343,6 +2402,114 @@ watch(messages, () => {
 }
 .chat-scroll:hover::-webkit-scrollbar-thumb {
     background: linear-gradient(180deg, #0d9488, #06b6d4);
+}
+
+/* ── Rich-text message rendering ── */
+.msg-body :deep(b),
+.msg-body :deep(strong) { 
+    font-weight: 700; 
+}
+
+.msg-body :deep(i),
+.msg-body :deep(em) { 
+    font-style: italic; 
+}
+
+.msg-body :deep(u) { 
+    text-decoration: underline; 
+}
+
+.msg-body :deep(s),
+.msg-body :deep(strike) { 
+    text-decoration: line-through; 
+}
+
+.msg-body :deep(blockquote) {
+    border-left: 3px solid rgba(255,255,255,0.5);
+    padding-left: 12px;
+    margin: 8px 0;
+    font-style: italic;
+    opacity: 0.9;
+}
+
+.msg-body :deep(ul) {
+    list-style-type: disc;
+    list-style-position: inside;
+    padding-left: 0;
+    margin: 6px 0;
+}
+
+.msg-body :deep(ul li) {
+    margin: 2px 0;
+    display: list-item;
+}
+
+.msg-body :deep(ol) {
+    list-style-type: decimal;
+    list-style-position: inside;
+    padding-left: 0;
+    margin: 6px 0;
+}
+
+.msg-body :deep(ol li) {
+    margin: 2px 0;
+    display: list-item;
+}
+
+.msg-body :deep(a),
+.msg-body :deep(a.rt-link) {
+    color: inherit;
+    text-decoration: underline;
+    opacity: 0.9;
+}
+
+.msg-body :deep(code),
+.msg-body :deep(code.rt-code) {
+    font-family: ui-monospace, 'Courier New', monospace;
+    background: rgba(0,0,0,0.2);
+    border-radius: 3px;
+    padding: 2px 5px;
+    font-size: 0.9em;
+}
+
+.msg-body :deep(.colored-text) {
+    /* Preserve color from inline style */
+}
+
+.msg-body :deep(span[style*="color"]) {
+    /* Preserve inline color styles */
+}
+
+.msg-body :deep(img.rt-image) {
+    max-width: 100%;
+    max-height: 300px;
+    height: auto;
+    border-radius: 8px;
+    margin: 8px 0;
+    display: block;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.msg-body :deep(img.rt-image):hover {
+    transform: scale(1.02);
+}
+
+/* For incoming messages (dark bg) use lighter code bg */
+.msg-body-incoming :deep(blockquote) {
+    border-left-color: #14b8a6;
+    color: inherit;
+}
+
+.msg-body-incoming :deep(code),
+.msg-body-incoming :deep(code.rt-code) {
+    background: rgba(0,0,0,0.08);
+}
+
+.msg-body-incoming :deep(a),
+.msg-body-incoming :deep(a.rt-link) {
+    color: #0ea5e9;
+    text-decoration: underline;
 }
 .chat-scroll::-webkit-scrollbar-thumb:active {
     background: linear-gradient(180deg, #0f766e, #0891b2);

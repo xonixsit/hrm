@@ -17,6 +17,30 @@ use Inertia\Inertia;
 class TeamMessagingController extends Controller
 {
     public function __construct(private MessagingService $messaging) {}
+    
+    // ─── Show conversation page ───────────────────────────────────────────────
+
+    public function show(Conversation $conversation)
+    {
+        $user = Auth::user();
+        
+        // Verify user is participant
+        abort_unless($this->messaging->isParticipant($conversation->id, $user->id), 403);
+        
+        // Get messages for this conversation
+        $messages = $this->messaging->messagesForConversation($conversation->id);
+        
+        return Inertia::render('TeamMessaging/Show', [
+            'conversation' => [
+                'id' => $conversation->id,
+                'name' => $conversation->name,
+                'type' => $conversation->type,
+                'is_group' => $conversation->type === 'group',
+            ],
+            'messages' => $messages,
+        ]);
+    }
+    
     // ─── Page load ────────────────────────────────────────────────────────────
 
     public function index()
@@ -312,6 +336,89 @@ class TeamMessagingController extends Controller
 
         // Return only the new message — not the full history
         return response()->json(['message' => $payload]);
+    }
+
+    // ─── Upload image ─────────────────────────────────────────────────────────
+
+    public function uploadImage(Request $request)
+    {
+        $request->validate([
+            'image' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:5120', // 5MB max
+            'conversation_id' => 'required|exists:conversations,id',
+        ]);
+
+        try {
+            $user = Auth::user();
+            $conversationId = $request->conversation_id;
+            
+            // Verify user is participant of the conversation
+            abort_unless($this->messaging->isParticipant($conversationId, $user->id), 403, 'Not authorized to upload to this conversation');
+            
+            if ($request->hasFile('image')) {
+                $file = $request->file('image');
+                
+                // Generate unique filename
+                $filename = 'chat_' . $conversationId . '_' . $user->id . '_' . time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+                
+                // Store in PRIVATE storage (not public)
+                $path = $file->storeAs('chat-images', $filename, 'local');
+                
+                // Return a secure URL that requires authentication
+                $url = route('team-messaging.image', ['filename' => $filename]);
+                
+                return response()->json([
+                    'success' => true,
+                    'url' => $url,
+                    'filename' => $filename,
+                ]);
+            }
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'No image file provided',
+            ], 400);
+            
+        } catch (\Exception $e) {
+            \Log::error('Image upload failed: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to upload image',
+            ], 500);
+        }
+    }
+
+    // ─── Serve private image with authorization ──────────────────────────────
+
+    public function serveImage($filename)
+    {
+        $user = Auth::user();
+        
+        // Extract conversation ID from filename (format: chat_{conv_id}_{user_id}_{timestamp}_{uniqid}.ext)
+        $parts = explode('_', $filename);
+        if (count($parts) < 4 || $parts[0] !== 'chat') {
+            abort(404, 'Invalid image');
+        }
+        
+        $conversationId = (int) $parts[1];
+        
+        // Verify user is participant of the conversation
+        if (!$this->messaging->isParticipant($conversationId, $user->id)) {
+            abort(403, 'You do not have access to this image');
+        }
+        
+        // Check if file exists in private storage
+        $path = 'chat-images/' . $filename;
+        
+        if (!\Storage::disk('local')->exists($path)) {
+            abort(404, 'Image not found');
+        }
+        
+        // Get file and return as response with proper headers
+        $file = \Storage::disk('local')->get($path);
+        $mimeType = \Storage::disk('local')->mimeType($path);
+        
+        return response($file, 200)->header('Content-Type', $mimeType);
     }
 
     // ─── Unread counts (lightweight polling fallback) ─────────────────────────

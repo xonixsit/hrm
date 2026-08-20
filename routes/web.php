@@ -118,6 +118,31 @@ Route::get('/training', [TrainingPageController::class, 'index'])->middleware(['
         Route::post('/reset', [\App\Http\Controllers\TrainingController::class, 'resetProgress'])->name('reset');
     });
 
+    // Debug team messaging data
+    Route::get('/debug-messaging', function() {
+        $user = Auth::user();
+        $messagingService = app(\App\Services\MessagingService::class);
+        $conversationIds = $messagingService->conversationIdsFor($user->id);
+        
+        $conversations = \Binkode\ChatSystem\Models\Conversation::whereIn('id', $conversationIds)->get();
+        
+        return response()->json([
+            'user_id' => $user->id,
+            'user_name' => $user->name,
+            'conversation_ids' => $conversationIds,
+            'conversations' => $conversations->map(fn($c) => [
+                'id' => $c->id,
+                'name' => $c->name,
+                'type' => $c->type,
+                'is_default' => $c->is_default,
+                'user_id' => $c->user_id,
+            ]),
+            'conversation_users_check' => \DB::table('conversation_users')
+                ->where('user_id', $user->id)
+                ->get()
+        ]);
+    })->name('debug.messaging');
+
     // Team Messaging Routes
     Route::prefix('team-messaging')->group(function () {
         Route::get('/', [TeamMessagingController::class, 'index'])->name('team-messaging.index');
@@ -138,6 +163,8 @@ Route::get('/training', [TrainingPageController::class, 'index'])->middleware(['
         Route::get('/{conversation}/messages', [TeamMessagingController::class, 'getMessages'])->name('team-messaging.messages');
         Route::post('/{conversation}/mark-unread', [TeamMessagingController::class, 'markUnread'])->name('team-messaging.mark-unread');
         Route::delete('/messages/{message}', [TeamMessagingController::class, 'deleteMessage'])->name('team-messaging.delete-message');
+        Route::post('/upload-image', [TeamMessagingController::class, 'uploadImage'])->name('team-messaging.upload-image');
+        Route::get('/images/{filename}', [TeamMessagingController::class, 'serveImage'])->name('team-messaging.image');
     });
 
     // Chat System API Routes (using Laravel Chat System package)
