@@ -389,9 +389,14 @@ function insertCode() {
 }
 
 function triggerImageUpload() {
-  // Save the current cursor position before opening file dialog
-  saveSelection();
-  imageInputRef.value?.click();
+  // Ensure editor is focused and save position
+  editorRef.value?.focus();
+  
+  // Small delay to ensure focus is set before saving
+  setTimeout(() => {
+    saveSelection();
+    imageInputRef.value?.click();
+  }, 10);
 }
 
 function onImageSelected(event) {
@@ -485,7 +490,20 @@ async function handleImageUpload(file) {
     // Focus editor and ensure we have a valid cursor position
     editorRef.value?.focus();
     
-    // If no saved range or editor not focused, append to end
+    // Create a new selection at the end if no saved range
+    if (!savedRange) {
+      const sel = window.getSelection();
+      if (sel && editorRef.value) {
+        const range = document.createRange();
+        range.selectNodeContents(editorRef.value);
+        range.collapse(false); // Collapse to end
+        sel.removeAllRanges();
+        sel.addRange(range);
+        savedRange = range.cloneRange();
+      }
+    }
+    
+    // If still no saved range or editor not focused, append to end
     if (!savedRange || !document.activeElement || document.activeElement !== editorRef.value) {
       editorRef.value?.insertAdjacentHTML('beforeend', placeholder);
     } else {

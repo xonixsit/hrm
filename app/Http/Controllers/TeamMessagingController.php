@@ -402,8 +402,11 @@ class TeamMessagingController extends Controller
         
         $conversationId = (int) $parts[1];
         
-        // Verify user is participant of the conversation
-        if (!$this->messaging->isParticipant($conversationId, $user->id)) {
+        // Allow admins to view all images, or verify user is participant
+        $isAdmin = $user->hasRole('admin') || $user->hasRole('super-admin');
+        $isParticipant = $this->messaging->isParticipant($conversationId, $user->id);
+        
+        if (!$isAdmin && !$isParticipant) {
             abort(403, 'You do not have access to this image');
         }
         
