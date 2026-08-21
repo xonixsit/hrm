@@ -9,7 +9,8 @@ class ProfilePictureController extends Controller
 {
     /**
      * Serve a profile picture.
-     * Access: Admin or HR can see anyone's. Employee can only see their own.
+     * Access: All authenticated users can view profile pictures.
+     * Needed for org charts, messaging, leaderboards, team views, etc.
      */
     public function show(Request $request, string $filename)
     {
@@ -17,21 +18,10 @@ class ProfilePictureController extends Controller
             abort(403);
         }
 
-        $user     = auth()->user();
         $filename = basename($filename); // prevent directory traversal
-
-        // Resolve which employee owns this picture
-        $employee = \App\Models\Employee::where('profile_pic', 'like', '%' . $filename)->first();
-
-        // Access check
-        $isAdminOrHR = $user->hasAnyRole(['Admin', 'HR']);
-        $isSelf      = $employee && $employee->user_id === $user->id;
-
-        if (!$isAdminOrHR && !$isSelf) {
-            // Return a generic avatar placeholder instead of 403 so the UI
-            // doesn't show broken images for regular employees
-            return $this->placeholder();
-        }
+        
+        // Profile pictures are visible to all authenticated users
+        // (needed for org charts, messaging, leaderboards, etc.)
 
         // Try public/images/profile-pictures first (primary storage)
         $absPath = public_path('images/profile-pictures/' . $filename);
