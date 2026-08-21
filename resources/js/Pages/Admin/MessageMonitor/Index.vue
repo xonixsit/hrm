@@ -4,6 +4,7 @@ import { Head, router } from '@inertiajs/vue3';
 import axios from 'axios';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import PageLayout from '@/Components/Layout/PageLayout.vue';
+import ImageLightbox from '@/Components/Chat/ImageLightbox.vue';
 import { useTheme } from '@/composables/useTheme';
 const { isDark } = useTheme();
 
@@ -102,6 +103,53 @@ function setPreset(preset) {
 const viewingMsg = ref(null);
 function openMsg(msg)  { viewingMsg.value = msg; }
 function closeMsg()    { viewingMsg.value = null; }
+
+// Image lightbox state
+const showImageLightbox = ref(false);
+const lightboxImageSrc = ref('');
+const lightboxImageAlt = ref('');
+
+// Image lightbox functions
+const openImageLightbox = (imageSrc, imageAlt = 'Image') => {
+    lightboxImageSrc.value = imageSrc;
+    lightboxImageAlt.value = imageAlt;
+    showImageLightbox.value = true;
+};
+
+const closeImageLightbox = () => {
+    showImageLightbox.value = false;
+    lightboxImageSrc.value = '';
+    lightboxImageAlt.value = '';
+};
+
+// Handle image clicks in messages
+const handleMessageClick = (event) => {
+    if (event.target.tagName === 'IMG' && event.target.classList.contains('rt-image')) {
+        event.preventDefault();
+        event.stopPropagation();
+        openImageLightbox(event.target.src, event.target.alt);
+    }
+};
+
+// Check if message contains images
+function hasImages(message) {
+    return message && message.includes('<img');
+}
+
+// Extract first image src from HTML message
+function getFirstImageSrc(message) {
+    if (!message) return null;
+    const match = message.match(/<img[^>]+src="([^">]+)"/);
+    return match ? match[1] : null;
+}
+
+// Strip HTML tags for plain text display
+function stripHtml(html) {
+    if (!html) return '';
+    const tmp = document.createElement('div');
+    tmp.innerHTML = html;
+    return tmp.textContent || tmp.innerText || '';
+}
 
 // ── Admin delete ──────────────────────────────────────────────────────────────
 const deletingId  = ref(null);
@@ -372,8 +420,23 @@ function initials(name) {
                                 </div>
                                 <!-- Message col-span-6 -->
                                 <div class="col-span-6 px-4 py-3.5 flex items-center gap-2">
-                                    <p class="leading-relaxed flex-1" :class="isDark ? 'text-gray-200' : 'text-slate-800'">{{ truncate(msg.message) }}</p>
-                                    <button v-if="msg.message && msg.message.length > 80" @click="openMsg(msg)"
+                                    <!-- Show thumbnail if message only contains image -->
+                                    <div v-if="hasImages(msg.message) && stripHtml(msg.message).trim().length === 0" class="flex items-center gap-2">
+                                        <img :src="getFirstImageSrc(msg.message)" 
+                                            alt="Message image" 
+                                            class="w-12 h-12 object-cover rounded-lg border cursor-pointer"
+                                            :class="isDark ? 'border-gray-600' : 'border-slate-200'"
+                                            @click="openMsg(msg)" />
+                                        <span class="text-xs" :class="isDark ? 'text-gray-400' : 'text-slate-500'">📷 Image</span>
+                                    </div>
+                                    <!-- Show text with indicator if has images + text -->
+                                    <div v-else-if="hasImages(msg.message)" class="flex items-center gap-2 flex-1 min-w-0">
+                                        <span class="text-xs shrink-0" :class="isDark ? 'text-gray-400' : 'text-slate-500'">📷</span>
+                                        <p class="leading-relaxed flex-1 min-w-0 truncate" :class="isDark ? 'text-gray-200' : 'text-slate-800'">{{ truncate(stripHtml(msg.message)) }}</p>
+                                    </div>
+                                    <!-- Text only -->
+                                    <p v-else class="leading-relaxed flex-1" :class="isDark ? 'text-gray-200' : 'text-slate-800'">{{ truncate(stripHtml(msg.message)) }}</p>
+                                    <button @click="openMsg(msg)"
                                         class="shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-md border transition-all"
                                         :class="isDark ? 'border-teal-700 text-teal-400 hover:bg-teal-900/30' : 'border-teal-200 text-teal-600 hover:bg-teal-50'">
                                         View
@@ -438,8 +501,23 @@ function initials(name) {
                                 </div>
                                 <!-- Message col-span-6 -->
                                 <div class="col-span-6 px-4 py-3.5 flex items-center gap-2">
-                                    <p class="leading-relaxed flex-1" :class="isDark ? 'text-gray-200' : 'text-slate-800'">{{ truncate(msg.message) }}</p>
-                                    <button v-if="msg.message && msg.message.length > 80" @click="openMsg(msg)"
+                                    <!-- Show thumbnail if message only contains image -->
+                                    <div v-if="hasImages(msg.message) && stripHtml(msg.message).trim().length === 0" class="flex items-center gap-2">
+                                        <img :src="getFirstImageSrc(msg.message)" 
+                                            alt="Message image" 
+                                            class="w-12 h-12 object-cover rounded-lg border cursor-pointer"
+                                            :class="isDark ? 'border-gray-600' : 'border-slate-200'"
+                                            @click="openMsg(msg)" />
+                                        <span class="text-xs" :class="isDark ? 'text-gray-400' : 'text-slate-500'">📷 Image</span>
+                                    </div>
+                                    <!-- Show text with indicator if has images + text -->
+                                    <div v-else-if="hasImages(msg.message)" class="flex items-center gap-2 flex-1 min-w-0">
+                                        <span class="text-xs shrink-0" :class="isDark ? 'text-gray-400' : 'text-slate-500'">📷</span>
+                                        <p class="leading-relaxed flex-1 min-w-0 truncate" :class="isDark ? 'text-gray-200' : 'text-slate-800'">{{ truncate(stripHtml(msg.message)) }}</p>
+                                    </div>
+                                    <!-- Text only -->
+                                    <p v-else class="leading-relaxed flex-1" :class="isDark ? 'text-gray-200' : 'text-slate-800'">{{ truncate(stripHtml(msg.message)) }}</p>
+                                    <button @click="openMsg(msg)"
                                         class="shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-md border transition-all"
                                         :class="isDark ? 'border-teal-700 text-teal-400 hover:bg-teal-900/30' : 'border-teal-200 text-teal-600 hover:bg-teal-50'">
                                         View
@@ -516,10 +594,12 @@ function initials(name) {
                             </svg>
                         </button>
                     </div>
-                    <div class="p-5 overflow-y-auto modal-scroll"
-                         style="scroll-behavior:smooth;">
-                        <p class="text-sm leading-relaxed whitespace-pre-wrap"
-                            :class="isDark ? 'text-gray-200' : 'text-slate-800'">{{ viewingMsg.message }}</p>
+                    <div class="p-5 overflow-y-auto modal-scroll msg-body"
+                         style="scroll-behavior:smooth;"
+                         @click="handleMessageClick">
+                        <div class="text-sm leading-relaxed whitespace-pre-wrap"
+                            :class="isDark ? 'text-gray-200' : 'text-slate-800'"
+                            v-html="viewingMsg.message"></div>
                     </div>
                     <!-- Delete from modal — hidden for now -->
                     <!--
@@ -532,6 +612,14 @@ function initials(name) {
             </div>
         </Transition>
     </Teleport>
+
+    <!-- Image Lightbox -->
+    <ImageLightbox
+        :is-open="showImageLightbox"
+        :image-src="lightboxImageSrc"
+        :image-alt="lightboxImageAlt"
+        @close="closeImageLightbox"
+    />
 </template>
 
 <style scoped>
@@ -560,5 +648,77 @@ function initials(name) {
 .modal-scroll {
     scrollbar-width: thin;
     scrollbar-color: #0d9488 transparent;
+}
+
+/* Rich text message rendering */
+.msg-body :deep(b),
+.msg-body :deep(strong) { 
+    font-weight: 700; 
+}
+
+.msg-body :deep(i),
+.msg-body :deep(em) { 
+    font-style: italic; 
+}
+
+.msg-body :deep(u) { 
+    text-decoration: underline; 
+}
+
+.msg-body :deep(s),
+.msg-body :deep(strike) { 
+    text-decoration: line-through; 
+}
+
+.msg-body :deep(blockquote) {
+    border-left: 3px solid #14b8a6;
+    padding-left: 12px;
+    margin: 8px 0;
+    font-style: italic;
+    opacity: 0.9;
+}
+
+.msg-body :deep(ul) {
+    list-style-type: disc;
+    list-style-position: inside;
+    padding-left: 0;
+    margin: 6px 0;
+}
+
+.msg-body :deep(ol) {
+    list-style-type: decimal;
+    list-style-position: inside;
+    padding-left: 0;
+    margin: 6px 0;
+}
+
+.msg-body :deep(a),
+.msg-body :deep(a.rt-link) {
+    color: #0ea5e9;
+    text-decoration: underline;
+}
+
+.msg-body :deep(code),
+.msg-body :deep(code.rt-code) {
+    font-family: ui-monospace, 'Courier New', monospace;
+    background: rgba(0,0,0,0.1);
+    border-radius: 3px;
+    padding: 2px 5px;
+    font-size: 0.9em;
+}
+
+.msg-body :deep(img.rt-image) {
+    max-width: 100%;
+    max-height: 400px;
+    height: auto;
+    border-radius: 8px;
+    margin: 8px 0;
+    display: block;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.msg-body :deep(img.rt-image):hover {
+    transform: scale(1.02);
 }
 </style>
