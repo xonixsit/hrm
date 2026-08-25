@@ -52,7 +52,7 @@
             </div>
 
             <!-- Upload Button -->
-            <div>
+            <div class="flex flex-col space-y-2">
               <input
                 ref="profilePicInput"
                 type="file"
@@ -60,17 +60,29 @@
                 class="hidden"
                 @change="handleProfilePicSelect"
               />
-              <button
-                type="button"
-                @click="$refs.profilePicInput.click()"
-                class="inline-flex items-center px-3 py-2 border border-primary-300 shadow-sm text-sm leading-4 font-medium rounded-md text-primary-700 bg-white hover:bg-primary-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-              >
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                {{ form.profile_pic ? 'Change Photo' : (employee.profile_pic ? 'Change Photo' : 'Upload Photo') }}
-              </button>
+              <div class="flex space-x-2">
+                <button
+                  type="button"
+                  @click="$refs.profilePicInput.click()"
+                  class="inline-flex items-center px-3 py-2 border border-primary-300 shadow-sm text-sm leading-4 font-medium rounded-md text-primary-700 bg-white hover:bg-primary-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                >
+                  <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  Upload New
+                </button>
+                <button
+                  type="button"
+                  @click="showMediaGallery = true"
+                  class="inline-flex items-center px-3 py-2 border border-primary-300 shadow-sm text-sm leading-4 font-medium rounded-md text-primary-700 bg-white hover:bg-primary-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                >
+                  <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  Choose from Gallery
+                </button>
+              </div>
               <p v-if="form.profile_pic" class="text-xs text-green-600 mt-1">New photo selected</p>
             </div>
           </div>
@@ -295,6 +307,14 @@
         </FormSection>
       </FormLayout>
     </PageLayout>
+
+    <!-- Media Gallery Modal -->
+    <MediaGalleryModal
+      :open="showMediaGallery"
+      mode="avatar"
+      @close="showMediaGallery = false"
+      @select="handleGallerySelect"
+    />
   </AuthenticatedLayout>
 </template>
 
@@ -311,6 +331,7 @@
   import BaseInput from '@/Components/Base/BaseInput.vue'
   import BaseSelect from '@/Components/Base/BaseSelect.vue'
   import BaseTextarea from '@/Components/Base/BaseTextarea.vue'
+  import MediaGalleryModal from '@/Components/Profile/MediaGalleryModal.vue'
   import {
     XMarkIcon,
     CheckIcon,
@@ -465,6 +486,7 @@
 
   const previewImage = ref(null)
   const profilePicInput = ref(null)
+  const showMediaGallery = ref(false)
 
   // Handle profile picture file selection
   const handleProfilePicSelect = (event) => {
@@ -491,6 +513,42 @@
       previewImage.value = e.target.result
     }
     reader.readAsDataURL(file)
+  }
+
+  // Handle media gallery selection
+  const handleGallerySelect = (selectedImage) => {
+    if (selectedImage.isNew) {
+      // New file upload from gallery
+      const file = selectedImage.file
+      form.profile_pic = file
+      
+      // Create preview
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        previewImage.value = e.target.result
+      }
+      reader.readAsDataURL(file)
+      
+      // Show success feedback
+      showNotification({
+        type: 'success',
+        title: 'Image Uploaded',
+        message: `New profile picture selected (${(file.size / 1024).toFixed(1)} KB). Click "Save Changes" to apply.`
+      })
+    } else {
+      // Existing image selected from gallery
+      // Set the preview to the selected image URL
+      previewImage.value = selectedImage.url
+      // Store the filename to be sent to backend
+      form.profile_pic = selectedImage.filename
+      
+      // Show success feedback
+      showNotification({
+        type: 'success',
+        title: 'Image Selected',
+        message: 'Profile picture selected from gallery. Click "Save Changes" to apply.'
+      })
+    }
   }
 
   // Password reset form
@@ -686,18 +744,57 @@
 
       router.post(route('employees.update', props.employee.id), formData, {
         preserveScroll: true,
-        onSuccess: () => {
+        onSuccess: (page) => {
           previewImage.value = null
           form.profile_pic = null
+          
+          // Show success notification
+          showNotification({
+            type: 'success',
+            title: 'Employee Updated',
+            message: 'Employee information and profile picture have been updated successfully.'
+          })
         },
-        onError
+        onError: (errors) => {
+          // Show detailed error notification
+          const errorMessages = Object.values(errors).flat()
+          showNotification({
+            type: 'error',
+            title: 'Update Failed',
+            message: errorMessages.length > 0 
+              ? errorMessages.join('. ') 
+              : 'Failed to update employee information. Please check the form for errors.'
+          })
+          onError(errors)
+        }
       })
     } else {
-      // No file: plain PUT via Inertia form
-      form.put(route('employees.update', props.employee.id), {
+      // No file: plain PUT via Inertia form, but exclude profile_pic from data
+      const dataToSubmit = { ...form.data() }
+      delete dataToSubmit.profile_pic // Don't send profile_pic if not changed
+      
+      router.put(route('employees.update', props.employee.id), dataToSubmit, {
         preserveScroll: true,
-        onSuccess: () => {},
-        onError
+        onSuccess: (page) => {
+          // Show success notification
+          showNotification({
+            type: 'success',
+            title: 'Employee Updated',
+            message: 'Employee information has been updated successfully.'
+          })
+        },
+        onError: (errors) => {
+          // Show detailed error notification
+          const errorMessages = Object.values(errors).flat()
+          showNotification({
+            type: 'error',
+            title: 'Update Failed',
+            message: errorMessages.length > 0 
+              ? errorMessages.join('. ') 
+              : 'Failed to update employee information. Please check the form for errors.'
+          })
+          onError(errors)
+        }
       })
     }
   }

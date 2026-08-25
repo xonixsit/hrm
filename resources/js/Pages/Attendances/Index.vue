@@ -43,6 +43,22 @@
                 </svg>
                 {{ showFilters ? 'Hide Filters' : 'Show Filters' }}
               </button>
+              
+              <!-- Export to Excel Button -->
+              <button
+                @click="exportToExcel"
+                :disabled="exporting"
+                class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <svg v-if="!exporting" class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <svg v-else class="animate-spin w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                {{ exporting ? 'Exporting...' : 'Export to Excel' }}
+              </button>
             </div>
           </div>
 
@@ -425,6 +441,7 @@ const { hasAnyRole, user } = useAuth();
 // Refs
 const showFilters = ref(true);
 const loading = ref(false);
+const exporting = ref(false);
 const showManualClockOutModal = ref(false);
 const selectedAttendance = ref(null);
 const localFilters = ref({
@@ -615,6 +632,85 @@ const resetFilters = () => {
     search: ''
   };
   applyFilters();
+};
+
+// Export to Excel function
+const exportToExcel = async () => {
+  exporting.value = true;
+  
+  try {
+    // Build query parameters from current filters
+    const params = new URLSearchParams();
+    
+    if (localFilters.value.employee_id) {
+      params.append('employee_id', localFilters.value.employee_id);
+    }
+    if (localFilters.value.status) {
+      params.append('status', localFilters.value.status);
+    }
+    if (localFilters.value.date_from) {
+      params.append('date_from', localFilters.value.date_from);
+    }
+    if (localFilters.value.date_to) {
+      params.append('date_to', localFilters.value.date_to);
+    }
+    if (localFilters.value.search) {
+      params.append('search', localFilters.value.search);
+    }
+    
+    // Make axios request with blob response type
+    const response = await axios.get(route('attendances.export') + '?' + params.toString(), {
+      responseType: 'blob',
+      headers: {
+        'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      }
+    });
+    
+    // Create blob URL and trigger download
+    const blob = new Blob([response.data], { 
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
+    });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    
+    // Extract filename from response headers or use default
+    const contentDisposition = response.headers['content-disposition'];
+    let filename = 'attendance_report.xlsx';
+    if (contentDisposition) {
+      const filenameMatch = contentDisposition.match(/filename="?(.+)"?/);
+      if (filenameMatch) {
+        filename = filenameMatch[1];
+      }
+    }
+    
+    link.setAttribute('download', filename);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+    
+    // Show success message
+    alert('Attendance report exported successfully!');
+    
+  } catch (error) {
+    console.error('Export failed:', error);
+    
+    // Check if error response is JSON (error message)
+    if (error.response && error.response.data instanceof Blob) {
+      const text = await error.response.data.text();
+      try {
+        const json = JSON.parse(text);
+        alert('Export failed: ' + (json.message || 'Unknown error'));
+      } catch {
+        alert('Export failed. Please try again.');
+      }
+    } else {
+      alert('Export failed: ' + (error.response?.data?.message || error.message || 'Unknown error'));
+    }
+  } finally {
+    exporting.value = false;
+  }
 };
 
 // Manual Clock Out functions

@@ -12,6 +12,7 @@ import data from '@emoji-mart/data';
 import { Picker } from 'emoji-mart';
 import RichTextEditor from '@/Components/Chat/RichTextEditor.vue';
 import ImageLightbox from '@/Components/Chat/ImageLightbox.vue';
+import MediaGalleryModal from '@/Components/Profile/MediaGalleryModal.vue';
 
 const { isDark } = useTheme();
 const page = usePage();
@@ -55,6 +56,9 @@ const showEmojiPicker = ref(false);
 const showImageLightbox = ref(false);
 const lightboxImageSrc = ref('');
 const lightboxImageAlt = ref('');
+
+// Media gallery state
+const showMediaGallery = ref(false);
 const showAttachments = ref(false);
 const showActions = ref(null);
 const isTyping = ref(false);
@@ -355,6 +359,11 @@ const closeImageLightbox = () => {
     lightboxImageAlt.value = '';
 };
 
+// Handle viewing image from media gallery
+const handleViewImageFromGallery = (image) => {
+    openImageLightbox(image.url, image.name);
+};
+
 // Handle image clicks in messages
 const handleMessageClick = (event) => {
     if (event.target.tagName === 'IMG' && event.target.classList.contains('rt-image')) {
@@ -461,10 +470,43 @@ const handleMessageClick = (event) => {
                         {{ isTyping ? 'Typing...' : 'Active now' }}
                     </p>
                 </div>
-                <div class="flex items-center gap-1 flex-shrink-0">
-                    <BaseButton variant="ghost" size="sm"><Icon name="Phone" class="w-5 h-5" /></BaseButton>
-                    <BaseButton variant="ghost" size="sm"><Icon name="Video" class="w-5 h-5" /></BaseButton>
-                    <BaseButton variant="ghost" size="sm"><Icon name="MoreVertical" class="w-5 h-5" /></BaseButton>
+                <div class="flex items-center gap-2 flex-shrink-0">
+                    <!-- Media Gallery Button -->
+                    <button
+                        @click="showMediaGallery = true"
+                        class="p-2 rounded-lg transition-colors"
+                        :class="isDark ? 'hover:bg-gray-700 text-gray-300' : 'hover:bg-gray-100 text-gray-600'"
+                        title="View shared media"
+                    >
+                        <Icon name="Image" class="w-5 h-5" />
+                    </button>
+                    
+                    <!-- Phone Button -->
+                    <button
+                        class="p-2 rounded-lg transition-colors"
+                        :class="isDark ? 'hover:bg-gray-700 text-gray-300' : 'hover:bg-gray-100 text-gray-600'"
+                        title="Voice call"
+                    >
+                        <Icon name="Phone" class="w-5 h-5" />
+                    </button>
+                    
+                    <!-- Video Button -->
+                    <button
+                        class="p-2 rounded-lg transition-colors"
+                        :class="isDark ? 'hover:bg-gray-700 text-gray-300' : 'hover:bg-gray-100 text-gray-600'"
+                        title="Video call"
+                    >
+                        <Icon name="Video" class="w-5 h-5" />
+                    </button>
+                    
+                    <!-- More Options Button -->
+                    <button
+                        class="p-2 rounded-lg transition-colors"
+                        :class="isDark ? 'hover:bg-gray-700 text-gray-300' : 'hover:bg-gray-100 text-gray-600'"
+                        title="More options"
+                    >
+                        <Icon name="MoreVertical" class="w-5 h-5" />
+                    </button>
                 </div>
             </div>
 
@@ -655,6 +697,15 @@ const handleMessageClick = (event) => {
             :image-src="lightboxImageSrc"
             :image-alt="lightboxImageAlt"
             @close="closeImageLightbox"
+        />
+
+        <!-- Media Gallery Modal -->
+        <MediaGalleryModal
+            :open="showMediaGallery"
+            mode="chat"
+            :conversationId="conversation.id"
+            @close="showMediaGallery = false"
+            @viewImage="handleViewImageFromGallery"
         />
     </AuthenticatedLayout>
 </template>

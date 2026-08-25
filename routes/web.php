@@ -164,7 +164,9 @@ Route::get('/training', [TrainingPageController::class, 'index'])->middleware(['
         Route::post('/{conversation}/mark-unread', [TeamMessagingController::class, 'markUnread'])->name('team-messaging.mark-unread');
         Route::delete('/messages/{message}', [TeamMessagingController::class, 'deleteMessage'])->name('team-messaging.delete-message');
         Route::post('/upload-image', [TeamMessagingController::class, 'uploadImage'])->name('team-messaging.upload-image');
+        Route::post('/upload-document', [TeamMessagingController::class, 'uploadDocument'])->name('team-messaging.upload-document');
         Route::get('/images/{filename}', [TeamMessagingController::class, 'serveImage'])->name('team-messaging.image');
+        Route::get('/documents/{filename}', [TeamMessagingController::class, 'serveDocument'])->name('team-messaging.document');
     });
 
     // Chat System API Routes (using Laravel Chat System package)
@@ -218,7 +220,7 @@ Route::get('/training', [TrainingPageController::class, 'index'])->middleware(['
     Route::resource('attendances', AttendanceController::class);
     Route::post('attendances/clock-in', [AttendanceController::class, 'clockIn'])->name('attendances.clockIn');
     Route::post('attendances/clock-out', [AttendanceController::class, 'clockOut'])->name('attendances.clockOut');
-    Route::get('attendances/{attendance}/export', [AttendanceController::class, 'export'])->name('attendances.export');
+    Route::get('attendances-export', [App\Http\Controllers\AttendanceExportController::class, 'exportAttendanceReport'])->name('attendances.export');
     Route::post('attendances/bulk-export', [AttendanceController::class, 'bulkExport'])->name('attendances.bulkExport');
     Route::post('attendances/manual-clock-out', [AttendanceController::class, 'manualClockOut'])->name('attendances.manual-clock-out');
     
@@ -334,6 +336,16 @@ Route::get('/training', [TrainingPageController::class, 'index'])->middleware(['
         Route::get('settings', [App\Http\Controllers\Api\AdminSettingsController::class, 'getSettings']);
     });
 
+    // Media Gallery API routes
+    Route::prefix('api/media')->middleware('auth')->group(function () {
+        Route::get('profile-pictures', [App\Http\Controllers\MediaGalleryController::class, 'profilePictures']);
+    });
+    
+    // Conversation Media API routes
+    Route::prefix('api/conversations')->middleware('auth')->group(function () {
+        Route::get('{conversation}/media', [App\Http\Controllers\MediaGalleryController::class, 'conversationMedia']);
+    });
+
     // Weather API proxy routes (optional - use if CORS issues occur)
     Route::prefix('api/weather')->group(function () {
         Route::get('current', [App\Http\Controllers\Api\WeatherProxyController::class, 'getWeather']);
@@ -364,6 +376,29 @@ Route::get('/training', [TrainingPageController::class, 'index'])->middleware(['
             ]
         ]);
     })->name('debug.leave.data');
+    
+    // Debug chat images
+    Route::get('debug/chat-images', function() {
+        $messages = DB::table('messages')
+            ->where('conversation_id', 4)
+            ->where('message', 'like', '%<img%')
+            ->orderBy('created_at', 'desc')
+            ->take(2)
+            ->get();
+        
+        $result = [];
+        foreach ($messages as $msg) {
+            preg_match_all('/<img[^>]+src=["\']([^"\']+)["\'][^>]*>/i', $msg->message, $matches);
+            $result[] = [
+                'message_id' => $msg->id,
+                'created_at' => $msg->created_at,
+                'urls_found' => $matches[1] ?? [],
+                'full_html' => $msg->message
+            ];
+        }
+        
+        return response()->json($result);
+    })->name('debug.chat.images');
     Route::resource('feedbacks', FeedbackController::class);
     
     // Ideas / Brainstorm

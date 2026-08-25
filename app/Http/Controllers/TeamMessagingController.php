@@ -360,7 +360,7 @@ class TeamMessagingController extends Controller
                 // Generate unique filename
                 $filename = 'chat_' . $conversationId . '_' . $user->id . '_' . time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
                 
-                // Store in PRIVATE storage (not public)
+                // Store in PRIVATE storage (same location as old system)
                 $path = $file->storeAs('chat-images', $filename, 'local');
                 
                 // Return a secure URL that requires authentication
@@ -387,6 +387,61 @@ class TeamMessagingController extends Controller
             ], 500);
         }
     }
+    
+    // ─── Upload document (PDF, Excel, Word, etc.) ─────────────────────────────
+
+    public function uploadDocument(Request $request)
+    {
+        $request->validate([
+            'document' => 'required|file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,txt,csv|max:20480', // 20MB max
+            'conversation_id' => 'required|exists:conversations,id',
+        ]);
+
+        try {
+            $user = Auth::user();
+            $conversationId = $request->conversation_id;
+            
+            // Verify user is participant of the conversation
+            abort_unless($this->messaging->isParticipant($conversationId, $user->id), 403, 'Not authorized to upload to this conversation');
+            
+            if ($request->hasFile('document')) {
+                $file = $request->file('document');
+                $originalName = $file->getClientOriginalName();
+                $extension = $file->getClientOriginalExtension();
+                
+                // Generate unique filename while preserving original name info
+                $filename = 'doc_' . $conversationId . '_' . $user->id . '_' . time() . '_' . uniqid() . '.' . $extension;
+                
+                // Store in PRIVATE storage
+                $path = $file->storeAs('chat-documents', $filename, 'local');
+                
+                // Return a secure URL that requires authentication
+                $url = route('team-messaging.document', ['filename' => $filename]);
+                
+                return response()->json([
+                    'success' => true,
+                    'url' => $url,
+                    'filename' => $filename,
+                    'original_name' => $originalName,
+                    'extension' => $extension,
+                    'size' => $file->getSize(),
+                ]);
+            }
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'No document file provided',
+            ], 400);
+            
+        } catch (\Exception $e) {
+            \Log::error('Document upload failed: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to upload document',
+            ], 500);
+        }
+    }
 
     // ─── Serve private image with authorization ──────────────────────────────
 
@@ -394,26 +449,44 @@ class TeamMessagingController extends Controller
     {
         $user = Auth::user();
         
+        \Log::info('ServeImage called', [
+            'filename' => $filename,
+            'user_id' => $user->id,
+            'user_roles' => $user->roles->pluck('name')->toArray()
+        ]);
+        
         // Extract conversation ID from filename (format: chat_{conv_id}_{user_id}_{timestamp}_{uniqid}.ext)
         $parts = explode('_', $filename);
         if (count($parts) < 4 || $parts[0] !== 'chat') {
+            \Log::warning('Invalid filename format', ['filename' => $filename, 'parts' => $parts]);
             abort(404, 'Invalid image');
         }
         
         $conversationId = (int) $parts[1];
         
+        \Log::info('Extracted conversation ID', ['conversation_id' => $conversationId]);
+        
         // Allow admins to view all images, or verify user is participant
-        $isAdmin = $user->hasRole('admin') || $user->hasRole('super-admin');
+        $isAdmin = $user->hasRole('Admin');
         $isParticipant = $this->messaging->isParticipant($conversationId, $user->id);
         
+        \Log::info('Authorization check', [
+            'is_admin' => $isAdmin,
+            'is_participant' => $isParticipant
+        ]);
+        
         if (!$isAdmin && !$isParticipant) {
+            \Log::warning('Access denied', ['user_id' => $user->id, 'conversation_id' => $conversationId]);
             abort(403, 'You do not have access to this image');
         }
         
-        // Check if file exists in private storage
+        // Check if file exists in private storage (same location as old system)
         $path = 'chat-images/' . $filename;
         
+        \Log::info('Checking file path', ['path' => $path, 'exists' => \Storage::disk('local')->exists($path)]);
+        
         if (!\Storage::disk('local')->exists($path)) {
+            \Log::error('File not found', ['path' => $path]);
             abort(404, 'Image not found');
         }
         
@@ -421,7 +494,50 @@ class TeamMessagingController extends Controller
         $file = \Storage::disk('local')->get($path);
         $mimeType = \Storage::disk('local')->mimeType($path);
         
+        \Log::info('Serving image', ['mime_type' => $mimeType, 'size' => strlen($file)]);
+        
         return response($file, 200)->header('Content-Type', $mimeType);
+    }
+    
+    // ─── Serve private document with authorization ───────────────────────────
+
+    public function serveDocument($filename)
+    {
+        $user = Auth::user();
+        
+        // Extract conversation ID from filename (format: doc_{conv_id}_{user_id}_{timestamp}_{uniqid}.ext)
+        $parts = explode('_', $filename);
+        if (count($parts) < 4 || $parts[0] !== 'doc') {
+            abort(404, 'Invalid document');
+        }
+        
+        $conversationId = (int) $parts[1];
+        
+        // Allow admins to view all documents, or verify user is participant
+        $isAdmin = $user->hasRole('Admin');
+        $isParticipant = $this->messaging->isParticipant($conversationId, $user->id);
+        
+        if (!$isAdmin && !$isParticipant) {
+            abort(403, 'You do not have access to this document');
+        }
+        
+        // Check if file exists in private storage
+        $path = 'chat-documents/' . $filename;
+        
+        if (!\Storage::disk('local')->exists($path)) {
+            abort(404, 'Document not found');
+        }
+        
+        // Get file and return as download
+        $file = \Storage::disk('local')->get($path);
+        $mimeType = \Storage::disk('local')->mimeType($path);
+        
+        // Return as inline or download based on mime type
+        $disposition = in_array($mimeType, ['application/pdf']) ? 'inline' : 'attachment';
+        
+        return response($file, 200)
+            ->header('Content-Type', $mimeType)
+            ->header('Content-Disposition', $disposition . '; filename="' . $filename . '"');
     }
 
     // ─── Unread counts (lightweight polling fallback) ─────────────────────────

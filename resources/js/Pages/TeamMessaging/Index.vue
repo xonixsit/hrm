@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 console.log('TeamMessaging Index.vue script setup loaded');
 import { ref, computed, onMounted, onUnmounted, nextTick, watch, TransitionGroup } from 'vue';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
@@ -14,6 +14,7 @@ import { markConversationReadGlobal, markConversationUnreadGlobal } from '@/comp
 import { openFloatingChat } from '@/composables/useFloatingChat';
 import RichTextEditor from '@/Components/Chat/RichTextEditor.vue';
 import ImageLightbox from '@/Components/Chat/ImageLightbox.vue';
+import MediaGalleryModal from '@/Components/Profile/MediaGalleryModal.vue';
 
 const { isDark } = useTheme();
 const page = usePage();
@@ -37,7 +38,7 @@ const richEditorRef = ref(null); // RichTextEditor component ref
 const loadingMessages = ref(false);
 const showEmojiPicker = ref(false);
 const isTyping = ref(false);
-const onlineUsers = ref({}); // kept for legacy compat — use userStatuses instead
+const onlineUsers = ref({}); // kept for legacy compat â€” use userStatuses instead
 const userStatuses = ref({}); // { userId: 'active' | 'inactive' | 'offline' }
 
 const getUserStatus = (userId) => userStatuses.value[userId] || 'offline';
@@ -72,6 +73,125 @@ const showImageLightbox = ref(false);
 const lightboxImageSrc = ref('');
 const lightboxImageAlt = ref('');
 
+// Debug watcher for lightbox
+watch(showImageLightbox, (newVal) => {
+    console.log('showImageLightbox changed to:', newVal);
+    console.log('lightboxImageSrc:', lightboxImageSrc.value);
+});
+
+// Media gallery state
+const showMediaGallery = ref(false);
+const mediaImages = ref([]);
+const loadingMedia = ref(false);
+
+// Debug watcher
+watch(showMediaGallery, (newVal) => {
+    console.log('showMediaGallery changed to:', newVal);
+    if (newVal && selectedConversation.value) {
+        loadMediaImages();
+    }
+});
+
+// Load media images for the conversation
+const loadMediaImages = async () => {
+    if (!selectedConversation.value) return;
+    console.log('Loading media for conversation:', selectedConversation.value);
+    loadingMedia.value = true;
+    try {
+        const response = await axios.get(`/api/conversations/${selectedConversation.value}/media`);
+        console.log('Media API response:', response.data);
+        mediaImages.value = (response.data.images || []).map(img => ({
+            id: img.filename,
+            url: img.url,
+            filename: img.filename,
+            created_at: img.created_at
+        }));
+        console.log('Loaded media images:', mediaImages.value.length, mediaImages.value);
+    } catch (error) {
+        console.error('Failed to load media:', error);
+        console.error('Error response:', error.response);
+        mediaImages.value = [];
+    } finally {
+        loadingMedia.value = false;
+    }
+};
+
+// Group media by date with friendly labels
+const mediaByDate = computed(() => {
+    const groups = {};
+    
+    // Get configured timezone offset (server sends timestamps in configured timezone)
+    // We need to get "today" in the server's timezone, not browser's timezone
+    // Since server timestamps are already in the correct timezone, we can work with date strings
+    
+    // Get current date/time - this will be in browser timezone
+    const browserNow = new Date();
+    
+    // Get timezone from page props (shared from server)
+    const appTimezone = page.props.app_timezone || 'UTC';
+    
+    // For simplicity, since server already sends dates in correct timezone,
+    // we'll use the date portion from a recently created message or current server time
+    // The most reliable way is to extract today's date from the image timestamps themselves
+    
+    // Get today's date string by looking at the most recent image timestamp
+    // or by parsing current date in browser and assuming server is roughly synchronized
+    const todayDate = new Date();
+    const todayStr = todayDate.toISOString().split('T')[0]; // YYYY-MM-DD in UTC
+    
+    // Better approach: use the date from the server timestamp directly
+    // Server sends: "2026-08-21 16:10:59" - the date part "2026-08-21" is in configured timezone
+    
+    // Calculate yesterday based on today
+    const yesterday = new Date(todayDate);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toISOString().split('T')[0];
+    
+    // Sort images by date (newest first)
+    const sorted = [...mediaImages.value].sort((a, b) => 
+        new Date(b.created_at) - new Date(a.created_at)
+    );
+    
+    // Get the most recent image date as reference for "today"
+    // Since images are sorted newest first, first image should be from today
+    const mostRecentImageDate = sorted.length > 0 ? sorted[0].created_at.split(' ')[0] : todayStr;
+    
+    sorted.forEach(img => {
+        // Extract just the date part from the timestamp (YYYY-MM-DD) 
+        // This date is already in the admin's configured timezone
+        const imageDateStr = img.created_at.split(' ')[0]; // "2026-08-21 16:10:59" -> "2026-08-21"
+        const messageDate = new Date(img.created_at);
+        
+        // Calculate yesterday of the most recent image date
+        const mostRecentDate = new Date(mostRecentImageDate);
+        const yesterdayOfRecent = new Date(mostRecentDate);
+        yesterdayOfRecent.setDate(yesterdayOfRecent.getDate() - 1);
+        const yesterdayOfRecentStr = yesterdayOfRecent.toISOString().split('T')[0];
+        
+        let label;
+        if (imageDateStr === mostRecentImageDate) {
+            label = 'Today';
+        } else if (imageDateStr === yesterdayOfRecentStr) {
+            label = 'Yesterday';
+        } else {
+            const imgDate = new Date(imageDateStr);
+            const weekAgo = new Date(mostRecentDate);
+            weekAgo.setDate(weekAgo.getDate() - 7);
+            
+            if (imgDate > weekAgo) {
+                label = messageDate.toLocaleDateString('en-US', { weekday: 'long' });
+            } else {
+                label = messageDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            }
+        }
+        
+        if (!groups[label]) groups[label] = [];
+        groups[label].push(img);
+    });
+    
+    return groups;
+});
+
 // Build a zoomedUser payload from any user-like object
 const openUserLightbox = (user, src) => {
     zoomedUser.value = {
@@ -86,15 +206,25 @@ const openUserLightbox = (user, src) => {
 
 // Image lightbox functions
 const openImageLightbox = (imageSrc, imageAlt = 'Image') => {
+    console.log('openImageLightbox called:', { imageSrc, imageAlt, currentState: showImageLightbox.value });
     lightboxImageSrc.value = imageSrc;
     lightboxImageAlt.value = imageAlt;
     showImageLightbox.value = true;
+    console.log('After setting state:', { 
+        lightboxImageSrc: lightboxImageSrc.value, 
+        showImageLightbox: showImageLightbox.value 
+    });
 };
 
 const closeImageLightbox = () => {
     showImageLightbox.value = false;
     lightboxImageSrc.value = '';
     lightboxImageAlt.value = '';
+};
+
+// Handle viewing image from media gallery
+const handleViewImageFromGallery = (image) => {
+    openImageLightbox(image.url, image.name);
 };
 
 // Handle image clicks in messages
@@ -114,7 +244,7 @@ const emojiPickerRef = ref(null);
 const emojiButtonRef = ref(null);
 const messageInputRef = ref(null);
 
-// ── Group chat state ──────────────────────────────────────────────────────────
+// â”€â”€ Group chat state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const showNewGroupModal   = ref(false);
 const newGroupName        = ref('');
 const newGroupUserIds     = ref([]);   // selected user IDs
@@ -188,7 +318,7 @@ const createGroup = async () => {
         newGroupName.value   = '';
         newGroupUserIds.value = [];
         groupUserSearch.value = '';
-        // Open the new conversation — force a page refresh to get it in the sidebar
+        // Open the new conversation â€” force a page refresh to get it in the sidebar
         router.reload({ only: ['conversations'] });
         selectConversation(res.data.conversation_id);
     } catch (e) {
@@ -277,7 +407,7 @@ const deleteGroup = async () => {
     }
 };
 
-// ── Notifications ─────────────────────────────────────────────────────────────
+// â”€â”€ Notifications â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const inAppToasts = ref([]); // [{ id, senderName, senderAvatar, message, conversationId }]
 const originalTitle = document.title;
 let titleFlashInterval = null;
@@ -287,7 +417,7 @@ const startTitleFlash = (senderName) => {
     if (titleFlashInterval) return; // already flashing
     let show = true;
     titleFlashInterval = setInterval(() => {
-        document.title = show ? `💬 New message from ${senderName}` : originalTitle;
+        document.title = show ? `ðŸ’¬ New message from ${senderName}` : originalTitle;
         show = !show;
     }, 1200);
 };
@@ -316,8 +446,8 @@ const showBrowserNotification = (senderName, messageText, avatar) => {
         : '/favicon.ico';
 
     try {
-        const notif = new Notification(`💬 ${senderName}`, {
-            body: messageText.length > 80 ? messageText.slice(0, 80) + '…' : messageText,
+        const notif = new Notification(`ðŸ’¬ ${senderName}`, {
+            body: messageText.length > 80 ? messageText.slice(0, 80) + 'â€¦' : messageText,
             icon: iconUrl,
             tag: 'team-message',
             silent: false,
@@ -459,7 +589,7 @@ let messagePollingInterval = null;
 let conversationPollingInterval = null;
 
 const filteredUsers = computed(() => {
-    // Groups tab — show no DM users
+    // Groups tab â€” show no DM users
     if (activeTab.value === 'groups') return [];
 
     let result = props.users;
@@ -481,7 +611,7 @@ const filteredUsers = computed(() => {
     }
     
     // Sort: 1) users with recent conversations first (by last message time desc)
-    //       2) then users with no conversation — alphabetically
+    //       2) then users with no conversation â€” alphabetically
     return [...result].sort((a, b) => {
         const aConv = dmConvByUserId.value[a.id];
         const bConv = dmConvByUserId.value[b.id];
@@ -493,14 +623,14 @@ const filteredUsers = computed(() => {
             ? new Date(bConv.last_message.created_at).getTime()
             : 0;
 
-        // Both have conversations — sort by most recent first
+        // Both have conversations â€” sort by most recent first
         if (aTime && bTime) return bTime - aTime;
 
-        // One has conversation, one doesn't — conversation goes first
+        // One has conversation, one doesn't â€” conversation goes first
         if (aTime && !bTime) return -1;
         if (!aTime && bTime) return 1;
 
-        // Neither has a conversation — alphabetical
+        // Neither has a conversation â€” alphabetical
         return a.name.localeCompare(b.name);
     });
 });
@@ -575,7 +705,7 @@ const currentConv = computed(() =>
     (props.conversations || []).find(c => c.id === selectedConversation.value) ?? null
 );
 
-// Map userId → DM conversation for O(1) lookup in the template (avoids repeated .find())
+// Map userId â†’ DM conversation for O(1) lookup in the template (avoids repeated .find())
 const dmConvByUserId = computed(() => {
     const map = {};
     for (const c of (props.conversations || [])) {
@@ -620,7 +750,7 @@ const selectConversation = async (conversationId) => {
             sender_id: msg.sender_id || msg.author_id,
             sender: msg.sender || msg.author
         }));
-        // Server has marked as read — confirm with fresh counts
+        // Server has marked as read â€” confirm with fresh counts
         checkForNewConversations();
     } catch (error) {
         console.error('Error loading messages:', error);
@@ -667,7 +797,7 @@ const sendMessage = async () => {
     };
     
     messages.value.push(tempMessage);
-    scrollToBottom(true, true); // force — user just sent, always scroll down
+    scrollToBottom(true, true); // force â€” user just sent, always scroll down
     
     try {
         const response = await axios.post(route('team-messaging.send', selectedConversation.value), {
@@ -842,7 +972,7 @@ onMounted(async () => {
     document.addEventListener('click', closeEmojiOnOutsideClick);
     document.addEventListener('click', closeMessageMenus);
 
-    // Send heartbeat immediately — marks this user as "active" on chat page
+    // Send heartbeat immediately â€” marks this user as "active" on chat page
     sendHeartbeat();
 
     // Poll for online statuses every 10 seconds
@@ -855,7 +985,7 @@ onMounted(async () => {
         sendHeartbeat();
     }, 30000);
 
-    // Socket: listen on personal channel for new messages → update unread counts instantly
+    // Socket: listen on personal channel for new messages â†’ update unread counts instantly
     const currentUserId = page.props.auth.user.id;
     if (window.Echo) {
         try {
@@ -874,7 +1004,7 @@ onMounted(async () => {
         }
     }
 
-    // Fallback polling every 5s — catches any missed socket events
+    // Fallback polling every 5s â€” catches any missed socket events
     conversationPollingInterval = setInterval(() => {
         checkForNewConversations();
     }, 5000);
@@ -919,11 +1049,11 @@ const sendHeartbeat = async () => {
     try {
         await axios.post(route('team-messaging.heartbeat'));
     } catch (e) {
-        // silent — heartbeat failure is non-critical
+        // silent â€” heartbeat failure is non-critical
     }
 };
 
-// ── Per-message context menu ──────────────────────────────────────────────────
+// â”€â”€ Per-message context menu â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const activeMessageMenu = ref(null); // message.id of open menu
 
 function toggleMessageMenu(id) {
@@ -969,7 +1099,7 @@ const markAsUnread = async (conversationId) => {
         // Update local state
         localUnreadCounts.value[id] = 1;
         locallyReadConversationIds.value = locallyReadConversationIds.value.filter(i => parseInt(i) !== id);
-        // Tell the global notification system to hold this at ≥1
+        // Tell the global notification system to hold this at â‰¥1
         markConversationUnreadGlobal(conversationId);
         // Deselect if currently open so badge is visible
         if (selectedConversation.value === conversationId) {
@@ -993,7 +1123,7 @@ const handleKeyPress = (e) => {
 const checkForNewMessages = async () => {
     if (!selectedConversation.value || isSending.value) return;
 
-    // Skip HTTP poll if WebSocket is connected — socket delivers in real-time
+    // Skip HTTP poll if WebSocket is connected â€” socket delivers in real-time
     if (window.Echo?.connector?.pusher?.connection?.state === 'connected') return;
 
     try {
@@ -1063,7 +1193,7 @@ const checkForNewConversations = async () => {
     }
 };
 
-// ── Scroll-to-bottom button ───────────────────────────────────────────────────
+// â”€â”€ Scroll-to-bottom button â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const showScrollBtn = ref(false);
 
 function onMessagesScroll() {
@@ -1158,7 +1288,7 @@ watch(selectedConversation, (newVal) => {
                         }
                     })
                     .listen('.MessageRead', (data) => {
-                        // Recipient has read messages — update is_read on our sent messages
+                        // Recipient has read messages â€” update is_read on our sent messages
                         const readIds = new Set(data.message_ids);
                         messages.value = messages.value.map(m =>
                             readIds.has(m.id) ? { ...m, is_read: true } : m
@@ -1169,15 +1299,15 @@ watch(selectedConversation, (newVal) => {
             }
         }
 
-        // Polling fallback every 3s — catches messages when WebSocket is unavailable
+        // Polling fallback every 3s â€” catches messages when WebSocket is unavailable
         messagePollingInterval = setInterval(() => {
             checkForNewMessages();
         }, 3000);
     }
-    scrollToBottom(false, true); // force on conversation switch — always jump to bottom
+    scrollToBottom(false, true); // force on conversation switch â€” always jump to bottom
 });
 
-// Watch for messages to scroll to bottom — only when near bottom
+// Watch for messages to scroll to bottom â€” only when near bottom
 watch(messages, () => {
     scrollToBottom(true); // respects isNearBottom() internally
 });
@@ -1197,7 +1327,7 @@ watch(messages, () => {
             <!-- Container: full width with side padding, matching reference -->
             <div class="w-full px-6 py-4 flex gap-4 min-h-0 h-full">
 
-            <!-- ── LEFT SIDEBAR ────────────────────── -->
+            <!-- â”€â”€ LEFT SIDEBAR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
             <div
                 class="w-72 xl:w-80 flex-shrink-0 flex flex-col rounded-xl overflow-hidden shadow-sm border"
                 :class="isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-slate-200'"
@@ -1265,7 +1395,7 @@ watch(messages, () => {
                 <!-- Conversation / User list -->
                 <div class="flex-1 overflow-y-auto pr-1 chat-scroll">
 
-                    <!-- ── Groups tab: show only group conversations ── -->
+                    <!-- â”€â”€ Groups tab: show only group conversations â”€â”€ -->
                     <template v-if="activeTab === 'groups'">
                         <div v-if="groupConversations.length === 0"
                             class="flex flex-col items-center justify-center h-full p-6 text-center">
@@ -1316,7 +1446,7 @@ watch(messages, () => {
                                     </div>
                                     <p class="text-xs truncate mt-0.5" :class="isDark ? 'text-gray-400' : 'text-slate-500'">
                                         {{ conv.participant_count }} members
-                                        <template v-if="conv.last_message"> · {{ conv.last_message.message }}</template>
+                                        <template v-if="conv.last_message"> Â· {{ conv.last_message.message }}</template>
                                     </p>
                                 </div>
                                 <!-- Unread badge + mark unread -->
@@ -1341,7 +1471,7 @@ watch(messages, () => {
                         </div>
                     </template>
 
-                    <!-- ── All / Unread tab: original DM + group list ── -->
+                    <!-- â”€â”€ All / Unread tab: original DM + group list â”€â”€ -->
                     <template v-else>
                     <div v-if="filteredUsers.length === 0" class="flex flex-col items-center justify-center h-full p-6 text-center">
                         <svg class="w-10 h-10 text-slate-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1403,7 +1533,7 @@ watch(messages, () => {
                                 </div>
                                 <p class="text-xs truncate mt-0.5" :class="isDark ? 'text-gray-400' : 'text-slate-500'">
                                     {{ user.employee?.department || user.email }}
-                                    <span class="mx-1">•</span>
+                                    <span class="mx-1">â€¢</span>
                                     <span :class="statusTextClass(user.id)">
                                         {{ statusLabel(user.id) }}
                                     </span>
@@ -1418,7 +1548,7 @@ watch(messages, () => {
                                     class="w-5 h-5 rounded-full bg-teal-500 text-white text-[10px] font-bold flex items-center justify-center"
                                 >{{ getUnreadCount(dmConvId(user.id)) }}</span>
 
-                                <!-- Mark as unread — always visible on hover when conversation exists -->
+                                <!-- Mark as unread â€” always visible on hover when conversation exists -->
                                 <button
                                     v-if="dmConvId(user.id)"
                                     @click.stop="markAsUnread(dmConvId(user.id))"
@@ -1482,7 +1612,7 @@ watch(messages, () => {
                     </button>
                 </div>
             </div>
-            <!-- ── RIGHT CHAT PANEL ───────────────────────── -->
+            <!-- â”€â”€ RIGHT CHAT PANEL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
             <div class="flex-1 flex flex-col min-h-0 rounded-xl overflow-hidden shadow-sm border"
                 :class="isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-slate-200'">
 
@@ -1588,6 +1718,31 @@ watch(messages, () => {
                                     {{ statusLabel(getSelectedUser()?.id) }}
                                 </p>
                             </div>
+                            <!-- Media Gallery Button -->
+                            <button
+                                @click="() => { console.log('Media button clicked, selectedConversation:', selectedConversation); showMediaGallery = true; }"
+                                class="flex-shrink-0 p-2.5 rounded-lg transition-all duration-200 relative group"
+                                :class="showMediaGallery
+                                    ? (isDark 
+                                        ? 'bg-teal-500/20 text-teal-400 ring-2 ring-teal-500' 
+                                        : 'bg-teal-50 text-teal-600 ring-2 ring-teal-500')
+                                    : (isDark 
+                                        ? 'bg-gray-700/50 text-gray-300 hover:bg-teal-500/20 hover:text-teal-400 border border-gray-600' 
+                                        : 'bg-gray-100 text-gray-600 hover:bg-teal-50 hover:text-teal-600 border border-gray-300')"
+                                title="View shared media"
+                            >
+                                <!-- Gallery/Image Icon -->
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                </svg>
+                                <!-- Badge showing media count -->
+                                <span v-if="mediaImages.length > 0" 
+                                    class="absolute -top-1 -right-1 px-1.5 py-0.5 text-[10px] font-bold rounded-full shadow-sm"
+                                    :class="isDark ? 'bg-teal-500 text-white' : 'bg-teal-600 text-white'">
+                                    {{ mediaImages.length }}
+                                </span>
+                            </button>
                         </template>
                     </div>
 
@@ -1633,7 +1788,7 @@ watch(messages, () => {
                             <div class="flex gap-2 items-end group/msg relative"
                                 :class="message.sender_id === page.props.auth.user.id ? 'flex-row-reverse' : 'flex-row'">
 
-                                <!-- Avatar — shown on outside edge -->
+                                <!-- Avatar â€” shown on outside edge -->
                                 <div class="flex-shrink-0">
                                     <div v-if="getProfilePicture(message.sender)"
                                         class="w-8 h-8 rounded-full overflow-hidden cursor-pointer relative group/mavatar"
@@ -1656,14 +1811,14 @@ watch(messages, () => {
                                 <div class="flex flex-col max-w-[60%] relative"
                                     :class="message.sender_id === page.props.auth.user.id ? 'items-end' : 'items-start'">
 
-                                    <!-- Sender name — only in group chats, only for others' messages -->
+                                    <!-- Sender name â€” only in group chats, only for others' messages -->
                                     <p
                                         v-if="currentConvIsGroup && message.sender_id !== page.props.auth.user.id"
                                         class="text-[11px] font-medium mb-0.5 px-1"
                                         :class="isDark ? 'text-gray-400' : 'text-slate-500'"
                                     >{{ message.sender?.name }}</p>
 
-                                    <!-- ── Hover action toolbar (Google Chat style) ── -->
+                                    <!-- â”€â”€ Hover action toolbar (Google Chat style) â”€â”€ -->
                                     <div
                                         class="absolute -top-8 opacity-0 group-hover/msg:opacity-100 transition-opacity z-10 flex items-center gap-0.5 px-1.5 py-1 rounded-xl shadow-lg border"
                                         :class="[
@@ -1687,7 +1842,7 @@ watch(messages, () => {
                                                 </svg>
                                             </button>
 
-                                            <!-- Dropdown — anchored to the toolbar -->
+                                            <!-- Dropdown â€” anchored to the toolbar -->
                                             <div
                                                 v-if="activeMessageMenu === message.id"
                                                 class="absolute top-full mt-1 min-w-[170px] rounded-xl shadow-xl border z-20 overflow-hidden"
@@ -1697,7 +1852,7 @@ watch(messages, () => {
                                                 ]"
                                                 @click.stop
                                             >
-                                                <!-- Mark as read — only when conversation has unread -->
+                                                <!-- Mark as read â€” only when conversation has unread -->
                                                 <button
                                                     v-if="selectedConversation && getUnreadCount(selectedConversation) > 0"
                                                     @click.stop="markReadFromMessage"
@@ -1710,7 +1865,7 @@ watch(messages, () => {
                                                     </svg>
                                                     Mark as read
                                                 </button>
-                                                <!-- Mark as unread — only when conversation is fully read -->
+                                                <!-- Mark as unread â€” only when conversation is fully read -->
                                                 <button
                                                     v-else
                                                     @click.stop="markUnreadFromMessage"
@@ -1752,7 +1907,7 @@ watch(messages, () => {
                                             {{ formatFullTime(message.created_at) }}
                                         </span>
 
-                                        <!-- Tick icons — only for own messages -->
+                                        <!-- Tick icons â€” only for own messages -->
                                         <template v-if="message.sender_id === page.props.auth.user.id">
                                             <svg v-if="message.isTemp"
                                                 class="w-3.5 h-3.5 flex-shrink-0" :class="isDark ? 'text-gray-500' : 'text-slate-400'"
@@ -1794,7 +1949,7 @@ watch(messages, () => {
                         </Transition>
                     </div>
 
-                    <!-- ── Group info panel (slides in when showGroupPanel is true) ── -->
+                    <!-- â”€â”€ Group info panel (slides in when showGroupPanel is true) â”€â”€ -->
                     <Transition name="slide-panel">
                         <div
                             v-if="showGroupPanel && currentConvIsGroup"
@@ -1990,6 +2145,97 @@ watch(messages, () => {
                         </div>
                     </Transition>
 
+                    <!-- Media Gallery Panel (slides in from right like group panel) -->
+                    <Transition name="slide-panel">
+                        <div
+                            v-if="showMediaGallery && selectedConversation"
+                            class="w-80 flex-shrink-0 flex flex-col border-l overflow-hidden"
+                            :class="isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-slate-100'"
+                        >
+                            <!-- Panel header -->
+                            <div class="flex items-center justify-between px-4 py-3 border-b flex-shrink-0"
+                                :class="isDark ? 'border-gray-700' : 'border-slate-100'">
+                                <h3 class="text-sm font-semibold" :class="isDark ? 'text-white' : 'text-slate-800'">Shared Media</h3>
+                                <button @click="showMediaGallery = false"
+                                    class="p-1 rounded transition-colors"
+                                    :class="isDark ? 'text-gray-400 hover:text-white hover:bg-gray-700' : 'text-slate-400 hover:text-slate-700 hover:bg-slate-100'">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                    </svg>
+                                </button>
+                            </div>
+                            <!-- Loading state -->
+                            <div v-if="loadingMedia" class="flex-1 flex items-center justify-center">
+                                <div class="text-center">
+                                    <svg class="w-8 h-8 animate-spin mx-auto mb-2" :class="isDark ? 'text-teal-400' : 'text-teal-600'" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+                                    </svg>
+                                    <p class="text-sm" :class="isDark ? 'text-gray-400' : 'text-slate-500'">Loading media...</p>
+                                </div>
+                            </div>
+                            <!-- Media grid -->
+                            <div v-else-if="mediaImages.length > 0" class="flex-1 overflow-y-auto group-panel-scroll">
+                                <div v-for="(images, dateLabel) in mediaByDate" :key="dateLabel" class="mb-4">
+                                    <!-- Date header -->
+                                    <div class="px-3 py-2 sticky top-0 z-10"
+                                        :class="isDark ? 'bg-gray-800/95 backdrop-blur' : 'bg-white/95 backdrop-blur'">
+                                        <h4 class="text-xs font-semibold uppercase tracking-wide"
+                                            :class="isDark ? 'text-gray-400' : 'text-slate-500'">
+                                            {{ dateLabel }}
+                                        </h4>
+                                        <div class="text-xs mt-0.5" :class="isDark ? 'text-gray-500' : 'text-slate-400'">
+                                            {{ images.length }} {{ images.length === 1 ? 'item' : 'items' }}
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Images grid -->
+                                    <div class="px-3 grid grid-cols-2 gap-2">
+                                        <div
+                                            v-for="image in images"
+                                            :key="image.id"
+                                            @click.stop="() => { console.log('Image clicked:', image.url); openImageLightbox(image.url, image.filename); }"
+                                            class="relative rounded-lg overflow-hidden cursor-pointer group transition-all duration-200"
+                                            :class="isDark ? 'hover:ring-2 ring-teal-500' : 'hover:ring-2 ring-teal-400'"
+                                        >
+                                            <!-- Aspect ratio container -->
+                                            <div class="aspect-square bg-gray-100 dark:bg-gray-700">
+                                                <img
+                                                    :src="image.url"
+                                                    :alt="image.filename"
+                                                    class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                                    loading="lazy"
+                                                />
+                                            </div>
+                                            
+                                            <!-- Hover overlay with zoom icon -->
+                                            <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+                                                <div class="absolute bottom-2 left-2 right-2 flex items-center justify-between">
+                                                    <span class="text-xs text-white font-medium truncate">
+                                                        {{ new Date(image.created_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) }}
+                                                    </span>
+                                                    <svg class="w-5 h-5 text-white flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/>
+                                                    </svg>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Empty state -->
+                            <div v-else class="flex-1 flex items-center justify-center p-6">
+                                <div class="text-center">
+                                    <svg class="w-16 h-16 mx-auto mb-3" :class="isDark ? 'text-gray-600' : 'text-gray-300'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                    </svg>
+                                    <p class="text-sm font-medium mb-1" :class="isDark ? 'text-gray-300' : 'text-slate-600'">No media yet</p>
+                                    <p class="text-xs" :class="isDark ? 'text-gray-500' : 'text-slate-400'">Images sent in this conversation will appear here</p>
+                                </div>
+                            </div>
+                        </div>
+                    </Transition>
+
                 </div><!-- end messages + panel flex row -->
 
                     <!-- Input area -->
@@ -2016,7 +2262,7 @@ watch(messages, () => {
                             <RichTextEditor
                                 ref="richEditorRef"
                                 v-model="messageInput"
-                                placeholder="Type a message…"
+                                placeholder="Type a messageâ€¦"
                                 :isDark="isDark"
                                 :conversationId="selectedConversation"
                                 @send="sendMessage"
@@ -2061,12 +2307,12 @@ watch(messages, () => {
                     </div>
                 </div><!-- end main body flex row -->
             </div>
-            <!-- ── END RIGHT PANEL ─────────────────────────── -->
+            <!-- â”€â”€ END RIGHT PANEL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
 
             </div><!-- end panels container -->
         </div><!-- end messenger -->
 
-        <!-- ── HOVER CARD ──────────────────────────────────── -->
+        <!-- â”€â”€ HOVER CARD â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
         <Teleport to="body">
             <div
                 v-if="hoveredUserId"
@@ -2080,7 +2326,7 @@ watch(messages, () => {
                 <div class="h-16 w-full" style="background: linear-gradient(135deg, #006970, #00a9b4)"></div>
 
                 <div class="px-5 pb-5 -mt-8">
-                    <!-- Avatar — click to zoom full size -->
+                    <!-- Avatar â€” click to zoom full size -->
                     <div class="relative inline-block mb-3">
                         <div v-if="getProfilePicture(props.users.find(u => u.id === hoveredUserId))"
                             class="w-16 h-16 rounded-full overflow-hidden border-4 border-white shadow-md cursor-zoom-in group/av"
@@ -2173,9 +2419,9 @@ watch(messages, () => {
             </div>
         </Teleport>
 
-        <!-- ── NEW CHAT MODAL ──────────────────────────────── -->
+        <!-- â”€â”€ NEW CHAT MODAL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
 
-        <!-- ── AVATAR LIGHTBOX ──────────────────────────── -->
+        <!-- â”€â”€ AVATAR LIGHTBOX â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
         <Teleport to="body">
             <Transition name="avatar-zoom">
                 <div v-if="zoomedUser"
@@ -2288,7 +2534,7 @@ watch(messages, () => {
 
         </template><!-- end #fullWidth -->
 
-        <!-- ── IN-APP TOAST NOTIFICATIONS ─────────────────────────── -->
+        <!-- â”€â”€ IN-APP TOAST NOTIFICATIONS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
         <Teleport to="body">
             <div class="fixed bottom-6 right-6 z-[500] flex flex-col gap-2 items-end pointer-events-none">
                 <TransitionGroup name="toast">
@@ -2333,220 +2579,106 @@ watch(messages, () => {
                             <p class="text-xs truncate mt-0.5" :class="isDark ? 'text-gray-400' : 'text-slate-500'">
                                 {{ toast.message }}
                             </p>
-                            <p class="text-[10px] mt-1 font-medium text-teal-500">New message · Tap to open</p>
+                            <p class="text-[10px] mt-1 font-medium text-teal-500">New message Â· Tap to open</p>
                         </div>
                     </div>
                 </TransitionGroup>
             </div>
         </Teleport>
-
-        <!-- Image Lightbox -->
-        <ImageLightbox
-            :is-open="showImageLightbox"
-            :image-src="lightboxImageSrc"
-            :image-alt="lightboxImageAlt"
-            @close="closeImageLightbox"
-        />
-
     </AuthenticatedLayout>
+
+    <!-- Image Lightbox (outside layout for proper z-index) -->
+    <ImageLightbox
+        :is-open="showImageLightbox"
+        :image-src="lightboxImageSrc"
+        :image-alt="lightboxImageAlt"
+        @close="closeImageLightbox"
+    />
 </template>
+>
 
 <style scoped>
 .toast-enter-active {
     transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
+
 .toast-leave-active {
-    transition: all 0.25s ease-in;
+    transition: all 0.2s ease-out;
 }
+
 .toast-enter-from {
+    transform: translateY(-100px);
     opacity: 0;
-    transform: translateX(100%) scale(0.9);
 }
+
 .toast-leave-to {
+    transform: translateY(-50px);
     opacity: 0;
-    transform: translateX(100%) scale(0.95);
 }
 
-/* Group info panel slide-in */
-.slide-panel-enter-active {
-    transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+.slide-panel-enter-active,
+.slide-panel-leave-active {
+    transition: transform 0.3s ease-out, opacity 0.3s ease-out;
 }
 
-/* Scroll-to-bottom button */
-.scroll-btn-enter-active { transition: all 0.2s cubic-bezier(0.34,1.56,0.64,1); }
-.scroll-btn-leave-active { transition: all 0.15s ease-in; }
-.scroll-btn-enter-from, .scroll-btn-leave-to { opacity:0; transform:translateX(-50%) translateY(8px) scale(0.9); }
-
-/* ── Avatar lightbox ── */
-.avatar-zoom-enter-active { transition: all 0.2s cubic-bezier(0.34,1.56,0.64,1); }
-.avatar-zoom-leave-active { transition: all 0.15s ease-in; }
-.avatar-zoom-enter-from, .avatar-zoom-leave-to { opacity:0; }
-.avatar-zoom-enter-from img, .avatar-zoom-leave-to img { transform:scale(0.7); }
-
-/* ── Themed sleek scrollbar — user list + chat window ── */
-.chat-scroll {
-    scroll-behavior: smooth;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(13,148,136,0.35) transparent;
+.slide-panel-enter-from {
+    transform: translateX(100%);
+    opacity: 0;
 }
+
+.slide-panel-leave-to {
+    transform: translateX(100%);
+    opacity: 0;
+}
+
 .chat-scroll::-webkit-scrollbar {
-    width: 4px;
+    width: 6px;
 }
+
 .chat-scroll::-webkit-scrollbar-track {
     background: transparent;
 }
+
 .chat-scroll::-webkit-scrollbar-thumb {
-    background: linear-gradient(180deg, rgba(13,148,136,0.5), rgba(6,182,212,0.4));
-    border-radius: 999px;
-    transition: background 0.2s;
-}
-.chat-scroll:hover::-webkit-scrollbar-thumb {
-    background: linear-gradient(180deg, #0d9488, #06b6d4);
-}
-
-/* ── Rich-text message rendering ── */
-.msg-body :deep(b),
-.msg-body :deep(strong) { 
-    font-weight: 700; 
-}
-
-.msg-body :deep(i),
-.msg-body :deep(em) { 
-    font-style: italic; 
-}
-
-.msg-body :deep(u) { 
-    text-decoration: underline; 
-}
-
-.msg-body :deep(s),
-.msg-body :deep(strike) { 
-    text-decoration: line-through; 
-}
-
-.msg-body :deep(blockquote) {
-    border-left: 3px solid rgba(255,255,255,0.5);
-    padding-left: 12px;
-    margin: 8px 0;
-    font-style: italic;
-    opacity: 0.9;
-}
-
-.msg-body :deep(ul) {
-    list-style-type: disc;
-    list-style-position: inside;
-    padding-left: 0;
-    margin: 6px 0;
-}
-
-.msg-body :deep(ul li) {
-    margin: 2px 0;
-    display: list-item;
-}
-
-.msg-body :deep(ol) {
-    list-style-type: decimal;
-    list-style-position: inside;
-    padding-left: 0;
-    margin: 6px 0;
-}
-
-.msg-body :deep(ol li) {
-    margin: 2px 0;
-    display: list-item;
-}
-
-.msg-body :deep(a),
-.msg-body :deep(a.rt-link) {
-    color: inherit;
-    text-decoration: underline;
-    opacity: 0.9;
-}
-
-.msg-body :deep(code),
-.msg-body :deep(code.rt-code) {
-    font-family: ui-monospace, 'Courier New', monospace;
-    background: rgba(0,0,0,0.2);
+    background: #cbd5e1;
     border-radius: 3px;
-    padding: 2px 5px;
-    font-size: 0.9em;
 }
 
-.msg-body :deep(.colored-text) {
-    /* Preserve color from inline style */
+.chat-scroll::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
 }
 
-.msg-body :deep(span[style*="color"]) {
-    /* Preserve inline color styles */
-}
-
-.msg-body :deep(img.rt-image) {
-    max-width: 100%;
-    max-height: 300px;
-    height: auto;
-    border-radius: 8px;
-    margin: 8px 0;
-    display: block;
-    cursor: pointer;
-    transition: transform 0.2s;
-}
-
-.msg-body :deep(img.rt-image):hover {
-    transform: scale(1.02);
-}
-
-/* For incoming messages (dark bg) use lighter code bg */
-.msg-body-incoming :deep(blockquote) {
-    border-left-color: #14b8a6;
-    color: inherit;
-}
-
-.msg-body-incoming :deep(code),
-.msg-body-incoming :deep(code.rt-code) {
-    background: rgba(0,0,0,0.08);
-}
-
-.msg-body-incoming :deep(a),
-.msg-body-incoming :deep(a.rt-link) {
-    color: #0ea5e9;
-    text-decoration: underline;
-}
-.chat-scroll::-webkit-scrollbar-thumb:active {
-    background: linear-gradient(180deg, #0f766e, #0891b2);
-}
-.slide-panel-leave-active {
-    transition: all 0.18s cubic-bezier(0.4, 0, 1, 1);
-}
-.slide-panel-enter-from,
-.slide-panel-leave-to {
-    opacity: 0;
-    transform: translateX(24px);
-}
-
-/* ── Group info panel — themed smooth scrollbar ── */
-.group-panel-scroll {
-    scroll-behavior: smooth;
-}
-
-/* Webkit (Chrome, Safari, Edge) */
 .group-panel-scroll::-webkit-scrollbar {
-    width: 5px;
+    width: 4px;
 }
+
 .group-panel-scroll::-webkit-scrollbar-track {
     background: transparent;
 }
+
 .group-panel-scroll::-webkit-scrollbar-thumb {
-    background: linear-gradient(180deg, #0d9488, #06b6d4);
-    border-radius: 999px;
-    transition: background 0.2s;
-}
-.group-panel-scroll::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(180deg, #0f766e, #0891b2);
+    background: #6b7280;
+    border-radius: 2px;
 }
 
-/* Firefox */
-.group-panel-scroll {
-    scrollbar-width: thin;
-    scrollbar-color: #0d9488 transparent;
+.group-panel-scroll::-webkit-scrollbar-thumb:hover {
+    background: #4b5563;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
 }
 </style>

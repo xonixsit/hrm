@@ -355,8 +355,14 @@ class EmployeeController extends Controller
             'join_date' => $canEditEmploymentInfo ? 'nullable|date' : 'sometimes',
             'employment_type' => $canEditEmploymentInfo ? 'nullable|in:full_time,part_time,contract,intern,consultant' : 'sometimes',
             'work_location' => $canEditEmploymentInfo ? 'nullable|string|max:255' : 'sometimes',
-            'profile_pic' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120', // 5MB max
+            // profile_pic can be either a file upload or an existing filename string
+            'profile_pic' => 'nullable',
         ];
+        
+        // Additional validation for profile_pic if it's a file
+        if ($request->hasFile('profile_pic')) {
+            $rules['profile_pic'] = 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120'; // 5MB max
+        }
 
         // Personal info (Admin, HR, or self can edit)
         if ($canEditPersonalInfo) {
@@ -392,8 +398,9 @@ class EmployeeController extends Controller
 
         $validated = $request->validate($rules);
 
-        // Handle profile picture upload
+        // Handle profile picture upload or gallery selection
         if ($request->hasFile('profile_pic')) {
+            // New file uploaded
             try {
                 // Delete old profile picture if exists
                 if ($employee->profile_pic) {
@@ -416,6 +423,21 @@ class EmployeeController extends Controller
             } catch (\Exception $e) {
                 \Log::error('Profile picture upload failed in update: ' . $e->getMessage());
                 return back()->withErrors(['profile_pic' => 'Profile picture upload failed: ' . $e->getMessage()]);
+            }
+        } elseif ($request->filled('profile_pic') && is_string($request->profile_pic)) {
+            // Existing image selected from gallery
+            $filename = basename($request->profile_pic);
+            
+            // Verify the file exists in the profile-pictures directory
+            $publicPath = public_path('images/profile-pictures/' . $filename);
+            $storagePath = storage_path('app/public/profile-pictures/' . $filename);
+            
+            if (file_exists($publicPath)) {
+                $validated['profile_pic'] = 'images/profile-pictures/' . $filename;
+            } elseif (file_exists($storagePath)) {
+                $validated['profile_pic'] = 'storage/profile-pictures/' . $filename;
+            } else {
+                return back()->withErrors(['profile_pic' => 'Selected image not found.']);
             }
         }
 
