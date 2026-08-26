@@ -277,25 +277,14 @@ class SummarySheet implements FromArray, WithHeadings, WithStyles, WithTitle
     
     public function array(): array
     {
-        $summary = [
-            ['ATTENDANCE SUMMARY REPORT'],
-            ['Period: ' . $this->dateFrom . ' to ' . $this->dateTo],
-            ['Total Employees: ' . count($this->data)],
-            ['Generated: ' . now()->format('F j, Y g:i A')],
-            [''],
-        ];
-        
-        return array_merge($summary, array_map('array_values', $this->data));
+        // Return only the data rows without headers
+        // Headers are handled by headings() method
+        return array_map('array_values', $this->data);
     }
     
     public function headings(): array
     {
         return [
-            '',
-            '',
-            '',
-            '',
-            '',
             'Employee Name',
             'Employee Code',
             'Department',
@@ -311,19 +300,27 @@ class SummarySheet implements FromArray, WithHeadings, WithStyles, WithTitle
     
     public function styles(Worksheet $sheet)
     {
+        // Add title rows at the top
+        $sheet->insertNewRowBefore(1, 5);
+        $sheet->setCellValue('A1', 'ATTENDANCE SUMMARY REPORT');
+        $sheet->setCellValue('A2', 'Period: ' . $this->dateFrom . ' to ' . $this->dateTo);
+        $sheet->setCellValue('A3', 'Total Employees: ' . count($this->data));
+        $sheet->setCellValue('A4', 'Generated: ' . now()->format('F j, Y g:i A'));
+        
+        // Style title
         $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(16);
         $sheet->getStyle('A2:A4')->getFont()->setBold(true);
         
-        // Header row (row 6)
-        $sheet->getStyle('A6:O6')->getFont()->setBold(true);
-        $sheet->getStyle('A6:O6')->getFill()
+        // Header row is now at row 6 (after 4 title rows + 1 empty row)
+        $sheet->getStyle('A6:J6')->getFont()->setBold(true);
+        $sheet->getStyle('A6:J6')->getFill()
             ->setFillType(Fill::FILL_SOLID)
             ->getStartColor()->setARGB('FF2E7D32'); // Green
-        $sheet->getStyle('A6:O6')->getFont()->getColor()->setARGB('FFFFFFFF');
-        $sheet->getStyle('A6:O6')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('A6:J6')->getFont()->getColor()->setARGB('FFFFFFFF');
+        $sheet->getStyle('A6:J6')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
         
         // Auto-size columns
-        foreach (range('A', 'O') as $col) {
+        foreach (range('A', 'J') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
         
@@ -352,25 +349,14 @@ class DetailedRecordsSheet implements FromArray, WithHeadings, WithStyles, WithT
     
     public function array(): array
     {
-        $summary = [
-            ['DETAILED ATTENDANCE RECORDS'],
-            ['Period: ' . $this->dateFrom . ' to ' . $this->dateTo],
-            ['Total Records: ' . count($this->data)],
-            ['Generated: ' . now()->format('F j, Y g:i A')],
-            [''],
-        ];
-        
-        return array_merge($summary, array_map('array_values', $this->data));
+        // Return only the data rows without headers
+        // Headers are handled by headings() method
+        return array_map('array_values', $this->data);
     }
     
     public function headings(): array
     {
         return [
-            '',
-            '',
-            '',
-            '',
-            '',
             'Employee Name',
             'Employee Code',
             'Department',
@@ -389,19 +375,27 @@ class DetailedRecordsSheet implements FromArray, WithHeadings, WithStyles, WithT
     
     public function styles(Worksheet $sheet)
     {
+        // Add title rows at the top
+        $sheet->insertNewRowBefore(1, 5);
+        $sheet->setCellValue('A1', 'DETAILED ATTENDANCE RECORDS');
+        $sheet->setCellValue('A2', 'Period: ' . $this->dateFrom . ' to ' . $this->dateTo);
+        $sheet->setCellValue('A3', 'Total Records: ' . count($this->data));
+        $sheet->setCellValue('A4', 'Generated: ' . now()->format('F j, Y g:i A'));
+        
+        // Style title
         $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(16);
         $sheet->getStyle('A2:A4')->getFont()->setBold(true);
         
-        // Header row (row 6)
-        $sheet->getStyle('A6:R6')->getFont()->setBold(true);
-        $sheet->getStyle('A6:R6')->getFill()
+        // Header row is now at row 6 (after 4 title rows + 1 empty row)
+        $sheet->getStyle('A6:M6')->getFont()->setBold(true);
+        $sheet->getStyle('A6:M6')->getFill()
             ->setFillType(Fill::FILL_SOLID)
             ->getStartColor()->setARGB('FF1565C0'); // Blue
-        $sheet->getStyle('A6:R6')->getFont()->getColor()->setARGB('FFFFFFFF');
-        $sheet->getStyle('A6:R6')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('A6:M6')->getFont()->getColor()->setARGB('FFFFFFFF');
+        $sheet->getStyle('A6:M6')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
         
         // Auto-size columns
-        foreach (range('A', 'R') as $col) {
+        foreach (range('A', 'M') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
         
