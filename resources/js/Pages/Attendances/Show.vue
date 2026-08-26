@@ -386,21 +386,13 @@ const formatDate = (dateString) => {
   });
 };
 
+import { formatTimeInAppTimezone } from '@/utils/timezone.js';
+
 const formatTime = (timeString) => {
   if (!timeString) return 'N/A';
   
   try {
-    // The timeString comes from database as UTC (e.g., "2025-11-04T06:46:00.000000Z")
-    // We need to display it in PST
-    const date = new Date(timeString);
-    
-    // Convert UTC to PST for display
-    return date.toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true,
-      timeZone: 'America/Los_Angeles' // This converts UTC to PST
-    });
+    return formatTimeInAppTimezone(timeString) || 'N/A';
   } catch (error) {
     console.error('Error formatting time:', error);
     return 'N/A';

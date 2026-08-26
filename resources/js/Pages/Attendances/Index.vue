@@ -496,6 +496,8 @@ const formatDate = (dateString) => {
   }
 };
 
+import { formatTimeInAppTimezone } from '@/utils/timezone.js';
+
 const formatTime = (timeString) => {
   if (!timeString || timeString === 'Invalid Date') return '-';
   
@@ -511,11 +513,7 @@ const formatTime = (timeString) => {
     
     if (isNaN(time.getTime())) return '-';
     
-    return time.toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true
-    });
+    return formatTimeInAppTimezone(time) || '-';
   } catch (error) {
     return '-';
   }

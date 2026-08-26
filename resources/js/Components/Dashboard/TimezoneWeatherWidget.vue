@@ -103,35 +103,39 @@ const weather = ref(null);
 const weatherError = ref(false);
 let timeInterval = null;
 
+import { formatInAppTimezone, APP_TIMEZONE } from '@/utils/timezone.js';
+
 const updateTime = () => {
   const now = new Date();
   
-  // Format time
-  currentTime.value = now.toLocaleTimeString('en-US', {
+  // Format time in application timezone
+  currentTime.value = formatInAppTimezone(now, {
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',
     hour12: true
   });
   
-  // Format date
-  currentDate.value = now.toLocaleDateString('en-US', {
+  // Format date in application timezone
+  currentDate.value = formatInAppTimezone(now, {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
     day: 'numeric'
   });
   
-  // Get timezone info — show only city name
-  const rawTz = props.systemTimezone || 'UTC';
-  timezoneName.value = rawTz.includes('/') ? rawTz.split('/').pop().replace(/_/g, ' ') : rawTz;
+  // Get timezone info
+  const rawTz = props.systemTimezone || APP_TIMEZONE;
+  timezoneName.value = rawTz;
   
-  // Get timezone offset
-  const offset = now.getTimezoneOffset();
-  const hours = Math.floor(Math.abs(offset) / 60);
-  const minutes = Math.abs(offset) % 60;
-  const sign = offset <= 0 ? '+' : '-';
-  timezoneOffset.value = `UTC${sign}${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+  // Get timezone offset for the application timezone
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: APP_TIMEZONE,
+    timeZoneName: 'shortOffset'
+  });
+  const parts = formatter.formatToParts(now);
+  const offsetPart = parts.find(part => part.type === 'timeZoneName');
+  timezoneOffset.value = offsetPart ? offsetPart.value : '';
 };
 
 const getWeatherIcon = (condition) => {

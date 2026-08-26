@@ -711,20 +711,48 @@ class AttendanceController extends Controller
         $workDuration = $attendance->work_duration;
         $breakDuration = $attendance->break_duration;
         
+        // Convert times to application timezone for editing
+        $appTimezone = config('app.timezone');
+        $attendanceData = $attendance->toArray();
+        
+        // Format datetime fields in application timezone
+        if ($attendance->clock_in) {
+            $attendanceData['clock_in'] = $attendance->clock_in->setTimezone($appTimezone)->format('Y-m-d\TH:i');
+        }
+        if ($attendance->clock_out) {
+            $attendanceData['clock_out'] = $attendance->clock_out->setTimezone($appTimezone)->format('Y-m-d\TH:i');
+        }
+        
+        // Format break session times in application timezone
+        if (!empty($attendanceData['break_sessions'])) {
+            $attendanceData['break_sessions'] = array_map(function($session) use ($appTimezone) {
+                if (isset($session['start'])) {
+                    $session['start'] = \Carbon\Carbon::parse($session['start'])->setTimezone($appTimezone)->format('Y-m-d\TH:i');
+                }
+                if (isset($session['end'])) {
+                    $session['end'] = \Carbon\Carbon::parse($session['end'])->setTimezone($appTimezone)->format('Y-m-d\TH:i');
+                }
+                return $session;
+            }, $attendanceData['break_sessions']);
+        }
+        
         // Debug logging
         \Log::info('Attendance Edit Data', [
             'id' => $attendance->id,
-            'clock_in' => $attendance->clock_in,
-            'clock_out' => $attendance->clock_out,
+            'clock_in_original' => $attendance->clock_in,
+            'clock_in_formatted' => $attendanceData['clock_in'],
+            'clock_out_original' => $attendance->clock_out,
+            'clock_out_formatted' => $attendanceData['clock_out'],
+            'timezone' => $appTimezone,
             'total_break_minutes' => $attendance->total_break_minutes,
             'work_minutes_calculated' => $workMinutes,
             'work_duration' => $workDuration,
             'break_duration' => $breakDuration,
-            'break_sessions' => $attendance->break_sessions
+            'break_sessions' => $attendanceData['break_sessions']
         ]);
         
         return Inertia::render('Attendances/Edit', [
-            'attendance' => array_merge($attendance->toArray(), [
+            'attendance' => array_merge($attendanceData, [
                 'work_minutes_calculated' => $workMinutes,
                 'work_duration_formatted' => $workDuration,
                 'break_duration_formatted' => $breakDuration,

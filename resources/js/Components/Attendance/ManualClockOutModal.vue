@@ -151,18 +151,13 @@
       .substring(0, 2)
   }
 
+import { formatTimeInAppTimezone } from '@/utils/timezone.js';
+
   const formatTime = (timeString) => {
     if (!timeString) return '-'
 
     try {
-      const time = new Date(timeString)
-      if (isNaN(time.getTime())) return '-'
-
-      return time.toLocaleTimeString('en-US', {
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true
-      })
+      return formatTimeInAppTimezone(timeString) || '-';
     } catch (error) {
       return '-'
     }

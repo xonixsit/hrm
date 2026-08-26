@@ -56,13 +56,11 @@ const getWeatherIcon = (condition) => {
   return icons[key] || icons['default'];
 };
 
+import { formatTimeInAppTimezone } from '@/utils/timezone.js';
+
 const updateTime = () => {
   const now = new Date();
-  currentTime.value = now.toLocaleTimeString('en-US', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true
-  });
+  currentTime.value = formatTimeInAppTimezone(now);
 };
 
 const fetchAdminSettings = async () => {

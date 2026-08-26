@@ -333,16 +333,12 @@ const getInitials = (name) => {
     .join('');
 };
 
+import { formatTimeInAppTimezone } from '@/utils/timezone.js';
+
 const getFormattedTime = (timeString) => {
   if (!timeString || timeString === 'Invalid Date') return '-';
   try {
-    const time = new Date(timeString);
-    if (isNaN(time.getTime())) return '-';
-    return time.toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true
-    });
+    return formatTimeInAppTimezone(timeString);
   } catch (error) {
     console.error('Error formatting time:', error);
     return '-';

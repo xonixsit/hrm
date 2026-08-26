@@ -130,6 +130,7 @@
 
 <script setup>
 import { computed, ref, onMounted, onUnmounted } from 'vue';
+import { formatInAppTimezone } from '@/utils/timezone.js';
 import {
   ClockIcon,
   PlayIcon,
@@ -186,13 +187,13 @@ let timeInterval = null;
 
 const updateTime = () => {
   const now = new Date();
-  currentTime.value = now.toLocaleTimeString('en-US', {
+  currentTime.value = formatInAppTimezone(now, {
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',
     hour12: true
   });
-  currentDate.value = now.toLocaleDateString('en-US', {
+  currentDate.value = formatInAppTimezone(now, {
     weekday: 'long',
     year: 'numeric',
     month: 'long',

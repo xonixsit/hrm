@@ -135,6 +135,7 @@
 
 import { computed, ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { useAuth } from '@/composables/useAuth.js'
+import { formatInAppTimezone, APP_TIMEZONE } from '@/utils/timezone.js'
 import { 
   ClockIcon, 
   PlayIcon, 
@@ -425,24 +426,24 @@ const updateTime = () => {
     serverTime = new Date()
   }
   
-  // Update current time using server time
-  currentTime.value = serverTime.toLocaleTimeString('en-US', {
+  // Update current time in application timezone
+  currentTime.value = formatInAppTimezone(serverTime, {
     hour12: false,
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit'
-  })
+  });
   
-  // Update current date using server time
-  currentDate.value = serverTime.toLocaleDateString('en-US', {
+  // Update current date in application timezone
+  currentDate.value = formatInAppTimezone(serverTime, {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
     day: 'numeric'
-  })
+  });
   
-  // Update timezone
-  timezone.value = Intl.DateTimeFormat().resolvedOptions().timeZone
+  // Update timezone to application timezone
+  timezone.value = APP_TIMEZONE;
 }
 
 const updateWorkDuration = () => {

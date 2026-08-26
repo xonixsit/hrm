@@ -485,6 +485,7 @@
   import { router } from '@inertiajs/vue3';
   import axios from 'axios';
   import { getInitials } from '@/utils/formatters.js';
+  import { formatTimeInAppTimezone } from '@/utils/timezone.js';
   import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 
   // Unified UI Components
@@ -666,8 +667,9 @@
     return 'Your personal workspace and activities';
   });
 
+
   const currentTime = computed(() => {
-    return new Date().toLocaleTimeString();
+    return formatTimeInAppTimezone(new Date());
   });
 
   const headerActions = computed(() => {
