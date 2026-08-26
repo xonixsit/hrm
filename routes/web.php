@@ -344,6 +344,7 @@ Route::get('/training', [TrainingPageController::class, 'index'])->middleware(['
     // Conversation Media API routes
     Route::prefix('api/conversations')->middleware('auth')->group(function () {
         Route::get('{conversation}/media', [App\Http\Controllers\MediaGalleryController::class, 'conversationMedia']);
+        Route::get('{conversation}/files', [App\Http\Controllers\MediaGalleryController::class, 'conversationFiles']);
     });
 
     // Weather API proxy routes (optional - use if CORS issues occur)

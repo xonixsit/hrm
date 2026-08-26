@@ -118,4 +118,57 @@ class MediaGalleryController extends Controller
 
         return response()->json(['images' => $images]);
     }
+
+    /**
+     * Get files (non-image attachments) shared in a specific conversation
+     */
+    public function conversationFiles(Request $request, $conversationId)
+    {
+        $messages = \DB::table('messages')
+            ->where('conversation_id', $conversationId)
+            ->where('message', 'like', '%rt-file-attachment%')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $files = [];
+        
+        foreach ($messages as $message) {
+            // Match file attachments with download link
+            preg_match_all('/<a[^>]+href=["\']([^"\']+)["\'][^>]+download=["\']([^"\']+)["\'][^>]*>/', $message->message, $matches);
+            
+            if (!empty($matches[1])) {
+                for ($i = 0; $i < count($matches[1]); $i++) {
+                    $fileUrl = $matches[1][$i];
+                    $filename = $matches[2][$i] ?? basename($fileUrl);
+                    
+                    // Extract file extension
+                    $extension = pathinfo($filename, PATHINFO_EXTENSION);
+                    
+                    // Try to get file size if it's accessible
+                    $size = null;
+                    if (strpos($fileUrl, '/storage/') === 0) {
+                        $relativePath = str_replace('/storage/', '', $fileUrl);
+                        $fullPath = storage_path('app/public/' . $relativePath);
+                        if (file_exists($fullPath)) {
+                            $size = filesize($fullPath);
+                        }
+                    }
+                    
+                    $user = \App\Models\User::find($message->user_id);
+                    $files[] = [
+                        'filename' => $filename,
+                        'url' => $fileUrl,
+                        'extension' => strtolower($extension),
+                        'size' => $size,
+                        'created_at' => $message->created_at,
+                        'sender_id' => $message->user_id,
+                        'sender_name' => $user ? $user->name : 'Unknown',
+                        'message_id' => $message->id
+                    ];
+                }
+            }
+        }
+
+        return response()->json(['files' => $files]);
+    }
 }

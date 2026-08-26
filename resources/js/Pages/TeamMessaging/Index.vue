@@ -91,11 +91,24 @@ const showMediaGallery = ref(false);
 const mediaImages = ref([]);
 const loadingMedia = ref(false);
 
+// File manager state
+const showFileManager = ref(false);
+const sharedFiles = ref([]);
+const loadingFiles = ref(false);
+
 // Debug watcher
 watch(showMediaGallery, (newVal) => {
     console.log('showMediaGallery changed to:', newVal);
     if (newVal && selectedConversation.value) {
         loadMediaImages();
+    }
+});
+
+// Watch file manager
+watch(showFileManager, (newVal) => {
+    console.log('showFileManager changed to:', newVal);
+    if (newVal && selectedConversation.value) {
+        loadSharedFiles();
     }
 });
 
@@ -120,6 +133,33 @@ const loadMediaImages = async () => {
         mediaImages.value = [];
     } finally {
         loadingMedia.value = false;
+    }
+};
+
+// Load shared files for the conversation
+const loadSharedFiles = async () => {
+    if (!selectedConversation.value) return;
+    console.log('Loading files for conversation:', selectedConversation.value);
+    loadingFiles.value = true;
+    try {
+        const response = await axios.get(`/api/conversations/${selectedConversation.value}/files`);
+        console.log('Files API response:', response.data);
+        sharedFiles.value = (response.data.files || []).map(file => ({
+            id: file.filename,
+            url: file.url,
+            filename: file.filename,
+            extension: file.extension,
+            size: file.size,
+            created_at: file.created_at,
+            sender_name: file.sender_name
+        }));
+        console.log('Loaded shared files:', sharedFiles.value.length, sharedFiles.value);
+    } catch (error) {
+        console.error('Failed to load files:', error);
+        console.error('Error response:', error.response);
+        sharedFiles.value = [];
+    } finally {
+        loadingFiles.value = false;
     }
 };
 
@@ -198,6 +238,81 @@ const mediaByDate = computed(() => {
     
     return groups;
 });
+
+// Group files by date with friendly labels
+const filesByDate = computed(() => {
+    const groups = {};
+    
+    const todayDate = new Date();
+    const todayStr = todayDate.toISOString().split('T')[0];
+    
+    const yesterday = new Date(todayDate);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toISOString().split('T')[0];
+    
+    // Sort files by date (newest first)
+    const sorted = [...sharedFiles.value].sort((a, b) => 
+        new Date(b.created_at) - new Date(a.created_at)
+    );
+    
+    const mostRecentFileDate = sorted.length > 0 ? sorted[0].created_at.split(' ')[0] : todayStr;
+    
+    sorted.forEach(file => {
+        const fileDateStr = file.created_at.split(' ')[0];
+        const messageDate = new Date(file.created_at);
+        
+        const mostRecentDate = new Date(mostRecentFileDate);
+        const yesterdayOfRecent = new Date(mostRecentDate);
+        yesterdayOfRecent.setDate(yesterdayOfRecent.getDate() - 1);
+        const yesterdayOfRecentStr = yesterdayOfRecent.toISOString().split('T')[0];
+        
+        let label;
+        if (fileDateStr === mostRecentFileDate) {
+            label = 'Today';
+        } else if (fileDateStr === yesterdayOfRecentStr) {
+            label = 'Yesterday';
+        } else {
+            const fileDate = new Date(fileDateStr);
+            const weekAgo = new Date(mostRecentDate);
+            weekAgo.setDate(weekAgo.getDate() - 7);
+            
+            if (fileDate > weekAgo) {
+                label = messageDate.toLocaleDateString('en-US', { weekday: 'long' });
+            } else {
+                label = messageDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            }
+        }
+        
+        if (!groups[label]) groups[label] = [];
+        groups[label].push(file);
+    });
+    
+    return groups;
+});
+
+// Format file size
+const formatFileSize = (bytes) => {
+    if (!bytes) return 'Unknown size';
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / 1048576).toFixed(1) + ' MB';
+};
+
+// Get file icon color based on extension (more vibrant colors)
+const getFileIconColor = (ext) => {
+    const colors = {
+        pdf: '#DC2626',      // Bright red
+        xls: '#059669', xlsx: '#059669',  // Emerald green
+        doc: '#2563EB', docx: '#2563EB',  // Bright blue
+        ppt: '#EA580C', pptx: '#EA580C',  // Vivid orange
+        csv: '#14B8A6',      // Bright teal
+        txt: '#6B7280',      // Medium gray
+        zip: '#7C3AED', rar: '#7C3AED',   // Purple for archives
+        mp3: '#EC4899', mp4: '#EC4899',   // Pink for media
+        jpg: '#F59E0B', jpeg: '#F59E0B', png: '#F59E0B', gif: '#F59E0B',  // Amber for images
+    };
+    return colors[ext] || '#8B5CF6';  // Default purple
+};
 
 // Build a zoomedUser payload from any user-like object
 const openUserLightbox = (user, src) => {
@@ -1764,27 +1879,57 @@ watch(messages, () => {
                             <!-- Media Gallery Button -->
                             <button
                                 @click="() => { console.log('Media button clicked, selectedConversation:', selectedConversation); showMediaGallery = true; }"
-                                class="flex-shrink-0 p-2.5 rounded-lg transition-all duration-200 relative group"
+                                class="flex-shrink-0 p-2 w-10 h-10 rounded-lg transition-all duration-200 relative group"
                                 :class="showMediaGallery
-                                    ? (isDark 
-                                        ? 'bg-teal-500/20 text-teal-400 ring-2 ring-teal-500' 
-                                        : 'bg-teal-50 text-teal-600 ring-2 ring-teal-500')
+                                    ? 'bg-gradient-to-br from-purple-500 to-pink-500 text-white shadow-lg hover:shadow-purple-500/50' 
                                     : (isDark 
-                                        ? 'bg-gray-700/50 text-gray-300 hover:bg-teal-500/20 hover:text-teal-400 border border-gray-600' 
-                                        : 'bg-gray-100 text-gray-600 hover:bg-teal-50 hover:text-teal-600 border border-gray-300')"
+                                        ? 'bg-gradient-to-br from-gray-700 to-gray-600 text-gray-300 hover:from-purple-600 hover:to-pink-600 hover:text-white shadow-md hover:shadow-lg' 
+                                        : 'bg-gradient-to-br from-slate-100 to-slate-200 text-slate-600 hover:from-purple-500 hover:to-pink-500 hover:text-white shadow-sm hover:shadow-md')"
                                 title="View shared media"
                             >
                                 <!-- Gallery/Image Icon -->
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-5 h-5 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                                         d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                                 </svg>
                                 <!-- Badge showing media count -->
                                 <span v-if="mediaImages.length > 0" 
-                                    class="absolute -top-1 -right-1 px-1.5 py-0.5 text-[10px] font-bold rounded-full shadow-sm"
-                                    :class="isDark ? 'bg-teal-500 text-white' : 'bg-teal-600 text-white'">
+                                    class="absolute -top-1 -right-1 px-1.5 py-0.5 text-[10px] font-bold rounded-full shadow-lg"
+                                    :class="showMediaGallery 
+                                        ? 'bg-white text-purple-600' 
+                                        : (isDark ? 'bg-purple-500 text-white' : 'bg-purple-600 text-white')">
                                     {{ mediaImages.length }}
                                 </span>
+                                <!-- Pulse animation ring on hover -->
+                                <span v-if="!showMediaGallery" class="absolute inset-0 rounded-lg bg-purple-400 opacity-0 group-hover:opacity-50 group-hover:animate-ping"></span>
+                            </button>
+
+                            <!-- File Manager Button -->
+                            <button
+                                @click="() => { console.log('Files button clicked, selectedConversation:', selectedConversation); showFileManager = true; }"
+                                class="flex-shrink-0 p-2 w-10 h-10 rounded-lg transition-all duration-200 relative group"
+                                :class="showFileManager
+                                    ? 'bg-gradient-to-br from-blue-500 to-cyan-500 text-white shadow-lg hover:shadow-blue-500/50' 
+                                    : (isDark 
+                                        ? 'bg-gradient-to-br from-gray-700 to-gray-600 text-gray-300 hover:from-blue-600 hover:to-cyan-600 hover:text-white shadow-md hover:shadow-lg' 
+                                        : 'bg-gradient-to-br from-slate-100 to-slate-200 text-slate-600 hover:from-blue-500 hover:to-cyan-500 hover:text-white shadow-sm hover:shadow-md')"
+                                title="View shared files"
+                            >
+                                <!-- File/Document Icon -->
+                                <svg class="w-5 h-5 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                        d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                                </svg>
+                                <!-- Badge showing files count -->
+                                <span v-if="sharedFiles.length > 0" 
+                                    class="absolute -top-1 -right-1 px-1.5 py-0.5 text-[10px] font-bold rounded-full shadow-lg"
+                                    :class="showFileManager 
+                                        ? 'bg-white text-blue-600' 
+                                        : (isDark ? 'bg-blue-500 text-white' : 'bg-blue-600 text-white')">
+                                    {{ sharedFiles.length }}
+                                </span>
+                                <!-- Pulse animation ring on hover -->
+                                <span v-if="!showFileManager" class="absolute inset-0 rounded-lg bg-blue-400 opacity-0 group-hover:opacity-50 group-hover:animate-ping"></span>
                             </button>
                         </template>
                     </div>
@@ -2274,6 +2419,121 @@ watch(messages, () => {
                                     </svg>
                                     <p class="text-sm font-medium mb-1" :class="isDark ? 'text-gray-300' : 'text-slate-600'">No media yet</p>
                                     <p class="text-xs" :class="isDark ? 'text-gray-500' : 'text-slate-400'">Images sent in this conversation will appear here</p>
+                                </div>
+                            </div>
+                        </div>
+                    </Transition>
+
+                    <!-- File Manager Panel (slides in from right) -->
+                    <Transition name="slide-panel">
+                        <div
+                            v-if="showFileManager && selectedConversation"
+                            class="w-80 flex-shrink-0 flex flex-col border-l overflow-hidden"
+                            :class="isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-slate-100'"
+                        >
+                            <!-- Panel header -->
+                            <div class="flex items-center justify-between px-4 py-3 border-b flex-shrink-0"
+                                :class="isDark ? 'border-gray-700' : 'border-slate-100'">
+                                <h3 class="text-sm font-semibold" :class="isDark ? 'text-white' : 'text-slate-800'">Shared Files</h3>
+                                <button @click="showFileManager = false"
+                                    class="p-1 rounded transition-colors"
+                                    :class="isDark ? 'text-gray-400 hover:text-white hover:bg-gray-700' : 'text-slate-400 hover:text-slate-700 hover:bg-slate-100'">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                    </svg>
+                                </button>
+                            </div>
+                            <!-- Loading state -->
+                            <div v-if="loadingFiles" class="flex-1 flex items-center justify-center">
+                                <div class="text-center">
+                                    <svg class="w-8 h-8 animate-spin mx-auto mb-2" :class="isDark ? 'text-blue-400' : 'text-blue-600'" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+                                    </svg>
+                                    <p class="text-sm" :class="isDark ? 'text-gray-400' : 'text-slate-500'">Loading files...</p>
+                                </div>
+                            </div>
+                            <!-- Files list -->
+                            <div v-else-if="sharedFiles.length > 0" class="flex-1 overflow-y-auto group-panel-scroll">
+                                <div v-for="(files, dateLabel) in filesByDate" :key="dateLabel" class="mb-4">
+                                    <!-- Date header -->
+                                    <div class="px-3 py-2 sticky top-0 z-10"
+                                        :class="isDark ? 'bg-gray-800/95 backdrop-blur' : 'bg-white/95 backdrop-blur'">
+                                        <h4 class="text-xs font-semibold uppercase tracking-wide"
+                                            :class="isDark ? 'text-gray-400' : 'text-slate-500'">
+                                            {{ dateLabel }}
+                                        </h4>
+                                        <div class="text-xs mt-0.5" :class="isDark ? 'text-gray-500' : 'text-slate-400'">
+                                            {{ files.length }} {{ files.length === 1 ? 'file' : 'files' }}
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Files list -->
+                                    <div class="px-3 space-y-2">
+                                        <a
+                                            v-for="file in files"
+                                            :key="file.id"
+                                            :href="file.url"
+                                            target="_blank"
+                                            :download="file.filename"
+                                            class="flex items-center gap-3 p-2.5 rounded-lg transition-all duration-200 group"
+                                            :class="isDark 
+                                                ? 'hover:bg-gray-700/70 border border-gray-700 hover:border-blue-500/50' 
+                                                : 'hover:bg-blue-50 border border-gray-200 hover:border-blue-400'"
+                                        >
+                                            <!-- File icon with color -->
+                                            <div class="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center"
+                                                :class="isDark ? 'bg-gray-700' : 'bg-gray-100'"
+                                            >
+                                                <svg 
+                                                    class="w-6 h-6" 
+                                                    :style="{ color: getFileIconColor(file.extension) }"
+                                                    fill="currentColor" 
+                                                    viewBox="0 0 24 24"
+                                                >
+                                                    <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/>
+                                                </svg>
+                                            </div>
+                                            
+                                            <!-- File info -->
+                                            <div class="flex-1 min-w-0">
+                                                <div class="text-sm font-medium truncate" 
+                                                    :class="isDark ? 'text-white group-hover:text-blue-400' : 'text-slate-800 group-hover:text-blue-600'"
+                                                >
+                                                    {{ file.filename }}
+                                                </div>
+                                                <div class="text-xs flex items-center gap-2 mt-0.5"
+                                                    :class="isDark ? 'text-gray-400' : 'text-slate-500'"
+                                                >
+                                                    <span>{{ file.extension.toUpperCase() }}</span>
+                                                    <span>•</span>
+                                                    <span>{{ formatFileSize(file.size) }}</span>
+                                                </div>
+                                                <div v-if="file.sender_name" class="text-xs mt-1"
+                                                    :class="isDark ? 'text-gray-500' : 'text-slate-400'"
+                                                >
+                                                    {{ file.sender_name }}
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Download icon -->
+                                            <div class="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <svg class="w-5 h-5" :class="isDark ? 'text-blue-400' : 'text-blue-600'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                                </svg>
+                                            </div>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Empty state -->
+                            <div v-else class="flex-1 flex items-center justify-center p-6">
+                                <div class="text-center">
+                                    <svg class="w-16 h-16 mx-auto mb-3" :class="isDark ? 'text-gray-600' : 'text-gray-300'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                                    </svg>
+                                    <p class="text-sm font-medium mb-1" :class="isDark ? 'text-gray-300' : 'text-slate-600'">No files yet</p>
+                                    <p class="text-xs" :class="isDark ? 'text-gray-500' : 'text-slate-400'">Files sent in this conversation will appear here</p>
                                 </div>
                             </div>
                         </div>

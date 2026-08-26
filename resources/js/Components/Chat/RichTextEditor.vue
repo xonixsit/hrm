@@ -3,10 +3,10 @@
 
     <!-- ── Formatting Toolbar ──────────────────────────────── -->
     <div
-      class="toolbar flex items-center gap-0.5 px-2 py-1 border-b flex-wrap"
+      class="toolbar flex items-center gap-1 px-3 py-2 border-b flex-wrap"
       :class="isDark
-        ? 'bg-gray-700/50 border-gray-600'
-        : 'bg-slate-50/80 border-slate-200'"
+        ? 'bg-gradient-to-r from-gray-800 to-gray-700 border-gray-600'
+        : 'bg-gradient-to-r from-slate-50 to-white border-slate-200'"
     >
       <!-- Bold -->
       <ToolBtn :active="states.bold" title="Bold (Ctrl+B)" @click="exec('bold')">
@@ -29,7 +29,7 @@
           type="button"
           title="Text color"
           @click.stop="toggleColorPicker"
-          class="w-7 h-7 flex items-center justify-center rounded-md transition-colors flex-shrink-0 text-slate-500 hover:text-slate-800 hover:bg-slate-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-600"
+          class="w-8 h-8 flex items-center justify-center rounded-lg transition-all flex-shrink-0 group relative bg-gradient-to-br from-slate-100 to-slate-200 text-slate-600 hover:from-slate-200 hover:to-slate-300 hover:text-slate-800 dark:from-gray-700 dark:to-gray-600 dark:text-gray-300 dark:hover:from-gray-600 dark:hover:to-gray-500 dark:hover:text-white shadow-sm hover:shadow-md"
         >
           <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
             <path d="M11 2L5.5 16h2.25l1.12-3h6.25l1.12 3H18.5L13 2h-2zm-1.38 9L12 4.67 14.38 11H9.62z"/>
@@ -96,10 +96,22 @@
 
       <Divider />
 
-      <!-- Image Upload -->
-      <ToolBtn :active="false" title="Upload image" @click="triggerImageUpload">
-        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
-      </ToolBtn>
+      <!-- Image Upload - More Impactful -->
+      <button
+        type="button"
+        title="Upload image"
+        @click="triggerImageUpload"
+        class="w-8 h-8 flex items-center justify-center rounded-lg transition-all flex-shrink-0 group relative"
+        :class="isDark 
+          ? 'bg-gradient-to-br from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white shadow-lg hover:shadow-purple-500/50' 
+          : 'bg-gradient-to-br from-purple-500 to-pink-500 hover:from-purple-400 hover:to-pink-400 text-white shadow-md hover:shadow-lg'"
+      >
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
+        </svg>
+        <!-- Pulse animation ring -->
+        <span class="absolute inset-0 rounded-lg bg-purple-400 opacity-0 group-hover:opacity-75 group-hover:animate-ping"></span>
+      </button>
       <input
         ref="imageInputRef"
         type="file"
@@ -108,10 +120,22 @@
         @change="onImageSelected"
       />
       
-      <!-- File/Document Upload -->
-      <ToolBtn :active="false" title="Upload file (PDF, Excel, Word, etc.)" @click="triggerFileUpload">
-        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
-      </ToolBtn>
+      <!-- File/Document Upload - More Impactful -->
+      <button
+        type="button"
+        title="Upload file (PDF, Excel, Word, etc.)"
+        @click="triggerFileUpload"
+        class="w-8 h-8 flex items-center justify-center rounded-lg transition-all flex-shrink-0 group relative"
+        :class="isDark 
+          ? 'bg-gradient-to-br from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white shadow-lg hover:shadow-blue-500/50' 
+          : 'bg-gradient-to-br from-blue-500 to-cyan-500 hover:from-blue-400 hover:to-cyan-400 text-white shadow-md hover:shadow-lg'"
+      >
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
+        </svg>
+        <!-- Pulse animation ring -->
+        <span class="absolute inset-0 rounded-lg bg-blue-400 opacity-0 group-hover:opacity-75 group-hover:animate-ping"></span>
+      </button>
       <input
         ref="fileInputRef"
         type="file"
@@ -206,10 +230,10 @@ const ToolBtn = defineComponent({
         emit('click'); 
       },
       class: [
-        'w-7 h-7 flex items-center justify-center rounded-md transition-colors flex-shrink-0',
+        'w-8 h-8 flex items-center justify-center rounded-lg transition-all flex-shrink-0 group relative',
         props.active
-          ? 'bg-teal-100 text-teal-700 dark:bg-teal-900/50 dark:text-teal-300'
-          : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-600',
+          ? 'bg-gradient-to-br from-teal-500 to-emerald-500 text-white shadow-md hover:shadow-lg hover:from-teal-400 hover:to-emerald-400'
+          : 'bg-gradient-to-br from-slate-100 to-slate-200 text-slate-600 hover:from-slate-200 hover:to-slate-300 hover:text-slate-800 dark:from-gray-700 dark:to-gray-600 dark:text-gray-300 dark:hover:from-gray-600 dark:hover:to-gray-500 dark:hover:text-white shadow-sm hover:shadow-md',
       ].join(' '),
     }, slots.default?.());
   },
@@ -218,7 +242,7 @@ const ToolBtn = defineComponent({
 const Divider = defineComponent({
   setup() {
     return () => h('span', {
-      class: 'w-px h-4 bg-slate-200 dark:bg-gray-600 mx-0.5 flex-shrink-0',
+      class: 'w-px h-5 bg-gradient-to-b from-slate-300 to-slate-200 dark:from-gray-500 dark:to-gray-600 mx-1 flex-shrink-0',
     });
   },
 });
@@ -844,53 +868,60 @@ function formatBytes(bytes) {
   else return (bytes / 1048576).toFixed(1) + ' MB';
 }
 
-// Helper function to get file icon SVG
+// Helper function to get file icon SVG (with vibrant colors)
 function getFileIconSVG(ext) {
-  // PDF - Red
+  // PDF - Bright Red
   if (ext === 'pdf') {
-    return `<svg style="width: 2rem; height: 2rem; color: #ef4444;" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+    return `<svg style="width: 2rem; height: 2rem; color: #DC2626;" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
       <path d="M7 18h2v1H7v-1zm7-1h2v1h-2v-1zM7 14h2v2H7v-2zm12-3v8c0 1.1-.9 2-2 2H7c-1.1 0-2-.9-2-2V5c0-1.1.9-2 2-2h6l4 4z"/>
       <path d="M13 9V4.5l4.5 4.5H13z"/>
     </svg>`;
   }
-  // Excel - Green
+  // Excel - Emerald Green
   if (['xls', 'xlsx'].includes(ext)) {
-    return `<svg style="width: 2rem; height: 2rem; color: #16a34a;" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+    return `<svg style="width: 2rem; height: 2rem; color: #059669;" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
       <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14h-1.5v-2H14v2h-1zm0-4h-1.5V9H14v4h-1zm3 4h-1.5v-2H17v2h-1zm0-4h-1.5V9H17v4h-1z"/>
       <path d="M7 9h4v2H7V9zm0 4h4v2H7v-2z"/>
     </svg>`;
   }
-  // Word - Blue
+  // Word - Bright Blue
   if (['doc', 'docx'].includes(ext)) {
-    return `<svg style="width: 2rem; height: 2rem; color: #2563eb;" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+    return `<svg style="width: 2rem; height: 2rem; color: #2563EB;" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
       <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/>
       <path d="M8 16h8v2H8v-2zm0-4h8v2H8v-2zm0-4h5v2H8V8z"/>
     </svg>`;
   }
-  // PowerPoint - Orange
+  // PowerPoint - Vivid Orange
   if (['ppt', 'pptx'].includes(ext)) {
-    return `<svg style="width: 2rem; height: 2rem; color: #ea580c;" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+    return `<svg style="width: 2rem; height: 2rem; color: #EA580C;" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
       <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/>
       <path d="M8 15h8v2H8v-2z"/>
       <circle cx="12" cy="10" r="2"/>
     </svg>`;
   }
-  // CSV - Teal
+  // CSV - Bright Teal
   if (ext === 'csv') {
-    return `<svg style="width: 2rem; height: 2rem; color: #0d9488;" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+    return `<svg style="width: 2rem; height: 2rem; color: #14B8A6;" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
       <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/>
       <path d="M8 10h2v2H8v-2zm4 0h2v2h-2v-2zm-4 4h2v2H8v-2zm4 0h2v2h-2v-2z"/>
     </svg>`;
   }
-  // Text - Gray
+  // Text - Medium Gray
   if (ext === 'txt') {
-    return `<svg style="width: 2rem; height: 2rem; color: #4b5563;" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+    return `<svg style="width: 2rem; height: 2rem; color: #6B7280;" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
       <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/>
       <path d="M8 16h8v2H8v-2zm0-4h8v2H8v-2zm0-4h5v2H8V8z"/>
     </svg>`;
   }
+  // Archives - Purple
+  if (['zip', 'rar', '7z'].includes(ext)) {
+    return `<svg style="width: 2rem; height: 2rem; color: #7C3AED;" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+      <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/>
+      <path d="M10 9h4v1h-4V9zm0 2h4v1h-4v-1zm0 2h4v1h-4v-1z"/>
+    </svg>`;
+  }
   // Default - Purple
-  return `<svg style="width: 2rem; height: 2rem; color: #9333ea;" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+  return `<svg style="width: 2rem; height: 2rem; color: #8B5CF6;" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
     <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/>
   </svg>`;
 }
