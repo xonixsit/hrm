@@ -952,7 +952,15 @@ function insertAtCursor(text) {
   emitValue();
 }
 
-defineExpose({ focus, clear, getHTML, getTextContent, insertAtCursor });
+// Set HTML content
+function setHTML(html) {
+  if (editorRef.value) {
+    editorRef.value.innerHTML = html;
+    emitValue();
+  }
+}
+
+defineExpose({ focus, clear, getHTML, getTextContent, insertAtCursor, setHTML, pendingFiles, uploadAllFiles });
 </script>
 
 <style scoped>

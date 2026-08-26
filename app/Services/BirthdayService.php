@@ -34,7 +34,9 @@ class BirthdayService
                 return false;
             }
             
-            $dob = Carbon::parse($employee->date_of_birth)->setTimezone(config('app.timezone'));
+            // Since date_of_birth is cast as 'date', it's already a Carbon instance
+            // Just compare month and day directly without timezone conversion
+            $dob = $employee->date_of_birth;
             $match = $dob->month === $today->month && $dob->day === $today->day;
             
             if ($match) {

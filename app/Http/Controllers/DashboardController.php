@@ -69,22 +69,28 @@ class DashboardController extends Controller
                     'todaysBirthdays' => $todaysBirthdays->map(function ($employee) {
                         return [
                             'id' => $employee->id,
+                            'user_id' => $employee->user_id, // Add user_id
                             'user' => [
+                                'id' => $employee->user->id, // Add user id here too
                                 'name' => $employee->user->name,
                                 'email' => $employee->user->email,
+                                'profile_pic' => $employee->user->profile_pic ?? null,
                             ],
                             'job_title' => $employee->job_title,
                             'department' => $employee->department ? $employee->department->name : null,
                             'age' => $employee->getAge(),
                         ];
                     })->toArray(),
-                    'upcomingBirthdays' => $this->birthdayService->getUpcomingBirthdays(1)->map(function ($birthday) {
+                    'upcomingBirthdays' => $this->birthdayService->getUpcomingBirthdays(7)->map(function ($birthday) {
                         return [
                             'employee' => [
                                 'id' => $birthday['employee']->id,
+                                'user_id' => $birthday['employee']->user_id,
                                 'user' => [
+                                    'id' => $birthday['employee']->user->id,
                                     'name' => $birthday['employee']->user->name,
                                     'email' => $birthday['employee']->user->email,
+                                    'profile_pic' => $birthday['employee']->user->profile_pic ?? null,
                                 ],
                                 'job_title' => $birthday['employee']->job_title,
                                 'department' => $birthday['employee']->department ? $birthday['employee']->department->name : null,
@@ -96,9 +102,12 @@ class DashboardController extends Controller
                     'stats' => $this->birthdayService->getBirthdayStats(),
                     'currentUserBirthday' => $currentUserBirthday ? [
                         'id' => $currentUserBirthday->id,
+                        'user_id' => $currentUserBirthday->user_id,
                         'user' => [
+                            'id' => $currentUserBirthday->user->id,
                             'name' => $currentUserBirthday->user->name,
                             'email' => $currentUserBirthday->user->email,
+                            'profile_pic' => $currentUserBirthday->user->profile_pic ?? null,
                         ],
                         'job_title' => $currentUserBirthday->job_title,
                         'department' => $currentUserBirthday->department ? $currentUserBirthday->department->name : null,

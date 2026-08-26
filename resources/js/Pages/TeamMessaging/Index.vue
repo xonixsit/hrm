@@ -953,19 +953,50 @@ onMounted(async () => {
         }
     });
 
-    // Auto-open conversation if redirected from a notification toast
+    // Auto-open conversation if redirected from a notification toast or birthday wish
     const urlParams = new URLSearchParams(window.location.search);
-    const openUserId = parseInt(urlParams.get('open_user'));
+    const openUserId = parseInt(urlParams.get('open_user')) || parseInt(urlParams.get('user_id'));
+    const isBirthdayWish = urlParams.get('birthday_wish') === 'true';
+    
     if (openUserId) {
         // Clean the URL without reloading
         window.history.replaceState({}, '', window.location.pathname);
         // Wait for conversations to be available, then open
         const target = props.conversations.find(c => c.other_user?.id === openUserId);
         if (target) {
-            startConversation(openUserId);
+            await startConversation(openUserId);
+            
+            // If it's a birthday wish, pre-fill the message
+            if (isBirthdayWish) {
+                await nextTick();
+                const userName = target.other_user?.name?.split(' ')[0] || '';
+                const birthdayMessage = `🎉 Happy Birthday ${userName}! Wishing you a wonderful day filled with joy and celebration! 🎂`;
+                
+                // Set the message in the rich editor
+                if (richEditorRef.value) {
+                    richEditorRef.value.setHTML(birthdayMessage);
+                } else {
+                    messageInput.value = birthdayMessage;
+                }
+            }
         } else {
             // Start a new conversation with that user
-            startConversation(openUserId);
+            await startConversation(openUserId);
+            
+            // If it's a birthday wish, pre-fill the message after conversation is created
+            if (isBirthdayWish) {
+                await nextTick();
+                const user = props.users.find(u => u.id === openUserId);
+                const userName = user?.name?.split(' ')[0] || '';
+                const birthdayMessage = `🎉 Happy Birthday ${userName}! Wishing you a wonderful day filled with joy and celebration! 🎂`;
+                
+                // Set the message in the rich editor
+                if (richEditorRef.value) {
+                    richEditorRef.value.setHTML(birthdayMessage);
+                } else {
+                    messageInput.value = birthdayMessage;
+                }
+            }
         }
     }
 
