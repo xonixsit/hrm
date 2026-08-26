@@ -405,7 +405,11 @@ const form = useForm({
   clock_out: formatDateTimeForInput(props.attendance.clock_out),
   notes: props.attendance.notes || '',
   total_break_minutes: props.attendance.total_break_minutes || 0,
-  break_sessions: props.attendance.break_sessions || [],
+  break_sessions: (props.attendance.break_sessions || []).map(session => ({
+    ...session,
+    start: formatDateTimeForInput(session.start),
+    end: formatDateTimeForInput(session.end)
+  })),
 });
 
 // Duration calculation functions
@@ -565,11 +569,18 @@ const updateSessionDuration = (index) => {
 };
 
 const handleBreakTimeChange = () => {
+  // Ensure all session durations are integers
+  form.break_sessions.forEach(session => {
+    if (session.duration_minutes) {
+      session.duration_minutes = Math.floor(Number(session.duration_minutes));
+    }
+  });
+  
   // Auto-calculate total break minutes from sessions
   if (form.break_sessions.length > 0) {
-    form.total_break_minutes = form.break_sessions.reduce((total, session) => {
-      return total + (session.duration_minutes || 0);
-    }, 0);
+    form.total_break_minutes = Math.floor(form.break_sessions.reduce((total, session) => {
+      return total + (Math.floor(Number(session.duration_minutes)) || 0);
+    }, 0));
   }
 };
 
@@ -586,6 +597,15 @@ const handleFormAction = (action) => {
 };
 
 const handleSubmit = () => {
+  // Ensure all numeric values are integers before submission
+  form.total_break_minutes = Math.floor(Number(form.total_break_minutes)) || 0;
+  
+  form.break_sessions.forEach(session => {
+    if (session.duration_minutes !== null && session.duration_minutes !== undefined) {
+      session.duration_minutes = Math.floor(Number(session.duration_minutes));
+    }
+  });
+  
   form.put(route('attendances.update', props.attendance.id), {
     onSuccess: () => {
       showNotification({
