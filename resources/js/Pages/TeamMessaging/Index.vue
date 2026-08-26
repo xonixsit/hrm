@@ -15,6 +15,7 @@ import { openFloatingChat } from '@/composables/useFloatingChat';
 import RichTextEditor from '@/Components/Chat/RichTextEditor.vue';
 import ImageLightbox from '@/Components/Chat/ImageLightbox.vue';
 import MediaGalleryModal from '@/Components/Profile/MediaGalleryModal.vue';
+import FilePreviewModal from '@/Components/Chat/FilePreviewModal.vue';
 import DOMPurify from 'dompurify';
 
 const sanitize = (html) => DOMPurify.sanitize(html, { 
@@ -95,6 +96,10 @@ const loadingMedia = ref(false);
 const showFileManager = ref(false);
 const sharedFiles = ref([]);
 const loadingFiles = ref(false);
+
+// File preview modal state
+const showFilePreview = ref(false);
+const selectedFile = ref(null);
 
 // Debug watcher
 watch(showMediaGallery, (newVal) => {
@@ -314,6 +319,18 @@ const getFileIconColor = (ext) => {
     return colors[ext] || '#8B5CF6';  // Default purple
 };
 
+// Open file preview modal
+const openFilePreview = (file) => {
+    selectedFile.value = file;
+    showFilePreview.value = true;
+};
+
+// Close file preview modal
+const closeFilePreview = () => {
+    showFilePreview.value = false;
+    selectedFile.value = null;
+};
+
 // Build a zoomedUser payload from any user-like object
 const openUserLightbox = (user, src) => {
     zoomedUser.value = {
@@ -351,10 +368,52 @@ const handleViewImageFromGallery = (image) => {
 
 // Handle image clicks in messages
 const handleMessageClick = (event) => {
+    // Handle image clicks
     if (event.target.tagName === 'IMG' && event.target.classList.contains('rt-image')) {
         event.preventDefault();
         event.stopPropagation();
         openImageLightbox(event.target.src, event.target.alt);
+        return;
+    }
+    
+    // Handle file attachment clicks
+    if (event.target.tagName === 'A' || event.target.closest('.rt-file-attachment')) {
+        const link = event.target.tagName === 'A' ? event.target : event.target.closest('a');
+        
+        if (link && link.hasAttribute('download')) {
+            event.preventDefault();
+            event.stopPropagation();
+            
+            // Extract file info from the link
+            const fileUrl = link.getAttribute('href');
+            const filename = link.getAttribute('download');
+            const extension = filename.split('.').pop().toLowerCase();
+            
+            // Get file size from the parent element if available
+            const fileAttachment = link.closest('.rt-file-attachment');
+            let size = null;
+            
+            // Try to extract size from the displayed text
+            if (fileAttachment) {
+                const sizeText = fileAttachment.textContent.match(/(\d+(?:\.\d+)?)\s*(B|KB|MB|GB)/i);
+                if (sizeText) {
+                    const value = parseFloat(sizeText[1]);
+                    const unit = sizeText[2].toUpperCase();
+                    if (unit === 'B') size = value;
+                    else if (unit === 'KB') size = value * 1024;
+                    else if (unit === 'MB') size = value * 1048576;
+                    else if (unit === 'GB') size = value * 1073741824;
+                }
+            }
+            
+            // Open file preview
+            openFilePreview({
+                url: fileUrl,
+                filename: filename,
+                extension: extension,
+                size: size
+            });
+        }
     }
 };
 
@@ -2470,13 +2529,11 @@ watch(messages, () => {
                                     
                                     <!-- Files list -->
                                     <div class="px-3 space-y-2">
-                                        <a
+                                        <button
                                             v-for="file in files"
                                             :key="file.id"
-                                            :href="file.url"
-                                            target="_blank"
-                                            :download="file.filename"
-                                            class="flex items-center gap-3 p-2.5 rounded-lg transition-all duration-200 group"
+                                            @click="openFilePreview(file)"
+                                            class="w-full flex items-center gap-3 p-2.5 rounded-lg transition-all duration-200 group text-left"
                                             :class="isDark 
                                                 ? 'hover:bg-gray-700/70 border border-gray-700 hover:border-blue-500/50' 
                                                 : 'hover:bg-blue-50 border border-gray-200 hover:border-blue-400'"
@@ -2519,10 +2576,11 @@ watch(messages, () => {
                                             <!-- Download icon -->
                                             <div class="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                                                 <svg class="w-5 h-5" :class="isDark ? 'text-blue-400' : 'text-blue-600'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                                                 </svg>
                                             </div>
-                                        </a>
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -2896,6 +2954,14 @@ watch(messages, () => {
         :image-src="lightboxImageSrc"
         :image-alt="lightboxImageAlt"
         @close="closeImageLightbox"
+    />
+
+    <!-- File Preview Modal -->
+    <FilePreviewModal
+        :open="showFilePreview"
+        :file="selectedFile"
+        :isDark="isDark"
+        @close="closeFilePreview"
     />
 </template>
 >

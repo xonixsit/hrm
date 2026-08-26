@@ -13,6 +13,7 @@ import { Picker } from 'emoji-mart';
 import RichTextEditor from '@/Components/Chat/RichTextEditor.vue';
 import ImageLightbox from '@/Components/Chat/ImageLightbox.vue';
 import MediaGalleryModal from '@/Components/Profile/MediaGalleryModal.vue';
+import FilePreviewModal from '@/Components/Chat/FilePreviewModal.vue';
 import DOMPurify from 'dompurify';
 
 const sanitize = (html) => DOMPurify.sanitize(html, { 

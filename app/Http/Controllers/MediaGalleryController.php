@@ -144,13 +144,25 @@ class MediaGalleryController extends Controller
                     // Extract file extension
                     $extension = pathinfo($filename, PATHINFO_EXTENSION);
                     
-                    // Try to get file size if it's accessible
+                    // Try to get file size using Laravel Storage facade
                     $size = null;
-                    if (strpos($fileUrl, '/storage/') === 0) {
+                    
+                    // Extract filename from route URL (matches /documents/{filename})
+                    if (preg_match('/\/documents\/([^?]+)/', $fileUrl, $urlMatches)) {
+                        $urlFilename = $urlMatches[1];
+                        $storagePath = 'chat-documents/' . $urlFilename;
+                        
+                        // Use Laravel's Storage facade with 'local' disk
+                        if (\Storage::disk('local')->exists($storagePath)) {
+                            $size = \Storage::disk('local')->size($storagePath);
+                        }
+                    }
+                    
+                    // Fallback: Try /storage/ path (public storage)
+                    if (!$size && strpos($fileUrl, '/storage/') === 0) {
                         $relativePath = str_replace('/storage/', '', $fileUrl);
-                        $fullPath = storage_path('app/public/' . $relativePath);
-                        if (file_exists($fullPath)) {
-                            $size = filesize($fullPath);
+                        if (\Storage::disk('public')->exists($relativePath)) {
+                            $size = \Storage::disk('public')->size($relativePath);
                         }
                     }
                     

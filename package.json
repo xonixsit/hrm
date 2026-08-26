@@ -42,7 +42,9 @@
         "laravel-echo": "^2.4.0",
         "lodash-es": "^4.17.21",
         "lucide-vue-next": "^0.525.0",
+        "mammoth": "^1.12.1",
         "pusher-js": "^8.5.0",
-        "three": "^0.184.0"
+        "three": "^0.184.0",
+        "xlsx": "^0.18.5"
     }
 }
