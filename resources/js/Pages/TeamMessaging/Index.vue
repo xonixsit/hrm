@@ -764,6 +764,11 @@ const isSending = ref(false);
 const sendMessage = async () => {
     if (!selectedConversation.value || isSending.value) return;
 
+    // Check if RichTextEditor has pending files that need to be uploaded first
+    if (richEditorRef.value?.pendingFiles?.length > 0) {
+        await richEditorRef.value.uploadAllFiles();
+    }
+
     // Get HTML content from rich editor
     const htmlContent = richEditorRef.value?.getHTML() ?? messageInput.value;
     const textContent = richEditorRef.value?.getTextContent() ?? messageInput.value.trim();
@@ -1533,7 +1538,7 @@ watch(messages, () => {
                                 </div>
                                 <p class="text-xs truncate mt-0.5" :class="isDark ? 'text-gray-400' : 'text-slate-500'">
                                     {{ user.employee?.department || user.email }}
-                                    <span class="mx-1">â€¢</span>
+                                    <span class="mx-1">•</span>
                                     <span :class="statusTextClass(user.id)">
                                         {{ statusLabel(user.id) }}
                                     </span>
@@ -2262,7 +2267,7 @@ watch(messages, () => {
                             <RichTextEditor
                                 ref="richEditorRef"
                                 v-model="messageInput"
-                                placeholder="Type a messageâ€¦"
+                                placeholder="Type a message…"
                                 :isDark="isDark"
                                 :conversationId="selectedConversation"
                                 @send="sendMessage"
