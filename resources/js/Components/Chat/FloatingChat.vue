@@ -11,6 +11,14 @@ import {
     restoreFloatingChat,
 } from '@/composables/useFloatingChat';
 import axios from 'axios';
+import RichTextEditor from '@/Components/Chat/RichTextEditor.vue';
+import DOMPurify from 'dompurify';
+
+const sanitize = (html) => DOMPurify.sanitize(html, { 
+    USE_PROFILES: { html: true },
+    ADD_TAGS: ['svg', 'path', 'circle'],
+    ADD_ATTR: ['xmlns', 'viewBox', 'fill', 'stroke', 'stroke-width', 'stroke-linecap', 'stroke-linejoin', 'd', 'cx', 'cy', 'r', 'style']
+});
 
 const { isDark } = useTheme();
 const page       = usePage();
@@ -52,6 +60,7 @@ const normaliseMsg = (m) => ({
 
 // ── Message containers (template refs keyed by userId) ────────────────────────
 const msgRefs = ref({});
+const editorRefs = ref({});
 const scrollBottom = (userId) => {
     const el = msgRefs.value[userId];
     if (el) el.scrollTop = el.scrollHeight;
@@ -93,27 +102,52 @@ const ensureConversation = async (win) => {
 // ── Send ──────────────────────────────────────────────────────────────────────
 const sendMessage = async (win) => {
     const s = getWindowState(win.userId);
-    if (!s.input.trim() || s.sending || !win.conversationId) return;
-    const text = s.input.trim();
-    s.input    = '';
-    s.sending  = true;
+    const editor = editorRefs.value[win.userId];
+    
+    if (!editor || s.sending || !win.conversationId) return;
+    
+    // Get HTML content from editor
+    const htmlContent = editor.getHTML();
+    const textContent = editor.getTextContent();
+    
+    // Check if there's any content or files
+    if (!textContent && editor.pendingFiles.length === 0) return;
+    
+    s.sending = true;
+    
+    // Upload files first if any
+    if (editor.pendingFiles.length > 0) {
+        await editor.uploadAllFiles();
+    }
+    
+    // Get final HTML after file uploads
+    const finalHtml = editor.getHTML();
+    
+    // Clear editor
+    editor.clear();
+    
     const tempId = 'temp-' + Date.now();
     s.messages.push({
-        id: tempId, message: text,
+        id: tempId, 
+        message: finalHtml,
         sender_id: currentUserId.value,
         sender: { id: currentUserId.value, name: page.props.auth.user.name },
-        is_read: false, created_at: new Date().toISOString(), isTemp: true,
+        is_read: false, 
+        created_at: new Date().toISOString(), 
+        isTemp: true,
     });
     await nextTick(); scrollBottom(win.userId);
+    
     try {
-        const res = await axios.post(route('team-messaging.send', win.conversationId), { message: text });
+        const res = await axios.post(route('team-messaging.send', win.conversationId), { message: finalHtml });
         if (res.data?.message) {
             const idx = s.messages.findIndex(m => m.id === tempId);
             if (idx !== -1) s.messages.splice(idx, 1, normaliseMsg(res.data.message));
         }
     } catch (e) {
         s.messages = s.messages.filter(m => m.id !== tempId);
-        s.input = text;
+        // Restore message on error
+        editor.setHTML(finalHtml);
     } finally {
         s.sending = false;
         await nextTick(); scrollBottom(win.userId);
@@ -122,9 +156,7 @@ const sendMessage = async (win) => {
 
 const onEnter = (e, win) => {
     if (!e.shiftKey) { e.preventDefault(); sendMessage(win); }
-};
-
-// ── Socket ────────────────────────────────────────────────────────────────────
+};// ── Socket ────────────────────────────────────────────────────────────────────
 const subscribeEcho = (win) => {
     if (!window.Echo || !win.conversationId) return;
     const s = getWindowState(win.userId);
@@ -325,7 +357,7 @@ watch(floatingWindows, async (wins) => {
                                         :style="msg.sender_id === currentUserId
                                             ? 'background:linear-gradient(135deg,#004f55,#006970)' : ''"
                                     >
-                                        <p>{{ msg.message }}</p>
+                                        <div v-html="sanitize(msg.message)"></div>
                                         <div
                                             class="flex items-center gap-0.5 mt-0.5"
                                             :class="msg.sender_id === currentUserId ? 'justify-end' : 'justify-start'"
@@ -353,32 +385,36 @@ watch(floatingWindows, async (wins) => {
 
                         <!-- Input bar -->
                         <div
-                            class="flex items-end gap-1.5 px-2 py-2 border-t flex-shrink-0"
+                            class="flex-shrink-0 border-t"
                             :class="isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-slate-100'"
                         >
-                            <textarea
-                                v-model="getWindowState(win.userId).input"
-                                @keydown.enter.exact.prevent="(e) => onEnter(e, win)"
-                                placeholder="Aa"
-                                rows="1"
-                                style="border:none;outline:none;box-shadow:none;background:transparent;resize:none;"
-                                class="flex-1 text-sm py-1 max-h-20 overflow-y-auto"
-                                :class="isDark ? 'text-white placeholder-gray-600' : 'text-slate-800 placeholder-slate-400'"
-                            ></textarea>
-                            <button
-                                @click="sendMessage(win)"
-                                :disabled="!getWindowState(win.userId).input.trim()"
-                                class="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center transition-all mb-0.5"
-                                :class="getWindowState(win.userId).input.trim()
-                                    ? 'text-white'
-                                    : 'text-slate-300 cursor-not-allowed'"
-                                :style="getWindowState(win.userId).input.trim()
-                                    ? 'background:linear-gradient(135deg,#006970,#00a9b4)' : ''"
-                            >
-                                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
-                                </svg>
-                            </button>
+                            <RichTextEditor
+                                :ref="el => { if (el) editorRefs[win.userId] = el }"
+                                :conversationId="win.conversationId"
+                                :isDark="isDark"
+                                placeholder="Type a message..."
+                                @keydown.enter.exact="(e) => onEnter(e, win)"
+                            />
+                            <div class="flex justify-end px-2 pb-2">
+                                <button
+                                    @click="sendMessage(win)"
+                                    :disabled="getWindowState(win.userId).sending"
+                                    class="w-8 h-8 rounded-full flex items-center justify-center transition-all"
+                                    :class="getWindowState(win.userId).sending
+                                        ? 'text-slate-300 cursor-not-allowed'
+                                        : 'text-white'"
+                                    :style="!getWindowState(win.userId).sending
+                                        ? 'background:linear-gradient(135deg,#006970,#00a9b4)' : ''"
+                                >
+                                    <svg v-if="!getWindowState(win.userId).sending" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                                    </svg>
+                                    <svg v-else class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </Transition>
@@ -393,4 +429,39 @@ watch(floatingWindows, async (wins) => {
 .chat-body-leave-active { transition: all 0.18s cubic-bezier(0.4, 0, 1, 1); }
 .chat-body-enter-from,
 .chat-body-leave-to    { opacity: 0; transform: scaleY(0.85); transform-origin: bottom; }
+
+/* File attachment styles for messages - ensure they fit in the floating chat */
+:deep(.rt-file-attachment) {
+  max-width: 100% !important;
+  display: inline-flex !important;
+  overflow: hidden !important;
+}
+
+:deep(.rt-file-attachment .truncate) {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+:deep(.rt-file-attachment .min-w-0) {
+  min-width: 0 !important;
+  flex: 1 !important;
+}
+
+/* Ensure SVG icons are visible */
+:deep(.rt-file-attachment svg) {
+  flex-shrink: 0 !important;
+  display: block !important;
+}
+
+:deep(.rt-file-attachment a) {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+:deep(.rt-file-attachment a svg) {
+  width: 1rem !important;
+  height: 1rem !important;
+}
 </style>

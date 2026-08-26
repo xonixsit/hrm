@@ -796,17 +796,20 @@ async function handleFileUpload(fileItem) {
         
         // Create file display element
         const fileDiv = document.createElement('div');
-        fileDiv.className = 'rt-file-attachment inline-flex items-center gap-3 px-3 py-2.5 my-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-600/50 transition-colors max-w-sm cursor-pointer';
+        fileDiv.className = 'rt-file-attachment inline-flex items-center gap-2 px-2.5 py-2 my-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-600/50 transition-colors cursor-pointer';
+        fileDiv.style.maxWidth = '100%';
+        
+        const iconSVG = getFileIconSVG(extension);
+        const downloadIconSVG = '<svg style="width: 1rem; height: 1rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>';
+        
         fileDiv.innerHTML = `
-          <div class="flex-shrink-0">${getFileIconSVG(extension)}</div>
-          <div class="flex-1 min-w-0">
-            <div class="text-sm font-medium text-gray-900 dark:text-white truncate">${fileItem.displayName}</div>
-            ${fileSize ? `<div class="text-xs text-gray-500 dark:text-gray-400">${fileSize}</div>` : ''}
+          <div class="flex-shrink-0 w-8 h-8 flex items-center justify-center">${iconSVG}</div>
+          <div class="flex-1 min-w-0 overflow-hidden">
+            <div class="text-xs font-medium text-gray-900 dark:text-white truncate" title="${fileItem.displayName}">${fileItem.displayName}</div>
+            ${fileSize ? `<div class="text-[10px] text-gray-500 dark:text-gray-400">${fileSize}</div>` : ''}
           </div>
-          <a href="${response.data.url}" target="_blank" download="${fileItem.displayName}" class="text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 transition-colors flex-shrink-0">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-            </svg>
+          <a href="${response.data.url}" target="_blank" download="${fileItem.displayName}" class="text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 transition-colors flex-shrink-0" onclick="event.stopPropagation()">
+            ${downloadIconSVG}
           </a>
         `;
         
@@ -845,28 +848,28 @@ function formatBytes(bytes) {
 function getFileIconSVG(ext) {
   // PDF - Red
   if (ext === 'pdf') {
-    return `<svg class="w-8 h-8 text-red-500" fill="currentColor" viewBox="0 0 24 24">
+    return `<svg style="width: 2rem; height: 2rem; color: #ef4444;" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
       <path d="M7 18h2v1H7v-1zm7-1h2v1h-2v-1zM7 14h2v2H7v-2zm12-3v8c0 1.1-.9 2-2 2H7c-1.1 0-2-.9-2-2V5c0-1.1.9-2 2-2h6l4 4z"/>
       <path d="M13 9V4.5l4.5 4.5H13z"/>
     </svg>`;
   }
   // Excel - Green
   if (['xls', 'xlsx'].includes(ext)) {
-    return `<svg class="w-8 h-8 text-green-600" fill="currentColor" viewBox="0 0 24 24">
+    return `<svg style="width: 2rem; height: 2rem; color: #16a34a;" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
       <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14h-1.5v-2H14v2h-1zm0-4h-1.5V9H14v4h-1zm3 4h-1.5v-2H17v2h-1zm0-4h-1.5V9H17v4h-1z"/>
       <path d="M7 9h4v2H7V9zm0 4h4v2H7v-2z"/>
     </svg>`;
   }
   // Word - Blue
   if (['doc', 'docx'].includes(ext)) {
-    return `<svg class="w-8 h-8 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
+    return `<svg style="width: 2rem; height: 2rem; color: #2563eb;" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
       <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/>
       <path d="M8 16h8v2H8v-2zm0-4h8v2H8v-2zm0-4h5v2H8V8z"/>
     </svg>`;
   }
   // PowerPoint - Orange
   if (['ppt', 'pptx'].includes(ext)) {
-    return `<svg class="w-8 h-8 text-orange-600" fill="currentColor" viewBox="0 0 24 24">
+    return `<svg style="width: 2rem; height: 2rem; color: #ea580c;" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
       <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/>
       <path d="M8 15h8v2H8v-2z"/>
       <circle cx="12" cy="10" r="2"/>
@@ -874,20 +877,20 @@ function getFileIconSVG(ext) {
   }
   // CSV - Teal
   if (ext === 'csv') {
-    return `<svg class="w-8 h-8 text-teal-600" fill="currentColor" viewBox="0 0 24 24">
+    return `<svg style="width: 2rem; height: 2rem; color: #0d9488;" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
       <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/>
       <path d="M8 10h2v2H8v-2zm4 0h2v2h-2v-2zm-4 4h2v2H8v-2zm4 0h2v2h-2v-2z"/>
     </svg>`;
   }
   // Text - Gray
   if (ext === 'txt') {
-    return `<svg class="w-8 h-8 text-gray-600" fill="currentColor" viewBox="0 0 24 24">
+    return `<svg style="width: 2rem; height: 2rem; color: #4b5563;" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
       <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/>
       <path d="M8 16h8v2H8v-2zm0-4h8v2H8v-2zm0-4h5v2H8V8z"/>
     </svg>`;
   }
   // Default - Purple
-  return `<svg class="w-8 h-8 text-purple-600" fill="currentColor" viewBox="0 0 24 24">
+  return `<svg style="width: 2rem; height: 2rem; color: #9333ea;" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
     <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/>
   </svg>`;
 }
@@ -1062,14 +1065,15 @@ defineExpose({ focus, clear, getHTML, getTextContent, insertAtCursor, setHTML, p
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.5rem 0.75rem;
+  padding: 0.5rem 0.625rem;
   margin: 0.5rem 0;
   border-radius: 0.5rem;
   border: 1px solid #d1d5db;
   background-color: #f9fafb;
   transition: background-color 0.2s;
-  max-width: 24rem;
+  max-width: 100%;
   cursor: pointer;
+  overflow: hidden;
 }
 
 .dark .editor-content :deep(.rt-file-attachment) {
@@ -1083,5 +1087,33 @@ defineExpose({ focus, clear, getHTML, getTextContent, insertAtCursor, setHTML, p
 
 .dark .editor-content :deep(.rt-file-attachment:hover) {
   background-color: rgba(75, 85, 99, 0.5);
+}
+
+/* Ensure file names truncate properly */
+.editor-content :deep(.rt-file-attachment .truncate) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.editor-content :deep(.rt-file-attachment .min-w-0) {
+  min-width: 0;
+}
+
+/* Ensure SVG icons are visible and properly sized */
+.editor-content :deep(.rt-file-attachment svg) {
+  flex-shrink: 0;
+  display: block;
+}
+
+.editor-content :deep(.rt-file-attachment a) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.editor-content :deep(.rt-file-attachment a svg) {
+  width: 1rem;
+  height: 1rem;
 }
 </style>

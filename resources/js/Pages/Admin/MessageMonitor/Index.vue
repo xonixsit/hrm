@@ -6,6 +6,13 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import PageLayout from '@/Components/Layout/PageLayout.vue';
 import ImageLightbox from '@/Components/Chat/ImageLightbox.vue';
 import { useTheme } from '@/composables/useTheme';
+import DOMPurify from 'dompurify';
+
+const sanitize = (html) => DOMPurify.sanitize(html, { 
+    USE_PROFILES: { html: true },
+    ADD_TAGS: ['svg', 'path', 'circle'],
+    ADD_ATTR: ['xmlns', 'viewBox', 'fill', 'stroke', 'stroke-width', 'stroke-linecap', 'stroke-linejoin', 'd', 'cx', 'cy', 'r', 'style']
+});
 const { isDark } = useTheme();
 
 const props = defineProps({
@@ -599,7 +606,7 @@ function initials(name) {
                          @click="handleMessageClick">
                         <div class="text-sm leading-relaxed whitespace-pre-wrap"
                             :class="isDark ? 'text-gray-200' : 'text-slate-800'"
-                            v-html="viewingMsg.message"></div>
+                            v-html="sanitize(viewingMsg.message)"></div>
                     </div>
                     <!-- Delete from modal — hidden for now -->
                     <!--

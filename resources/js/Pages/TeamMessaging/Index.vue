@@ -15,6 +15,13 @@ import { openFloatingChat } from '@/composables/useFloatingChat';
 import RichTextEditor from '@/Components/Chat/RichTextEditor.vue';
 import ImageLightbox from '@/Components/Chat/ImageLightbox.vue';
 import MediaGalleryModal from '@/Components/Profile/MediaGalleryModal.vue';
+import DOMPurify from 'dompurify';
+
+const sanitize = (html) => DOMPurify.sanitize(html, { 
+    USE_PROFILES: { html: true },
+    ADD_TAGS: ['svg', 'path', 'circle'],
+    ADD_ATTR: ['xmlns', 'viewBox', 'fill', 'stroke', 'stroke-width', 'stroke-linecap', 'stroke-linejoin', 'd', 'cx', 'cy', 'r', 'style']
+});
 
 const { isDark } = useTheme();
 const page = usePage();
@@ -1932,7 +1939,7 @@ watch(messages, () => {
                                             : ''">
                                         <div class="msg-body prose-chat break-words text-sm leading-relaxed"
                                             :class="message.sender_id !== page.props.auth.user.id ? 'msg-body-incoming' : ''"
-                                            v-html="message.message"
+                                            v-html="sanitize(message.message)"
                                             @click="handleMessageClick"></div>
                                     </div>
 
