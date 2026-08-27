@@ -35,6 +35,11 @@
       </div>
     </template>
 
+    <!-- ── Raksha Bandhan Banner — shown for all roles on August 28, 2026 ──────────────── -->
+    <div v-if="showRakshaBandhanBanner" class="mb-6">
+      <RakshaBandhanBanner />
+    </div>
+
     <!-- ── Independence Day Banner — shown for all roles ──────────────── -->
     <!-- Temporarily hidden
     <div class="mb-6">
@@ -498,6 +503,7 @@
   import EmployeeDashboard from '@/Components/Dashboard/EmployeeDashboard.vue';
   import IdeaBoxModal from '@/Components/IdeaBox/IdeaBoxModal.vue';
   import IndependenceDayBanner from '@/Components/Dashboard/IndependenceDayBanner.vue';
+  import RakshaBandhanBanner from '@/Components/Dashboard/RakshaBandhanBanner.vue';
   import ApprovalModal from '@/Components/Dashboard/ApprovalModal.vue';
 
   // Widget Components
@@ -667,6 +673,15 @@
     return 'Your personal workspace and activities';
   });
 
+
+  // Check if today is Raksha Bandhan (August 28, 2026)
+  const showRakshaBandhanBanner = computed(() => {
+    const today = new Date();
+    const month = today.getMonth(); // 0-indexed (7 = August)
+    const date = today.getDate();
+    const year = today.getFullYear();
+    return year === 2026 && month === 7 && date === 28;
+  });
 
   const currentTime = computed(() => {
     return formatTimeInAppTimezone(new Date());

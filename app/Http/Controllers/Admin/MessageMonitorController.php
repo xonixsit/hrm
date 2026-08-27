@@ -128,10 +128,26 @@ class MessageMonitorController extends Controller
         if ($tab === 'groups') {
             $query    = $this->groupQuery($f);
             $messages = $query->paginate($perPage)->withQueryString();
+            
+            // Add file detection to each message
+            $messages->getCollection()->transform(function ($msg) {
+                $msg->has_file = $this->detectFile($msg->message);
+                $msg->file_info = $msg->has_file ? $this->extractFileInfo($msg->message) : null;
+                return $msg;
+            });
+            
             $total    = (clone $query)->count();
         } else {
             $query    = $this->directQuery($f);
             $messages = $query->paginate($perPage)->withQueryString();
+            
+            // Add file detection to each message
+            $messages->getCollection()->transform(function ($msg) {
+                $msg->has_file = $this->detectFile($msg->message);
+                $msg->file_info = $msg->has_file ? $this->extractFileInfo($msg->message) : null;
+                return $msg;
+            });
+            
             $total    = (clone $query)->count();
         }
 
@@ -234,5 +250,122 @@ class MessageMonitorController extends Controller
             ]);
 
         return response()->json(['ok' => true]);
+    }
+
+    // ─── File detection helpers ───────────────────────────────────────────────
+
+    private function detectFile($message)
+    {
+        if (!$message) return false;
+        
+        // Check for file patterns
+        return (
+            str_contains($message, 'rt-file-attachment') || // Rich text editor files
+            preg_match('/\b(doc|attendance_report|file)_\d+_\d+_\d+_[a-f0-9]+/i', $message) || // Filename pattern
+            preg_match('/\.(pdf|docx?|xlsx?|txt|csv|pptx?|zip|rar)\b/i', $message) // File extensions
+        );
+    }
+
+    private function extractFileInfo($message)
+    {
+        if (!$message) return null;
+
+        // Try to parse HTML if it contains rt-file-attachment
+        if (str_contains($message, 'rt-file-attachment')) {
+            // Extract filename and URL from HTML: <a href="..." download="...">
+            if (preg_match('/<a[^>]+href=["\']([^"\']+)["\'][^>]+download=["\']([^"\']+)["\'][^>]*>/', $message, $matches)) {
+                $url = $matches[1];
+                $filename = $matches[2];
+                
+                // Extract file extension
+                $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+                
+                // Try to get file size
+                $sizeBytes = 0;
+                if (preg_match('/\/documents\/([^?]+)/', $url, $urlMatches)) {
+                    $urlFilename = $urlMatches[1];
+                    $storagePath = 'chat-documents/' . $urlFilename;
+                    
+                    if (\Storage::disk('local')->exists($storagePath)) {
+                        $sizeBytes = \Storage::disk('local')->size($storagePath);
+                    }
+                }
+                
+                return [
+                    'filename' => $filename,
+                    'url' => $url,
+                    'size' => $sizeBytes, // Return bytes, not formatted string
+                    'extension' => $extension,
+                    'type' => $this->getFileType($filename),
+                ];
+            }
+        }
+
+        // Extract from plain text filename pattern
+        $plainText = strip_tags($message);
+        
+        // Check for common filename patterns
+        if (preg_match('/([a-zA-Z0-9_-]+\.(pdf|docx?|xlsx?|txt|csv|pptx?|zip|rar))/i', $plainText, $matches)) {
+            $filename = $matches[0];
+            $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+            
+            return [
+                'filename' => $filename,
+                'url' => null,
+                'size' => 0,
+                'extension' => $extension,
+                'type' => $this->getFileType($filename),
+            ];
+        }
+
+        // If message looks like a filename (starts with doc_, file_, etc.)
+        if (preg_match('/^(doc|file|attendance_report)_\d+_\d+_\d+_[a-f0-9]+/i', $plainText)) {
+            // Truncate long filenames
+            $displayName = strlen($plainText) > 50 ? substr($plainText, 0, 47) . '...' : $plainText;
+            
+            return [
+                'filename' => $displayName,
+                'url' => null,
+                'size' => 0,
+                'extension' => 'unknown',
+                'type' => 'document',
+            ];
+        }
+
+        return null;
+    }
+
+    private function formatFileSize($bytes)
+    {
+        if ($bytes >= 1073741824) {
+            return number_format($bytes / 1073741824, 2) . ' GB';
+        } elseif ($bytes >= 1048576) {
+            return number_format($bytes / 1048576, 2) . ' MB';
+        } elseif ($bytes >= 1024) {
+            return number_format($bytes / 1024, 2) . ' KB';
+        } else {
+            return $bytes . ' B';
+        }
+    }
+
+    private function getFileType($filename)
+    {
+        $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+        
+        $types = [
+            'pdf' => 'PDF Document',
+            'doc' => 'Word Document',
+            'docx' => 'Word Document',
+            'xls' => 'Excel Spreadsheet',
+            'xlsx' => 'Excel Spreadsheet',
+            'ppt' => 'PowerPoint',
+            'pptx' => 'PowerPoint',
+            'txt' => 'Text File',
+            'csv' => 'CSV File',
+            'zip' => 'Archive',
+            'rar' => 'Archive',
+        ];
+
+        return $types[$extension] ?? 'Document';
     }
 }

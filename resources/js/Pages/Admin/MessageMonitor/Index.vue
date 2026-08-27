@@ -5,6 +5,18 @@ import axios from 'axios';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import PageLayout from '@/Components/Layout/PageLayout.vue';
 import ImageLightbox from '@/Components/Chat/ImageLightbox.vue';
+import FilePreviewModal from '@/Components/Chat/FilePreviewModal.vue';
+import { 
+    DocumentTextIcon,
+    DocumentIcon,
+    TableCellsIcon,
+    PresentationChartBarIcon,
+    ArchiveBoxIcon,
+    PhotoIcon,
+    MusicalNoteIcon,
+    FilmIcon,
+    PaperClipIcon,
+} from '@heroicons/vue/24/outline';
 import { useTheme } from '@/composables/useTheme';
 import DOMPurify from 'dompurify';
 
@@ -116,6 +128,10 @@ const showImageLightbox = ref(false);
 const lightboxImageSrc = ref('');
 const lightboxImageAlt = ref('');
 
+// File preview modal state
+const showFilePreview = ref(false);
+const previewFile = ref(null);
+
 // Image lightbox functions
 const openImageLightbox = (imageSrc, imageAlt = 'Image') => {
     lightboxImageSrc.value = imageSrc;
@@ -127,6 +143,44 @@ const closeImageLightbox = () => {
     showImageLightbox.value = false;
     lightboxImageSrc.value = '';
     lightboxImageAlt.value = '';
+};
+
+// File preview functions
+const openFilePreview = (fileInfo) => {
+    console.log('openFilePreview called with:', fileInfo);
+    
+    if (!fileInfo) {
+        console.error('No fileInfo provided to openFilePreview');
+        return;
+    }
+    
+    if (!fileInfo.url) {
+        console.error('No file URL available for preview. FileInfo:', fileInfo);
+        return;
+    }
+    
+    // Format file size for display
+    const formatSize = (bytes) => {
+        if (!bytes || bytes === 0) return 0;
+        return bytes;
+    };
+    
+    previewFile.value = {
+        filename: fileInfo.filename,
+        url: fileInfo.url,
+        size: formatSize(fileInfo.size),
+        extension: (fileInfo.extension || 'unknown').toLowerCase(),
+    };
+    
+    console.log('Opening file preview with previewFile:', previewFile.value);
+    showFilePreview.value = true;
+    console.log('showFilePreview set to:', showFilePreview.value);
+};
+
+const closeFilePreview = () => {
+    console.log('Closing file preview');
+    showFilePreview.value = false;
+    previewFile.value = null;
 };
 
 // Handle image clicks in messages
@@ -141,6 +195,185 @@ const handleMessageClick = (event) => {
 // Check if message contains images
 function hasImages(message) {
     return message && message.includes('<img');
+}
+
+// Check if message contains file attachments (using backend detection)
+function hasFiles(msg) {
+    const result = msg && msg.has_file;
+    console.log('hasFiles check:', { msg_id: msg?.id, has_file: msg?.has_file, file_info: msg?.file_info });
+    return result;
+}
+
+// Get file info from backend
+function getFileInfo(msg) {
+    const info = msg?.file_info || null;
+    console.log('getFileInfo:', { msg_id: msg?.id, file_info: info });
+    return info;
+}
+
+// Format file size helper
+function formatFileSize(bytes) {
+    if (!bytes || bytes === 0) return null;
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+    if (bytes < 1073741824) return (bytes / 1048576).toFixed(1) + ' MB';
+    return (bytes / 1073741824).toFixed(2) + ' GB';
+}
+
+// Get file icon component for modal (returns Vue component)
+function getFileIconComponent(extension) {
+    const ext = (extension || '').toLowerCase();
+    
+    const icons = {
+        'pdf': DocumentTextIcon,
+        'doc': DocumentIcon,
+        'docx': DocumentIcon,
+        'txt': DocumentTextIcon,
+        'xls': TableCellsIcon,
+        'xlsx': TableCellsIcon,
+        'csv': TableCellsIcon,
+        'ppt': PresentationChartBarIcon,
+        'pptx': PresentationChartBarIcon,
+        'zip': ArchiveBoxIcon,
+        'rar': ArchiveBoxIcon,
+        '7z': ArchiveBoxIcon,
+        'jpg': PhotoIcon,
+        'jpeg': PhotoIcon,
+        'png': PhotoIcon,
+        'gif': PhotoIcon,
+        'svg': PhotoIcon,
+        'webp': PhotoIcon,
+        'mp3': MusicalNoteIcon,
+        'wav': MusicalNoteIcon,
+        'ogg': MusicalNoteIcon,
+        'aac': MusicalNoteIcon,
+        'mp4': FilmIcon,
+        'avi': FilmIcon,
+        'mov': FilmIcon,
+        'webm': FilmIcon,
+    };
+    
+    return icons[ext] || PaperClipIcon;
+}
+
+// Get file icon SVG (same as chat/file manager)
+function getFileIconSVG(ext) {
+    ext = (ext || '').toLowerCase();
+    
+    // PDF - Bright Red
+    if (ext === 'pdf') {
+        return `<svg style="width: 1.25rem; height: 1.25rem; color: #DC2626;" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M7 18h2v1H7v-1zm7-1h2v1h-2v-1zM7 14h2v2H7v-2zm12-3v8c0 1.1-.9 2-2 2H7c-1.1 0-2-.9-2-2V5c0-1.1.9-2 2-2h6l4 4z"/>
+            <path d="M13 9V4.5l4.5 4.5H13z"/>
+        </svg>`;
+    }
+    // Excel - Emerald Green
+    if (['xls', 'xlsx'].includes(ext)) {
+        return `<svg style="width: 1.25rem; height: 1.25rem; color: #059669;" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14h-1.5v-2H14v2h-1zm0-4h-1.5V9H14v4h-1zm3 4h-1.5v-2H17v2h-1zm0-4h-1.5V9H17v4h-1z"/>
+            <path d="M7 9h4v2H7V9zm0 4h4v2H7v-2z"/>
+        </svg>`;
+    }
+    // Word - Bright Blue
+    if (['doc', 'docx'].includes(ext)) {
+        return `<svg style="width: 1.25rem; height: 1.25rem; color: #2563EB;" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/>
+            <path d="M8 16h8v2H8v-2zm0-4h8v2H8v-2zm0-4h5v2H8V8z"/>
+        </svg>`;
+    }
+    // PowerPoint - Vivid Orange
+    if (['ppt', 'pptx'].includes(ext)) {
+        return `<svg style="width: 1.25rem; height: 1.25rem; color: #EA580C;" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/>
+            <path d="M8 15h8v2H8v-2z"/>
+            <circle cx="12" cy="10" r="2"/>
+        </svg>`;
+    }
+    // CSV - Bright Teal
+    if (ext === 'csv') {
+        return `<svg style="width: 1.25rem; height: 1.25rem; color: #14B8A6;" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/>
+            <path d="M8 10h2v2H8v-2zm4 0h2v2h-2v-2zm-4 4h2v2H8v-2zm4 0h2v2h-2v-2z"/>
+        </svg>`;
+    }
+    // Text - Medium Gray
+    if (ext === 'txt') {
+        return `<svg style="width: 1.25rem; height: 1.25rem; color: #6B7280;" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/>
+            <path d="M8 16h8v2H8v-2zm0-4h8v2H8v-2zm0-4h5v2H8V8z"/>
+        </svg>`;
+    }
+    // Archives - Purple
+    if (['zip', 'rar', '7z'].includes(ext)) {
+        return `<svg style="width: 1.25rem; height: 1.25rem; color: #7C3AED;" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/>
+            <path d="M10 9h4v1h-4V9zm0 2h4v1h-4v-1zm0 2h4v1h-4v-1z"/>
+        </svg>`;
+    }
+    // Default - Purple
+    return `<svg style="width: 1.25rem; height: 1.25rem; color: #8B5CF6;" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+        <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/>
+    </svg>`;
+}
+
+// Get larger file icon SVG for modal
+function getFileIconSVGLarge(ext) {
+    ext = (ext || '').toLowerCase();
+    
+    // PDF - Bright Red
+    if (ext === 'pdf') {
+        return `<svg style="width: 3rem; height: 3rem; color: #DC2626;" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M7 18h2v1H7v-1zm7-1h2v1h-2v-1zM7 14h2v2H7v-2zm12-3v8c0 1.1-.9 2-2 2H7c-1.1 0-2-.9-2-2V5c0-1.1.9-2 2-2h6l4 4z"/>
+            <path d="M13 9V4.5l4.5 4.5H13z"/>
+        </svg>`;
+    }
+    // Excel - Emerald Green
+    if (['xls', 'xlsx'].includes(ext)) {
+        return `<svg style="width: 3rem; height: 3rem; color: #059669;" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14h-1.5v-2H14v2h-1zm0-4h-1.5V9H14v4h-1zm3 4h-1.5v-2H17v2h-1zm0-4h-1.5V9H17v4h-1z"/>
+            <path d="M7 9h4v2H7V9zm0 4h4v2H7v-2z"/>
+        </svg>`;
+    }
+    // Word - Bright Blue
+    if (['doc', 'docx'].includes(ext)) {
+        return `<svg style="width: 3rem; height: 3rem; color: #2563EB;" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/>
+            <path d="M8 16h8v2H8v-2zm0-4h8v2H8v-2zm0-4h5v2H8V8z"/>
+        </svg>`;
+    }
+    // PowerPoint - Vivid Orange
+    if (['ppt', 'pptx'].includes(ext)) {
+        return `<svg style="width: 3rem; height: 3rem; color: #EA580C;" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/>
+            <path d="M8 15h8v2H8v-2z"/>
+            <circle cx="12" cy="10" r="2"/>
+        </svg>`;
+    }
+    // CSV - Bright Teal
+    if (ext === 'csv') {
+        return `<svg style="width: 3rem; height: 3rem; color: #14B8A6;" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/>
+            <path d="M8 10h2v2H8v-2zm4 0h2v2h-2v-2zm-4 4h2v2H8v-2zm4 0h2v2h-2v-2z"/>
+        </svg>`;
+    }
+    // Text - Medium Gray
+    if (ext === 'txt') {
+        return `<svg style="width: 3rem; height: 3rem; color: #6B7280;" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/>
+            <path d="M8 16h8v2H8v-2zm0-4h8v2H8v-2zm0-4h5v2H8V8z"/>
+        </svg>`;
+    }
+    // Archives - Purple
+    if (['zip', 'rar', '7z'].includes(ext)) {
+        return `<svg style="width: 3rem; height: 3rem; color: #7C3AED;" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/>
+            <path d="M10 9h4v1h-4V9zm0 2h4v1h-4v-1zm0 2h4v1h-4v-1z"/>
+        </svg>`;
+    }
+    // Default - Purple
+    return `<svg style="width: 3rem; height: 3rem; color: #8B5CF6;" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+        <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/>
+    </svg>`;
 }
 
 // Extract first image src from HTML message
@@ -425,8 +658,15 @@ function initials(name) {
                                         <p class="text-[10px] truncate" :class="isDark ? 'text-gray-500' : 'text-slate-400'">{{ msg.recipient_email }}</p>
                                     </div>
                                 </div>
-                                <!-- Message col-span-6 -->
+                                <!-- Message col-span-6 DIRECT -->
                                 <div class="col-span-6 px-4 py-3.5 flex items-center gap-2">
+                                    <!-- File indicator with type-specific SVG icon -->
+                                    <span v-if="hasFiles(msg)" 
+                                          class="shrink-0 flex items-center" 
+                                          :title="`${getFileInfo(msg)?.type || 'File attachment'}`"
+                                          v-html="getFileIconSVG(getFileInfo(msg)?.extension)">
+                                    </span>
+                                    
                                     <!-- Show thumbnail if message only contains image -->
                                     <div v-if="hasImages(msg.message) && stripHtml(msg.message).trim().length === 0" class="flex items-center gap-2">
                                         <img :src="getFirstImageSrc(msg.message)" 
@@ -506,8 +746,15 @@ function initials(name) {
                                         <p class="text-[10px] truncate" :class="isDark ? 'text-gray-500' : 'text-slate-400'">{{ msg.sender_email }}</p>
                                     </div>
                                 </div>
-                                <!-- Message col-span-6 -->
+                                <!-- Message col-span-6 GROUP -->
                                 <div class="col-span-6 px-4 py-3.5 flex items-center gap-2">
+                                    <!-- File indicator with type-specific SVG icon -->
+                                    <span v-if="hasFiles(msg)" 
+                                          class="shrink-0 flex items-center" 
+                                          :title="`${getFileInfo(msg)?.type || 'File attachment'}`"
+                                          v-html="getFileIconSVG(getFileInfo(msg)?.extension)">
+                                    </span>
+                                    
                                     <!-- Show thumbnail if message only contains image -->
                                     <div v-if="hasImages(msg.message) && stripHtml(msg.message).trim().length === 0" class="flex items-center gap-2">
                                         <img :src="getFirstImageSrc(msg.message)" 
@@ -604,6 +851,47 @@ function initials(name) {
                     <div class="p-5 overflow-y-auto modal-scroll msg-body"
                          style="scroll-behavior:smooth;"
                          @click="handleMessageClick">
+                        <!-- File attachment button (clickable to open preview) -->
+                        <button v-if="hasFiles(viewingMsg) && getFileInfo(viewingMsg)?.url" 
+                             @click="openFilePreview(getFileInfo(viewingMsg))"
+                             class="mb-4 p-4 rounded-lg border flex items-center gap-4 w-full text-left transition-all hover:shadow-md"
+                             :class="isDark ? 'bg-gray-700 border-gray-600 hover:bg-gray-650' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'">
+                            <span class="shrink-0 flex items-center" v-html="getFileIconSVGLarge(getFileInfo(viewingMsg)?.extension)"></span>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-bold truncate" :class="isDark ? 'text-white' : 'text-slate-900'">
+                                    {{ getFileInfo(viewingMsg)?.filename || 'File Attachment' }}
+                                </p>
+                                <p class="text-xs mt-1" :class="isDark ? 'text-gray-400' : 'text-slate-500'">
+                                    {{ getFileInfo(viewingMsg)?.type || 'Document' }}
+                                    <span v-if="formatFileSize(getFileInfo(viewingMsg)?.size)"> · {{ formatFileSize(getFileInfo(viewingMsg).size) }}</span>
+                                </p>
+                            </div>
+                            <div class="flex flex-col items-center gap-1 flex-shrink-0">
+                                <svg class="w-6 h-6" :class="isDark ? 'text-gray-400' : 'text-slate-400'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                </svg>
+                                <span class="text-[9px] font-bold uppercase" :class="isDark ? 'text-gray-500' : 'text-slate-400'">Preview</span>
+                            </div>
+                        </button>
+                        
+                        <!-- File attachment info (non-clickable if no URL) -->
+                        <div v-else-if="hasFiles(viewingMsg)" 
+                             class="mb-4 p-4 rounded-lg border flex items-center gap-4"
+                             :class="isDark ? 'bg-gray-700 border-gray-600' : 'bg-slate-50 border-slate-200'">
+                            <span class="shrink-0 flex items-center" v-html="getFileIconSVGLarge(getFileInfo(viewingMsg)?.extension)"></span>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-bold truncate" :class="isDark ? 'text-white' : 'text-slate-900'">
+                                    {{ getFileInfo(viewingMsg)?.filename || 'File Attachment' }}
+                                </p>
+                                <p class="text-xs mt-1" :class="isDark ? 'text-gray-400' : 'text-slate-500'">
+                                    {{ getFileInfo(viewingMsg)?.type || 'Document' }}
+                                    <span v-if="formatFileSize(getFileInfo(viewingMsg)?.size)"> · {{ formatFileSize(getFileInfo(viewingMsg).size) }}</span>
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <!-- Message content -->
                         <div class="text-sm leading-relaxed whitespace-pre-wrap"
                             :class="isDark ? 'text-gray-200' : 'text-slate-800'"
                             v-html="sanitize(viewingMsg.message)"></div>
@@ -626,6 +914,13 @@ function initials(name) {
         :image-src="lightboxImageSrc"
         :image-alt="lightboxImageAlt"
         @close="closeImageLightbox"
+    />
+
+    <!-- File Preview Modal -->
+    <FilePreviewModal
+        :open="showFilePreview"
+        :file="previewFile"
+        @close="closeFilePreview"
     />
 </template>
 
@@ -727,5 +1022,10 @@ function initials(name) {
 
 .msg-body :deep(img.rt-image):hover {
     transform: scale(1.02);
+}
+
+/* Hide file attachment HTML since we show it separately */
+.msg-body :deep(.rt-file-attachment) {
+    display: none;
 }
 </style>
