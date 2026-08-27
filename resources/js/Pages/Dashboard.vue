@@ -901,7 +901,11 @@
     console.log('🎂 Dashboard: Full birthday data:', props.birthdayData);
     console.log('🎂 Dashboard: Current user birthday:', props.birthdayData?.currentUserBirthday);
     console.log('🎂 Dashboard: Today\'s birthdays:', props.birthdayData?.todaysBirthdays);
+    console.log('🎂 Dashboard: Today\'s birthdays COUNT:', props.birthdayData?.todaysBirthdays?.length || 0);
+    console.log('🎂 Dashboard: Today\'s birthdays ARRAY:', JSON.stringify(props.birthdayData?.todaysBirthdays));
+    console.log('🎂 Dashboard: Upcoming birthdays COUNT:', props.birthdayData?.upcomingBirthdays?.length || 0);
     console.log('🎂 Dashboard: User info:', user.value);
+    console.log('🎂 Dashboard: User employee:', user.value?.employee);
     
     if (props.birthdayData?.currentUserBirthday) {
       // Show popup after a short delay to let the page load
