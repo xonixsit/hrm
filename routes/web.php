@@ -157,6 +157,12 @@ Route::get('/training', [TrainingPageController::class, 'index'])->middleware(['
         Route::post('/groups/{conversation}/members', [TeamMessagingController::class, 'addMember'])->name('team-messaging.groups.add-member');
         Route::delete('/groups/{conversation}/members', [TeamMessagingController::class, 'removeMember'])->name('team-messaging.groups.remove-member');
         Route::get('/groups/{conversation}/members', [TeamMessagingController::class, 'groupMembers'])->name('team-messaging.groups.members');
+        
+        // Block/Unblock routes
+        Route::post('/block', [TeamMessagingController::class, 'blockUser'])->name('team-messaging.block');
+        Route::post('/unblock', [TeamMessagingController::class, 'unblockUser'])->name('team-messaging.unblock');
+        Route::get('/is-blocked', [TeamMessagingController::class, 'isUserBlocked'])->name('team-messaging.is-blocked');
+        
         // Existing
         Route::get('/{conversation}', [TeamMessagingController::class, 'show'])->name('team-messaging.show');
         Route::post('/{conversation}/messages', [TeamMessagingController::class, 'sendMessage'])->name('team-messaging.send');

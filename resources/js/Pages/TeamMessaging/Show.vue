@@ -33,6 +33,9 @@ const props = defineProps({
 // Debug: Log conversation prop
 console.log('TeamMessaging Show.vue - conversation prop:', props.conversation);
 
+// Block state
+const isUserBlocked = ref(props.conversation.is_blocked || false);
+
 // Transform messages to match expected format
 const transformedMessages = computed(() => {
     return props.messages.map(msg => ({
@@ -388,6 +391,37 @@ const handleViewImageFromGallery = (image) => {
     openImageLightbox(image.url, image.name);
 };
 
+// Block/Unblock user functions
+const blockUser = async () => {
+    if (!props.conversation.other_user_id || props.conversation.is_group) return;
+    
+    try {
+        await axios.post(route('team-messaging.block'), {
+            user_id: props.conversation.other_user_id
+        });
+        isUserBlocked.value = true;
+        alert('User blocked successfully. You will not be able to send or receive messages from this user.');
+    } catch (error) {
+        console.error('Error blocking user:', error);
+        alert(error.response?.data?.error || 'Failed to block user');
+    }
+};
+
+const unblockUser = async () => {
+    if (!props.conversation.other_user_id || props.conversation.is_group) return;
+    
+    try {
+        await axios.post(route('team-messaging.unblock'), {
+            user_id: props.conversation.other_user_id
+        });
+        isUserBlocked.value = false;
+        alert('User unblocked successfully');
+    } catch (error) {
+        console.error('Error unblocking user:', error);
+        alert(error.response?.data?.error || 'Failed to unblock user');
+    }
+};
+
 // Handle image clicks in messages
 const handleMessageClick = (event) => {
     // Handle image clicks
@@ -537,6 +571,22 @@ const handleMessageClick = (event) => {
                     </p>
                 </div>
                 <div class="flex items-center gap-2 flex-shrink-0">
+                    <!-- Block/Unblock Button (only for 1-on-1 conversations) -->
+                    <button
+                        v-if="!conversation.is_group"
+                        @click="isUserBlocked ? unblockUser() : blockUser()"
+                        class="p-2 rounded-lg transition-colors"
+                        :class="[
+                            isUserBlocked 
+                                ? 'bg-red-100 text-red-600 hover:bg-red-200 dark:bg-red-900/20 dark:text-red-400' 
+                                : 'hover:bg-gray-100 text-gray-600 dark:hover:bg-gray-700 dark:text-gray-300'
+                        ]"
+                        :title="isUserBlocked ? 'Unblock user' : 'Block user'"
+                    >
+                        <Icon v-if="isUserBlocked" name="lock-open" class="w-5 h-5" />
+                        <Icon v-else name="lock" class="w-5 h-5" />
+                    </button>
+                    
                     <!-- Media Gallery Button -->
                     <button
                         @click="showMediaGallery = true"
@@ -716,6 +766,7 @@ const handleMessageClick = (event) => {
 
                 <!-- Rich text input card -->
                 <div
+                    v-if="!isUserBlocked"
                     class="rounded-2xl border overflow-hidden transition-all duration-150"
                     :class="isDark
                         ? 'bg-gray-700 border-gray-600 focus-within:border-teal-500'
@@ -753,6 +804,29 @@ const handleMessageClick = (event) => {
                             <Icon name="Send" class="w-4 h-4" />
                         </button>
                     </div>
+                </div>
+                
+                <!-- Blocked user notice -->
+                <div
+                    v-else
+                    class="rounded-2xl border p-6 text-center"
+                    :class="isDark 
+                        ? 'bg-gray-800/50 border-gray-700' 
+                        : 'bg-gray-50 border-gray-200'"
+                >
+                    <Icon name="LockClosed" class="w-12 h-12 mx-auto mb-3 text-gray-400" />
+                    <h3 class="text-lg font-semibold mb-2" :class="isDark ? 'text-white' : 'text-gray-900'">
+                        User Blocked
+                    </h3>
+                    <p class="text-sm mb-4" :class="isDark ? 'text-gray-400' : 'text-gray-600'">
+                        You have blocked this user. You cannot send or receive messages from them.
+                    </p>
+                    <button
+                        @click="unblockUser"
+                        class="px-4 py-2 rounded-lg bg-teal-600 text-white hover:bg-teal-700 transition-colors text-sm font-medium"
+                    >
+                        Unblock User
+                    </button>
                 </div>
             </div>
         </div>

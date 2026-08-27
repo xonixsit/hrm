@@ -30,12 +30,24 @@ class TeamMessagingController extends Controller
         // Get messages for this conversation
         $messages = $this->messaging->messagesForConversation($conversation->id);
         
+        // Get other user ID for 1-on-1 conversations
+        $otherUserId = null;
+        $isBlocked = false;
+        if ($conversation->type !== 'group') {
+            $otherUserId = $this->messaging->otherParticipantId($conversation->id, $user->id);
+            if ($otherUserId) {
+                $isBlocked = \App\Models\BlockedUser::isBlocked($user->id, $otherUserId);
+            }
+        }
+        
         return Inertia::render('TeamMessaging/Show', [
             'conversation' => [
                 'id' => $conversation->id,
                 'name' => $conversation->name,
                 'type' => $conversation->type,
                 'is_group' => $conversation->type === 'group',
+                'other_user_id' => $otherUserId,
+                'is_blocked' => $isBlocked,
             ],
             'messages' => $messages,
         ]);
@@ -307,6 +319,17 @@ class TeamMessagingController extends Controller
         $user = Auth::user();
 
         abort_unless($this->messaging->isParticipant($conversation->id, $user->id), 403);
+
+        // Check if users are blocked (for 1-on-1 conversations)
+        if ($conversation->type !== 'group') {
+            $recipientId = $this->messaging->otherParticipantId($conversation->id, $user->id);
+            
+            if ($recipientId && \App\Models\BlockedUser::isBlockedBetween($user->id, $recipientId)) {
+                return response()->json([
+                    'error' => 'Cannot send message. One of you has blocked the other.'
+                ], 403);
+            }
+        }
 
         $message = Message::create([
             'conversation_id' => $conversation->id,
@@ -726,6 +749,73 @@ class TeamMessagingController extends Controller
         ]);
 
         return response()->json(['success' => true]);
+    }
+
+    // ─── Block / Unblock User ──────────────────────────────────────────────────
+
+    public function blockUser(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+        ]);
+
+        $user = Auth::user();
+        $targetUserId = $request->user_id;
+
+        // Can't block yourself
+        if ($user->id === $targetUserId) {
+            return response()->json(['error' => 'You cannot block yourself'], 400);
+        }
+
+        // Check if already blocked
+        if (\App\Models\BlockedUser::isBlocked($user->id, $targetUserId)) {
+            return response()->json(['error' => 'User is already blocked'], 400);
+        }
+
+        \App\Models\BlockedUser::create([
+            'blocker_id' => $user->id,
+            'blocked_id' => $targetUserId,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'User blocked successfully',
+        ]);
+    }
+
+    public function unblockUser(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+        ]);
+
+        $user = Auth::user();
+        $targetUserId = $request->user_id;
+
+        \App\Models\BlockedUser::where('blocker_id', $user->id)
+            ->where('blocked_id', $targetUserId)
+            ->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'User unblocked successfully',
+        ]);
+    }
+
+    public function isUserBlocked(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+        ]);
+
+        $user = Auth::user();
+        $targetUserId = $request->user_id;
+
+        $isBlocked = \App\Models\BlockedUser::isBlocked($user->id, $targetUserId);
+
+        return response()->json([
+            'is_blocked' => $isBlocked,
+        ]);
     }
 
     // ─── Helpers ──────────────────────────────────────────────────────────────

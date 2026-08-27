@@ -674,13 +674,12 @@
   });
 
 
-  // Check if today is Raksha Bandhan (August 28, 2026)
+  // Show Raksha Bandhan banner for 48 hours from August 28, 2026 00:00 local time
   const showRakshaBandhanBanner = computed(() => {
-    const today = new Date();
-    const month = today.getMonth(); // 0-indexed (7 = August)
-    const date = today.getDate();
-    const year = today.getFullYear();
-    return year === 2026 && month === 7 && date === 28;
+    const now = new Date();
+    const start = new Date('2026-08-28T00:00:00');
+    const end   = new Date(start.getTime() + 48 * 60 * 60 * 1000);
+    return now >= start && now < end;
   });
 
   const currentTime = computed(() => {
