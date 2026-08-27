@@ -65,6 +65,10 @@ const showImageLightbox = ref(false);
 const lightboxImageSrc = ref('');
 const lightboxImageAlt = ref('');
 
+// File preview modal state
+const showFilePreview = ref(false);
+const selectedFile = ref(null);
+
 // Media gallery state
 const showMediaGallery = ref(false);
 const showAttachments = ref(false);
@@ -367,6 +371,18 @@ const closeImageLightbox = () => {
     lightboxImageAlt.value = '';
 };
 
+// Open file preview modal
+const openFilePreview = (file) => {
+    selectedFile.value = file;
+    showFilePreview.value = true;
+};
+
+// Close file preview modal
+const closeFilePreview = () => {
+    showFilePreview.value = false;
+    selectedFile.value = null;
+};
+
 // Handle viewing image from media gallery
 const handleViewImageFromGallery = (image) => {
     openImageLightbox(image.url, image.name);
@@ -374,10 +390,52 @@ const handleViewImageFromGallery = (image) => {
 
 // Handle image clicks in messages
 const handleMessageClick = (event) => {
+    // Handle image clicks
     if (event.target.tagName === 'IMG' && event.target.classList.contains('rt-image')) {
         event.preventDefault();
         event.stopPropagation();
         openImageLightbox(event.target.src, event.target.alt);
+        return;
+    }
+    
+    // Handle file attachment clicks
+    if (event.target.tagName === 'A' || event.target.closest('.rt-file-attachment')) {
+        const link = event.target.tagName === 'A' ? event.target : event.target.closest('a');
+        
+        if (link && link.hasAttribute('download')) {
+            event.preventDefault();
+            event.stopPropagation();
+            
+            // Extract file info from the link
+            const fileUrl = link.getAttribute('href');
+            const filename = link.getAttribute('download');
+            const extension = filename.split('.').pop().toLowerCase();
+            
+            // Get file size from the parent element if available
+            const fileAttachment = link.closest('.rt-file-attachment');
+            let size = null;
+            
+            // Try to extract size from the displayed text
+            if (fileAttachment) {
+                const sizeText = fileAttachment.textContent.match(/(\d+(?:\.\d+)?)\s*(B|KB|MB|GB)/i);
+                if (sizeText) {
+                    const value = parseFloat(sizeText[1]);
+                    const unit = sizeText[2].toUpperCase();
+                    if (unit === 'B') size = value;
+                    else if (unit === 'KB') size = value * 1024;
+                    else if (unit === 'MB') size = value * 1048576;
+                    else if (unit === 'GB') size = value * 1073741824;
+                }
+            }
+            
+            // Open file preview
+            openFilePreview({
+                url: fileUrl,
+                filename: filename,
+                extension: extension,
+                size: size
+            });
+        }
     }
 };
 

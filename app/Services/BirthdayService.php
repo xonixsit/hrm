@@ -21,31 +21,49 @@ class BirthdayService
     {
         $today = now()->setTimezone(config('app.timezone'))->startOfDay();
         
+        Log::info('=== BIRTHDAY CHECK START ===');
+        Log::info('Today date: ' . $today->format('Y-m-d H:i:s T'));
+        Log::info('Today month-day: ' . $today->format('m-d'));
+        Log::info('Timezone: ' . config('app.timezone'));
+        
         $employees = Employee::active()
             ->with(['user', 'department'])
             ->whereNotNull('date_of_birth')
             ->get();
         
-        Log::info('Birthday check - Today: ' . $today->format('Y-m-d'), ['month' => $today->month, 'day' => $today->day]);
         Log::info('Total active employees with DOB: ' . $employees->count());
+        
+        // Log all employees with their DOBs for debugging
+        foreach ($employees as $emp) {
+            Log::info('Employee DOB', [
+                'name' => $emp->user->name ?? 'Unknown',
+                'dob_raw' => $emp->date_of_birth,
+                'dob_formatted' => $emp->date_of_birth ? Carbon::parse($emp->date_of_birth)->format('Y-m-d') : 'null'
+            ]);
+        }
         
         $birthdays = $employees->filter(function ($employee) use ($today) {
             if (!$employee->date_of_birth) {
                 return false;
             }
             
-            // Since date_of_birth is cast as 'date', it's already a Carbon instance
-            // Just compare month and day directly without timezone conversion
-            $dob = $employee->date_of_birth;
-            $match = $dob->month === $today->month && $dob->day === $today->day;
+            // Use format comparison for reliable month/day matching regardless of timezone
+            $dobMonthDay = Carbon::parse($employee->date_of_birth)->format('m-d');
+            $todayMonthDay = $today->format('m-d');
+            $match = $dobMonthDay === $todayMonthDay;
             
-            if ($match) {
-                Log::info('Birthday match found: ' . $employee->user->name . ' DOB: ' . $dob->format('Y-m-d'));
-            }
+            Log::info('Birthday comparison', [
+                'employee' => $employee->user->name ?? 'Unknown',
+                'dob_month_day' => $dobMonthDay,
+                'today_month_day' => $todayMonthDay,
+                'match' => $match ? 'YES' : 'NO'
+            ]);
+            
             return $match;
         });
         
-        Log::info('Total birthdays today: ' . $birthdays->count());
+        Log::info('Total birthdays found today: ' . $birthdays->count());
+        Log::info('=== BIRTHDAY CHECK END ===');
         return $birthdays;
     }
 
