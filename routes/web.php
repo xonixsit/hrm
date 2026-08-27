@@ -1011,3 +1011,55 @@ Route::get('/api/server-time', function () {
         'timezone' => config('app.timezone'),
     ]);
 })->middleware('auth');
+
+
+// Temporary debug route for birthday testing - REMOVE AFTER FIXING
+Route::get('/debug/birthdays-detailed', function () {
+    $birthdayService = app(\App\Services\BirthdayService::class);
+    $today = now()->setTimezone(config('app.timezone'));
+    $todaysBirthdays = $birthdayService->getTodaysBirthdays();
+    $upcomingBirthdays = $birthdayService->getUpcomingBirthdays(7);
+    
+    // Get all employees with DOB for debugging
+    $allEmployeesWithDOB = \App\Models\Employee::active()
+        ->with(['user', 'department'])
+        ->whereNotNull('date_of_birth')
+        ->get()
+        ->map(function($emp) use ($today) {
+            $dobMonthDay = \Carbon\Carbon::parse($emp->date_of_birth)->format('m-d');
+            $todayMonthDay = $today->format('m-d');
+            
+            return [
+                'id' => $emp->id,
+                'name' => $emp->user->name,
+                'email' => $emp->user->email,
+                'dob' => $emp->date_of_birth->format('Y-m-d'),
+                'dob_month_day' => $dobMonthDay,
+                'status' => $emp->status,
+                'exit_date' => $emp->exit_date,
+                'matches_today' => $dobMonthDay === $todayMonthDay,
+            ];
+        });
+    
+    return response()->json([
+        'timezone' => config('app.timezone'),
+        'today' => $today->format('Y-m-d H:i:s T'),
+        'today_month_day' => $today->format('m-d'),
+        'todays_birthdays_count' => $todaysBirthdays->count(),
+        'todays_birthdays' => $todaysBirthdays->map(function ($emp) {
+            return [
+                'id' => $emp->id,
+                'name' => $emp->user->name,
+                'email' => $emp->user->email,
+                'dob' => $emp->date_of_birth->format('Y-m-d'),
+                'dob_month_day' => $emp->date_of_birth->format('m-d'),
+                'status' => $emp->status,
+                'exit_date' => $emp->exit_date,
+            ];
+        }),
+        'upcoming_birthdays_count' => $upcomingBirthdays->count(),
+        'all_employees_with_dob_count' => $allEmployeesWithDOB->count(),
+        'all_employees_with_dob' => $allEmployeesWithDOB,
+        'check_laravel_log_for_details' => storage_path('logs/laravel.log'),
+    ]);
+})->middleware('auth')->name('debug.birthdays.detailed');

@@ -80,7 +80,7 @@ class DashboardController extends Controller
                             'department' => $employee->department ? $employee->department->name : null,
                             'age' => $employee->getAge(),
                         ];
-                    })->toArray(),
+                    })->values()->toArray(),
                     'upcomingBirthdays' => $this->birthdayService->getUpcomingBirthdays(7)->map(function ($birthday) {
                         return [
                             'employee' => [
@@ -98,7 +98,7 @@ class DashboardController extends Controller
                             'birthday_date' => $birthday['birthday_date']->format('Y-m-d'),
                             'days_until' => $birthday['days_until'],
                         ];
-                    })->toArray(),
+                    })->values()->toArray(),
                     'stats' => $this->birthdayService->getBirthdayStats(),
                     'currentUserBirthday' => $currentUserBirthday ? [
                         'id' => $currentUserBirthday->id,
