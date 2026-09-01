@@ -379,7 +379,16 @@ class TeamMessagingController extends Controller
             
             // Verify user is participant of the conversation
             abort_unless($this->messaging->isParticipant($conversationId, $user->id), 403, 'Not authorized to upload to this conversation');
-            
+
+            // Check block status for 1-on-1 conversations
+            $conversation = \Binkode\ChatSystem\Models\Conversation::find($conversationId);
+            if ($conversation && $conversation->type !== 'group') {
+                $recipientId = $this->messaging->otherParticipantId($conversationId, $user->id);
+                if ($recipientId && \App\Models\BlockedUser::isBlockedBetween($user->id, $recipientId)) {
+                    return response()->json(['success' => false, 'message' => 'Cannot upload. One of you has blocked the other.'], 403);
+                }
+            }
+
             if ($request->hasFile('image')) {
                 $file = $request->file('image');
                 
@@ -429,7 +438,16 @@ class TeamMessagingController extends Controller
             
             // Verify user is participant of the conversation
             abort_unless($this->messaging->isParticipant($conversationId, $user->id), 403, 'Not authorized to upload to this conversation');
-            
+
+            // Check block status for 1-on-1 conversations
+            $conversation = \Binkode\ChatSystem\Models\Conversation::find($conversationId);
+            if ($conversation && $conversation->type !== 'group') {
+                $recipientId = $this->messaging->otherParticipantId($conversationId, $user->id);
+                if ($recipientId && \App\Models\BlockedUser::isBlockedBetween($user->id, $recipientId)) {
+                    return response()->json(['success' => false, 'message' => 'Cannot upload. One of you has blocked the other.'], 403);
+                }
+            }
+
             if ($request->hasFile('document')) {
                 $file = $request->file('document');
                 $originalName = $file->getClientOriginalName();
