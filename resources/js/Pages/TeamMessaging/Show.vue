@@ -476,7 +476,7 @@ const handleMessageClick = (event) => {
 </script>
 
 <template>
-    <Head :title="`${conversation.other_user.name}`" />
+    <Head :title="conversation.other_user?.name ?? conversation.name" />
 
     <AuthenticatedLayout>
         <!-- Avatar Lightbox -->
@@ -544,13 +544,13 @@ const handleMessageClick = (event) => {
                 isDark ? 'border-gray-700' : 'border-gray-200'
             ]">
                 <Link :href="route('team-messaging.index')" class="flex-shrink-0 p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-                    <Icon name="ArrowLeft" class="w-5 h-5" />
+                    <Icon name="arrow-left" class="w-5 h-5" />
                 </Link>
                 <div class="relative flex-shrink-0">
                     <div v-if="getProfilePicture(conversation.other_user)"
                         class="w-10 h-10 rounded-full overflow-hidden ring-2 ring-teal-500/30 cursor-pointer relative group/hdravatar"
                         @click="openUserLightbox(conversation.other_user)">
-                        <img :src="getProfilePicture(conversation.other_user)" :alt="conversation.other_user.name" class="w-full h-full object-cover object-top" />
+                        <img :src="getProfilePicture(conversation.other_user)" :alt="conversation.other_user?.name" class="w-full h-full object-cover object-top" />
                         <div class="absolute inset-0 rounded-full bg-black/30 flex items-center justify-center opacity-0 group-hover/hdravatar:opacity-100 transition-opacity duration-150">
                             <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
@@ -561,19 +561,18 @@ const handleMessageClick = (event) => {
                     <div v-else :class="[
                         'w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold',
                         'bg-gradient-to-br from-teal-500 to-cyan-500 text-white'
-                    ]">{{ getInitials(conversation.other_user.name) }}</div>
+                    ]">{{ getInitials(conversation.other_user?.name) }}</div>
                     <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2" :class="isDark ? 'border-gray-800' : 'border-white'"></div>
                 </div>
                 <div class="flex-1 min-w-0">
-                    <h2 class="text-base font-semibold truncate">{{ conversation.other_user.name }}</h2>
+                    <h2 class="text-base font-semibold truncate">{{ conversation.other_user?.name ?? conversation.name }}</h2>
                     <p class="text-xs" :class="isDark ? 'text-gray-400' : 'text-gray-500'">
                         {{ isTyping ? 'Typing...' : 'Active now' }}
                     </p>
                 </div>
                 <div class="flex items-center gap-2 flex-shrink-0">
-                    <!-- Block/Unblock Button (only for 1-on-1 conversations) -->
+                    <!-- Block/Unblock Button --> Testing
                     <button
-                        v-if="!conversation.is_group"
                         @click="isUserBlocked ? unblockUser() : blockUser()"
                         class="p-2 rounded-lg transition-colors"
                         :class="[
@@ -587,23 +586,14 @@ const handleMessageClick = (event) => {
                         <Icon v-else name="lock" class="w-5 h-5" />
                     </button>
                     
-                    <!-- Media Gallery Button -->
-                    <button
-                        @click="showMediaGallery = true"
-                        class="p-2 rounded-lg transition-colors"
-                        :class="isDark ? 'hover:bg-gray-700 text-gray-300' : 'hover:bg-gray-100 text-gray-600'"
-                        title="View shared media"
-                    >
-                        <Icon name="Image" class="w-5 h-5" />
-                    </button>
-                    
+                   
                     <!-- Phone Button -->
                     <button
                         class="p-2 rounded-lg transition-colors"
                         :class="isDark ? 'hover:bg-gray-700 text-gray-300' : 'hover:bg-gray-100 text-gray-600'"
                         title="Voice call"
                     >
-                        <Icon name="Phone" class="w-5 h-5" />
+                        <Icon name="phone" class="w-5 h-5" />
                     </button>
                     
                     <!-- Video Button -->
@@ -612,7 +602,7 @@ const handleMessageClick = (event) => {
                         :class="isDark ? 'hover:bg-gray-700 text-gray-300' : 'hover:bg-gray-100 text-gray-600'"
                         title="Video call"
                     >
-                        <Icon name="Video" class="w-5 h-5" />
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9A2.25 2.25 0 0013.5 5.25h-9A2.25 2.25 0 002.25 7.5v9A2.25 2.25 0 004.5 18.75z"/></svg>
                     </button>
                     
                     <!-- More Options Button -->
@@ -621,7 +611,7 @@ const handleMessageClick = (event) => {
                         :class="isDark ? 'hover:bg-gray-700 text-gray-300' : 'hover:bg-gray-100 text-gray-600'"
                         title="More options"
                     >
-                        <Icon name="MoreVertical" class="w-5 h-5" />
+                        <Icon name="dots-vertical" class="w-5 h-5" />
                     </button>
                 </div>
             </div>
@@ -637,7 +627,7 @@ const handleMessageClick = (event) => {
                         'w-24 h-24 rounded-full flex items-center justify-center mb-8',
                         isDark ? 'bg-gray-700/50' : 'bg-gray-100'
                     ]">
-                        <Icon name="MessageSquare" class="w-12 h-12 text-gray-400" />
+                        <Icon name="message-square" class="w-12 h-12 text-gray-400" />
                     </div>
                     <h3 :class="[
                         'text-xl font-semibold mb-3',
@@ -649,7 +639,7 @@ const handleMessageClick = (event) => {
                         'text-base text-center max-w-md mb-6',
                         isDark ? 'text-gray-400' : 'text-gray-500'
                     ]">
-                        Send a message to {{ conversation.other_user.name }} to get started
+                        Send a message to {{ conversation.other_user?.name ?? conversation.name }} to get started
                     </p>
                     <BaseButton 
                         @click="messageInput.focus()" 
@@ -814,7 +804,7 @@ const handleMessageClick = (event) => {
                         ? 'bg-gray-800/50 border-gray-700' 
                         : 'bg-gray-50 border-gray-200'"
                 >
-                    <Icon name="LockClosed" class="w-12 h-12 mx-auto mb-3 text-gray-400" />
+                    <Icon name="lock" class="w-12 h-12 mx-auto mb-3 text-gray-400" />
                     <h3 class="text-lg font-semibold mb-2" :class="isDark ? 'text-white' : 'text-gray-900'">
                         User Blocked
                     </h3>

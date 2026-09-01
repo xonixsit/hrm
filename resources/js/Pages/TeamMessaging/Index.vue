@@ -331,6 +331,78 @@ const closeFilePreview = () => {
     selectedFile.value = null;
 };
 
+// ── Block / Unblock user ──────────────────────────────────────────────────────
+const isUserBlocked = ref(false);
+const blockLoading = ref(false);
+const showBlockConfirm = ref(false);  // confirmation modal
+const blockFeedback = ref(null);      // null | 'blocked' | 'unblocked'
+
+let blockFeedbackTimer = null;
+
+const showBlockFeedback = (type) => {
+    blockFeedback.value = type;
+    clearTimeout(blockFeedbackTimer);
+    blockFeedbackTimer = setTimeout(() => { blockFeedback.value = null; }, 2500);
+};
+
+// Reset block state when switching conversations
+watch(selectedConversation, async (convId) => {
+    isUserBlocked.value = false;
+    showBlockConfirm.value = false;
+    blockFeedback.value = null;
+    if (!convId || currentConvIsGroup.value) return;
+    try {
+        const conv = (props.conversations || []).find(c => c.id === convId);
+        const otherUserId = conv?.other_user?.id;
+        if (!otherUserId) return;
+        const res = await axios.get(route('team-messaging.is-blocked'), { params: { user_id: otherUserId } });
+        isUserBlocked.value = res.data.is_blocked ?? false;
+    } catch (e) {
+        console.error('Failed to check block status:', e);
+    }
+});
+
+const getSelectedOtherUserId = () => {
+    const conv = (props.conversations || []).find(c => c.id === selectedConversation.value);
+    return conv?.other_user?.id ?? null;
+};
+
+const confirmBlock = () => {
+    showBlockConfirm.value = true;
+};
+
+const blockUser = async () => {
+    const otherUserId = getSelectedOtherUserId();
+    if (!otherUserId) return;
+    blockLoading.value = true;
+    showBlockConfirm.value = false;
+    try {
+        await axios.post(route('team-messaging.block'), { user_id: otherUserId });
+        isUserBlocked.value = true;
+        showBlockFeedback('blocked');
+    } catch (e) {
+        alert(e.response?.data?.error || 'Failed to block user');
+    } finally {
+        blockLoading.value = false;
+    }
+};
+
+const unblockUser = async () => {
+    const otherUserId = getSelectedOtherUserId();
+    if (!otherUserId) return;
+    blockLoading.value = true;
+    showBlockConfirm.value = false;
+    try {
+        await axios.post(route('team-messaging.unblock'), { user_id: otherUserId });
+        isUserBlocked.value = false;
+        showBlockFeedback('unblocked');
+    } catch (e) {
+        alert(e.response?.data?.error || 'Failed to unblock user');
+    } finally {
+        blockLoading.value = false;
+    }
+};
+
 // Build a zoomedUser payload from any user-like object
 const openUserLightbox = (user, src) => {
     zoomedUser.value = {
@@ -943,7 +1015,7 @@ const selectConversation = async (conversationId) => {
 const isSending = ref(false);
 
 const sendMessage = async () => {
-    if (!selectedConversation.value || isSending.value) return;
+    if (!selectedConversation.value || isSending.value || isUserBlocked.value) return;
 
     // Check if RichTextEditor has pending files that need to be uploaded first
     if (richEditorRef.value?.pendingFiles?.length > 0) {
@@ -1937,21 +2009,18 @@ watch(messages, () => {
                             </div>
                             <!-- Media Gallery Button -->
                             <button
-                                @click="() => { console.log('Media button clicked, selectedConversation:', selectedConversation); showMediaGallery = true; }"
-                                class="flex-shrink-0 p-2 w-10 h-10 rounded-lg transition-all duration-200 relative group"
+                                @click="showMediaGallery = true"
+                                class="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-200 relative"
                                 :class="showMediaGallery
-                                    ? 'bg-gradient-to-br from-purple-500 to-pink-500 text-white shadow-lg hover:shadow-purple-500/50' 
+                                    ? 'bg-gradient-to-br from-purple-500 to-pink-500 text-white shadow-lg' 
                                     : (isDark 
-                                        ? 'bg-gradient-to-br from-gray-700 to-gray-600 text-gray-300 hover:from-purple-600 hover:to-pink-600 hover:text-white shadow-md hover:shadow-lg' 
-                                        : 'bg-gradient-to-br from-slate-100 to-slate-200 text-slate-600 hover:from-purple-500 hover:to-pink-500 hover:text-white shadow-sm hover:shadow-md')"
+                                        ? 'bg-gray-700 text-gray-300 hover:from-purple-600 hover:to-pink-600 hover:bg-gradient-to-br hover:text-white' 
+                                        : 'bg-slate-100 text-slate-500 hover:from-purple-500 hover:to-pink-500 hover:bg-gradient-to-br hover:text-white')"
                                 title="View shared media"
                             >
-                                <!-- Gallery/Image Icon -->
-                                <svg class="w-5 h-5 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                <svg class="w-[18px] h-[18px]" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"/>
                                 </svg>
-                                <!-- Badge showing media count -->
                                 <span v-if="mediaImages.length > 0" 
                                     class="absolute -top-1 -right-1 px-1.5 py-0.5 text-[10px] font-bold rounded-full shadow-lg"
                                     :class="showMediaGallery 
@@ -1959,27 +2028,22 @@ watch(messages, () => {
                                         : (isDark ? 'bg-purple-500 text-white' : 'bg-purple-600 text-white')">
                                     {{ mediaImages.length }}
                                 </span>
-                                <!-- Pulse animation ring on hover -->
-                                <span v-if="!showMediaGallery" class="absolute inset-0 rounded-lg bg-purple-400 opacity-0 group-hover:opacity-50 group-hover:animate-ping"></span>
                             </button>
 
                             <!-- File Manager Button -->
                             <button
-                                @click="() => { console.log('Files button clicked, selectedConversation:', selectedConversation); showFileManager = true; }"
-                                class="flex-shrink-0 p-2 w-10 h-10 rounded-lg transition-all duration-200 relative group"
+                                @click="showFileManager = true"
+                                class="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-200 relative"
                                 :class="showFileManager
-                                    ? 'bg-gradient-to-br from-blue-500 to-cyan-500 text-white shadow-lg hover:shadow-blue-500/50' 
+                                    ? 'bg-gradient-to-br from-blue-500 to-cyan-500 text-white shadow-lg' 
                                     : (isDark 
-                                        ? 'bg-gradient-to-br from-gray-700 to-gray-600 text-gray-300 hover:from-blue-600 hover:to-cyan-600 hover:text-white shadow-md hover:shadow-lg' 
-                                        : 'bg-gradient-to-br from-slate-100 to-slate-200 text-slate-600 hover:from-blue-500 hover:to-cyan-500 hover:text-white shadow-sm hover:shadow-md')"
+                                        ? 'bg-gray-700 text-gray-300 hover:from-blue-600 hover:to-cyan-600 hover:bg-gradient-to-br hover:text-white' 
+                                        : 'bg-slate-100 text-slate-500 hover:from-blue-500 hover:to-cyan-500 hover:bg-gradient-to-br hover:text-white')"
                                 title="View shared files"
                             >
-                                <!-- File/Document Icon -->
-                                <svg class="w-5 h-5 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                        d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                                <svg class="w-[18px] h-[18px]" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"/>
                                 </svg>
-                                <!-- Badge showing files count -->
                                 <span v-if="sharedFiles.length > 0" 
                                     class="absolute -top-1 -right-1 px-1.5 py-0.5 text-[10px] font-bold rounded-full shadow-lg"
                                     :class="showFileManager 
@@ -1987,9 +2051,49 @@ watch(messages, () => {
                                         : (isDark ? 'bg-blue-500 text-white' : 'bg-blue-600 text-white')">
                                     {{ sharedFiles.length }}
                                 </span>
-                                <!-- Pulse animation ring on hover -->
-                                <span v-if="!showFileManager" class="absolute inset-0 rounded-lg bg-blue-400 opacity-0 group-hover:opacity-50 group-hover:animate-ping"></span>
                             </button>
+
+                            <!-- Block/Unblock Button -->
+                            <div class="relative flex-shrink-0">
+                                <button
+                                    @click="isUserBlocked ? unblockUser() : confirmBlock()"
+                                    :disabled="blockLoading"
+                                    class="flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-200"
+                                    :class="isUserBlocked
+                                        ? 'bg-gradient-to-br from-red-500 to-red-600 text-white shadow-lg'
+                                        : (isDark
+                                            ? 'bg-gray-700 text-gray-300 hover:from-red-600 hover:to-red-700 hover:bg-gradient-to-br hover:text-white'
+                                            : 'bg-slate-100 text-slate-500 hover:from-red-500 hover:to-red-600 hover:bg-gradient-to-br hover:text-white')"
+                                    :title="isUserBlocked ? 'Unblock user' : 'Block user'"
+                                >
+                                    <svg v-if="blockLoading" class="w-[18px] h-[18px] animate-spin" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 00-8 8h4z"/>
+                                    </svg>
+                                    <svg v-else class="w-[18px] h-[18px]" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clip-rule="evenodd"/>
+                                    </svg>
+                                </button>
+
+                                <!-- Feedback toast (floats below button) -->
+                                <Transition
+                                    enter-active-class="transition duration-200 ease-out"
+                                    enter-from-class="opacity-0 translate-y-1 scale-95"
+                                    enter-to-class="opacity-100 translate-y-0 scale-100"
+                                    leave-active-class="transition duration-150 ease-in"
+                                    leave-from-class="opacity-100"
+                                    leave-to-class="opacity-0"
+                                >
+                                    <div v-if="blockFeedback"
+                                        class="absolute top-12 right-0 z-50 whitespace-nowrap px-3 py-1.5 rounded-lg text-xs font-semibold shadow-lg pointer-events-none"
+                                        :class="blockFeedback === 'blocked'
+                                            ? 'bg-red-500 text-white'
+                                            : 'bg-green-500 text-white'"
+                                    >
+                                        {{ blockFeedback === 'blocked' ? '🚫 User blocked' : '✓ User unblocked' }}
+                                    </div>
+                                </Transition>
+                            </div>
                         </template>
                     </div>
 
@@ -2612,8 +2716,32 @@ watch(messages, () => {
                             ></div>
                         </Teleport>
 
+                        <!-- Blocked notice — replaces input when user is blocked -->
+                        <div v-if="isUserBlocked"
+                            class="rounded-2xl border px-4 py-4 flex items-center gap-3"
+                            :class="isDark ? 'bg-gray-800/60 border-gray-700' : 'bg-red-50 border-red-100'"
+                        >
+                            <div class="flex-shrink-0 w-8 h-8 rounded-full bg-red-100 flex items-center justify-center">
+                                <svg class="w-4 h-4 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-medium" :class="isDark ? 'text-red-400' : 'text-red-600'">
+                                    You've blocked {{ getSelectedUser()?.name }}
+                                </p>
+                                <p class="text-xs mt-0.5" :class="isDark ? 'text-gray-500' : 'text-slate-400'">
+                                    Unblock to send and receive messages
+                                </p>
+                            </div>
+                            <button
+                                @click="unblockUser()"
+                                class="flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors text-white bg-red-500 hover:bg-red-600"
+                            >Unblock</button>
+                        </div>
+
                         <!-- Rich text input card -->
-                        <div
+                        <div v-else
                             class="rounded-2xl border overflow-hidden transition-all duration-150"
                             :class="isDark
                                 ? 'bg-gray-700 border-gray-600 focus-within:border-teal-500'
@@ -2955,6 +3083,64 @@ watch(messages, () => {
         :image-alt="lightboxImageAlt"
         @close="closeImageLightbox"
     />
+
+    <!-- Block confirmation modal -->
+    <Teleport to="body">
+        <Transition
+            enter-active-class="transition duration-200 ease-out"
+            enter-from-class="opacity-0"
+            enter-to-class="opacity-100"
+            leave-active-class="transition duration-150 ease-in"
+            leave-from-class="opacity-100"
+            leave-to-class="opacity-0"
+        >
+            <div v-if="showBlockConfirm"
+                class="fixed inset-0 z-[999] flex items-center justify-center p-4"
+            >
+                <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="showBlockConfirm = false"/>
+                <Transition
+                    enter-active-class="transition duration-200 ease-out"
+                    enter-from-class="opacity-0 scale-95"
+                    enter-to-class="opacity-100 scale-100"
+                    leave-active-class="transition duration-150 ease-in"
+                    leave-from-class="opacity-100 scale-100"
+                    leave-to-class="opacity-0 scale-95"
+                >
+                    <div v-if="showBlockConfirm"
+                        class="relative rounded-2xl shadow-2xl w-full max-w-sm p-6 z-10"
+                        :class="isDark ? 'bg-gray-800' : 'bg-white'"
+                    >
+                        <!-- Icon -->
+                        <div class="flex items-center justify-center w-14 h-14 rounded-full bg-red-100 mx-auto mb-4">
+                            <svg class="w-7 h-7 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <circle cx="12" cy="12" r="9" stroke-width="2"/>
+                                <line x1="5.636" y1="5.636" x2="18.364" y2="18.364" stroke-width="2" stroke-linecap="round"/>
+                            </svg>
+                        </div>
+                        <!-- Text -->
+                        <h3 class="text-base font-semibold text-center mb-1" :class="isDark ? 'text-white' : 'text-slate-800'">
+                            Block {{ getSelectedUser()?.name }}?
+                        </h3>
+                        <p class="text-sm text-center mb-6" :class="isDark ? 'text-gray-400' : 'text-slate-500'">
+                            They won't be able to send you messages and you won't see their messages.
+                        </p>
+                        <!-- Actions -->
+                        <div class="flex gap-3">
+                            <button
+                                @click="showBlockConfirm = false"
+                                class="flex-1 py-2.5 rounded-xl text-sm font-medium transition-colors border"
+                                :class="isDark ? 'border-gray-600 text-gray-300 hover:bg-gray-700' : 'border-slate-200 text-slate-600 hover:bg-slate-50'"
+                            >Cancel</button>
+                            <button
+                                @click="blockUser()"
+                                class="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white transition-colors bg-red-500 hover:bg-red-600"
+                            >Block</button>
+                        </div>
+                    </div>
+                </Transition>
+            </div>
+        </Transition>
+    </Teleport>
 
     <!-- File Preview Modal -->
     <FilePreviewModal

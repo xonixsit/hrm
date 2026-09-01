@@ -32,22 +32,25 @@ class TeamMessagingController extends Controller
         
         // Get other user ID for 1-on-1 conversations
         $otherUserId = null;
-        $isBlocked = false;
+        $otherUser   = null;
+        $isBlocked   = false;
         if ($conversation->type !== 'group') {
             $otherUserId = $this->messaging->otherParticipantId($conversation->id, $user->id);
             if ($otherUserId) {
+                $otherUser = User::with('employee')->find($otherUserId);
                 $isBlocked = \App\Models\BlockedUser::isBlocked($user->id, $otherUserId);
             }
         }
-        
+
         return Inertia::render('TeamMessaging/Show', [
             'conversation' => [
-                'id' => $conversation->id,
-                'name' => $conversation->name,
-                'type' => $conversation->type,
-                'is_group' => $conversation->type === 'group',
+                'id'            => $conversation->id,
+                'name'          => $conversation->name,
+                'type'          => $conversation->type,
+                'is_group'      => $conversation->type === 'group',
                 'other_user_id' => $otherUserId,
-                'is_blocked' => $isBlocked,
+                'other_user'    => $otherUser,
+                'is_blocked'    => $isBlocked,
             ],
             'messages' => $messages,
         ]);
