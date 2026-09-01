@@ -24,9 +24,11 @@
         <button v-for="action in headerActions" :key="action.id" @click="action.handler" :disabled="action.disabled"
           :class="[
             'inline-flex items-center px-4 py-2 rounded-lg transition-all duration-200 text-sm font-medium',
-            action.primary 
-              ? 'bg-teal-600 text-white hover:bg-teal-700 shadow-lg shadow-teal-500/25' 
-              : 'bg-white/60 text-gray-700 border border-gray-200 hover:bg-white hover:shadow-sm',
+            action.primary
+              ? 'bg-teal-600 text-white hover:bg-teal-700 shadow-lg shadow-teal-500/25'
+              : action.color === 'amber'
+                ? 'bg-amber-50 text-amber-700 border border-amber-300 hover:bg-amber-100 hover:border-amber-400 shadow-sm'
+                : 'bg-white/60 text-gray-700 border border-gray-200 hover:bg-white hover:shadow-sm',
             'disabled:opacity-50 disabled:cursor-not-allowed'
           ]">
           <component :is="getIconComponent(action.icon)" class="w-4 h-4 mr-2" />
@@ -64,14 +66,14 @@
           variant="info" 
           :status="getAttendanceStatus(adminStats.clockedInCount, adminStats.totalEmployeeCount)"
           :statusText="getAttendanceStatusText(adminStats.clockedInCount, adminStats.totalEmployeeCount)"
-          :clickable="false" 
+          route="attendances.index"
           :loading="loading" 
         />
 
         <UnifiedStatsCard :value="adminStats.pendingLeaves" label="Pending Approvals" description="Requires attention"
           :icon="ExclamationTriangleIcon" variant="warning"
           :status="adminStats.pendingLeaves > 10 ? 'critical' : 'warning'"
-          :statusText="adminStats.pendingLeaves > 10 ? 'High' : 'Normal'" route="approvals.index"
+          :statusText="adminStats.pendingLeaves > 10 ? 'High' : 'Normal'" route="leaves.index"
           :urgent="adminStats.pendingLeaves > 15" :loading="loading" />
 
         <UnifiedStatsCard :value="adminStats.pendingAssessments" label="Pending Assessments" description="Review status"
@@ -86,7 +88,7 @@
           description="This month" :icon="ClockIcon" variant="info" :trend="adminStats.attendanceTrend || 0"
           :status="(adminStats.attendanceRate || 0) > 95 ? 'excellent' : (adminStats.attendanceRate || 0) > 85 ? 'good' : 'warning'"
           :statusText="(adminStats.attendanceRate || 0) > 95 ? 'Excellent' : (adminStats.attendanceRate || 0) > 85 ? 'Good' : 'Needs Attention'"
-          route="attendance.reports" :loading="loading" />
+          route="attendances.index" :loading="loading" />
 
         <UnifiedStatsCard :value="adminStats.workReportsCount || 0" label="Work Reports" description="This month"
           :icon="ChartBarIcon" variant="primary" :trend="adminStats.workReportsTrend || 0"
@@ -542,7 +544,8 @@
     ChartBarIcon,
     CogIcon,
     ArrowTrendingUpIcon,
-    QuestionMarkCircleIcon
+    QuestionMarkCircleIcon,
+    ShieldExclamationIcon
   } from '@heroicons/vue/24/outline';
 
   import { CakeIcon } from '@heroicons/vue/24/solid';
@@ -695,11 +698,11 @@
         handler: () => showVideoModal.value = true
       },
       {
-        id: 'refresh',
-        label: 'Refresh',
-        icon: 'ArrowPathIcon',
-        handler: handleRefresh,
-        disabled: loading.value
+        id: 'whistleblower',
+        label: 'Whistle Blower',
+        icon: 'ShieldExclamationIcon',
+        handler: () => router.visit(route('whistleblower.create')),
+        color: 'amber'
       }
     ];
 
@@ -745,7 +748,8 @@
       CogIcon,
       ChartBarIcon,
       ClockIcon,
-      QuestionMarkCircleIcon
+      QuestionMarkCircleIcon,
+      ShieldExclamationIcon
     };
     return iconMap[iconName] || ClockIcon;
   };

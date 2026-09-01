@@ -175,7 +175,22 @@ Route::get('/training', [TrainingPageController::class, 'index'])->middleware(['
         Route::get('/documents/{filename}', [TeamMessagingController::class, 'serveDocument'])->name('team-messaging.document');
     });
 
-    // Chat System API Routes (using Laravel Chat System package)
+    // ── Whistleblower Routes ──────────────────────────────────────────────────
+
+    // Employee-facing routes (any authenticated user)
+    Route::prefix('whistleblower')->group(function () {
+        Route::get('/report', [\App\Http\Controllers\WhistleblowerController::class, 'create'])->name('whistleblower.create');
+        Route::post('/report', [\App\Http\Controllers\WhistleblowerController::class, 'store'])->name('whistleblower.store');
+        Route::get('/my-reports', [\App\Http\Controllers\WhistleblowerController::class, 'myReports'])->name('whistleblower.my-reports');
+    });
+
+    // Admin-only routes
+    Route::prefix('admin/whistleblower')->middleware('auth')->group(function () {
+        Route::get('/', [\App\Http\Controllers\WhistleblowerController::class, 'adminIndex'])->name('admin.whistleblower.index');
+        Route::get('/{report}', [\App\Http\Controllers\WhistleblowerController::class, 'adminShow'])->name('admin.whistleblower.show');
+        Route::patch('/{report}', [\App\Http\Controllers\WhistleblowerController::class, 'adminUpdate'])->name('admin.whistleblower.update');
+        Route::get('/{report}/attachment/{index}', [\App\Http\Controllers\WhistleblowerController::class, 'downloadAttachment'])->name('admin.whistleblower.attachment');
+    });
     Route::prefix('api/chat')->group(function () {
         Route::get('/conversations', function () {
             return response()->json([

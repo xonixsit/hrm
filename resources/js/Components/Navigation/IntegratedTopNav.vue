@@ -180,8 +180,15 @@
                                 : 'text-gray-700 hover:text-gray-900 hover:bg-gray-50')
                         ]"
                       >
-                        <!-- Regular Items Icon - Teal -->
-                        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="#0D9488" viewBox="0 0 24 24">
+                        <!-- Per-item icon -->
+                        <svg v-if="item.icon === 'whistleblower'" class="w-4 h-4 flex-shrink-0 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                        </svg>
+                        <svg v-else-if="item.icon === 'my-reports'" class="w-4 h-4 flex-shrink-0" fill="none" stroke="#0D9488" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                        </svg>
+                        <!-- Default icon -->
+                        <svg v-else class="w-4 h-4 flex-shrink-0" fill="none" stroke="#0D9488" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
                         <span>{{ item.label }}</span>
@@ -514,6 +521,8 @@ const moreNavItems = computed(() => {
       { route: 'work-reports.index', label: 'Work Reports', category: 'regular' },
       { route: 'ideas.index', label: 'Share Ideas', category: 'regular' },
       { route: 'feedbacks.index', label: 'Feedback', category: 'regular' },
+      { route: 'whistleblower.create', label: 'Whistle Blower', category: 'regular', icon: 'whistleblower' },
+      { route: 'whistleblower.my-reports', label: 'My Reports', category: 'regular', icon: 'my-reports' },
       { route: 'employee-handbook', label: 'Employee Handbook', category: 'regular' },
       { route: 'support.index', label: 'Support', category: 'regular' }
     ]
@@ -531,6 +540,7 @@ const moreNavItems = computed(() => {
 
     if (isAdmin) {
       items.push(
+        { route: 'admin.whistleblower.index', label: 'Whistleblower Reports', category: 'admin' },
         { route: 'skill-tests.index', label: 'Skill Tests', category: 'admin' },
         { route: 'skill-tests.reviews.index', label: 'Test Reviews', category: 'admin' },
         { route: 'admin.message-monitor.index', label: 'Message Center', category: 'admin' },
