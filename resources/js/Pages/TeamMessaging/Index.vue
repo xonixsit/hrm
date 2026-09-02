@@ -30,13 +30,14 @@ const page = usePage();
 const props = defineProps({
     conversations: Array,
     users: Array,
+    blockedUsers: Array,
 });
 
 const searchQuery = ref('');
 const showNewChatModal = ref(false);
 const selectedUser = ref(null);
 const selectedUserId = ref(null);
-const activeTab = ref('all'); // 'all', 'unread', 'groups'
+const activeTab = ref('all'); // 'all', 'unread', 'groups', 'blocked'
 const sidebarCollapsed = ref(false);
 const selectedConversation = ref(null);
 const messagesContainer = ref(null);
@@ -380,6 +381,9 @@ const blockUser = async () => {
         await axios.post(route('team-messaging.block'), { user_id: otherUserId });
         isUserBlocked.value = true;
         showBlockFeedback('blocked');
+        
+        // Reload page data to refresh the lists
+        router.reload({ only: ['users', 'blockedUsers', 'conversations'] });
     } catch (e) {
         alert(e.response?.data?.error || 'Failed to block user');
     } finally {
@@ -387,19 +391,41 @@ const blockUser = async () => {
     }
 };
 
-const unblockUser = async () => {
-    const otherUserId = getSelectedOtherUserId();
-    if (!otherUserId) return;
+const unblockUser = async (userId = null) => {
+    const targetUserId = userId || getSelectedOtherUserId();
+    if (!targetUserId) return;
     blockLoading.value = true;
     showBlockConfirm.value = false;
     try {
-        await axios.post(route('team-messaging.unblock'), { user_id: otherUserId });
+        await axios.post(route('team-messaging.unblock'), { user_id: targetUserId });
         isUserBlocked.value = false;
         showBlockFeedback('unblocked');
+        
+        // Reload page data to refresh the lists
+        router.reload({ only: ['users', 'blockedUsers', 'conversations'] });
     } catch (e) {
         alert(e.response?.data?.error || 'Failed to unblock user');
     } finally {
         blockLoading.value = false;
+    }
+};
+
+// Unblock directly from the Blocked tab list (no open conversation needed)
+const unblockingUserId = ref(null);
+const unblockUserById = async (userId) => {
+    if (unblockingUserId.value) return;
+    unblockingUserId.value = userId;
+    try {
+        await axios.post(route('team-messaging.unblock'), { user_id: userId });
+        // If the unblocked user was the open conversation partner, clear block state
+        if (getSelectedOtherUserId() === userId) {
+            isUserBlocked.value = false;
+        }
+        router.reload({ only: ['blockedUsers', 'users'] });
+    } catch (e) {
+        alert(e.response?.data?.error || 'Failed to unblock user');
+    } finally {
+        unblockingUserId.value = null;
     }
 };
 
@@ -844,6 +870,22 @@ let conversationPollingInterval = null;
 const filteredUsers = computed(() => {
     // Groups tab â€” show no DM users
     if (activeTab.value === 'groups') return [];
+    
+    // Blocked tab - show only blocked users
+    if (activeTab.value === 'blocked') {
+        let result = props.blockedUsers || [];
+        
+        if (searchQuery.value) {
+            const query = searchQuery.value.toLowerCase();
+            result = result.filter(user => 
+                user.name.toLowerCase().includes(query) ||
+                user.email.toLowerCase().includes(query)
+            );
+        }
+        
+        // Sort alphabetically for blocked users
+        return [...result].sort((a, b) => a.name.localeCompare(b.name));
+    }
 
     let result = props.users;
     
@@ -1640,11 +1682,11 @@ watch(messages, () => {
                 </div>
 
                 <!-- Tabs: All / Unread / Groups -->
-                <div class="flex px-4 gap-1 border-b" :class="isDark ? 'border-gray-700' : 'border-slate-100'">
+                <div class="flex border-b" :class="isDark ? 'border-gray-700' : 'border-slate-100'">
                     <!-- All tab -->
                     <button
                         @click="activeTab = 'all'"
-                        class="relative pb-3 pt-1 px-3 text-sm font-medium transition-colors"
+                        class="relative flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-medium transition-colors focus:outline-none"
                         :class="activeTab === 'all'
                             ? 'text-teal-600 after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-teal-500 after:rounded-full'
                             : isDark ? 'text-gray-400 hover:text-gray-200' : 'text-slate-500 hover:text-slate-700'"
@@ -1653,30 +1695,29 @@ watch(messages, () => {
                     <!-- Unread tab -->
                     <button
                         @click="activeTab = 'unread'"
-                        class="relative pb-3 pt-1 px-3 text-sm font-medium transition-colors"
+                        class="relative flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-medium transition-colors focus:outline-none"
                         :class="activeTab === 'unread'
                             ? 'text-teal-600 after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-teal-500 after:rounded-full'
                             : isDark ? 'text-gray-400 hover:text-gray-200' : 'text-slate-500 hover:text-slate-700'"
                     >
                         Unread
-                        <span
-                            v-if="effectiveUnreadCount > 0"
-                            class="ml-1.5 px-1.5 py-0.5 rounded-full text-xs font-semibold bg-red-500 text-white"
+                        <span v-if="effectiveUnreadCount > 0"
+                            class="px-1.5 py-0.5 rounded text-[10px] font-bold leading-none bg-red-500 text-white"
                         >{{ effectiveUnreadCount }}</span>
                     </button>
 
                     <!-- Groups tab -->
                     <button
                         @click="activeTab = 'groups'"
-                        class="relative pb-3 pt-1 px-3 text-sm font-medium transition-colors"
+                        class="relative flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-medium transition-colors focus:outline-none"
                         :class="activeTab === 'groups'
                             ? 'text-teal-600 after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-teal-500 after:rounded-full'
                             : isDark ? 'text-gray-400 hover:text-gray-200' : 'text-slate-500 hover:text-slate-700'"
                     >
                         Groups
                         <span v-if="groupConversations.length > 0"
-                            class="ml-1.5 px-1.5 py-0.5 rounded-full text-xs font-semibold"
-                            :class="isDark ? 'bg-gray-600 text-gray-300' : 'bg-slate-100 text-slate-600'"
+                            class="px-1.5 py-0.5 rounded text-[10px] font-bold leading-none"
+                            :class="isDark ? 'bg-gray-600 text-gray-300' : 'bg-slate-200 text-slate-600'"
                         >{{ groupConversations.length }}</span>
                     </button>
                 </div>
@@ -1760,7 +1801,75 @@ watch(messages, () => {
                         </div>
                     </template>
 
-                    <!-- â”€â”€ All / Unread tab: original DM + group list â”€â”€ -->
+                    <!-- Blocked tab -->
+                    <template v-else-if="activeTab === 'blocked'">
+                        <div v-if="(blockedUsers || []).length === 0"
+                            class="flex flex-col items-center justify-center h-full p-6 text-center">
+                            <svg class="w-10 h-10 mb-3" :class="isDark ? 'text-gray-600' : 'text-slate-300'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                    d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+                            </svg>
+                            <p class="text-sm font-medium" :class="isDark ? 'text-gray-400' : 'text-slate-500'">No blocked users</p>
+                            <p class="text-xs mt-1" :class="isDark ? 'text-gray-600' : 'text-slate-400'">Users you block will appear here</p>
+                        </div>
+
+                        <div v-else class="space-y-1 pt-2">
+                            <div
+                                v-for="user in (searchQuery
+                                    ? (blockedUsers || []).filter(u => u.name.toLowerCase().includes(searchQuery.toLowerCase()) || u.email.toLowerCase().includes(searchQuery.toLowerCase()))
+                                    : (blockedUsers || []))"
+                                :key="'blocked-' + user.id"
+                                class="group flex items-center gap-3 px-3 py-2.5 rounded-lg mx-1 border-l-[3px] border-transparent"
+                                :class="isDark ? 'hover:bg-gray-700/50' : 'hover:bg-slate-50'"
+                            >
+                                <!-- Avatar (greyscale to signal blocked) -->
+                                <div class="relative flex-shrink-0">
+                                    <div v-if="getProfilePicture(user)"
+                                        class="w-10 h-10 rounded-full overflow-hidden grayscale opacity-60">
+                                        <img :src="getProfilePicture(user)" :alt="user.name"
+                                            class="w-full h-full object-cover object-top"/>
+                                    </div>
+                                    <div v-else
+                                        class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold text-white opacity-50"
+                                        style="background: linear-gradient(135deg, #6b7280, #9ca3af)"
+                                    >{{ getInitials(user.name) }}</div>
+                                    <!-- Blocked indicator -->
+                                    <span class="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-red-500 border-2 flex items-center justify-center"
+                                        :class="isDark ? 'border-gray-800' : 'border-white'">
+                                        <svg class="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"/>
+                                        </svg>
+                                    </span>
+                                </div>
+
+                                <!-- Info -->
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-semibold truncate" :class="isDark ? 'text-gray-300' : 'text-slate-700'">
+                                        {{ user.name }}
+                                    </p>
+                                    <p class="text-xs truncate mt-0.5" :class="isDark ? 'text-gray-500' : 'text-slate-400'">
+                                        {{ user.employee?.department || user.email }}
+                                    </p>
+                                </div>
+
+                                <!-- Unblock button -->
+                                <button
+                                    @click.stop="unblockUserById(user.id)"
+                                    :disabled="unblockingUserId === user.id"
+                                    class="flex-shrink-0 px-2.5 py-1 rounded-md text-xs font-medium transition-colors border"
+                                    :class="isDark
+                                        ? 'border-gray-600 text-gray-300 hover:border-teal-500 hover:text-teal-400 hover:bg-teal-900/20 disabled:opacity-40'
+                                        : 'border-slate-300 text-slate-600 hover:border-teal-500 hover:text-teal-600 hover:bg-teal-50 disabled:opacity-40'"
+                                    title="Unblock user"
+                                >
+                                    <span v-if="unblockingUserId === user.id">...</span>
+                                    <span v-else>Unblock</span>
+                                </button>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- All / Unread tab: original DM + group list -->
                     <template v-else>
                     <div v-if="filteredUsers.length === 0" class="flex flex-col items-center justify-center h-full p-6 text-center">
                         <svg class="w-10 h-10 text-slate-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1822,7 +1931,7 @@ watch(messages, () => {
                                 </div>
                                 <p class="text-xs truncate mt-0.5" :class="isDark ? 'text-gray-400' : 'text-slate-500'">
                                     {{ user.employee?.department || user.email }}
-                                    <span class="mx-1">•</span>
+                                    <span class="mx-1">&#8226;</span>
                                     <span :class="statusTextClass(user.id)">
                                         {{ statusLabel(user.id) }}
                                     </span>
@@ -1837,7 +1946,7 @@ watch(messages, () => {
                                     class="w-5 h-5 rounded-full bg-teal-500 text-white text-[10px] font-bold flex items-center justify-center"
                                 >{{ getUnreadCount(dmConvId(user.id)) }}</span>
 
-                                <!-- Mark as unread â€” always visible on hover when conversation exists -->
+                                <!-- Mark as unread -->
                                 <button
                                     v-if="dmConvId(user.id)"
                                     @click.stop="markAsUnread(dmConvId(user.id))"
@@ -1867,6 +1976,61 @@ watch(messages, () => {
                             </div>
                         </div>
                     </div>
+
+                    <!-- Blocked users section (only on All tab, only if there are blocked users) -->
+                    <template v-if="activeTab === 'all' && (blockedUsers || []).length > 0">
+                        <!-- Divider -->
+                        <div class="flex items-center gap-2 px-3 mt-3 mb-1">
+                            <div class="flex-1 h-px" :class="isDark ? 'bg-gray-700' : 'bg-slate-200'"></div>
+                            <span class="text-[10px] font-semibold uppercase tracking-wider flex items-center gap-1"
+                                :class="isDark ? 'text-gray-500' : 'text-slate-400'">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <circle cx="12" cy="12" r="9" stroke-width="2"/>
+                                    <path stroke-linecap="round" stroke-width="2" d="M6 6l12 12"/>
+                                </svg>
+                                Blocked
+                            </span>
+                            <div class="flex-1 h-px" :class="isDark ? 'bg-gray-700' : 'bg-slate-200'"></div>
+                        </div>
+
+                        <div v-for="user in (blockedUsers || [])" :key="'bl-' + user.id"
+                            class="group flex items-center gap-3 px-3 py-2.5 border-l-[3px] border-transparent"
+                            :class="isDark ? 'hover:bg-gray-700/30' : 'hover:bg-slate-50'"
+                        >
+                            <!-- Avatar greyscale -->
+                            <div class="relative flex-shrink-0">
+                                <div v-if="getProfilePicture(user)"
+                                    class="w-9 h-9 rounded-full overflow-hidden grayscale opacity-50">
+                                    <img :src="getProfilePicture(user)" :alt="user.name" class="w-full h-full object-cover object-top"/>
+                                </div>
+                                <div v-else
+                                    class="w-9 h-9 rounded-full flex items-center justify-center text-xs font-semibold text-white opacity-40"
+                                    style="background: linear-gradient(135deg, #6b7280, #9ca3af)"
+                                >{{ getInitials(user.name) }}</div>
+                                <span class="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-red-500 border-2 flex items-center justify-center"
+                                    :class="isDark ? 'border-gray-800' : 'border-white'">
+                                    <svg class="w-2 h-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"/>
+                                    </svg>
+                                </span>
+                            </div>
+                            <!-- Info -->
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm truncate" :class="isDark ? 'text-gray-400' : 'text-slate-500'">{{ user.name }}</p>
+                                <p class="text-xs truncate" :class="isDark ? 'text-gray-600' : 'text-slate-400'">{{ user.employee?.department || user.email }}</p>
+                            </div>
+                            <!-- Unblock -->
+                            <button
+                                @click.stop="unblockUserById(user.id)"
+                                :disabled="unblockingUserId === user.id"
+                                class="opacity-0 group-hover:opacity-100 flex-shrink-0 px-2 py-1 rounded text-[11px] font-medium transition-colors border"
+                                :class="isDark
+                                    ? 'border-gray-600 text-gray-400 hover:border-teal-500 hover:text-teal-400 disabled:opacity-30'
+                                    : 'border-slate-300 text-slate-500 hover:border-teal-500 hover:text-teal-600 disabled:opacity-30'"
+                            >{{ unblockingUserId === user.id ? '...' : 'Unblock' }}</button>
+                        </div>
+                    </template>
+
                     </template><!-- end All/Unread template -->
                 </div>
 

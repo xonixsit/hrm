@@ -111,14 +111,24 @@ class TeamMessagingController extends Controller
                 ];
             });
 
+        // Get blocked user IDs
+        $blockedUserIds = \App\Models\BlockedUser::where('blocker_id', $user->id)
+            ->pluck('blocked_id')
+            ->toArray();
+
         $users = User::where('id', '!=', $user->id)
             ->with('employee')
             ->get()
             ->map(fn(User $u) => $this->formatUser($u));
 
+        // Separate blocked users from regular users
+        $blockedUsers = $users->filter(fn($u) => in_array($u['id'], $blockedUserIds))->values();
+        $regularUsers = $users->filter(fn($u) => !in_array($u['id'], $blockedUserIds))->values();
+
         return Inertia::render('TeamMessaging/Index', [
             'conversations' => $conversations,
-            'users'         => $users,
+            'users'         => $regularUsers,
+            'blockedUsers'  => $blockedUsers,
         ]);
     }
 

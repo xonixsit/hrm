@@ -1,0 +1,1 @@
+import{_ as c,o as s,f as e,d as n}from"./app-BaH2WTbs.js";const t={},a={class:"logo-container"};function r(i,o){return s(),e("div",a,o[0]||(o[0]=[n("img",{src:"/images/xonobics_logo.png",alt:"Xonobics",class:"h-12 w-auto object-contain"},null,-1)]))}const l=c(t,[["render",r],["__scopeId","data-v-ffbacc08"]]);export{l as A};
