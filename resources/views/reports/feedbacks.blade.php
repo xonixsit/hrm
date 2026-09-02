@@ -17,8 +17,8 @@
         <tbody>
             @foreach ($feedbacks as $feedback)
                 <tr>
-                    <td>{{ $feedback->reviewer->name }}</td>
-                    <td>{{ $feedback->reviewee->name }}</td>
+                    <td>{{ $feedback->reviewer?->name ?? '—' }}</td>
+                    <td>{{ $feedback->reviewee?->name ?? '—' }}</td>
                     <td>{{ $feedback->period }}</td>
                     <td>{{ $feedback->rating }}</td>
                     <td>{{ $feedback->comments }}</td>

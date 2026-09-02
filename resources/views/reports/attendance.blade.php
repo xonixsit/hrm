@@ -16,7 +16,7 @@
         <tbody>
             @foreach ($attendances as $attendance)
                 <tr>
-                    <td>{{ $attendance->employee->user->name }}</td>
+                    <td>{{ $attendance->employee?->user?->name ?? '—' }}</td>
                     <td>{{ $attendance->clock_in }}</td>
                     <td>{{ $attendance->clock_out }}</td>
                     <td>{{ $attendance->notes }}</td>

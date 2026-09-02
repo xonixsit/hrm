@@ -19,9 +19,9 @@
         <tbody>
             @foreach ($timesheets as $timesheet)
                 <tr>
-                    <td>{{ $timesheet->employee->user->name }}</td>
-                    <td>{{ $timesheet->project->name }}</td>
-                    <td>{{ $timesheet->task->name }}</td>
+                    <td>{{ $timesheet->employee?->user?->name ?? '—' }}</td>
+                    <td>{{ $timesheet->project?->name ?? '—' }}</td>
+                    <td>{{ $timesheet->task?->name ?? '—' }}</td>
                     <td>{{ $timesheet->date }}</td>
                     <td>{{ $timesheet->hours }}</td>
                     <td>{{ $timesheet->description }}</td>

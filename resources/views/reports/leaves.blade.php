@@ -18,8 +18,8 @@
         <tbody>
             @foreach ($leaves as $leave)
                 <tr>
-                    <td>{{ $leave->employee->user->name }}</td>
-                    <td>{{ $leave->leave_type->name }}</td>
+                    <td>{{ $leave->employee?->user?->name ?? '—' }}</td>
+                    <td>{{ $leave->leaveType?->name ?? '—' }}</td>
                     <td>{{ $leave->from_date }}</td>
                     <td>{{ $leave->to_date }}</td>
                     <td>{{ $leave->status }}</td>
