@@ -364,7 +364,10 @@ const sendNow = async (s) => {
       alert(`Sent to: ${s.recipients.join(', ')}`);
       await loadSchedules();
     } else alert(res.data.message || 'Failed.');
-  } catch (e) { alert(e.response?.data?.message || 'Failed to send.'); }
+  } catch (e) {
+    const d = e.response?.data;
+    alert((d?.message || 'Failed to send.') + (d?.file ? '\n' + d.file : ''));
+  }
   finally { sendingId.value = null; }
 };
 

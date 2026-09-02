@@ -93,7 +93,6 @@ class ScheduledReportController extends Controller
     {
         try {
             $command = new \App\Console\Commands\SendScheduledReports();
-            // Use reflection to call the private processSchedule method
             $ref = new \ReflectionClass($command);
             $method = $ref->getMethod('processSchedule');
             $method->setAccessible(true);
@@ -101,7 +100,12 @@ class ScheduledReportController extends Controller
 
             return response()->json(['success' => true, 'message' => 'Report sent successfully.']);
         } catch (\Throwable $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+                'file'    => $e->getFile() . ':' . $e->getLine(),
+                'type'    => get_class($e),
+            ], 500);
         }
     }
 
