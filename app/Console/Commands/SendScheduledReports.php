@@ -58,7 +58,7 @@ class SendScheduledReports extends Command
     private function processSchedule(ScheduledReport $schedule, Carbon $now): void
     {
         // Generate the file to a temp path
-        $tmpDir  = storage_path('app/temp-reports');
+        $tmpDir = rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'xonixshr-reports';
         if (! is_dir($tmpDir)) mkdir($tmpDir, 0755, true);
 
         [$filePath, $fileName] = $this->generateFile($schedule, $tmpDir, $now);
@@ -112,8 +112,9 @@ class SendScheduledReports extends Command
                 'feedbacks'   => new \App\Exports\FeedbacksExport,
                 default       => throw new \InvalidArgumentException("Unknown report type: {$type}"),
             };
-            // Use the full path for Excel export
-            Excel::store($export, $path);
+            // Excel::raw() returns the file contents directly — no disk involved
+            $contents = Excel::raw($export, \Maatwebsite\Excel\Excel::XLSX);
+            file_put_contents($path, $contents);
         }
 
         return [$path, $name];
