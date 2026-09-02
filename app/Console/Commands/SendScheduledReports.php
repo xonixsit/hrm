@@ -8,7 +8,6 @@ use App\Models\Feedback;
 use App\Models\Leave;
 use App\Models\ScheduledReport;
 use App\Models\Timesheet;
-use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Mail;
@@ -57,11 +56,15 @@ class SendScheduledReports extends Command
 
     private function processSchedule(ScheduledReport $schedule, Carbon $now): void
     {
+        // Bump limits for large datasets
+        @ini_set('memory_limit', '256M');
+        @set_time_limit(120);
+
         // Generate the file to a temp path
         $tmpDir = rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'xonixshr-reports';
         if (! is_dir($tmpDir)) mkdir($tmpDir, 0755, true);
 
-        [$filePath, $fileName] = $this->generateFile($schedule, $tmpDir, $now);
+        [$filePath, $fileName] = $this->generateFile($schedule, $tmpDir, $now, false);
 
         // Email to all recipients
         foreach ($schedule->recipients as $email) {
@@ -78,44 +81,23 @@ class SendScheduledReports extends Command
         ]);
     }
 
-    private function generateFile(ScheduledReport $schedule, string $tmpDir, Carbon $now): array
+    private function generateFile(ScheduledReport $schedule, string $tmpDir, Carbon $now, bool $forceExcel = false): array
     {
         $date   = $now->format('Y-m-d');
-        $isPdf  = $schedule->report_format === 'pdf';
-        $ext    = $isPdf ? 'pdf' : 'xlsx';
         $type   = $schedule->report_type;
-        $name   = "{$type}-report-{$date}.{$ext}";
+        $name   = "{$type}-report-{$date}.xlsx";
         $path   = "{$tmpDir}/{$name}";
 
-        if ($isPdf) {
-            $pdf = match ($type) {
-                'attendance' => Pdf::loadView('reports.attendance', [
-                    'attendances' => Attendance::with('employee.user')->get(),
-                ]),
-                'leaves' => Pdf::loadView('reports.leaves', [
-                    'leaves' => Leave::with(['employee.user', 'leaveType'])->get(),
-                ]),
-                'timesheets' => Pdf::loadView('reports.timesheets', [
-                    'timesheets' => Timesheet::with(['employee.user', 'project', 'task'])->get(),
-                ]),
-                'feedbacks' => Pdf::loadView('reports.feedbacks', [
-                    'feedbacks' => Feedback::with(['reviewer', 'reviewee'])->get(),
-                ]),
-                default => throw new \InvalidArgumentException("Unknown report type: {$type}"),
-            };
-            file_put_contents($path, $pdf->output());
-        } else {
-            $export = match ($type) {
-                'attendance'  => new \App\Exports\AttendancesExport,
-                'leaves'      => new \App\Exports\LeavesExport,
-                'timesheets'  => new \App\Exports\TimesheetsExport,
-                'feedbacks'   => new \App\Exports\FeedbacksExport,
-                default       => throw new \InvalidArgumentException("Unknown report type: {$type}"),
-            };
-            // Excel::raw() returns the file contents directly — no disk involved
-            $contents = Excel::raw($export, \Maatwebsite\Excel\Excel::XLSX);
-            file_put_contents($path, $contents);
-        }
+        $export = match ($type) {
+            'attendance'  => new \App\Exports\AttendancesExport,
+            'leaves'      => new \App\Exports\LeavesExport,
+            'timesheets'  => new \App\Exports\TimesheetsExport,
+            'feedbacks'   => new \App\Exports\FeedbacksExport,
+            default       => throw new \InvalidArgumentException("Unknown report type: {$type}"),
+        };
+
+        $contents = Excel::raw($export, \Maatwebsite\Excel\Excel::XLSX);
+        file_put_contents($path, $contents);
 
         return [$path, $name];
     }

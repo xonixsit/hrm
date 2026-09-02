@@ -366,6 +366,7 @@ const sendNow = async (s) => {
     } else alert(res.data.message || 'Failed.');
   } catch (e) {
     const d = e.response?.data;
+    console.log(e.response);
     alert((d?.message || 'Failed to send.') + (d?.file ? '\n' + d.file : ''));
   }
   finally { sendingId.value = null; }

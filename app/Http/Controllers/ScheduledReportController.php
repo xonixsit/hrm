@@ -93,10 +93,29 @@ class ScheduledReportController extends Controller
     {
         try {
             $command = new \App\Console\Commands\SendScheduledReports();
-            $ref = new \ReflectionClass($command);
-            $method = $ref->getMethod('processSchedule');
-            $method->setAccessible(true);
-            $method->invoke($command, $scheduledReport, now());
+            $ref     = new \ReflectionClass($command);
+
+            $tmpDir = rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'xonixshr-reports';
+            if (! is_dir($tmpDir)) mkdir($tmpDir, 0755, true);
+
+            $now = now();
+
+            // Force Excel to avoid DomPDF memory exhaustion in web requests
+            $genMethod = $ref->getMethod('generateFile');
+            $genMethod->setAccessible(true);
+            [$filePath, $fileName] = $genMethod->invoke($command, $scheduledReport, $tmpDir, $now, true);
+
+            foreach ($scheduledReport->recipients as $email) {
+                \Illuminate\Support\Facades\Mail::to(trim($email))
+                    ->send(new \App\Mail\ScheduledReportMail($scheduledReport, $filePath, $fileName));
+            }
+
+            if (file_exists($filePath)) unlink($filePath);
+
+            $scheduledReport->update([
+                'last_sent_at' => $now,
+                'next_run_at'  => $scheduledReport->calculateNextRun($now),
+            ]);
 
             return response()->json(['success' => true, 'message' => 'Report sent successfully.']);
         } catch (\Throwable $e) {
@@ -104,7 +123,6 @@ class ScheduledReportController extends Controller
                 'success' => false,
                 'message' => $e->getMessage(),
                 'file'    => $e->getFile() . ':' . $e->getLine(),
-                'type'    => get_class($e),
             ], 500);
         }
     }
