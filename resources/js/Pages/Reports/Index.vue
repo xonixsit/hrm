@@ -1,721 +1,402 @@
 <template>
   <AuthenticatedLayout>
     <div class="min-h-screen bg-gray-50">
+
       <!-- Page Header -->
       <div class="bg-white border-b border-gray-200">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div class="py-6">
-            <!-- Breadcrumbs -->
-            <nav class="flex mb-4" aria-label="Breadcrumb">
-              <ol class="flex items-center space-x-2 text-sm">
-                <li>
-                  <Link :href="route('dashboard')" class="text-gray-500 hover:text-gray-700 transition-colors">
-                    Dashboard
-                  </Link>
-                </li>
-                <li class="flex items-center">
-                  <ChevronRightIcon class="w-4 h-4 text-gray-400 mx-2" />
-                  <span class="text-gray-900 font-medium">Reports & Analytics</span>
-                </li>
-              </ol>
-            </nav>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <nav class="flex mb-3">
+            <ol class="flex items-center space-x-2 text-sm">
+              <li><Link :href="route('dashboard')" class="text-gray-500 hover:text-gray-700">Dashboard</Link></li>
+              <li class="flex items-center">
+                <ChevronRightIcon class="w-4 h-4 text-gray-400 mx-2" />
+                <span class="text-gray-900 font-medium">Reports</span>
+              </li>
+            </ol>
+          </nav>
+          <div class="flex items-center justify-between">
+            <div>
+              <h1 class="text-2xl font-bold text-gray-900">Reports</h1>
+              <p class="mt-1 text-sm text-gray-500">Download or schedule automated delivery of reports.</p>
+            </div>
+            <button v-if="isAdmin" @click="showScheduleModal = true"
+              class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white"
+              style="background:linear-gradient(135deg,#006970,#00a9b4)">
+              <PlusIcon class="w-4 h-4" />
+              Schedule Report
+            </button>
+          </div>
+        </div>
+      </div>
 
-            <!-- Page Title and Actions -->
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-              <div class="mb-4 sm:mb-0">
-                <h1 class="text-2xl font-bold text-gray-900">Reports & Analytics</h1>
-                <p class="mt-1 text-sm text-gray-600">Comprehensive insights and data-driven decisions</p>
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+
+        <!-- Download cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div v-for="r in reportCards" :key="r.type"
+            class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div class="px-6 py-4 border-b flex items-center gap-3"
+              :class="`bg-gradient-to-r ${r.bg} ${r.borderColor}`">
+              <div :class="`p-2 ${r.iconBg} rounded-lg`">
+                <component :is="r.icon" :class="`w-5 h-5 ${r.iconColor}`" />
               </div>
-              <div class="flex items-center space-x-3">
-                <SecondaryButton @click="showScheduleModal = true">
-                  <ClockIcon class="w-4 h-4 mr-2" />
-                  Schedule Report
-                </SecondaryButton>
-                <button class="inline-flex items-center px-4 py-2 bg-teal-500 text-white text-sm font-medium rounded-lg hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-colors" @click="showCustomReportModal = true">
-                  <PlusIcon class="w-4 h-4 mr-2" />
-                  Custom Report
+              <div>
+                <h3 class="text-sm font-semibold text-gray-900">{{ r.title }}</h3>
+                <p class="text-xs text-gray-500">{{ r.desc }}</p>
+              </div>
+            </div>
+            <div class="p-5 grid grid-cols-2 gap-3">
+              <a :href="r.pdf"
+                class="flex items-center justify-between p-3.5 bg-gray-50 rounded-xl border border-transparent hover:bg-red-50 hover:border-red-200 transition-all group">
+                <div class="flex items-center gap-2">
+                  <div class="p-1.5 bg-red-100 rounded-lg group-hover:bg-red-200 transition-colors">
+                    <DocumentIcon class="w-4 h-4 text-red-600" />
+                  </div>
+                  <div>
+                    <p class="text-xs font-semibold text-gray-900">PDF</p>
+                    <p class="text-[10px] text-gray-400">Download</p>
+                  </div>
+                </div>
+                <ArrowDownTrayIcon class="w-3.5 h-3.5 text-gray-400 group-hover:text-red-500" />
+              </a>
+              <a :href="r.excel"
+                class="flex items-center justify-between p-3.5 bg-gray-50 rounded-xl border border-transparent hover:bg-green-50 hover:border-green-200 transition-all group">
+                <div class="flex items-center gap-2">
+                  <div class="p-1.5 bg-green-100 rounded-lg group-hover:bg-green-200 transition-colors">
+                    <TableCellsIcon class="w-4 h-4 text-green-600" />
+                  </div>
+                  <div>
+                    <p class="text-xs font-semibold text-gray-900">Excel</p>
+                    <p class="text-[10px] text-gray-400">Download</p>
+                  </div>
+                </div>
+                <ArrowDownTrayIcon class="w-3.5 h-3.5 text-gray-400 group-hover:text-green-500" />
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Work Reports -->
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="p-2 bg-blue-100 rounded-lg"><DocumentTextIcon class="w-5 h-5 text-blue-600" /></div>
+            <div>
+              <p class="text-sm font-semibold text-gray-900">Work Reports</p>
+              <p class="text-xs text-gray-500">Daily work submissions and productivity tracking</p>
+            </div>
+          </div>
+          <Link :href="route('work-reports.index')"
+            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold text-white"
+            style="background:linear-gradient(135deg,#006970,#00a9b4)">
+            View <ChevronRightIcon class="w-4 h-4" />
+          </Link>
+        </div>
+
+        <!-- Scheduled Reports (admin only) -->
+        <div v-if="isAdmin" class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+          <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+              <div class="p-2 bg-teal-100 rounded-lg"><ClockIcon class="w-5 h-5 text-teal-600" /></div>
+              <div>
+                <h3 class="text-base font-semibold text-gray-900">Scheduled Reports</h3>
+                <p class="text-xs text-gray-500">Auto-deliver reports by email on a schedule</p>
+              </div>
+            </div>
+            <button @click="showScheduleModal = true"
+              class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-teal-200 text-teal-700 bg-teal-50 hover:bg-teal-100 transition-colors">
+              <PlusIcon class="w-3.5 h-3.5" /> Add
+            </button>
+          </div>
+
+          <div v-if="loadingSchedules" class="py-10 text-center text-sm text-gray-400">Loading…</div>
+
+          <div v-else-if="schedules.length === 0" class="py-12 text-center">
+            <ClockIcon class="w-10 h-10 mx-auto mb-3 text-gray-300" />
+            <p class="text-sm font-medium text-gray-600">No scheduled reports yet</p>
+            <p class="text-xs text-gray-400 mt-1">Reports will be emailed automatically on your chosen schedule.</p>
+          </div>
+
+          <div v-else class="divide-y divide-gray-50">
+            <div v-for="s in schedules" :key="s.id"
+              class="flex items-center gap-4 px-6 py-4 hover:bg-gray-50 transition-colors">
+              <span class="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                :class="s.is_active ? 'bg-green-500' : 'bg-gray-300'" />
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-semibold text-gray-900 truncate">{{ s.label || s.report_type_label }}</p>
+                <p class="text-xs text-gray-500 mt-0.5">
+                  {{ s.report_type_label }} · {{ s.report_format.toUpperCase() }} · {{ s.frequency_label }}
+                  <template v-if="s.frequency === 'weekly'"> ({{ s.day_of_week_label }})</template>
+                  <template v-if="s.frequency === 'monthly'"> ({{ s.day_of_month }}th)</template>
+                  at {{ s.send_time }}
+                </p>
+                <p class="text-xs text-gray-400">To: {{ s.recipients.join(', ') }}</p>
+              </div>
+              <div class="hidden sm:block text-right text-xs text-gray-400 flex-shrink-0">
+                <p v-if="s.last_sent_at">Last sent {{ s.last_sent_at }}</p>
+                <p v-else class="italic">Never sent</p>
+                <p v-if="s.is_active && s.next_run_at" class="text-teal-600">Next {{ s.next_run_at }}</p>
+              </div>
+              <div class="flex items-center gap-1.5 flex-shrink-0">
+                <button @click="sendNow(s)" :disabled="sendingId === s.id" title="Send now"
+                  class="p-1.5 rounded-lg border border-gray-200 hover:bg-teal-50 hover:border-teal-300 hover:text-teal-700 transition-colors disabled:opacity-40">
+                  <PaperAirplaneIcon class="w-3.5 h-3.5" />
+                </button>
+                <button @click="toggleActive(s)" :title="s.is_active ? 'Pause' : 'Resume'"
+                  class="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors">
+                  <PauseIcon v-if="s.is_active" class="w-3.5 h-3.5 text-orange-500" />
+                  <PlayIcon v-else class="w-3.5 h-3.5 text-green-600" />
+                </button>
+                <button @click="deleteSchedule(s)" title="Delete"
+                  class="p-1.5 rounded-lg border border-gray-200 hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-colors">
+                  <TrashIcon class="w-3.5 h-3.5" />
                 </button>
               </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- Main Content -->
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        
-        <!-- Key Metrics Overview -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <!-- Total Employees -->
-          <div class="bg-white rounded-2xl p-6 border border-gray-100 hover:shadow-lg transition-all duration-300">
-            <div class="flex items-center justify-between mb-4">
-              <div class="p-3 bg-gradient-to-br from-teal-500 to-teal-600 rounded-xl">
-                <UsersIcon class="w-6 h-6 text-white" />
-              </div>
-              <div class="text-right">
-                <div class="text-2xl font-bold text-gray-900">{{ stats.totalUsers || 274 }}</div>
-                <div class="text-xs text-gray-500">Total Employees</div>
-              </div>
-            </div>
-            <div class="text-sm text-gray-600">Active workforce</div>
-          </div>
-
-          <!-- Active Projects -->
-          <div class="bg-white rounded-2xl p-6 border border-gray-100 hover:shadow-lg transition-all duration-300">
-            <div class="flex items-center justify-between mb-4">
-              <div class="p-3 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl">
-                <FolderIcon class="w-6 h-6 text-white" />
-              </div>
-              <div class="text-right">
-                <div class="text-2xl font-bold text-gray-900">{{ stats.activeProjects || 8 }}</div>
-                <div class="text-xs text-gray-500">Active Projects</div>
-              </div>
-            </div>
-            <div class="text-sm text-gray-600">In progress</div>
-          </div>
-
-          <!-- Completed Tasks -->
-          <div class="bg-white rounded-2xl p-6 border border-gray-100 hover:shadow-lg transition-all duration-300">
-            <div class="flex items-center justify-between mb-4">
-              <div class="p-3 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl">
-                <CheckCircleIcon class="w-6 h-6 text-white" />
-              </div>
-              <div class="text-right">
-                <div class="text-2xl font-bold text-gray-900">{{ stats.completedTasks || 142 }}</div>
-                <div class="text-xs text-gray-500">Completed Tasks</div>
-              </div>
-            </div>
-            <div class="text-sm text-gray-600">This month</div>
-          </div>
-
-          <!-- Hours Logged -->
-          <div class="bg-white rounded-2xl p-6 border border-gray-100 hover:shadow-lg transition-all duration-300">
-            <div class="flex items-center justify-between mb-4">
-              <div class="p-3 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl">
-                <ClockIcon class="w-6 h-6 text-white" />
-              </div>
-              <div class="text-right">
-                <div class="text-2xl font-bold text-gray-900">{{ stats.hoursLogged || 1250 }}</div>
-                <div class="text-xs text-gray-500">Hours Logged</div>
-              </div>
-            </div>
-            <div class="text-sm text-gray-600">Total hours</div>
-          </div>
-        </div>
-
-        <!-- Report Categories -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          
-          <!-- HR & Employee Reports -->
-          <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-            <div class="bg-gradient-to-r from-teal-50 to-indigo-50 px-6 py-4 border-b border-teal-100">
-              <div class="flex items-center space-x-3">
-                <div class="p-2 bg-teal-100 rounded-lg">
-                  <UsersIcon class="w-5 h-5 text-teal-600" />
-                </div>
-                <h3 class="text-lg font-semibold text-gray-900">HR & Employee Reports</h3>
-              </div>
-            </div>
-            <div class="p-6 space-y-3">
-              <button
-                @click="generateReport('attendance')"
-                class="w-full flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all group"
-              >
-                <div class="flex items-center space-x-3">
-                  <ClipboardDocumentCheckIcon class="w-5 h-5 text-gray-500" />
-                  <div class="text-left">
-                    <p class="text-sm font-medium text-gray-900">Attendance Report</p>
-                    <p class="text-xs text-gray-500">Employee attendance and leave tracking</p>
-                  </div>
-                </div>
-                <ChevronRightIcon class="w-4 h-4 text-gray-400 group-hover:translate-x-1 transition-transform" />
-              </button>
-
-              <button
-                @click="generateReport('team-performance')"
-                class="w-full flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all group"
-              >
-                <div class="flex items-center space-x-3">
-                  <UserGroupIcon class="w-5 h-5 text-gray-500" />
-                  <div class="text-left">
-                    <p class="text-sm font-medium text-gray-900">Team Performance</p>
-                    <p class="text-xs text-gray-500">Individual and team productivity metrics</p>
-                  </div>
-                </div>
-                <ChevronRightIcon class="w-4 h-4 text-gray-400 group-hover:translate-x-1 transition-transform" />
-              </button>
-
-              <button
-                @click="generateReport('competency-analysis')"
-                class="w-full flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all group"
-              >
-                <div class="flex items-center space-x-3">
-                  <AcademicCapIcon class="w-5 h-5 text-gray-500" />
-                  <div class="text-left">
-                    <p class="text-sm font-medium text-gray-900">Competency Analysis</p>
-                    <p class="text-xs text-gray-500">Skills assessment and development tracking</p>
-                  </div>
-                </div>
-                <ChevronRightIcon class="w-4 h-4 text-gray-400 group-hover:translate-x-1 transition-transform" />
-              </button>
-            </div>
-          </div>
-
-          <!-- Project Reports -->
-          <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-            <div class="bg-gradient-to-r from-green-50 to-emerald-50 px-6 py-4 border-b border-green-100">
-              <div class="flex items-center space-x-3">
-                <div class="p-2 bg-green-100 rounded-lg">
-                  <FolderIcon class="w-5 h-5 text-green-600" />
-                </div>
-                <h3 class="text-lg font-semibold text-gray-900">Project Reports</h3>
-              </div>
-            </div>
-            <div class="p-6 space-y-3">
-              <button
-                @click="generateReport('project-summary')"
-                class="w-full flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all group"
-              >
-                <div class="flex items-center space-x-3">
-                  <ChartBarIcon class="w-5 h-5 text-gray-500" />
-                  <div class="text-left">
-                    <p class="text-sm font-medium text-gray-900">Project Summary</p>
-                    <p class="text-xs text-gray-500">Overview of all projects and their status</p>
-                  </div>
-                </div>
-                <ChevronRightIcon class="w-4 h-4 text-gray-400 group-hover:translate-x-1 transition-transform" />
-              </button>
-
-              <button
-                @click="generateReport('project-progress')"
-                class="w-full flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all group"
-              >
-                <div class="flex items-center space-x-3">
-                  <ArrowTrendingUpIcon class="w-5 h-5 text-gray-500" />
-                  <div class="text-left">
-                    <p class="text-sm font-medium text-gray-900">Progress Tracking</p>
-                    <p class="text-xs text-gray-500">Detailed progress analysis by project</p>
-                  </div>
-                </div>
-                <ChevronRightIcon class="w-4 h-4 text-gray-400 group-hover:translate-x-1 transition-transform" />
-              </button>
-
-              <button
-                @click="generateReport('work-reports')"
-                class="w-full flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all group"
-              >
-                <div class="flex items-center space-x-3">
-                  <DocumentTextIcon class="w-5 h-5 text-gray-500" />
-                  <div class="text-left">
-                    <p class="text-sm font-medium text-gray-900">Work Reports</p>
-                    <p class="text-xs text-gray-500">Daily work reports and productivity</p>
-                  </div>
-                </div>
-                <ChevronRightIcon class="w-4 h-4 text-gray-400 group-hover:translate-x-1 transition-transform" />
-              </button>
-            </div>
-          </div>
-
-          <!-- Financial & Analytics -->
-          <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-            <div class="bg-gradient-to-r from-purple-50 to-indigo-50 px-6 py-4 border-b border-purple-100">
-              <div class="flex items-center space-x-3">
-                <div class="p-2 bg-purple-100 rounded-lg">
-                  <ChartBarIcon class="w-5 h-5 text-purple-600" />
-                </div>
-                <h3 class="text-lg font-semibold text-gray-900">Analytics & Insights</h3>
-              </div>
-            </div>
-            <div class="p-6 space-y-3">
-              <button
-                @click="generateReport('timesheet-analysis')"
-                class="w-full flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all group"
-              >
-                <div class="flex items-center space-x-3">
-                  <ClockIcon class="w-5 h-5 text-gray-500" />
-                  <div class="text-left">
-                    <p class="text-sm font-medium text-gray-900">Timesheet Analysis</p>
-                    <p class="text-xs text-gray-500">Time tracking and billing analysis</p>
-                  </div>
-                </div>
-                <ChevronRightIcon class="w-4 h-4 text-gray-400 group-hover:translate-x-1 transition-transform" />
-              </button>
-
-              <button
-                @click="generateReport('feedback-summary')"
-                class="w-full flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all group"
-              >
-                <div class="flex items-center space-x-3">
-                  <ChatBubbleLeftEllipsisIcon class="w-5 h-5 text-gray-500" />
-                  <div class="text-left">
-                    <p class="text-sm font-medium text-gray-900">Feedback Summary</p>
-                    <p class="text-xs text-gray-500">Employee feedback and satisfaction</p>
-                  </div>
-                </div>
-                <ChevronRightIcon class="w-4 h-4 text-gray-400 group-hover:translate-x-1 transition-transform" />
-              </button>
-
-              <button
-                @click="generateReport('executive-dashboard')"
-                class="w-full flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all group"
-              >
-                <div class="flex items-center space-x-3">
-                  <PresentationChartBarIcon class="w-5 h-5 text-gray-500" />
-                  <div class="text-left">
-                    <p class="text-sm font-medium text-gray-900">Executive Dashboard</p>
-                    <p class="text-xs text-gray-500">High-level organizational metrics</p>
-                  </div>
-                </div>
-                <ChevronRightIcon class="w-4 h-4 text-gray-400 group-hover:translate-x-1 transition-transform" />
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Recent Reports -->
-        <div class="bg-white rounded-2xl border border-gray-100">
-          <div class="px-6 py-4 border-b border-gray-200">
-            <div class="flex items-center justify-between">
-              <h3 class="text-lg font-semibold text-gray-900">Recent Reports</h3>
-              <SecondaryButton @click="refreshReports" size="sm">
-                <ArrowPathIcon class="w-4 h-4 mr-2" />
-                Refresh
-              </SecondaryButton>
-            </div>
-          </div>
-          
-          <div class="p-6">
-            <div v-if="recentReports.length === 0" class="text-center py-12">
-              <DocumentIcon class="mx-auto h-16 w-16 text-gray-400 mb-4" />
-              <h3 class="text-lg font-semibold text-gray-900 mb-2">No reports yet</h3>
-              <p class="text-gray-600 mb-6">Get started by generating your first report from the categories above.</p>
-              <PrimaryButton @click="showCustomReportModal = true">
-                <PlusIcon class="w-4 h-4 mr-2" />
-                Create Your First Report
-              </PrimaryButton>
-            </div>
-
-            <div v-else class="overflow-hidden">
-              <div class="hidden md:block">
-                <table class="min-w-full">
-                  <thead>
-                    <tr class="border-b border-gray-200">
-                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Report Name
-                      </th>
-                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Type
-                      </th>
-                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Generated
-                      </th>
-                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody class="divide-y divide-gray-200">
-                    <tr v-for="report in recentReports" :key="report.id" class="hover:bg-gray-50">
-                      <td class="px-6 py-4 text-sm font-medium text-gray-900">
-                        {{ report.name }}
-                      </td>
-                      <td class="px-6 py-4 text-sm text-gray-500 capitalize">
-                        {{ report.type }}
-                      </td>
-                      <td class="px-6 py-4 text-sm text-gray-500">
-                        {{ formatDateForDisplay(report.created_at) }}
-                      </td>
-                      <td class="px-6 py-4">
-                        <span
-                          :class="{
-                            'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium': true,
-                            'bg-green-100 text-green-800': report.status === 'completed',
-                            'bg-yellow-100 text-yellow-800': report.status === 'processing',
-                            'bg-red-100 text-red-800': report.status === 'failed'
-                          }"
-                        >
-                          {{ report.status }}
-                        </span>
-                      </td>
-                      <td class="px-6 py-4 text-right space-x-2">
-                        <SecondaryButton
-                          v-if="report.status === 'completed'"
-                          @click="downloadReport(report)"
-                          size="sm"
-                        >
-                          Download
-                        </SecondaryButton>
-                        <SecondaryButton
-                          @click="deleteReport(report)"
-                          size="sm"
-                          variant="danger"
-                        >
-                          Delete
-                        </SecondaryButton>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-
-              <!-- Mobile View -->
-              <div class="md:hidden space-y-4">
-                <div v-for="report in recentReports" :key="report.id" class="bg-gray-50 rounded-lg p-4">
-                  <div class="flex items-center justify-between mb-2">
-                    <h4 class="font-medium text-gray-900">{{ report.name }}</h4>
-                    <span
-                      :class="{
-                        'inline-flex items-center px-2 py-1 rounded-full text-xs font-medium': true,
-                        'bg-green-100 text-green-800': report.status === 'completed',
-                        'bg-yellow-100 text-yellow-800': report.status === 'processing',
-                        'bg-red-100 text-red-800': report.status === 'failed'
-                      }"
-                    >
-                      {{ report.status }}
-                    </span>
-                  </div>
-                  <div class="text-sm text-gray-600 mb-3">
-                    <p>Type: {{ report.type }}</p>
-                    <p>Generated: {{ formatDateForDisplay(report.created_at) }}</p>
-                  </div>
-                  <div class="flex space-x-2">
-                    <SecondaryButton
-                      v-if="report.status === 'completed'"
-                      @click="downloadReport(report)"
-                      size="sm"
-                    >
-                      Download
-                    </SecondaryButton>
-                    <SecondaryButton
-                      @click="deleteReport(report)"
-                      size="sm"
-                      variant="danger"
-                    >
-                      Delete
-                    </SecondaryButton>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
 
-    <!-- Schedule Report Modal -->
-    <div v-if="showScheduleModal" class="fixed inset-0 z-50 overflow-y-auto">
-      <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" @click="showScheduleModal = false"></div>
-        
-        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-          <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-            <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Schedule Report</h3>
-            <div class="space-y-4">
+    <!-- ── Create Schedule Modal ──────────────────────────────────────────── -->
+    <Teleport to="body">
+      <Transition enter-active-class="transition duration-200 ease-out" enter-from-class="opacity-0"
+        enter-to-class="opacity-100" leave-active-class="transition duration-150"
+        leave-from-class="opacity-100" leave-to-class="opacity-0">
+        <div v-if="showScheduleModal"
+          class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+          @click.self="showScheduleModal = false">
+          <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-200">
+
+            <div class="flex items-center justify-between px-6 py-4 border-b bg-gray-50">
+              <h3 class="text-base font-semibold text-gray-900">Schedule a Report</h3>
+              <button @click="showScheduleModal = false"
+                class="w-7 h-7 rounded-full flex items-center justify-center border border-gray-200 text-gray-400 hover:bg-gray-100">
+                <XMarkIcon class="w-4 h-4" />
+              </button>
+            </div>
+
+            <div class="px-6 py-5 space-y-4 overflow-y-auto" style="max-height:65vh">
+
               <div>
-                <label class="block text-sm font-medium text-gray-700">Report Type</label>
-                <select v-model="scheduleForm.type" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
-                  <option value="">Select report type</option>
-                  <option value="project-summary">Project Summary</option>
-                  <option value="team-performance">Team Performance</option>
-                  <option value="attendance">Attendance Report</option>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Name <span class="text-gray-400">(optional)</span></label>
+                <input v-model="form.label" type="text" placeholder="e.g. Monthly HR Report"
+                  class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-teal-500" />
+              </div>
+
+              <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Report Type <span class="text-red-500">*</span></label>
+                <select v-model="form.report_type"
+                  class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-teal-500">
+                  <option value="">Select type</option>
+                  <option v-for="(label, key) in reportTypes" :key="key" :value="key">{{ label }}</option>
                 </select>
               </div>
+
               <div>
-                <label class="block text-sm font-medium text-gray-700">Frequency</label>
-                <select v-model="scheduleForm.frequency" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
-                  <option value="daily">Daily</option>
-                  <option value="weekly">Weekly</option>
-                  <option value="monthly">Monthly</option>
+                <label class="block text-xs font-medium text-gray-600 mb-1.5">Format <span class="text-red-500">*</span></label>
+                <div class="grid grid-cols-2 gap-2">
+                  <button type="button" @click="form.report_format = 'pdf'"
+                    class="py-2 rounded-xl border text-sm font-medium transition-all"
+                    :class="form.report_format === 'pdf' ? 'border-red-400 bg-red-50 text-red-700' : 'border-gray-200 text-gray-600'">
+                    📄 PDF
+                  </button>
+                  <button type="button" @click="form.report_format = 'excel'"
+                    class="py-2 rounded-xl border text-sm font-medium transition-all"
+                    :class="form.report_format === 'excel' ? 'border-green-400 bg-green-50 text-green-700' : 'border-gray-200 text-gray-600'">
+                    📊 Excel
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1.5">Frequency <span class="text-red-500">*</span></label>
+                <div class="grid grid-cols-3 gap-2">
+                  <button v-for="(label, key) in frequencies" :key="key" type="button"
+                    @click="form.frequency = key"
+                    class="py-2 rounded-xl border text-sm font-medium transition-all"
+                    :class="form.frequency === key ? 'border-teal-500 bg-teal-50 text-teal-700' : 'border-gray-200 text-gray-600'">
+                    {{ label }}
+                  </button>
+                </div>
+              </div>
+
+              <div v-if="form.frequency === 'weekly'">
+                <label class="block text-xs font-medium text-gray-600 mb-1">Day of Week <span class="text-red-500">*</span></label>
+                <select v-model="form.day_of_week"
+                  class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-teal-500">
+                  <option v-for="(label, idx) in daysOfWeek" :key="idx" :value="idx">{{ label }}</option>
                 </select>
               </div>
-            </div>
-          </div>
-          <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-            <button
-              @click="scheduleReport"
-              class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm"
-            >
-              Schedule
-            </button>
-            <button
-              @click="showScheduleModal = false"
-              class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
 
-    <!-- Custom Report Modal -->
-    <div v-if="showCustomReportModal" class="fixed inset-0 z-50 overflow-y-auto">
-      <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" @click="showCustomReportModal = false"></div>
-        
-        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
-          <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-            <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Create Custom Report</h3>
-            <div class="space-y-4">
+              <div v-if="form.frequency === 'monthly'">
+                <label class="block text-xs font-medium text-gray-600 mb-1">Day of Month <span class="text-red-500">*</span></label>
+                <select v-model="form.day_of_month"
+                  class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-teal-500">
+                  <option v-for="d in 28" :key="d" :value="d">{{ d }}</option>
+                </select>
+              </div>
+
               <div>
-                <label class="block text-sm font-medium text-gray-700">Report Name</label>
-                <input
-                  v-model="customForm.name"
-                  type="text"
-                  class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                  placeholder="Enter report name"
-                />
+                <label class="block text-xs font-medium text-gray-600 mb-1">Send Time <span class="text-red-500">*</span></label>
+                <input v-model="form.send_time" type="time"
+                  class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-teal-500" />
               </div>
+
               <div>
-                <label class="block text-sm font-medium text-gray-700">Data Sources</label>
-                <div class="mt-2 space-y-2">
-                  <label class="flex items-center">
-                    <input v-model="customForm.sources" type="checkbox" value="projects" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" />
-                    <span class="ml-2 text-sm text-gray-700">Projects</span>
-                  </label>
-                  <label class="flex items-center">
-                    <input v-model="customForm.sources" type="checkbox" value="users" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" />
-                    <span class="ml-2 text-sm text-gray-700">Users</span>
-                  </label>
-                  <label class="flex items-center">
-                    <input v-model="customForm.sources" type="checkbox" value="feedback" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" />
-                    <span class="ml-2 text-sm text-gray-700">Feedback</span>
-                  </label>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Recipients <span class="text-red-500">*</span></label>
+                <div class="space-y-2">
+                  <div v-for="(_, i) in form.recipients" :key="i" class="flex gap-2">
+                    <input v-model="form.recipients[i]" type="email" placeholder="email@company.com"
+                      class="flex-1 rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-teal-500" />
+                    <button v-if="form.recipients.length > 1" type="button" @click="form.recipients.splice(i, 1)"
+                      class="p-2 rounded-lg border border-gray-200 text-gray-400 hover:text-red-500 hover:border-red-200 transition-colors">
+                      <XMarkIcon class="w-4 h-4" />
+                    </button>
+                  </div>
+                  <button type="button" @click="form.recipients.push('')"
+                    class="text-xs text-teal-600 hover:text-teal-700 font-medium">
+                    + Add recipient
+                  </button>
                 </div>
+                <p v-if="formError" class="mt-1.5 text-xs text-red-500">{{ formError }}</p>
               </div>
-              <div class="grid grid-cols-2 gap-4">
-                <div>
-                  <label class="block text-sm font-medium text-gray-700">Start Date</label>
-                  <input
-                    v-model="customForm.startDate"
-                    type="date"
-                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                  />
-                </div>
-                <div>
-                  <label class="block text-sm font-medium text-gray-700">End Date</label>
-                  <input
-                    v-model="customForm.endDate"
-                    type="date"
-                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                  />
-                </div>
-              </div>
+
             </div>
-          </div>
-          <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-            <button
-              @click="createCustomReport"
-              class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm"
-            >
-              Generate Report
-            </button>
-            <button
-              @click="showCustomReportModal = false"
-              class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
-            >
-              Cancel
-            </button>
+
+            <div class="px-6 py-4 bg-gray-50 border-t flex justify-end gap-3">
+              <button @click="showScheduleModal = false"
+                class="px-4 py-2 rounded-xl text-sm border border-gray-200 text-gray-600 hover:bg-gray-100">Cancel</button>
+              <button @click="createSchedule" :disabled="savingSchedule"
+                class="px-5 py-2 rounded-xl text-sm font-semibold text-white disabled:opacity-50"
+                style="background:linear-gradient(135deg,#006970,#00a9b4)">
+                {{ savingSchedule ? 'Saving…' : 'Create Schedule' }}
+              </button>
+            </div>
+
           </div>
         </div>
-      </div>
-    </div>
+      </Transition>
+    </Teleport>
+
   </AuthenticatedLayout>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
-import { router, Link } from '@inertiajs/vue3'
-import axios from 'axios'
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
-import PrimaryButton from '@/Components/PrimaryButton.vue'
-import SecondaryButton from '@/Components/SecondaryButton.vue'
-import { useDateUtils } from '@/composables/useDateUtils'
+import { ref, computed, onMounted, watch } from 'vue';
+import { Link, usePage } from '@inertiajs/vue3';
+import axios from 'axios';
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import {
-  ClockIcon,
-  PlusIcon,
-  UsersIcon,
-  FolderIcon,
-  CheckCircleIcon,
-  ChartBarIcon,
-  ArrowTrendingUpIcon,
-  CalendarIcon,
-  UserGroupIcon,
-  ClipboardDocumentCheckIcon,
-  ChatBubbleLeftEllipsisIcon,
-  ChevronRightIcon,
-  DocumentIcon,
-  DocumentTextIcon,
-  PresentationChartBarIcon,
-  AcademicCapIcon,
-  ArrowPathIcon
-} from '@heroicons/vue/24/outline'
+  ClockIcon, ChevronRightIcon, DocumentTextIcon, DocumentIcon,
+  PlusIcon, PauseIcon, PlayIcon, TrashIcon, XMarkIcon,
+  PaperAirplaneIcon, ArrowDownTrayIcon, TableCellsIcon,
+} from '@heroicons/vue/24/outline';
+import { ClipboardDocumentCheckIcon, CalendarDaysIcon, ChatBubbleLeftEllipsisIcon } from '@heroicons/vue/24/outline';
 
-const { formatDateForDisplay } = useDateUtils()
+const page    = usePage();
+const roles   = computed(() => { const r = page.props.auth?.user?.roles ?? []; return Array.isArray(r) ? r : Object.values(r); });
+const isAdmin = computed(() => roles.value.includes('Admin'));
 
-// Reactive data
-const showScheduleModal = ref(false)
-const showCustomReportModal = ref(false)
+// ── Report cards config ───────────────────────────────────────────────────────
+const reportCards = computed(() => [
+  {
+    type: 'attendance', title: 'Attendance Reports', desc: 'Clock-in/out records and history',
+    icon: ClipboardDocumentCheckIcon, bg: 'from-teal-50 to-cyan-50', borderColor: 'border-teal-100',
+    iconBg: 'bg-teal-100', iconColor: 'text-teal-600',
+    pdf:   route('reports.attendance.pdf'), excel: route('reports.attendance.excel'),
+  },
+  {
+    type: 'leaves', title: 'Leave Reports', desc: 'Applications, approvals and balances',
+    icon: CalendarDaysIcon, bg: 'from-orange-50 to-amber-50', borderColor: 'border-orange-100',
+    iconBg: 'bg-orange-100', iconColor: 'text-orange-600',
+    pdf:   route('reports.leaves.pdf'), excel: route('reports.leaves.excel'),
+  },
+  {
+    type: 'timesheets', title: 'Timesheet Reports', desc: 'Work hours logged and approvals',
+    icon: ClockIcon, bg: 'from-purple-50 to-indigo-50', borderColor: 'border-purple-100',
+    iconBg: 'bg-purple-100', iconColor: 'text-purple-600',
+    pdf:   route('reports.timesheets.pdf'), excel: route('reports.timesheets.excel'),
+  },
+  {
+    type: 'feedbacks', title: 'Feedback Reports', desc: 'Employee ratings and satisfaction',
+    icon: ChatBubbleLeftEllipsisIcon, bg: 'from-pink-50 to-rose-50', borderColor: 'border-pink-100',
+    iconBg: 'bg-pink-100', iconColor: 'text-pink-600',
+    pdf:   route('reports.feedbacks.pdf'), excel: route('reports.feedbacks.excel'),
+  },
+]);
 
-const stats = reactive({
-  totalUsers: 0, // This will now contain Employee count for consistency with Dashboard
-  activeProjects: 0,
-  completedTasks: 0,
-  hoursLogged: 0
-})
+// ── Schedules ─────────────────────────────────────────────────────────────────
+const schedules        = ref([]);
+const loadingSchedules = ref(false);
+const sendingId        = ref(null);
 
-const recentReports = ref([])
-
-const scheduleForm = reactive({
-  type: '',
-  frequency: 'weekly'
-})
-
-const customForm = reactive({
-  name: '',
-  sources: [],
-  startDate: '',
-  endDate: ''
-})
-
-// Methods
-const generateReport = async (type) => {
+const loadSchedules = async () => {
+  if (!isAdmin.value) return;
+  loadingSchedules.value = true;
   try {
-    const response = await axios.post(route('reports.generate'), {
-      type: type,
-      format: 'pdf'
-    })
-    
-    if (response?.data?.success) {
-      await refreshReports()
-      alert('Report generation started. You will be notified when it\'s ready.')
-    }
-  } catch (error) {
-    console.error('Error generating report:', error)
-    alert('Failed to generate report. Please try again.')
-  }
-}
+    const res = await axios.get(route('reports.schedules.index'));
+    schedules.value = res.data.schedules;
+  } catch (e) { console.error(e); }
+  finally { loadingSchedules.value = false; }
+};
 
-const scheduleReport = async () => {
-  if (!scheduleForm.type) {
-    alert('Please select a report type')
-    return
-  }
-
+const toggleActive = async (s) => {
   try {
-    const response = await axios.post(route('reports.schedule'), scheduleForm)
-    
-    if (response?.data?.success) {
-      showScheduleModal.value = false
-      scheduleForm.type = ''
-      scheduleForm.frequency = 'weekly'
-      alert('Report scheduled successfully!')
-    }
-  } catch (error) {
-    console.error('Error scheduling report:', error)
-    alert('Failed to schedule report. Please try again.')
-  }
-}
+    const res = await axios.patch(route('reports.schedules.toggle', s.id));
+    s.is_active = res.data.is_active;
+  } catch { alert('Failed to update.'); }
+};
 
-const createCustomReport = async () => {
-  if (!customForm.name || customForm.sources.length === 0) {
-    alert('Please provide a report name and select at least one data source')
-    return
-  }
-
+const deleteSchedule = async (s) => {
+  if (!confirm(`Delete "${s.label || s.report_type_label}"?`)) return;
   try {
-    const response = await axios.post(route('reports.custom'), customForm)
-    
-    if (response?.data?.success) {
-      showCustomReportModal.value = false
-      Object.assign(customForm, {
-        name: '',
-        sources: [],
-        startDate: '',
-        endDate: ''
-      })
-      
-      await refreshReports()
-      alert('Custom report generation started!')
-    }
-  } catch (error) {
-    console.error('Error creating custom report:', error)
-    alert('Failed to create custom report. Please try again.')
-  }
-}
+    await axios.delete(route('reports.schedules.destroy', s.id));
+    schedules.value = schedules.value.filter(x => x.id !== s.id);
+  } catch { alert('Failed to delete.'); }
+};
 
-const refreshReports = async () => {
+const sendNow = async (s) => {
+  sendingId.value = s.id;
   try {
-    const response = await axios.get(route('reports.recent'))
-    recentReports.value = response?.data?.reports || []
-  } catch (error) {
-    console.error('Error fetching reports:', error)
-    recentReports.value = []
-  }
-}
+    const res = await axios.post(route('reports.schedules.send-now', s.id));
+    if (res.data.success) {
+      alert(`Sent to: ${s.recipients.join(', ')}`);
+      await loadSchedules();
+    } else alert(res.data.message || 'Failed.');
+  } catch (e) { alert(e.response?.data?.message || 'Failed to send.'); }
+  finally { sendingId.value = null; }
+};
 
-const downloadReport = async (report) => {
+// ── Create form ───────────────────────────────────────────────────────────────
+const reportTypes  = { attendance: 'Attendance Report', leaves: 'Leave Report', timesheets: 'Timesheet Report', feedbacks: 'Feedback Report' };
+const frequencies  = { daily: 'Daily', weekly: 'Weekly', monthly: 'Monthly' };
+const daysOfWeek   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+const showScheduleModal = ref(false);
+const savingSchedule    = ref(false);
+const formError         = ref('');
+
+const emptyForm = () => ({ label: '', report_type: '', report_format: 'pdf', frequency: 'weekly', day_of_week: 1, day_of_month: 1, send_time: '08:00', recipients: [''] });
+const form = ref(emptyForm());
+
+watch(showScheduleModal, v => { if (!v) { form.value = emptyForm(); formError.value = ''; } });
+
+const createSchedule = async () => {
+  formError.value = '';
+  const validEmails = form.value.recipients.filter(e => e.trim());
+  if (!form.value.report_type) { formError.value = 'Select a report type.'; return; }
+  if (!validEmails.length)     { formError.value = 'Add at least one recipient.'; return; }
+
+  savingSchedule.value = true;
   try {
-    const response = await axios.get(route('reports.download', report.id), {
-      responseType: 'blob'
-    })
-    
-    const url = window.URL.createObjectURL(new Blob([response.data]))
-    const link = document.createElement('a')
-    link.href = url
-    link.setAttribute('download', `${report.name}.pdf`)
-    document.body.appendChild(link)
-    link.click()
-    link.remove()
-    window.URL.revokeObjectURL(url)
-  } catch (error) {
-    console.error('Error downloading report:', error)
-    alert('Failed to download report. Please try again.')
-  }
-}
+    const res = await axios.post(route('reports.schedules.store'), { ...form.value, recipients: validEmails });
+    if (res.data.success) { schedules.value.unshift(res.data.schedule); showScheduleModal.value = false; }
+  } catch (e) {
+    const errors = e.response?.data?.errors;
+    formError.value = errors ? Object.values(errors).flat().join(' ') : (e.response?.data?.message || 'Failed.');
+  } finally { savingSchedule.value = false; }
+};
 
-const deleteReport = async (report) => {
-  if (!confirm('Are you sure you want to delete this report?')) {
-    return
-  }
-
-  try {
-    const response = await axios.delete(route('reports.destroy', report.id))
-    
-    if (response?.data?.success) {
-      await refreshReports()
-    }
-  } catch (error) {
-    console.error('Error deleting report:', error)
-    alert('Failed to delete report. Please try again.')
-  }
-}
-
-const loadStats = async () => {
-  try {
-    const response = await axios.get(route('reports.stats'))
-    Object.assign(stats, response?.data?.stats || {})
-  } catch (error) {
-    console.error('Error loading stats:', error)
-    Object.assign(stats, {
-      totalUsers: 25,
-      activeProjects: 8,
-      completedTasks: 142,
-      hoursLogged: 1250
-    })
-  }
-}
-
-// Navigation is now handled by StatsCard component
-
-// Lifecycle
-onMounted(async () => {
-  await Promise.all([
-    loadStats(),
-    refreshReports()
-  ])
-})
+onMounted(loadSchedules);
 </script>

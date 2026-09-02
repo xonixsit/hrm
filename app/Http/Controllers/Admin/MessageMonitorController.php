@@ -158,12 +158,28 @@ class MessageMonitorController extends Controller
             ->distinct('user_id')
             ->count('user_id');
 
+        $blockedUsers = DB::table('blocked_users as b')
+            ->join('users as blocker', 'blocker.id', '=', 'b.blocker_id')
+            ->join('users as blocked', 'blocked.id', '=', 'b.blocked_id')
+            ->select(
+                'b.id',
+                'b.created_at',
+                'blocker.id   as blocker_id',
+                'blocker.name as blocker_name',
+                'blocker.email as blocker_email',
+                'blocked.id   as blocked_id',
+                'blocked.name as blocked_name',
+                'blocked.email as blocked_email'
+            )
+            ->orderBy('b.created_at', 'desc')
+            ->get();
+
         return Inertia::render('Admin/MessageMonitor/Index', [
-            'messages' => $messages,
-            'users'    => $users,
-            'groups'   => $groups,
-            'tab'      => $tab,
-            'filters'  => array_merge($f, [
+            'messages'     => $messages,
+            'users'        => $users,
+            'groups'       => $groups,
+            'tab'          => $tab,
+            'filters'      => array_merge($f, [
                 'to_user'  => $request->get('to_user'),
                 'group_id' => $request->get('group_id'),
                 'tab'      => $tab,
@@ -172,6 +188,7 @@ class MessageMonitorController extends Controller
                 'total_messages' => $total,
                 'active_users'   => $activeUsers,
             ],
+            'blockedUsers' => $blockedUsers,
         ]);
     }
 

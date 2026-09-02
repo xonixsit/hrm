@@ -449,6 +449,15 @@ Route::get('/training', [TrainingPageController::class, 'index'])->middleware(['
     Route::get('/reports/recent', [ReportController::class, 'recent'])->name('reports.recent');
     Route::get('/reports/{id}/download', [ReportController::class, 'download'])->name('reports.download');
     Route::delete('/reports/{id}', [ReportController::class, 'destroy'])->name('reports.destroy');
+
+    // Scheduled Reports (admin only)
+    Route::prefix('reports/schedules')->middleware('auth')->group(function () {
+        Route::get('/', [\App\Http\Controllers\ScheduledReportController::class, 'index'])->name('reports.schedules.index');
+        Route::post('/', [\App\Http\Controllers\ScheduledReportController::class, 'store'])->name('reports.schedules.store');
+        Route::patch('/{scheduledReport}/toggle', [\App\Http\Controllers\ScheduledReportController::class, 'toggleActive'])->name('reports.schedules.toggle');
+        Route::post('/{scheduledReport}/send-now', [\App\Http\Controllers\ScheduledReportController::class, 'sendNow'])->name('reports.schedules.send-now');
+        Route::delete('/{scheduledReport}', [\App\Http\Controllers\ScheduledReportController::class, 'destroy'])->name('reports.schedules.destroy');
+    });
     
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::post('/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');

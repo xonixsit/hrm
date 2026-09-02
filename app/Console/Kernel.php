@@ -18,6 +18,12 @@ class Kernel extends ConsoleKernel
                  ->withoutOverlapping()
                  ->runInBackground();
 
+        // Send scheduled reports — runs every 30 minutes to catch any due schedules
+        $schedule->command('reports:send-scheduled')
+                 ->everyThirtyMinutes()
+                 ->withoutOverlapping()
+                 ->runInBackground();
+
         // Send daily digests at 9:00 AM every day
         $schedule->command('notifications:send-daily-digests')
                  ->dailyAt('09:00')

@@ -28,12 +28,13 @@ const sanitize = (html) => DOMPurify.sanitize(html, {
 const { isDark } = useTheme();
 
 const props = defineProps({
-    messages: Object,   // paginated
-    users:    Array,
-    groups:   Array,
-    tab:      String,
-    filters:  Object,
-    stats:    Object,
+    messages:     Object,   // paginated
+    users:        Array,
+    groups:       Array,
+    tab:          String,
+    filters:      Object,
+    stats:        Object,
+    blockedUsers: Array,    // [{ blocker_id, blocker_name, blocked_id, blocked_name, created_at }]
 });
 
 const breadcrumbs = [
@@ -122,6 +123,9 @@ function setPreset(preset) {
 const viewingMsg = ref(null);
 function openMsg(msg)  { viewingMsg.value = msg; }
 function closeMsg()    { viewingMsg.value = null; }
+
+// ── Blocked users modal ───────────────────────────────────────────────────────
+const showBlockedModal = ref(false);
 
 // Image lightbox state
 const showImageLightbox = ref(false);
@@ -612,6 +616,18 @@ function initials(name) {
                             </svg>
                             {{ refreshing ? 'Refreshing…' : 'Refresh' }}
                         </button>
+                        <button @click="showBlockedModal = true"
+                            class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold border transition-all"
+                            :class="isDark ? 'bg-red-900/30 border-red-700 text-red-400 hover:bg-red-900/50' : 'bg-red-50 border-red-200 text-red-600 hover:bg-red-100'">
+                            <svg class="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clip-rule="evenodd"/>
+                            </svg>
+                            Blocked Users
+                            <span v-if="blockedUsers?.length" class="ml-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-extrabold"
+                                :class="isDark ? 'bg-red-700 text-white' : 'bg-red-500 text-white'">
+                                {{ blockedUsers.length }}
+                            </span>
+                        </button>
                     </div>
 
                     <!-- ── DIRECT MESSAGES table ───────────────────────── -->
@@ -908,6 +924,113 @@ function initials(name) {
         </Transition>
     </Teleport>
 
+    <!-- ── Blocked Users Modal ──────────────────────────────────────────── -->
+    <Teleport to="body">
+        <Transition enter-active-class="transition duration-200 ease-out" enter-from-class="opacity-0"
+            enter-to-class="opacity-100" leave-active-class="transition duration-150 ease-in"
+            leave-from-class="opacity-100" leave-to-class="opacity-0">
+            <div v-if="showBlockedModal"
+                class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm"
+                @click.self="showBlockedModal = false">
+                <Transition enter-active-class="transition duration-200 ease-out"
+                    enter-from-class="opacity-0 scale-95" enter-to-class="opacity-100 scale-100"
+                    leave-active-class="transition duration-150 ease-in"
+                    leave-from-class="opacity-100 scale-100" leave-to-class="opacity-0 scale-95">
+                    <div v-if="showBlockedModal"
+                        class="w-full max-w-xl rounded-2xl shadow-2xl overflow-hidden"
+                        :class="isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-slate-200'">
+
+                        <!-- Header -->
+                        <div class="flex items-center justify-between px-5 py-4 border-b"
+                            :class="isDark ? 'border-gray-700 bg-gray-800' : 'border-slate-200 bg-slate-50'">
+                            <div class="flex items-center gap-2.5">
+                                <div class="w-8 h-8 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                                    <svg class="w-4 h-4 text-red-600 dark:text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clip-rule="evenodd"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-bold" :class="isDark ? 'text-white' : 'text-slate-800'">Blocked Users</p>
+                                    <p class="text-xs" :class="isDark ? 'text-gray-400' : 'text-slate-500'">
+                                        {{ blockedUsers?.length || 0 }} active block{{ blockedUsers?.length !== 1 ? 's' : '' }}
+                                    </p>
+                                </div>
+                            </div>
+                            <button @click="showBlockedModal = false"
+                                class="w-7 h-7 rounded-full flex items-center justify-center border transition-all"
+                                :class="isDark ? 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-100'">
+                                <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
+                                    <path d="M1 1l10 10M11 1L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                </svg>
+                            </button>
+                        </div>
+
+                        <!-- Body -->
+                        <div class="overflow-y-auto blocked-scroll" style="max-height:58vh">
+                            <!-- Empty -->
+                            <div v-if="!blockedUsers?.length" class="py-14 text-center">
+                                <div class="w-12 h-12 rounded-full mx-auto mb-3 flex items-center justify-center"
+                                    :class="isDark ? 'bg-gray-700' : 'bg-slate-100'">
+                                    <svg class="w-6 h-6" :class="isDark ? 'text-gray-500' : 'text-slate-400'" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clip-rule="evenodd"/>
+                                    </svg>
+                                </div>
+                                <p class="text-sm font-medium" :class="isDark ? 'text-gray-300' : 'text-slate-600'">No blocked users</p>
+                                <p class="text-xs mt-1" :class="isDark ? 'text-gray-500' : 'text-slate-400'">No employees have blocked each other</p>
+                            </div>
+
+                            <!-- Table -->
+                            <div v-else class="divide-y" :class="isDark ? 'divide-gray-700' : 'divide-slate-100'">
+                                <!-- Header -->
+                                <div class="grid grid-cols-[1fr_auto_1fr_auto] gap-2 px-4 py-2.5 text-[10px] font-semibold uppercase tracking-wide border-b"
+                                    :class="isDark ? 'border-gray-700 bg-gray-750 text-gray-400' : 'border-slate-200 bg-slate-50 text-slate-500'">
+                                    <span>Blocked User</span>
+                                    <span class="text-center px-1">→</span>
+                                    <span>Blocked By</span>
+                                    <span class="text-right">Date</span>
+                                </div>
+                                <!-- Rows -->
+                                <div v-for="b in blockedUsers" :key="b.id"
+                                    class="grid grid-cols-[1fr_auto_1fr_auto] gap-2 items-center px-4 py-3 transition-colors"
+                                    :class="isDark ? 'hover:bg-gray-700/50' : 'hover:bg-red-50/40'">
+                                    <!-- Blocked user (victim) -->
+                                    <div class="flex items-center gap-2 min-w-0">
+                                        <span class="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-extrabold text-white shrink-0 bg-slate-400">
+                                            {{ initials(b.blocked_name) }}
+                                        </span>
+                                        <div class="min-w-0">
+                                            <p class="font-semibold truncate text-xs" :class="isDark ? 'text-white' : 'text-slate-800'">{{ b.blocked_name }}</p>
+                                            <p class="text-[10px] truncate" :class="isDark ? 'text-gray-500' : 'text-slate-400'">{{ b.blocked_email }}</p>
+                                        </div>
+                                    </div>
+                                    <!-- Arrow -->
+                                    <svg class="w-3.5 h-3.5 flex-shrink-0" :class="isDark ? 'text-red-400' : 'text-red-400'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+                                    </svg>
+                                    <!-- Blocker -->
+                                    <div class="flex items-center gap-2 min-w-0">
+                                        <span class="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-extrabold text-white shrink-0"
+                                            style="background:linear-gradient(135deg,#dc2626,#f97316)">
+                                            {{ initials(b.blocker_name) }}
+                                        </span>
+                                        <div class="min-w-0">
+                                            <p class="font-semibold truncate text-xs" :class="isDark ? 'text-white' : 'text-slate-800'">{{ b.blocker_name }}</p>
+                                            <p class="text-[10px] truncate" :class="isDark ? 'text-gray-500' : 'text-slate-400'">{{ b.blocker_email }}</p>
+                                        </div>
+                                    </div>
+                                    <!-- Date -->
+                                    <span class="text-[10px] whitespace-nowrap text-right shrink-0" :class="isDark ? 'text-gray-400' : 'text-slate-400'">
+                                        {{ formatDT(b.created_at) }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </Transition>
+            </div>
+        </Transition>
+    </Teleport>
+
     <!-- Image Lightbox -->
     <ImageLightbox
         :is-open="showImageLightbox"
@@ -1027,5 +1150,29 @@ function initials(name) {
 /* Hide file attachment HTML since we show it separately */
 .msg-body :deep(.rt-file-attachment) {
     display: none;
+}
+
+/* Blocked users smooth scroll */
+.blocked-scroll {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+}
+.blocked-scroll::-webkit-scrollbar {
+    width: 4px;
+}
+.blocked-scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+.blocked-scroll::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #dc2626, #f97316);
+    border-radius: 999px;
+}
+.blocked-scroll::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #b91c1c, #ea580c);
+}
+.blocked-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: #dc2626 transparent;
 }
 </style>
