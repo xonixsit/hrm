@@ -27,7 +27,7 @@ class AttendancesExport implements FromCollection, WithHeadings, WithMapping
     public function map($attendance): array
     {
         return [
-            $attendance->employee->user->name,
+            $attendance->employee?->user?->name ?? 'N/A',
             $attendance->clock_in,
             $attendance->clock_out,
             $attendance->notes,

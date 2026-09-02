@@ -30,9 +30,9 @@ class TimesheetsExport implements FromCollection, WithHeadings, WithMapping
     public function map($timesheet): array
     {
         return [
-            $timesheet->employee->user->name,
-            $timesheet->project->name,
-            $timesheet->task->name,
+            $timesheet->employee?->user?->name ?? 'N/A',
+            $timesheet->project?->name ?? 'N/A',
+            $timesheet->task?->name ?? 'N/A',
             $timesheet->date,
             $timesheet->hours,
             $timesheet->description,

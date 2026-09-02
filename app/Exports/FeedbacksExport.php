@@ -28,8 +28,8 @@ class FeedbacksExport implements FromCollection, WithHeadings, WithMapping
     public function map($feedback): array
     {
         return [
-            $feedback->reviewer->name,
-            $feedback->reviewee->name,
+            $feedback->reviewer?->name ?? 'N/A',
+            $feedback->reviewee?->name ?? 'N/A',
             $feedback->period,
             $feedback->rating,
             $feedback->comments,
