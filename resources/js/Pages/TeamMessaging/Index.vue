@@ -1,4 +1,4 @@
-﻿<script setup>
+<script setup>
 console.log('TeamMessaging Index.vue script setup loaded');
 import { ref, computed, onMounted, onUnmounted, nextTick, watch, TransitionGroup } from 'vue';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
@@ -1047,6 +1047,8 @@ const selectConversation = async (conversationId) => {
         }));
         // Server has marked as read â€” confirm with fresh counts
         checkForNewConversations();
+        // Scroll to bottom once messages are in the DOM
+        nextTick(() => scrollToBottom(false, true));
     } catch (error) {
         console.error('Error loading messages:', error);
     } finally {
@@ -1635,7 +1637,6 @@ watch(selectedConversation, (newVal) => {
             checkForNewMessages();
         }, 3000);
     }
-    scrollToBottom(false, true); // force on conversation switch â€” always jump to bottom
 });
 
 // Watch for messages to scroll to bottom â€” only when near bottom
