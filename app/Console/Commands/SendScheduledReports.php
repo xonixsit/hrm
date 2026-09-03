@@ -89,10 +89,10 @@ class SendScheduledReports extends Command
         $path   = "{$tmpDir}/{$name}";
 
         $export = match ($type) {
-            'attendance'  => new \App\Exports\AttendancesExport,
-            'leaves'      => new \App\Exports\LeavesExport,
-            'timesheets'  => new \App\Exports\TimesheetsExport,
-            'feedbacks'   => new \App\Exports\FeedbacksExport,
+            'attendance'  => new \App\Exports\AttendancesExport(['date' => $now->toDateString()]),
+            'leaves'      => new \App\Exports\LeavesExport(['date_from' => $now->toDateString(), 'date_to' => $now->toDateString()]),
+            'timesheets'  => new \App\Exports\TimesheetsExport(['date' => $now->toDateString()]),
+            'feedbacks'   => new \App\Exports\FeedbacksExport(),
             default       => throw new \InvalidArgumentException("Unknown report type: {$type}"),
         };
 

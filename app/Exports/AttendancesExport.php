@@ -9,9 +9,22 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 
 class AttendancesExport implements FromCollection, WithHeadings, WithMapping
 {
+    protected array $filters;
+
+    public function __construct(array $filters = [])
+    {
+        $this->filters = $filters;
+    }
+
     public function collection()
     {
-        return Attendance::with('employee.user')->get();
+        $query = Attendance::with('employee.user');
+
+        if (!empty($this->filters['date'])) {
+            $query->whereDate('clock_in', $this->filters['date']);
+        }
+
+        return $query->latest('clock_in')->get();
     }
 
     public function headings(): array

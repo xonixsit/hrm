@@ -9,9 +9,22 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 
 class TimesheetsExport implements FromCollection, WithHeadings, WithMapping
 {
+    protected array $filters;
+
+    public function __construct(array $filters = [])
+    {
+        $this->filters = $filters;
+    }
+
     public function collection()
     {
-        return Timesheet::with(['employee.user', 'project', 'task'])->get();
+        $query = Timesheet::with(['employee.user', 'project', 'task']);
+
+        if (!empty($this->filters['date'])) {
+            $query->whereDate('date', $this->filters['date']);
+        }
+
+        return $query->latest('date')->get();
     }
 
     public function headings(): array
