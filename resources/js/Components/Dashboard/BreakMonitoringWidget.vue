@@ -206,15 +206,12 @@ const sendBreakReminders = async () => {
     }
   } catch (error) {
     console.error('Failed to send break reminders:', error);
-    
+    const msg = error.response?.data?.message || error.message || 'Unknown error';
     const toast = document.createElement('div');
     toast.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 transition-all duration-300';
-    toast.textContent = '❌ Failed to send break reminders. Please try again.';
+    toast.textContent = `❌ Failed to send break reminders: ${msg}`;
     document.body.appendChild(toast);
-    
-    setTimeout(() => {
-      toast.remove();
-    }, 5000);
+    setTimeout(() => { toast.remove(); }, 7000);
   } finally {
     loading.value = false;
   }

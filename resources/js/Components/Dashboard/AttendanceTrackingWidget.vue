@@ -384,7 +384,8 @@ const sendReminder = async () => {
       showToast('❌ Session expired. Please refresh the page and try again.', 'red');
       setTimeout(() => window.location.reload(), 3000);
     } else {
-      showToast('❌ Failed to send reminders. Please try again.', 'red');
+      const msg = error.response?.data?.message || error.message || 'Unknown error';
+      showToast(`❌ Failed to send reminders: ${msg}`, 'red');
     }
   } finally {
     loading.value = false;

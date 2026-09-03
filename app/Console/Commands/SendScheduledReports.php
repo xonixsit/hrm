@@ -88,11 +88,20 @@ class SendScheduledReports extends Command
         $name   = "{$type}-report-{$date}.xlsx";
         $path   = "{$tmpDir}/{$name}";
 
+        // Calculate date range based on frequency
+        $dateFrom = match ($schedule->frequency) {
+            'daily'   => $now->toDateString(),
+            'weekly'  => $now->copy()->subDays(6)->toDateString(),
+            'monthly' => $now->copy()->startOfMonth()->toDateString(),
+            default   => $now->toDateString(),
+        };
+        $dateTo = $now->toDateString();
+
         $export = match ($type) {
-            'attendance'  => new \App\Exports\AttendancesExport(['date' => $now->toDateString()]),
-            'leaves'      => new \App\Exports\LeavesExport(['date_from' => $now->toDateString(), 'date_to' => $now->toDateString()]),
-            'timesheets'  => new \App\Exports\TimesheetsExport(['date' => $now->toDateString()]),
-            'feedbacks'   => new \App\Exports\FeedbacksExport(),
+            'attendance'  => new \App\Exports\AttendancesExport(['date_from' => $dateFrom, 'date_to' => $dateTo]),
+            'leaves'      => new \App\Exports\LeavesExport(['date_from' => $dateFrom, 'date_to' => $dateTo]),
+            'timesheets'  => new \App\Exports\TimesheetsExport(['date_from' => $dateFrom, 'date_to' => $dateTo]),
+            'feedbacks'   => new \App\Exports\FeedbacksExport(['date_from' => $dateFrom, 'date_to' => $dateTo]),
             default       => throw new \InvalidArgumentException("Unknown report type: {$type}"),
         };
 

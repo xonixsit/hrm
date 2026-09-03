@@ -45,20 +45,7 @@
                 <p class="text-xs text-gray-500">{{ r.desc }}</p>
               </div>
             </div>
-            <div class="p-5 grid grid-cols-2 gap-3">
-              <a :href="r.pdf"
-                class="flex items-center justify-between p-3.5 bg-gray-50 rounded-xl border border-transparent hover:bg-red-50 hover:border-red-200 transition-all group">
-                <div class="flex items-center gap-2">
-                  <div class="p-1.5 bg-red-100 rounded-lg group-hover:bg-red-200 transition-colors">
-                    <DocumentIcon class="w-4 h-4 text-red-600" />
-                  </div>
-                  <div>
-                    <p class="text-xs font-semibold text-gray-900">PDF</p>
-                    <p class="text-[10px] text-gray-400">Download</p>
-                  </div>
-                </div>
-                <ArrowDownTrayIcon class="w-3.5 h-3.5 text-gray-400 group-hover:text-red-500" />
-              </a>
+            <div class="p-5">
               <a :href="r.excel"
                 class="flex items-center justify-between p-3.5 bg-gray-50 rounded-xl border border-transparent hover:bg-green-50 hover:border-green-200 transition-all group">
                 <div class="flex items-center gap-2">
@@ -124,7 +111,7 @@
               <div class="flex-1 min-w-0">
                 <p class="text-sm font-semibold text-gray-900 truncate">{{ s.label || s.report_type_label }}</p>
                 <p class="text-xs text-gray-500 mt-0.5">
-                  {{ s.report_type_label }} · {{ s.report_format.toUpperCase() }} · {{ s.frequency_label }}
+                  {{ s.report_type_label }} · {{ s.frequency_label }}
                   <template v-if="s.frequency === 'weekly'"> ({{ s.day_of_week_label }})</template>
                   <template v-if="s.frequency === 'monthly'"> ({{ s.day_of_month }}th)</template>
                   at {{ s.send_time }}
@@ -194,18 +181,9 @@
               </div>
 
               <div>
-                <label class="block text-xs font-medium text-gray-600 mb-1.5">Format <span class="text-red-500">*</span></label>
-                <div class="grid grid-cols-2 gap-2">
-                  <button type="button" @click="form.report_format = 'pdf'"
-                    class="py-2 rounded-xl border text-sm font-medium transition-all"
-                    :class="form.report_format === 'pdf' ? 'border-red-400 bg-red-50 text-red-700' : 'border-gray-200 text-gray-600'">
-                    📄 PDF
-                  </button>
-                  <button type="button" @click="form.report_format = 'excel'"
-                    class="py-2 rounded-xl border text-sm font-medium transition-all"
-                    :class="form.report_format === 'excel' ? 'border-green-400 bg-green-50 text-green-700' : 'border-gray-200 text-gray-600'">
-                    📊 Excel
-                  </button>
+                <label class="block text-xs font-medium text-gray-600 mb-1.5">Format</label>
+                <div class="py-2 px-3 rounded-xl border border-green-400 bg-green-50 text-green-700 text-sm font-medium">
+                  📊 Excel (xlsx)
                 </div>
               </div>
 
@@ -304,25 +282,25 @@ const reportCards = computed(() => [
     type: 'attendance', title: 'Attendance Reports', desc: 'Clock-in/out records and history',
     icon: ClipboardDocumentCheckIcon, bg: 'from-teal-50 to-cyan-50', borderColor: 'border-teal-100',
     iconBg: 'bg-teal-100', iconColor: 'text-teal-600',
-    pdf:   route('reports.attendance.pdf'), excel: route('reports.attendance.excel'),
+    excel: route('reports.attendance.excel'),
   },
   {
     type: 'leaves', title: 'Leave Reports', desc: 'Applications, approvals and balances',
     icon: CalendarDaysIcon, bg: 'from-orange-50 to-amber-50', borderColor: 'border-orange-100',
     iconBg: 'bg-orange-100', iconColor: 'text-orange-600',
-    pdf:   route('reports.leaves.pdf'), excel: route('reports.leaves.excel'),
+    excel: route('reports.leaves.excel'),
   },
   {
     type: 'timesheets', title: 'Timesheet Reports', desc: 'Work hours logged and approvals',
     icon: ClockIcon, bg: 'from-purple-50 to-indigo-50', borderColor: 'border-purple-100',
     iconBg: 'bg-purple-100', iconColor: 'text-purple-600',
-    pdf:   route('reports.timesheets.pdf'), excel: route('reports.timesheets.excel'),
+    excel: route('reports.timesheets.excel'),
   },
   {
     type: 'feedbacks', title: 'Feedback Reports', desc: 'Employee ratings and satisfaction',
     icon: ChatBubbleLeftEllipsisIcon, bg: 'from-pink-50 to-rose-50', borderColor: 'border-pink-100',
     iconBg: 'bg-pink-100', iconColor: 'text-pink-600',
-    pdf:   route('reports.feedbacks.pdf'), excel: route('reports.feedbacks.excel'),
+    excel: route('reports.feedbacks.excel'),
   },
 ]);
 
@@ -381,7 +359,7 @@ const showScheduleModal = ref(false);
 const savingSchedule    = ref(false);
 const formError         = ref('');
 
-const emptyForm = () => ({ label: '', report_type: '', report_format: 'pdf', frequency: 'weekly', day_of_week: 1, day_of_month: 1, send_time: '08:00', recipients: [''] });
+const emptyForm = () => ({ label: '', report_type: '', report_format: 'excel', frequency: 'weekly', day_of_week: 1, day_of_month: 1, send_time: '08:00', recipients: [''] });
 const form = ref(emptyForm());
 
 watch(showScheduleModal, v => { if (!v) { form.value = emptyForm(); formError.value = ''; } });

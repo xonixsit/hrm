@@ -20,8 +20,11 @@ class TimesheetsExport implements FromCollection, WithHeadings, WithMapping
     {
         $query = Timesheet::with(['employee.user', 'project', 'task']);
 
-        if (!empty($this->filters['date'])) {
-            $query->whereDate('date', $this->filters['date']);
+        if (!empty($this->filters['date_from'])) {
+            $query->whereDate('date', '>=', $this->filters['date_from']);
+        }
+        if (!empty($this->filters['date_to'])) {
+            $query->whereDate('date', '<=', $this->filters['date_to']);
         }
 
         return $query->latest('date')->get();

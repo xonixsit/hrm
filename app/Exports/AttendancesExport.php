@@ -20,8 +20,11 @@ class AttendancesExport implements FromCollection, WithHeadings, WithMapping
     {
         $query = Attendance::with('employee.user');
 
-        if (!empty($this->filters['date'])) {
-            $query->whereDate('clock_in', $this->filters['date']);
+        if (!empty($this->filters['date_from'])) {
+            $query->whereDate('clock_in', '>=', $this->filters['date_from']);
+        }
+        if (!empty($this->filters['date_to'])) {
+            $query->whereDate('clock_in', '<=', $this->filters['date_to']);
         }
 
         return $query->latest('clock_in')->get();
