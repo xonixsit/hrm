@@ -988,13 +988,22 @@ class TeamMessagingController extends Controller
         return response()->json(['success' => true, 'is_starred' => false, 'message_id' => $message->id]);
     }
 
-    public function starredMessages()
+    public function starredMessages(Request $request)
     {
         $user = Auth::user();
 
-        $stars = StarredMessage::where('user_id', $user->id)
-            ->with(['message', 'conversation'])
-            ->orderBy('created_at', 'desc')
+        $query = StarredMessage::where('user_id', $user->id)
+            ->with(['message', 'conversation']);
+
+        // Filter to current conversation if specified
+        if ($request->conversation_id) {
+            $convId = (int) $request->conversation_id;
+            // Verify participant
+            abort_unless($this->messaging->isParticipant($convId, $user->id), 403);
+            $query->where('conversation_id', $convId);
+        }
+
+        $stars = $query->orderBy('created_at', 'desc')
             ->get()
             ->filter(fn($s) => $s->message !== null)
             ->map(fn($s) => [

@@ -492,7 +492,9 @@ const loadingStars   = ref(false);
 const loadStarredMessages = async () => {
     loadingStars.value = true;
     try {
-        const res = await axios.get(route('team-messaging.starred'));
+        const res = await axios.get(route('team-messaging.starred'), {
+            params: { conversation_id: selectedConversation.value }
+        });
         starredMsgs.value = res.data.stars || [];
     } catch (e) {
         console.error('[stars] load failed:', e);
@@ -1160,6 +1162,9 @@ const selectConversation = async (conversationId) => {
     pinnedMessages.value = [];
     showPinnedPanel.value = false;
     loadPinnedMessages(conversationId);
+    // Reload starred if panel is open
+    starredMsgs.value = [];
+    if (showStarPanel.value) loadStarredMessages();
     
     try {
         const response = await axios.get(route('team-messaging.messages', conversationId));
@@ -2259,6 +2264,53 @@ watch(messages, () => {
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                 </svg>
                             </button>
+
+                            <!-- Media Gallery Button (group) -->
+                            <button
+                                @click="showMediaGallery = true"
+                                class="flex-shrink-0 flex items-center justify-center w-9 h-9 rounded-xl transition-all duration-200 relative"
+                                :class="showMediaGallery
+                                    ? 'bg-gradient-to-br from-purple-500 to-pink-500 text-white shadow-lg'
+                                    : (isDark
+                                        ? 'bg-gray-700 text-gray-300 hover:from-purple-600 hover:to-pink-600 hover:bg-gradient-to-br hover:text-white'
+                                        : 'bg-slate-100 text-slate-500 hover:from-purple-500 hover:to-pink-500 hover:bg-gradient-to-br hover:text-white')"
+                                title="View shared media"
+                            >
+                                <svg class="w-[17px] h-[17px]" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"/>
+                                </svg>
+                                <span v-if="mediaImages.length > 0"
+                                    class="absolute -top-1 -right-1 px-1.5 py-0.5 text-[10px] font-bold rounded-full shadow-lg"
+                                    :class="showMediaGallery
+                                        ? 'bg-white text-purple-600'
+                                        : (isDark ? 'bg-purple-500 text-white' : 'bg-purple-600 text-white')">
+                                    {{ mediaImages.length }}
+                                </span>
+                            </button>
+
+                            <!-- File Manager Button (group) -->
+                            <button
+                                @click="showFileManager = true"
+                                class="flex-shrink-0 flex items-center justify-center w-9 h-9 rounded-xl transition-all duration-200 relative"
+                                :class="showFileManager
+                                    ? 'bg-gradient-to-br from-blue-500 to-cyan-500 text-white shadow-lg'
+                                    : (isDark
+                                        ? 'bg-gray-700 text-gray-300 hover:from-blue-600 hover:to-cyan-600 hover:bg-gradient-to-br hover:text-white'
+                                        : 'bg-slate-100 text-slate-500 hover:from-blue-500 hover:to-cyan-500 hover:bg-gradient-to-br hover:text-white')"
+                                title="View shared files"
+                            >
+                                <svg class="w-[17px] h-[17px]" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"/>
+                                </svg>
+                                <span v-if="sharedFiles.length > 0"
+                                    class="absolute -top-1 -right-1 px-1.5 py-0.5 text-[10px] font-bold rounded-full shadow-lg"
+                                    :class="showFileManager
+                                        ? 'bg-white text-blue-600'
+                                        : (isDark ? 'bg-blue-500 text-white' : 'bg-blue-600 text-white')">
+                                    {{ sharedFiles.length }}
+                                </span>
+                            </button>
+
                             <!-- Mark as unread (group) -->
                             <button
                                 @click="markAsUnread(selectedConversation)"

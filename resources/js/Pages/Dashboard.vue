@@ -696,17 +696,17 @@
         label: 'Watch Training Video',
         icon: 'QuestionMarkCircleIcon',
         handler: () => showVideoModal.value = true
-      },
-      {
-        id: 'whistleblower',
-        label: 'Whistle Blower',
-        icon: 'ShieldExclamationIcon',
-        handler: () => router.visit(route('whistleblower.create')),
-        color: 'amber'
       }
     ];
 
     if (isAdmin.value) {
+      actions.push({
+        id: 'whistleblower',
+        label: 'Whistleblower Reports',
+        icon: 'ShieldExclamationIcon',
+        handler: () => router.visit(route('admin.whistleblower.index')),
+        color: 'amber'
+      });
       actions.unshift(
         {
           id: 'settings',

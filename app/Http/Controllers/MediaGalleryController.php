@@ -84,6 +84,13 @@ class MediaGalleryController extends Controller
      */
     public function conversationMedia(Request $request, $conversationId)
     {
+        // Verify current user is a participant
+        $isParticipant = \DB::table('conversation_users')
+            ->where('conversation_id', $conversationId)
+            ->where('user_id', Auth::id())
+            ->exists();
+        abort_unless($isParticipant, 403);
+
         $messages = \DB::table('messages')
             ->where('conversation_id', $conversationId)
             ->where('message', 'like', '%<img%')
@@ -124,6 +131,13 @@ class MediaGalleryController extends Controller
      */
     public function conversationFiles(Request $request, $conversationId)
     {
+        // Verify current user is a participant
+        $isParticipant = \DB::table('conversation_users')
+            ->where('conversation_id', $conversationId)
+            ->where('user_id', Auth::id())
+            ->exists();
+        abort_unless($isParticipant, 403);
+
         $messages = \DB::table('messages')
             ->where('conversation_id', $conversationId)
             ->where('message', 'like', '%rt-file-attachment%')

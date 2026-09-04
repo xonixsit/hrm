@@ -521,8 +521,6 @@ const moreNavItems = computed(() => {
       { route: 'work-reports.index', label: 'Work Reports', category: 'regular' },
       { route: 'ideas.index', label: 'Share Ideas', category: 'regular' },
       { route: 'feedbacks.index', label: 'Feedback', category: 'regular' },
-      { route: 'whistleblower.create', label: 'Whistle Blower', category: 'regular', icon: 'whistleblower' },
-      { route: 'whistleblower.my-reports', label: 'My Reports', category: 'regular', icon: 'my-reports' },
       { route: 'employee-handbook', label: 'Employee Handbook', category: 'regular' },
       { route: 'support.index', label: 'Support', category: 'regular' }
     ]
