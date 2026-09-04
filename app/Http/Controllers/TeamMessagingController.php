@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Events\MessageRead;
+use App\Models\PinnedMessage;
+use App\Models\StarredMessage;
 use App\Events\NewConversationMessage;
 use App\Events\TeamMessageSent;
 use App\Models\User;
@@ -878,5 +880,135 @@ class TeamMessagingController extends Controller
                 'position'   => $position,
             ] : null,
         ];
+    }
+
+    // ─── Pin / Unpin message ──────────────────────────────────────────────────
+
+    public function pinMessage(Conversation $conversation, Message $message)
+    {
+        $user = Auth::user();
+        abort_unless($this->messaging->isParticipant($conversation->id, $user->id), 403);
+        abort_unless($message->conversation_id === $conversation->id, 404);
+
+        // Only admins, group creators, or the message author can pin
+        $canPin = $user->hasRole('Admin')
+            || $message->user_id === $user->id
+            || ($conversation->type === 'group' && $conversation->user_id === $user->id);
+
+        abort_unless($canPin, 403, 'You do not have permission to pin messages.');
+
+        PinnedMessage::firstOrCreate(
+            ['conversation_id' => $conversation->id, 'message_id' => $message->id],
+            ['pinned_by' => $user->id]
+        );
+
+        return response()->json([
+            'success'    => true,
+            'is_pinned'  => true,
+            'message_id' => $message->id,
+        ]);
+    }
+
+    public function unpinMessage(Conversation $conversation, Message $message)
+    {
+        $user = Auth::user();
+        abort_unless($this->messaging->isParticipant($conversation->id, $user->id), 403);
+        abort_unless($message->conversation_id === $conversation->id, 404);
+
+        $pin = PinnedMessage::where('conversation_id', $conversation->id)
+            ->where('message_id', $message->id)
+            ->first();
+
+        if ($pin) {
+            $canUnpin = $user->hasRole('Admin')
+                || $pin->pinned_by === $user->id
+                || $message->user_id === $user->id
+                || ($conversation->type === 'group' && $conversation->user_id === $user->id);
+
+            abort_unless($canUnpin, 403, 'You do not have permission to unpin this message.');
+            $pin->delete();
+        }
+
+        return response()->json([
+            'success'    => true,
+            'is_pinned'  => false,
+            'message_id' => $message->id,
+        ]);
+    }
+
+    public function pinnedMessages(Conversation $conversation)
+    {
+        $user = Auth::user();
+        abort_unless($this->messaging->isParticipant($conversation->id, $user->id), 403);
+
+        $pins = PinnedMessage::where('conversation_id', $conversation->id)
+            ->with(['message', 'pinnedByUser'])
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->filter(fn ($p) => $p->message !== null)   // guard deleted messages
+            ->map(fn ($p) => [
+                'id'           => $p->message->id,
+                'message'      => $p->message->message,
+                'sender_id'    => $p->message->user_id,
+                'created_at'   => $p->message->created_at,
+                'pinned_by'    => $p->pinnedByUser?->name,
+                'pinned_at'    => $p->created_at,
+            ])
+            ->values();
+
+        return response()->json(['pins' => $pins]);
+    }
+
+    // ─── Star / Unstar message ────────────────────────────────────────────────
+
+    public function starMessage(Conversation $conversation, Message $message)
+    {
+        $user = Auth::user();
+        abort_unless($this->messaging->isParticipant($conversation->id, $user->id), 403);
+        abort_unless($message->conversation_id === $conversation->id, 404);
+
+        StarredMessage::firstOrCreate(
+            ['user_id' => $user->id, 'message_id' => $message->id],
+            ['conversation_id' => $conversation->id]
+        );
+
+        return response()->json(['success' => true, 'is_starred' => true, 'message_id' => $message->id]);
+    }
+
+    public function unstarMessage(Conversation $conversation, Message $message)
+    {
+        $user = Auth::user();
+        abort_unless($this->messaging->isParticipant($conversation->id, $user->id), 403);
+        abort_unless($message->conversation_id === $conversation->id, 404);
+
+        StarredMessage::where('user_id', $user->id)
+            ->where('message_id', $message->id)
+            ->delete();
+
+        return response()->json(['success' => true, 'is_starred' => false, 'message_id' => $message->id]);
+    }
+
+    public function starredMessages()
+    {
+        $user = Auth::user();
+
+        $stars = StarredMessage::where('user_id', $user->id)
+            ->with(['message', 'conversation'])
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->filter(fn($s) => $s->message !== null)
+            ->map(fn($s) => [
+                'id'              => $s->message->id,
+                'message'         => $s->message->message,
+                'sender_id'       => $s->message->user_id,
+                'conversation_id' => $s->conversation_id,
+                'conversation_name' => $s->conversation?->name
+                    ?? ('DM #' . $s->conversation_id),
+                'created_at'      => $s->message->created_at,
+                'starred_at'      => $s->created_at,
+            ])
+            ->values();
+
+        return response()->json(['stars' => $stars]);
     }
 }

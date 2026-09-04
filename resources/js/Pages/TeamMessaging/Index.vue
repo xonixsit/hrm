@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 console.log('TeamMessaging Index.vue script setup loaded');
 import { ref, computed, onMounted, onUnmounted, nextTick, watch, TransitionGroup } from 'vue';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
@@ -429,6 +429,126 @@ const unblockUserById = async (userId) => {
     }
 };
 
+// ── Pin / Unpin message ──────────────────────────────────────────────────────
+const pinnedMessages = ref([]);        // [{ id, message, sender_id, created_at, pinned_by, pinned_at }]
+const showPinnedPanel = ref(false);    // expanded pinned messages panel
+const pinLoading = ref(null);          // message id being pinned/unpinned
+
+const loadPinnedMessages = async (convId) => {
+    if (!convId) return;
+    try {
+        const res = await axios.get(route('team-messaging.pins', convId));
+        pinnedMessages.value = res.data.pins || [];
+    } catch (e) {
+        console.error('[pins] load failed:', e);
+    }
+};
+
+const togglePin = async (message) => {
+    if (pinLoading.value) return;
+    pinLoading.value = message.id;
+    try {
+        if (message.is_pinned) {
+            await axios.delete(route('team-messaging.unpin', {
+                conversation: selectedConversation.value,
+                message: message.id,
+            }));
+            message.is_pinned = false;
+            pinnedMessages.value = pinnedMessages.value.filter(p => p.id !== message.id);
+        } else {
+            await axios.post(route('team-messaging.pin', {
+                conversation: selectedConversation.value,
+                message: message.id,
+            }));
+            message.is_pinned = true;
+            await loadPinnedMessages(selectedConversation.value);
+        }
+    } catch (e) {
+        alert(e.response?.data?.message || 'Failed to update pin.');
+    } finally {
+        pinLoading.value = null;
+    }
+};
+
+const jumpToMessage = (messageId) => {
+    showPinnedPanel.value = false;
+    nextTick(() => {
+        const el = document.querySelector(`[data-message-id="${messageId}"]`);
+        if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            // Brief highlight
+            el.classList.add('pin-highlight');
+            setTimeout(() => el.classList.remove('pin-highlight'), 1500);
+        }
+    });
+};
+
+// ── Star / Unstar message ────────────────────────────────────────────────────
+const starLoading    = ref(null);    // message.id being starred
+const showStarPanel  = ref(false);   // global starred messages drawer
+const starredMsgs    = ref([]);      // [{ id, message, sender_id, conversation_id, conversation_name, created_at, starred_at }]
+const loadingStars   = ref(false);
+
+const loadStarredMessages = async () => {
+    loadingStars.value = true;
+    try {
+        const res = await axios.get(route('team-messaging.starred'));
+        starredMsgs.value = res.data.stars || [];
+    } catch (e) {
+        console.error('[stars] load failed:', e);
+    } finally {
+        loadingStars.value = false;
+    }
+};
+
+const toggleStar = async (message) => {
+    if (starLoading.value) return;
+    starLoading.value = message.id;
+    const convId = message.conversation_id ?? selectedConversation.value;
+    try {
+        if (message.is_starred) {
+            await axios.delete(route('team-messaging.unstar', {
+                conversation: convId,
+                message: message.id,
+            }));
+            message.is_starred = false;
+            starredMsgs.value = starredMsgs.value.filter(s => s.id !== message.id);
+            // Also update the in-chat messages list if it's the current conversation
+            const inChat = messages.value.find(m => m.id === message.id);
+            if (inChat) inChat.is_starred = false;
+        } else {
+            await axios.post(route('team-messaging.star', {
+                conversation: convId,
+                message: message.id,
+            }));
+            message.is_starred = true;
+            if (showStarPanel.value) await loadStarredMessages();
+        }
+    } catch (e) {
+        alert(e.response?.data?.message || 'Failed to update star.');
+    } finally {
+        starLoading.value = null;
+    }
+};
+
+const jumpToStarredMessage = async (star) => {
+    // Switch to the conversation first if needed
+    if (star.conversation_id !== selectedConversation.value) {
+        await selectConversation(star.conversation_id);
+    }
+    showStarPanel.value = false;
+    nextTick(() => {
+        setTimeout(() => {
+            const el = document.querySelector(`[data-message-id="${star.id}"]`);
+            if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                el.classList.add('pin-highlight');
+                setTimeout(() => el.classList.remove('pin-highlight'), 1500);
+            }
+        }, 300);
+    });
+};
+
 // Build a zoomedUser payload from any user-like object
 const openUserLightbox = (user, src) => {
     zoomedUser.value = {
@@ -726,7 +846,7 @@ const showBrowserNotification = (senderName, messageText, avatar) => {
 
     try {
         const notif = new Notification(`ðŸ’¬ ${senderName}`, {
-            body: messageText.length > 80 ? messageText.slice(0, 80) + 'â€¦' : messageText,
+            body: messageText.length > 80 ? messageText.slice(0, 80) + '¦' : messageText,
             icon: iconUrl,
             tag: 'team-message',
             silent: false,
@@ -1036,6 +1156,10 @@ const selectConversation = async (conversationId) => {
     if (conv?.is_group || conv?.type === 'group') {
         loadGroupMembers(conversationId);
     }
+    // Load pinned messages for this conversation
+    pinnedMessages.value = [];
+    showPinnedPanel.value = false;
+    loadPinnedMessages(conversationId);
     
     try {
         const response = await axios.get(route('team-messaging.messages', conversationId));
@@ -2148,6 +2272,21 @@ watch(messages, () => {
                                         d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                                 </svg>
                             </button>
+
+                            <!-- Starred messages toggle -->
+                            <button
+                                @click="showStarPanel = !showStarPanel; if(showStarPanel) loadStarredMessages()"
+                                class="flex-shrink-0 p-2 rounded-lg transition-colors"
+                                :class="showStarPanel
+                                    ? (isDark ? 'bg-yellow-900/40 text-yellow-400' : 'bg-yellow-50 text-yellow-600')
+                                    : (isDark ? 'text-gray-400 hover:text-yellow-400 hover:bg-gray-700' : 'text-slate-400 hover:text-yellow-500 hover:bg-slate-100')"
+                                title="Starred messages"
+                            >
+                                <svg class="w-4 h-4" :fill="showStarPanel ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+                                </svg>
+                            </button>
                         </template>
 
                         <!-- DM header -->
@@ -2217,6 +2356,21 @@ watch(messages, () => {
                                     {{ sharedFiles.length }}
                                 </span>
                             </button>
+                            <!-- Starred messages toggle (DM) -->
+                            <button
+                                @click="showStarPanel = !showStarPanel; if(showStarPanel) loadStarredMessages()"
+                                class="flex-shrink-0 p-2 rounded-lg transition-colors"
+                                :class="showStarPanel
+                                    ? (isDark ? 'bg-yellow-900/40 text-yellow-400' : 'bg-yellow-50 text-yellow-600')
+                                    : (isDark ? 'text-gray-400 hover:text-yellow-400 hover:bg-gray-700' : 'text-slate-400 hover:text-yellow-500 hover:bg-slate-100')"
+                                title="Starred messages"
+                            >
+                                <svg class="w-4 h-4" :fill="showStarPanel ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+                                </svg>
+                            </button>
+
 
                             <!-- Block/Unblock Button -->
                             <div class="relative flex-shrink-0">
@@ -2262,6 +2416,59 @@ watch(messages, () => {
                         </template>
                     </div>
 
+
+                <!-- Pinned messages banner -->
+                <div v-if="pinnedMessages.length > 0" class="flex-shrink-0 border-b" :class="isDark ? 'border-gray-700 bg-gray-800' : 'border-amber-100 bg-amber-50'">
+                    <!-- Collapsed bar -->
+                    <button
+                        @click="showPinnedPanel = !showPinnedPanel"
+                        class="w-full flex items-center gap-2.5 px-4 py-2 text-left"
+                        :class="isDark ? 'hover:bg-gray-700/50' : 'hover:bg-amber-100/60'"
+                    >
+                        <svg class="w-4 h-4 flex-shrink-0 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+                        </svg>
+                        <span class="text-xs font-semibold flex-1 truncate" :class="isDark ? 'text-amber-400' : 'text-amber-700'">
+                            {{ pinnedMessages.length }} pinned {{ pinnedMessages.length === 1 ? 'message' : 'messages' }}
+                            <span class="font-normal opacity-70 ml-1 truncate">— {{ pinnedMessages[0]?.message?.replace(/<[^>]*>/g, '').slice(0, 60) }}</span>
+                        </span>
+                        <svg class="w-3.5 h-3.5 flex-shrink-0 transition-transform" :class="[showPinnedPanel ? 'rotate-180' : '', isDark ? 'text-gray-400' : 'text-amber-500']" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </button>
+
+                    <!-- Expanded list -->
+                    <div v-if="showPinnedPanel" class="border-t max-h-52 overflow-y-auto" :class="isDark ? 'border-gray-700' : 'border-amber-100'">
+                        <div v-for="pin in pinnedMessages" :key="pin.id"
+                            class="flex items-start gap-3 px-4 py-2.5 border-b last:border-b-0 cursor-pointer transition-colors"
+                            :class="isDark ? 'border-gray-700 hover:bg-gray-700/50' : 'border-amber-100 hover:bg-amber-100/50'"
+                            @click="jumpToMessage(pin.id)"
+                        >
+                            <svg class="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-amber-500" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+                            </svg>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-xs truncate" :class="isDark ? 'text-gray-200' : 'text-slate-700'"
+                                    v-html="sanitize(pin.message?.slice(0, 120) || '')"></p>
+                                <p class="text-[10px] mt-0.5" :class="isDark ? 'text-gray-500' : 'text-slate-400'">
+                                    Pinned by {{ pin.pinned_by }} · {{ formatTime(pin.pinned_at) }}
+                                </p>
+                            </div>
+                            <!-- Unpin from banner -->
+                            <button
+                                @click.stop="togglePin({ id: pin.id, is_pinned: true })"
+                                class="flex-shrink-0 p-1 rounded transition-colors opacity-60 hover:opacity-100"
+                                :class="isDark ? 'text-gray-400 hover:text-red-400 hover:bg-gray-600' : 'text-slate-400 hover:text-red-500 hover:bg-red-50'"
+                                title="Unpin"
+                            >
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Main body: messages + optional group panel side by side -->
                 <div class="flex flex-1 min-h-0 overflow-hidden">
 
@@ -2302,9 +2509,10 @@ watch(messages, () => {
                                 </div>
 
                             <div class="flex gap-2 items-end group/msg relative"
-                                :class="message.sender_id === page.props.auth.user.id ? 'flex-row-reverse' : 'flex-row'">
+                                :class="message.sender_id === page.props.auth.user.id ? 'flex-row-reverse' : 'flex-row'"
+                                :data-message-id="message.id">
 
-                                <!-- Avatar â€” shown on outside edge -->
+                                <!--Avatar shown on outside edge -->
                                 <div class="flex-shrink-0">
                                     <div v-if="getProfilePicture(message.sender)"
                                         class="w-8 h-8 rounded-full overflow-hidden cursor-pointer relative group/mavatar"
@@ -2394,6 +2602,41 @@ watch(messages, () => {
                                                     </svg>
                                                     Mark as unread
                                                 </button>
+
+                                                <!-- Divider -->
+                                                <div class="mx-3 my-1 h-px" :class="isDark ? 'bg-gray-700' : 'bg-slate-100'"></div>
+
+                                                <!-- Pin / Unpin -->
+                                                <button
+                                                    @click.stop="togglePin(message); activeMessageMenu = null"
+                                                    :disabled="pinLoading === message.id"
+                                                    class="w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors text-left"
+                                                    :class="message.is_pinned
+                                                        ? (isDark ? 'text-amber-400 hover:bg-gray-700' : 'text-amber-600 hover:bg-amber-50')
+                                                        : (isDark ? 'text-gray-300 hover:bg-gray-700' : 'text-slate-700 hover:bg-slate-50')"
+                                                >
+                                                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                            d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+                                                    </svg>
+                                                    {{ message.is_pinned ? 'Unpin message' : 'Pin message' }}
+                                                </button>
+
+                                                <!-- Star / Unstar -->
+                                                <button
+                                                    @click.stop="toggleStar(message); activeMessageMenu = null"
+                                                    :disabled="starLoading === message.id"
+                                                    class="w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors text-left"
+                                                    :class="message.is_starred
+                                                        ? (isDark ? 'text-yellow-400 hover:bg-gray-700' : 'text-yellow-600 hover:bg-yellow-50')
+                                                        : (isDark ? 'text-gray-300 hover:bg-gray-700' : 'text-slate-700 hover:bg-slate-50')"
+                                                >
+                                                    <svg class="w-4 h-4 flex-shrink-0" :fill="message.is_starred ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                            d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+                                                    </svg>
+                                                    {{ message.is_starred ? 'Unstar message' : 'Star message' }}
+                                                </button>
                                             </div>
                                         </div>
                                     </div>
@@ -2415,6 +2658,32 @@ watch(messages, () => {
                                             v-html="sanitize(message.message)"
                                             @click="handleMessageClick"></div>
                                     </div>
+
+                                    <!-- Pinned badge -->
+                                    <div v-if="message.is_pinned"
+                                        class="flex items-center gap-1 mt-0.5 mb-0.5 px-1.5 py-0.5 rounded-full w-fit text-[10px] font-semibold"
+                                        :class="message.sender_id === page.props.auth.user.id
+                                            ? 'bg-amber-500/20 text-amber-300 self-end'
+                                            : (isDark ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-100 text-amber-600')"
+                                    >
+                                        <svg class="w-2.5 h-2.5 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+                                        </svg>
+                                        Pinned
+                                    </div>
+                                    <!-- Starred badge -->
+                                    <div v-if="message.is_starred"
+                                        class="flex items-center justify-center mt-0.5 mb-0.5 w-5 h-5 rounded-full"
+                                        :class="message.sender_id === page.props.auth.user.id
+                                            ? 'bg-yellow-400/40'
+                                            : (isDark ? 'bg-yellow-500/30' : 'bg-yellow-200')"
+                                        title="Starred"
+                                    >
+                                        <svg class="w-3 h-3 text-yellow-400" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+                                        </svg>
+                                    </div>
+
 
                                     <!-- Timestamp + ticks -->
                                     <div class="flex items-center gap-1 mt-1"
@@ -2464,6 +2733,88 @@ watch(messages, () => {
                             </button>
                         </Transition>
                     </div>
+
+                    <!-- Starred messages panel -->
+                    <Transition name="slide-panel">
+                        <div v-if="showStarPanel"
+                            class="w-72 flex-shrink-0 flex flex-col border-l overflow-hidden"
+                            :class="isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-slate-100'"
+                        >
+                            <!-- Header -->
+                            <div class="flex items-center justify-between px-4 py-3 border-b flex-shrink-0"
+                                :class="isDark ? 'border-gray-700' : 'border-slate-100'">
+                                <div class="flex items-center gap-2">
+                                    <svg class="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+                                    </svg>
+                                    <h3 class="text-sm font-semibold" :class="isDark ? 'text-white' : 'text-slate-800'">Starred Messages</h3>
+                                </div>
+                                <button @click="showStarPanel = false"
+                                    class="p-1 rounded transition-colors"
+                                    :class="isDark ? 'text-gray-400 hover:text-white hover:bg-gray-700' : 'text-slate-400 hover:text-slate-700 hover:bg-slate-100'">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <!-- Loading -->
+                            <div v-if="loadingStars" class="flex items-center justify-center py-8">
+                                <svg class="w-5 h-5 animate-spin" :class="isDark ? 'text-gray-400' : 'text-slate-400'" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+                                </svg>
+                            </div>
+
+                            <!-- Empty -->
+                            <div v-else-if="starredMsgs.length === 0"
+                                class="flex flex-col items-center justify-center flex-1 gap-2 px-4 py-8 text-center">
+                                <svg class="w-8 h-8" :class="isDark ? 'text-gray-600' : 'text-slate-300'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                        d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+                                </svg>
+                                <p class="text-xs" :class="isDark ? 'text-gray-500' : 'text-slate-400'">No starred messages yet</p>
+                                <p class="text-[10px]" :class="isDark ? 'text-gray-600' : 'text-slate-300'">Star a message to save it here</p>
+                            </div>
+
+                            <!-- List -->
+                            <div v-else class="flex-1 overflow-y-auto group-panel-scroll">
+                                <div v-for="star in starredMsgs" :key="star.id"
+                                    @click="jumpToStarredMessage(star)"
+                                    class="group flex items-start gap-3 px-4 py-3 border-b cursor-pointer transition-colors"
+                                    :class="isDark ? 'border-gray-700 hover:bg-gray-700/50' : 'border-slate-100 hover:bg-slate-50'"
+                                >
+                                    <!-- Star icon -->
+                                    <svg class="w-3.5 h-3.5 mt-1 flex-shrink-0 text-yellow-400" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+                                    </svg>
+                                    <!-- Content -->
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-[10px] font-semibold mb-0.5 truncate"
+                                            :class="isDark ? 'text-gray-400' : 'text-slate-400'">
+                                            {{ star.conversation_name }}
+                                        </p>
+                                        <p class="text-xs line-clamp-2" :class="isDark ? 'text-gray-200' : 'text-slate-700'"
+                                            v-html="sanitize(star.message?.slice(0, 120) || '')"></p>
+                                        <p class="text-[10px] mt-1" :class="isDark ? 'text-gray-500' : 'text-slate-400'">
+                                            {{ formatTime(star.starred_at) }}
+                                        </p>
+                                    </div>
+                                    <!-- Unstar -->
+                                    <button
+                                        @click.stop="toggleStar({ id: star.id, is_starred: true, conversation_id: star.conversation_id })"
+                                        class="opacity-0 group-hover:opacity-100 flex-shrink-0 p-1 rounded transition-colors"
+                                        :class="isDark ? 'text-gray-400 hover:text-yellow-400 hover:bg-gray-600' : 'text-slate-400 hover:text-yellow-500 hover:bg-yellow-50'"
+                                        title="Unstar"
+                                    >
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </Transition>
 
                     <!-- â”€â”€ Group info panel (slides in when showGroupPanel is true) â”€â”€ -->
                     <Transition name="slide-panel">
@@ -3322,6 +3673,15 @@ watch(messages, () => {
     transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
+/* Pin highlight flash */
+@keyframes pin-flash {
+    0%   { background-color: rgba(251, 191, 36, 0.35); }
+    100% { background-color: transparent; }
+}
+.pin-highlight {
+    animation: pin-flash 1.5s ease-out forwards;
+    border-radius: 8px;
+}
 .toast-leave-active {
     transition: all 0.2s ease-out;
 }

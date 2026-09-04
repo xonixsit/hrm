@@ -157,7 +157,22 @@ class MessagingService
             ->flip()
             ->toArray();
 
-        return $messages->map(function (Message $msg) use ($users, $readMsgIds) {
+        // Pinned message IDs for this conversation
+        $pinnedMsgIds = DB::table('pinned_messages')
+            ->where('conversation_id', $conversationId)
+            ->pluck('message_id')
+            ->flip()
+            ->toArray();
+
+        // Starred message IDs for the current authenticated user
+        $starredMsgIds = DB::table('starred_messages')
+            ->where('user_id', auth()->id())
+            ->whereIn('message_id', $messages->pluck('id'))
+            ->pluck('message_id')
+            ->flip()
+            ->toArray();
+
+        return $messages->map(function (Message $msg) use ($users, $readMsgIds, $pinnedMsgIds, $starredMsgIds) {
             $sender = $users->get($msg->user_id);
             return [
                 'id'         => $msg->id,
@@ -169,6 +184,8 @@ class MessagingService
                     'profile_picture' => $sender->profile_picture,
                 ] : null,
                 'is_read'    => isset($readMsgIds[$msg->id]),
+                'is_pinned'  => isset($pinnedMsgIds[$msg->id]),
+                'is_starred' => isset($starredMsgIds[$msg->id]),
                 'created_at' => $msg->created_at,
             ];
         })->toArray();

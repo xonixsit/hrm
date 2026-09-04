@@ -162,13 +162,21 @@ Route::get('/training', [TrainingPageController::class, 'index'])->middleware(['
         Route::post('/block', [TeamMessagingController::class, 'blockUser'])->name('team-messaging.block');
         Route::post('/unblock', [TeamMessagingController::class, 'unblockUser'])->name('team-messaging.unblock');
         Route::get('/is-blocked', [TeamMessagingController::class, 'isUserBlocked'])->name('team-messaging.is-blocked');
-        
+
+        // Starred messages (must be before /{conversation} wildcard)
+        Route::get('/starred', [TeamMessagingController::class, 'starredMessages'])->name('team-messaging.starred');
+
         // Existing
         Route::get('/{conversation}', [TeamMessagingController::class, 'show'])->name('team-messaging.show');
         Route::post('/{conversation}/messages', [TeamMessagingController::class, 'sendMessage'])->name('team-messaging.send');
         Route::get('/{conversation}/messages', [TeamMessagingController::class, 'getMessages'])->name('team-messaging.messages');
         Route::post('/{conversation}/mark-unread', [TeamMessagingController::class, 'markUnread'])->name('team-messaging.mark-unread');
         Route::delete('/messages/{message}', [TeamMessagingController::class, 'deleteMessage'])->name('team-messaging.delete-message');
+        Route::post('/{conversation}/messages/{message}/pin',   [TeamMessagingController::class, 'pinMessage'])->name('team-messaging.pin');
+        Route::delete('/{conversation}/messages/{message}/pin', [TeamMessagingController::class, 'unpinMessage'])->name('team-messaging.unpin');
+        Route::get('/{conversation}/pins',                      [TeamMessagingController::class, 'pinnedMessages'])->name('team-messaging.pins');
+        Route::post('/{conversation}/messages/{message}/star',  [TeamMessagingController::class, 'starMessage'])->name('team-messaging.star');
+        Route::delete('/{conversation}/messages/{message}/star',[TeamMessagingController::class, 'unstarMessage'])->name('team-messaging.unstar');
         Route::post('/upload-image', [TeamMessagingController::class, 'uploadImage'])->name('team-messaging.upload-image');
         Route::post('/upload-document', [TeamMessagingController::class, 'uploadDocument'])->name('team-messaging.upload-document');
         Route::get('/images/{filename}', [TeamMessagingController::class, 'serveImage'])->name('team-messaging.image');
