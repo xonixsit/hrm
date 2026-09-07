@@ -139,13 +139,18 @@ class TeamMessagingController extends Controller
     public function createGroup(Request $request)
     {
         $request->validate([
-            'name'     => 'required|string|max:100',
-            'user_ids' => 'required|array|min:1',
-            'user_ids.*' => 'exists:users,id',
+            'name'          => 'required|string|max:100',
+            'user_ids'      => 'nullable|array',
+            'user_ids.*'    => 'exists:users,id',
+            'group_admin_id'=> 'nullable|exists:users,id',
         ]);
+
+        // Only platform admins can create groups
+        abort_unless(Auth::user()->hasRole('Admin'), 403, 'Only admins can create groups.');
 
         $user    = Auth::user();
         $members = array_unique(array_merge([$user->id], $request->user_ids));
+        $groupAdminId = $request->group_admin_id;
 
         $conv = Conversation::create([
             'user_id' => $user->id,
@@ -156,9 +161,11 @@ class TeamMessagingController extends Controller
         $inserts = array_map(fn($uid) => [
             'user_id'         => $uid,
             'conversation_id' => $conv->id,
+            'is_admin'        => $groupAdminId && (int)$uid === (int)$groupAdminId,
             'created_at'      => now(),
             'updated_at'      => now(),
         ], $members);
+
         DB::table('conversation_users')->insert($inserts);
 
         return response()->json(['conversation_id' => $conv->id, 'name' => $conv->name]);
@@ -169,8 +176,16 @@ class TeamMessagingController extends Controller
     public function updateGroup(Request $request, Conversation $conversation)
     {
         abort_unless($conversation->type === 'group', 400);
-        abort_unless(Auth::user()->hasRole('Admin'), 403, 'Only admins can rename groups.');
         abort_if($conversation->is_default, 403, 'The Company group cannot be renamed.');
+
+        $user = Auth::user();
+        $isGroupAdmin = DB::table('conversation_users')
+            ->where('conversation_id', $conversation->id)
+            ->where('user_id', $user->id)
+            ->where('is_admin', true)
+            ->exists();
+
+        abort_unless($user->hasRole('Admin') || $isGroupAdmin, 403, 'Only admins can rename groups.');
 
         $request->validate(['name' => 'required|string|max:100']);
         $conversation->update(['name' => $request->name]);
@@ -183,7 +198,17 @@ class TeamMessagingController extends Controller
     public function addMember(Request $request, Conversation $conversation)
     {
         abort_unless($conversation->type === 'group', 400);
-        abort_unless(Auth::user()->hasRole('Admin'), 403, 'Only admins can add members.');
+
+        $user = Auth::user();
+
+        // Platform admin OR group admin can add members
+        $isGroupAdmin = DB::table('conversation_users')
+            ->where('conversation_id', $conversation->id)
+            ->where('user_id', $user->id)
+            ->where('is_admin', true)
+            ->exists();
+
+        abort_unless($user->hasRole('Admin') || $isGroupAdmin, 403, 'Only admins can add members.');
 
         $request->validate(['user_id' => 'required|exists:users,id']);
 
@@ -196,6 +221,7 @@ class TeamMessagingController extends Controller
             DB::table('conversation_users')->insert([
                 'user_id'         => $request->user_id,
                 'conversation_id' => $conversation->id,
+                'is_admin'        => false,
                 'created_at'      => now(),
                 'updated_at'      => now(),
             ]);
@@ -209,10 +235,32 @@ class TeamMessagingController extends Controller
     public function removeMember(Request $request, Conversation $conversation)
     {
         abort_unless($conversation->type === 'group', 400);
-        $user = Auth::user();
-        // Creator can remove anyone; members can remove themselves
+
+        $user     = Auth::user();
         $targetId = (int) $request->user_id;
-        abort_unless($conversation->user_id === $user->id || $targetId === $user->id, 403);
+
+        $isGroupAdmin = DB::table('conversation_users')
+            ->where('conversation_id', $conversation->id)
+            ->where('user_id', $user->id)
+            ->where('is_admin', true)
+            ->exists();
+
+        // Platform admin, group admin, or self-remove
+        abort_unless(
+            $user->hasRole('Admin') || $isGroupAdmin || $targetId === $user->id,
+            403,
+            'You do not have permission to remove this member.'
+        );
+
+        // Group admin cannot remove another group admin (only platform admin can)
+        if ($isGroupAdmin && !$user->hasRole('Admin')) {
+            $targetIsAdmin = DB::table('conversation_users')
+                ->where('conversation_id', $conversation->id)
+                ->where('user_id', $targetId)
+                ->where('is_admin', true)
+                ->exists();
+            abort_if($targetIsAdmin, 403, 'Group admins cannot remove other group admins.');
+        }
 
         DB::table('conversation_users')
             ->where('conversation_id', $conversation->id)
@@ -245,13 +293,18 @@ class TeamMessagingController extends Controller
             ->leftJoin('employees', 'employees.user_id', '=', 'users.id')
             ->where('conversation_users.conversation_id', $conversation->id)
             ->whereNull('employees.deleted_at')
-            ->select('users.id', 'users.name', 'users.email', 'employees.profile_pic')
+            ->select(
+                'users.id', 'users.name', 'users.email',
+                'employees.profile_pic',
+                'conversation_users.is_admin'
+            )
             ->get()
             ->map(fn($m) => [
                 'id'              => $m->id,
                 'name'            => $m->name,
                 'email'           => $m->email,
                 'profile_picture' => $m->profile_pic ?? null,
+                'is_admin'        => (bool) $m->is_admin,
             ]);
 
         return response()->json([
@@ -880,6 +933,28 @@ class TeamMessagingController extends Controller
                 'position'   => $position,
             ] : null,
         ];
+    }
+
+    // ─── Toggle group admin status ────────────────────────────────────────────
+
+    public function toggleGroupAdmin(Conversation $conversation, \App\Models\User $user)
+    {
+        abort_unless($conversation->type === 'group', 400);
+        // Only platform admin can promote/demote group admins
+        abort_unless(Auth::user()->hasRole('Admin'), 403, 'Only platform admins can manage group admin roles.');
+        abort_unless($this->messaging->isParticipant($conversation->id, $user->id), 422, 'User is not a member of this group.');
+
+        $current = DB::table('conversation_users')
+            ->where('conversation_id', $conversation->id)
+            ->where('user_id', $user->id)
+            ->value('is_admin');
+
+        DB::table('conversation_users')
+            ->where('conversation_id', $conversation->id)
+            ->where('user_id', $user->id)
+            ->update(['is_admin' => !$current, 'updated_at' => now()]);
+
+        return response()->json(['ok' => true, 'is_admin' => !$current]);
     }
 
     // ─── Pin / Unpin message ──────────────────────────────────────────────────

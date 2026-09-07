@@ -33,7 +33,8 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'auth' => [
                 'user' => $request->user() ? array_merge($request->user()->load('employee')->toArray(), [
-                    'roles' => $request->user()->getRoleNames(),
+                    'roles'    => $request->user()->getRoleNames()->values()->toArray(),
+                    'is_admin' => $request->user()->hasRole('Admin'),
                 ]) : null,
             ],
             'csrf_token' => csrf_token(),

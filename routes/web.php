@@ -157,6 +157,7 @@ Route::get('/training', [TrainingPageController::class, 'index'])->middleware(['
         Route::post('/groups/{conversation}/members', [TeamMessagingController::class, 'addMember'])->name('team-messaging.groups.add-member');
         Route::delete('/groups/{conversation}/members', [TeamMessagingController::class, 'removeMember'])->name('team-messaging.groups.remove-member');
         Route::get('/groups/{conversation}/members', [TeamMessagingController::class, 'groupMembers'])->name('team-messaging.groups.members');
+        Route::patch('/groups/{conversation}/members/{user}/admin', [TeamMessagingController::class, 'toggleGroupAdmin'])->name('team-messaging.groups.toggle-admin');
         
         // Block/Unblock routes
         Route::post('/block', [TeamMessagingController::class, 'blockUser'])->name('team-messaging.block');

@@ -645,15 +645,16 @@ const emojiPickerRef = ref(null);
 const emojiButtonRef = ref(null);
 const messageInputRef = ref(null);
 
-// â”€â”€ Group chat state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -- Group chat state --------------------------------------------------------
 const showNewGroupModal   = ref(false);
 const newGroupName        = ref('');
 const newGroupUserIds     = ref([]);   // selected user IDs
+const newGroupAdminId     = ref(null); // designated group admin
 const groupUserSearch     = ref('');
 const creatingGroup       = ref(false);
 
-const showGroupPanel      = ref(false); // right-side member/settings panel
-const groupMembers        = ref([]);    // [{ id, name, email }]
+const showGroupPanel      = ref(false);
+const groupMembers        = ref([]);    // [{ id, name, email, profile_picture, is_admin }]
 const groupCreatorId      = ref(null);
 const loadingGroupMembers = ref(false);
 const editingGroupName    = ref(false);
@@ -661,6 +662,7 @@ const groupNameEdit       = ref('');
 const savingGroupName     = ref(false);
 const addMemberSearch     = ref('');
 const addingMember        = ref(false);
+const togglingAdminId     = ref(null); // user id being promoted/demoted
 
 const currentConvIsGroup = computed(() => {
     const c = (props.conversations || []).find(c => c.id === selectedConversation.value);
@@ -675,12 +677,21 @@ const currentUserIsCreator = computed(() =>
     currentGroupConv.value && groupCreatorId.value === page.props.auth.user.id
 );
 
-const currentUserIsAdmin = computed(() => {
-    const roles = page.props.auth?.user?.roles || [];
-    return Array.isArray(roles)
-        ? roles.includes('Admin')
-        : Object.values(roles).includes('Admin');
+const currentUserIsAdmin = computed(() =>
+    page.props.auth?.user?.is_admin === true
+);
+
+// Is current user a group admin (is_admin flag in conversation_users)
+const currentUserIsGroupAdmin = computed(() => {
+    if (!currentGroupConv.value) return false;
+    const me = groupMembers.value.find(m => m.id === page.props.auth.user.id);
+    return me?.is_admin === true;
 });
+
+// Can manage members = platform Admin OR group admin
+const currentUserCanManageGroup = computed(() =>
+    currentUserIsAdmin.value || currentUserIsGroupAdmin.value
+);
 
 // Users not yet in the group (for "add member" list)
 const availableToAdd = computed(() => {
@@ -708,24 +719,46 @@ const toggleGroupUser = (userId) => {
 };
 
 const createGroup = async () => {
-    if (!newGroupName.value.trim() || newGroupUserIds.value.length === 0) return;
+    if (!newGroupName.value.trim()) return;
     creatingGroup.value = true;
     try {
         const res = await axios.post(route('team-messaging.groups.create'), {
-            name:     newGroupName.value.trim(),
-            user_ids: newGroupUserIds.value,
+            name:           newGroupName.value.trim(),
+            user_ids:       newGroupUserIds.value,
+            group_admin_id: newGroupAdminId.value,
         });
         showNewGroupModal.value = false;
-        newGroupName.value   = '';
+        newGroupName.value    = '';
         newGroupUserIds.value = [];
+        newGroupAdminId.value = null;
         groupUserSearch.value = '';
-        // Open the new conversation â€” force a page refresh to get it in the sidebar
         router.reload({ only: ['conversations'] });
         selectConversation(res.data.conversation_id);
     } catch (e) {
+        alert(e.response?.data?.message || 'Failed to create group.');
         console.error('[Group] create failed:', e);
     } finally {
         creatingGroup.value = false;
+    }
+};
+
+const toggleGroupAdmin = async (userId) => {
+    if (!currentGroupConv.value || togglingAdminId.value) return;
+    togglingAdminId.value = userId;
+    try {
+        const res = await axios.patch(
+            route('team-messaging.groups.toggle-admin', {
+                conversation: currentGroupConv.value.id,
+                user: userId,
+            })
+        );
+        // Update local member list
+        const member = groupMembers.value.find(m => m.id === userId);
+        if (member) member.is_admin = res.data.is_admin;
+    } catch (e) {
+        alert(e.response?.data?.message || 'Failed to update admin status.');
+    } finally {
+        togglingAdminId.value = null;
     }
 };
 
@@ -1853,11 +1886,124 @@ watch(messages, () => {
                 </div>
 
                 <!-- Conversation / User list -->
-                <div class="flex-1 overflow-y-auto pr-1 chat-scroll">
+                <div class="flex-1 min-h-0 overflow-y-auto pr-1 chat-scroll">
 
                     <!-- â”€â”€ Groups tab: show only group conversations â”€â”€ -->
                     <template v-if="activeTab === 'groups'">
-                        <div v-if="groupConversations.length === 0"
+
+                        <!-- Create Group button (admin only) -->
+                        <div v-if="currentUserIsAdmin" class="px-3 pt-3 pb-1">
+                            <button
+                                @click="showNewGroupModal = !showNewGroupModal"
+                                class="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-opacity hover:opacity-90"
+                                style="background: linear-gradient(135deg, #006970, #00a9b4)"
+                            >
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                                </svg>
+                                Create Group
+                            </button>
+                        </div>
+
+                        <!-- Inline Create Group Form -->
+                        <div v-if="showNewGroupModal"
+                            class="mx-3 mb-3 rounded-xl border shadow-sm overflow-hidden"
+                            :class="isDark ? 'bg-gray-700 border-gray-600' : 'bg-slate-50 border-slate-200'"
+                        >
+                            <!-- Form header -->
+                            <div class="flex items-center justify-between px-4 py-3 border-b"
+                                :class="isDark ? 'border-gray-600' : 'border-slate-200'">
+                                <span class="text-sm font-semibold" :class="isDark ? 'text-white' : 'text-slate-800'">New Group</span>
+                                <button @click="showNewGroupModal = false; newGroupName = ''; newGroupUserIds = []; newGroupAdminId = null; groupUserSearch = ''"
+                                    class="p-1 rounded transition-colors"
+                                    :class="isDark ? 'text-gray-400 hover:text-white hover:bg-gray-600' : 'text-slate-400 hover:text-slate-700 hover:bg-slate-200'">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <div class="px-4 py-3 space-y-3">
+                                <!-- Group Name -->
+                                <input
+                                    v-model="newGroupName"
+                                    type="text"
+                                    placeholder="Group name *"
+                                    maxlength="100"
+                                    class="w-full px-3 py-2 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                                    :class="isDark ? 'bg-gray-800 border-gray-600 text-white placeholder-gray-500' : 'bg-white border-slate-300 text-slate-900 placeholder-slate-400'"
+                                />
+
+                                <!-- Group Admin -->
+                                <select
+                                    v-model="newGroupAdminId"
+                                    class="w-full px-3 py-2 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                                    :class="isDark ? 'bg-gray-800 border-gray-600 text-white' : 'bg-white border-slate-300 text-slate-900'"
+                                >
+                                    <option :value="null">-- No group admin --</option>
+                                    <option v-for="u in (props.users || [])" :key="u.id" :value="u.id">
+                                        {{ u.name }}
+                                    </option>
+                                </select>
+
+                                <!-- Member search -->
+                                <input
+                                    v-model="groupUserSearch"
+                                    type="text"
+                                    placeholder="Search members..."
+                                    class="w-full px-3 py-2 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                                    :class="isDark ? 'bg-gray-800 border-gray-600 text-white placeholder-gray-500' : 'bg-white border-slate-300 text-slate-900 placeholder-slate-400'"
+                                />
+
+                                <!-- Member list -->
+                                <div class="rounded-lg border max-h-40 overflow-y-auto"
+                                    :class="isDark ? 'border-gray-600' : 'border-slate-200'">
+                                    <button
+                                        v-for="u in groupModalUsers" :key="u.id"
+                                        type="button"
+                                        @click="toggleGroupUser(u.id)"
+                                        class="w-full flex items-center gap-2.5 px-3 py-2 text-left transition-colors border-b last:border-b-0 text-sm"
+                                        :class="[
+                                            newGroupUserIds.includes(u.id)
+                                                ? (isDark ? 'bg-teal-900/40' : 'bg-teal-50')
+                                                : (isDark ? 'hover:bg-gray-600' : 'hover:bg-slate-50'),
+                                            isDark ? 'border-gray-600' : 'border-slate-100'
+                                        ]"
+                                    >
+                                        <div class="w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center text-[10px] font-bold text-white overflow-hidden"
+                                            style="background:linear-gradient(135deg,#006970,#00a9b4)">
+                                            <img v-if="getProfilePicture(u)" :src="getProfilePicture(u)" class="w-full h-full object-cover"/>
+                                            <span v-else>{{ getInitials(u.name) }}</span>
+                                        </div>
+                                        <span class="flex-1 truncate" :class="isDark ? 'text-gray-200' : 'text-slate-700'">
+                                            {{ u.name }}
+                                            <span v-if="newGroupAdminId === u.id" class="ml-1 text-[10px] text-teal-500 font-semibold">Admin</span>
+                                        </span>
+                                        <svg v-if="newGroupUserIds.includes(u.id)" class="w-4 h-4 flex-shrink-0 text-teal-500" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                        </svg>
+                                    </button>
+                                    <p v-if="groupModalUsers.length === 0" class="px-3 py-3 text-xs text-center"
+                                        :class="isDark ? 'text-gray-500' : 'text-slate-400'">No users found</p>
+                                </div>
+
+                                <p class="text-[11px]" :class="isDark ? 'text-gray-400' : 'text-slate-500'">
+                                    {{ newGroupUserIds.length }} member{{ newGroupUserIds.length !== 1 ? 's' : '' }} selected
+                                </p>
+
+                                <!-- Submit -->
+                                <button
+                                    @click="createGroup"
+                                    :disabled="creatingGroup || !newGroupName.trim()"
+                                    class="w-full py-2 rounded-lg text-sm font-semibold text-white transition-opacity disabled:opacity-50"
+                                    style="background:linear-gradient(135deg,#006970,#00a9b4)"
+                                >
+                                    {{ creatingGroup ? 'Creating...' : 'Create Group' }}
+                                </button>
+                            </div>
+                        </div>
+
+                        <div v-if="groupConversations.length === 0 && !showNewGroupModal"
                             class="flex flex-col items-center justify-center h-full p-6 text-center">
                             <svg class="w-10 h-10 text-slate-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
@@ -2166,32 +2312,18 @@ watch(messages, () => {
 
                 <!-- Sidebar footer -->
                 <div
-                    class="flex items-center justify-between px-4 py-3 border-t"
+                    class="flex items-center justify-center px-4 py-3 border-t gap-2"
                     :class="isDark ? 'border-gray-700' : 'border-slate-100'"
                 >
-                    <button class="p-2 rounded-lg transition-colors" :class="isDark ? 'text-gray-400 hover:bg-gray-700' : 'text-slate-400 hover:bg-slate-100'"
-                        title="Settings">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 0 0-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 0 0-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 0 0-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 0 0-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 0 0 1.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/>
+                    <button
+                        @click="showNewChatModal = true"
+                        class="flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90"
+                        style="background: linear-gradient(135deg, #006970, #00a9b4)"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                         </svg>
-                    </button>
-                    <div class="flex items-center gap-2">
-                        <button
-                            @click="showNewChatModal = true"
-                            class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90"
-                            style="background: linear-gradient(135deg, #006970, #00a9b4)"
-                        >
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                            </svg>
-                            New Message
-                        </button>
-                    </div>
-                    <button class="p-2 rounded-lg transition-colors" :class="isDark ? 'text-gray-400 hover:bg-gray-700' : 'text-slate-400 hover:bg-slate-100'"
-                        title="Help">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/>
-                        </svg>
+                        New Message
                     </button>
                 </div>
             </div>
@@ -2896,9 +3028,9 @@ watch(messages, () => {
                                     <span class="text-sm flex-1 truncate" :class="isDark ? 'text-white' : 'text-slate-800'">
                                         {{ currentGroupConv?.name }}
                                     </span>
-                                    <!-- Only allow rename for admins on non-default groups -->
+                                    <!-- Only allow rename for admins/group admins on non-default groups -->
                                     <button
-                                        v-if="!currentGroupConv?.is_default && currentUserIsAdmin"
+                                        v-if="!currentGroupConv?.is_default && currentUserCanManageGroup"
                                         @click="groupNameEdit = currentGroupConv?.name; editingGroupName = true"
                                         class="p-1 rounded transition-colors flex-shrink-0"
                                         :class="isDark ? 'text-gray-400 hover:text-teal-400' : 'text-slate-400 hover:text-teal-600'"
@@ -2960,55 +3092,81 @@ watch(messages, () => {
                                         class="flex items-center gap-2.5 px-2 py-2 rounded-lg"
                                         :class="isDark ? 'hover:bg-gray-700' : 'hover:bg-slate-50'"
                                     >
-                                        <!-- Avatar with photo or initials fallback -->
+                                        <!-- Avatar -->
                                         <div class="w-8 h-8 rounded-full flex-shrink-0 overflow-hidden relative group/gmavatar">
-                                            <img
-                                                v-if="getProfilePicture(member)"
-                                                :src="getProfilePicture(member)"
-                                                :alt="member.name"
-                                                class="w-full h-full object-cover object-top cursor-pointer"
-                                                @click="openUserLightbox(member)"
-                                            />
-                                            <div v-else
-                                                class="w-full h-full flex items-center justify-center text-xs font-semibold text-white"
+                                            <img v-if="getProfilePicture(member)" :src="getProfilePicture(member)" :alt="member.name"
+                                                class="w-full h-full object-cover object-top cursor-pointer" @click="openUserLightbox(member)"/>
+                                            <div v-else class="w-full h-full flex items-center justify-center text-xs font-semibold text-white"
                                                 style="background: linear-gradient(135deg, #006970, #00a9b4)">
                                                 {{ getInitials(member.name) }}
                                             </div>
-                                            <div v-if="getProfilePicture(member)"
-                                                class="absolute inset-0 rounded-full bg-black/30 flex items-center justify-center opacity-0 group-hover/gmavatar:opacity-100 transition-opacity duration-150 cursor-pointer pointer-events-none">
-                                                <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0zm0 0l0 .01"/>
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 8v6M8 11h6"/>
-                                                </svg>
-                                            </div>
                                         </div>
+
+                                        <!-- Info + badges -->
                                         <div class="flex-1 min-w-0">
                                             <p class="text-sm font-medium truncate" :class="isDark ? 'text-white' : 'text-slate-800'">
                                                 {{ member.name }}
-                                                <span v-if="member.id === groupCreatorId"
-                                                    class="ml-1 text-[10px] px-1 rounded bg-teal-100 text-teal-700 font-semibold">creator</span>
-                                                <span v-if="member.id === page.props.auth.user.id"
-                                                    class="ml-1 text-[10px] px-1 rounded"
-                                                    :class="isDark ? 'bg-gray-600 text-gray-300' : 'bg-slate-100 text-slate-500'">you</span>
                                             </p>
+                                            <div class="flex items-center gap-1 flex-wrap mt-0.5">
+                                                <span v-if="member.id === groupCreatorId"
+                                                    class="text-[10px] px-1.5 py-0.5 rounded-full font-semibold"
+                                                    :class="isDark ? 'bg-teal-900/40 text-teal-400' : 'bg-teal-100 text-teal-700'">
+                                                    Creator
+                                                </span>
+                                                <span v-if="member.is_admin"
+                                                    class="text-[10px] px-1.5 py-0.5 rounded-full font-semibold"
+                                                    :class="isDark ? 'bg-amber-900/40 text-amber-400' : 'bg-amber-100 text-amber-700'">
+                                                    Group Admin
+                                                </span>
+                                                <span v-if="member.id === page.props.auth.user.id"
+                                                    class="text-[10px] px-1.5 py-0.5 rounded-full font-semibold"
+                                                    :class="isDark ? 'bg-gray-600 text-gray-300' : 'bg-slate-100 text-slate-500'">
+                                                    You
+                                                </span>
+                                            </div>
                                         </div>
-                                        <!-- Remove button: creator removes anyone, members remove themselves -->
-                                        <button
-                                            v-if="currentUserIsCreator || member.id === page.props.auth.user.id"
-                                            @click="removeMember(member.id)"
-                                            class="flex-shrink-0 p-1 rounded transition-colors"
-                                            :class="isDark ? 'text-gray-500 hover:text-red-400 hover:bg-gray-700' : 'text-slate-300 hover:text-red-500 hover:bg-slate-100'"
-                                            :title="member.id === page.props.auth.user.id ? 'Leave group' : 'Remove member'"
-                                        >
-                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                                            </svg>
-                                        </button>
+
+                                        <!-- Actions: toggle admin (platform admin only) + remove -->
+                                        <div class="flex items-center gap-1 flex-shrink-0">
+                                            <!-- Toggle Group Admin (platform admin only, not for creator) -->
+                                            <button
+                                                v-if="currentUserIsAdmin && member.id !== groupCreatorId"
+                                                @click="toggleGroupAdmin(member.id)"
+                                                :disabled="togglingAdminId === member.id"
+                                                class="p-1 rounded transition-colors"
+                                                :class="member.is_admin
+                                                    ? (isDark ? 'text-amber-400 hover:bg-gray-700' : 'text-amber-600 hover:bg-amber-50')
+                                                    : (isDark ? 'text-gray-500 hover:text-amber-400 hover:bg-gray-700' : 'text-slate-300 hover:text-amber-600 hover:bg-amber-50')"
+                                                :title="member.is_admin ? 'Remove group admin' : 'Make group admin'"
+                                            >
+                                                <svg v-if="togglingAdminId === member.id" class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+                                                </svg>
+                                                <svg v-else class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                                                </svg>
+                                            </button>
+
+                                            <!-- Remove member -->
+                                            <button
+                                                v-if="currentUserCanManageGroup || member.id === page.props.auth.user.id"
+                                                @click="removeMember(member.id)"
+                                                class="p-1 rounded transition-colors"
+                                                :class="isDark ? 'text-gray-500 hover:text-red-400 hover:bg-gray-700' : 'text-slate-300 hover:text-red-500 hover:bg-slate-100'"
+                                                :title="member.id === page.props.auth.user.id ? 'Leave group' : 'Remove member'"
+                                            >
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                                </svg>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
 
-                                <!-- Add member (admin only) -->
-                                <div v-if="currentUserIsAdmin" class="mt-4">
+                                <!-- Add member (admin or group admin) -->
+                                <div v-if="currentUserCanManageGroup" class="mt-4">
                                     <p class="text-xs font-semibold uppercase tracking-wider mb-2"
                                         :class="isDark ? 'text-gray-400' : 'text-slate-400'">Add member</p>
                                     <div class="relative mb-2">
@@ -3048,8 +3206,8 @@ watch(messages, () => {
                                 </div>
                             </div>
 
-                            <!-- Delete group (admin only, not for default group) -->
-                            <div v-if="currentUserIsAdmin && !currentGroupConv?.is_default" class="px-4 pb-4">
+                            <!-- Delete group (admin or group admin, not for default group) -->
+                            <div v-if="currentUserCanManageGroup && !currentGroupConv?.is_default" class="px-4 pb-4">
                                 <button
                                     @click="deleteGroup"
                                     class="w-full flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium text-red-600 border border-red-200 hover:bg-red-50 transition-colors"
@@ -3642,6 +3800,177 @@ watch(messages, () => {
                 </TransitionGroup>
             </div>
         </Teleport>
+
+    <!-- ── Create Group Modal (Admin only) ─────────────────────────────── -->
+    <Teleport to="body">
+        <div v-if="showNewGroupModal"
+            class="fixed inset-0 z-50 flex items-center justify-center p-4"
+            @click.self="showNewGroupModal = false">
+                <!-- Backdrop -->
+                <div class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
+
+                <!-- Modal -->
+                <div class="relative w-full max-w-lg rounded-2xl shadow-2xl flex flex-col max-h-[90vh]"
+                    :class="isDark ? 'bg-gray-800' : 'bg-white'">
+
+                    <!-- Header -->
+                    <div class="flex items-center justify-between px-6 py-4 border-b flex-shrink-0"
+                        :class="isDark ? 'border-gray-700' : 'border-slate-100'">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-8 h-8 rounded-xl flex items-center justify-center text-white"
+                                style="background:linear-gradient(135deg,#006970,#00a9b4)">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                </svg>
+                            </div>
+                            <h2 class="text-base font-semibold" :class="isDark ? 'text-white' : 'text-slate-800'">Create Group</h2>
+                        </div>
+                        <button @click="showNewGroupModal = false"
+                            class="p-1.5 rounded-lg transition-colors"
+                            :class="isDark ? 'text-gray-400 hover:bg-gray-700' : 'text-slate-400 hover:bg-slate-100'">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- Body -->
+                    <div class="flex-1 overflow-y-auto px-6 py-5 space-y-5">
+
+                        <!-- Group Name -->
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider mb-1.5"
+                                :class="isDark ? 'text-gray-400' : 'text-slate-500'">Group Name *</label>
+                            <input
+                                v-model="newGroupName"
+                                type="text"
+                                placeholder="e.g. Reports Team"
+                                maxlength="100"
+                                class="w-full px-3 py-2 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                                :class="isDark ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-500' : 'bg-white border-slate-300 text-slate-900 placeholder-slate-400'"
+                            />
+                        </div>
+
+                        <!-- Group Admin picker -->
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider mb-1.5"
+                                :class="isDark ? 'text-gray-400' : 'text-slate-500'">Group Admin (optional)</label>
+                            <p class="text-xs mb-2" :class="isDark ? 'text-gray-500' : 'text-slate-400'">
+                                This person can add/remove members and rename the group.
+                            </p>
+                            <select
+                                v-model="newGroupAdminId"
+                                class="w-full px-3 py-2 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                                :class="isDark ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-slate-300 text-slate-900'"
+                            >
+                                <option :value="null">-- No group admin --</option>
+                                <option v-for="u in groupModalUsers" :key="u.id" :value="u.id">
+                                    {{ u.name }} ({{ u.email }})
+                                </option>
+                            </select>
+                        </div>
+
+                        <!-- Member search -->
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider mb-1.5"
+                                :class="isDark ? 'text-gray-400' : 'text-slate-500'">
+                                Add Members *
+                                <span class="ml-1 font-normal normal-case"
+                                    :class="isDark ? 'text-gray-500' : 'text-slate-400'">
+                                    ({{ newGroupUserIds.length }} selected)
+                                </span>
+                            </label>
+                            <input
+                                v-model="groupUserSearch"
+                                type="text"
+                                placeholder="Search by name or email..."
+                                class="w-full px-3 py-2 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 mb-2"
+                                :class="isDark ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-500' : 'bg-white border-slate-300 text-slate-900 placeholder-slate-400'"
+                            />
+
+                            <!-- User list -->
+                            <div class="rounded-xl border overflow-hidden"
+                                :class="isDark ? 'border-gray-700' : 'border-slate-200'">
+                                <div class="max-h-48 overflow-y-auto">
+                                    <div v-if="groupModalUsers.length === 0"
+                                        class="px-4 py-6 text-sm text-center"
+                                        :class="isDark ? 'text-gray-500' : 'text-slate-400'">
+                                        No users found
+                                    </div>
+                                    <button
+                                        v-for="u in groupModalUsers" :key="u.id"
+                                        type="button"
+                                        @click="toggleGroupUser(u.id)"
+                                        class="w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors border-b last:border-b-0"
+                                        :class="[
+                                            newGroupUserIds.includes(u.id)
+                                                ? (isDark ? 'bg-teal-900/30' : 'bg-teal-50')
+                                                : (isDark ? 'hover:bg-gray-700' : 'hover:bg-slate-50'),
+                                            isDark ? 'border-gray-700' : 'border-slate-100'
+                                        ]"
+                                    >
+                                        <!-- Avatar -->
+                                        <div class="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-semibold text-white overflow-hidden"
+                                            style="background:linear-gradient(135deg,#006970,#00a9b4)">
+                                            <img v-if="getProfilePicture(u)" :src="getProfilePicture(u)" class="w-full h-full object-cover"/>
+                                            <span v-else>{{ getInitials(u.name) }}</span>
+                                        </div>
+                                        <!-- Info -->
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-sm font-medium truncate" :class="isDark ? 'text-white' : 'text-slate-800'">
+                                                {{ u.name }}
+                                                <span v-if="newGroupAdminId === u.id"
+                                                    class="ml-1.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+                                                    :class="isDark ? 'bg-teal-900/40 text-teal-400' : 'bg-teal-100 text-teal-700'">
+                                                    Admin
+                                                </span>
+                                            </p>
+                                            <p class="text-xs truncate" :class="isDark ? 'text-gray-400' : 'text-slate-400'">{{ u.email }}</p>
+                                        </div>
+                                        <!-- Checkbox -->
+                                        <div class="flex-shrink-0 w-5 h-5 rounded-md border-2 flex items-center justify-center transition-colors"
+                                            :class="newGroupUserIds.includes(u.id)
+                                                ? 'bg-teal-500 border-teal-500'
+                                                : (isDark ? 'border-gray-600' : 'border-slate-300')">
+                                            <svg v-if="newGroupUserIds.includes(u.id)" class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                                            </svg>
+                                        </div>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Footer -->
+                    <div class="flex items-center justify-between px-6 py-4 border-t flex-shrink-0"
+                        :class="isDark ? 'border-gray-700' : 'border-slate-100'">
+                        <button @click="showNewGroupModal = false; newGroupName = ''; newGroupUserIds = []; newGroupAdminId = null; groupUserSearch = ''"
+                            class="px-4 py-2 rounded-xl text-sm font-medium transition-colors"
+                            :class="isDark ? 'text-gray-400 hover:bg-gray-700' : 'text-slate-500 hover:bg-slate-100'">
+                            Cancel
+                        </button>
+                        <button
+                            @click="createGroup"
+                            :disabled="creatingGroup || !newGroupName.trim()"
+                            class="flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-semibold text-white transition-opacity disabled:opacity-50"
+                            style="background:linear-gradient(135deg,#006970,#00a9b4)"
+                        >
+                            <svg v-if="creatingGroup" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+                            </svg>
+                            <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                            </svg>
+                            {{ creatingGroup ? 'Creating...' : 'Create Group' }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+    </Teleport>
+
     </AuthenticatedLayout>
 
     <!-- Image Lightbox (outside layout for proper z-index) -->
