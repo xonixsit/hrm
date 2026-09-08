@@ -1241,6 +1241,15 @@ const selectConversation = async (conversationId) => {
     // Load pinned messages for this conversation
     pinnedMessages.value = [];
     showPinnedPanel.value = false;
+
+    // Non-members of a group should not fetch messages or pins
+    const isGroupNonMember = (conv?.is_group || conv?.type === 'group') && conv?.is_member === false;
+    if (isGroupNonMember) {
+        messages.value = [];
+        loadingMessages.value = false;
+        return;
+    }
+
     loadPinnedMessages(conversationId);
     // Reload starred if panel is open
     starredMsgs.value = [];
@@ -2732,8 +2741,36 @@ watch(messages, () => {
                         class="flex-1 overflow-y-auto min-h-0 px-6 py-4 space-y-5 relative chat-scroll"
                         style="scroll-behavior:smooth;">
 
+                        <!-- Not a member gate — hides all messages until joined -->
+                        <div v-if="currentConvIsGroup && !currentUserIsMember"
+                            class="flex flex-col items-center justify-center h-full gap-4 text-center px-6">
+                            <div class="w-16 h-16 rounded-full flex items-center justify-center"
+                                :class="isDark ? 'bg-gray-700' : 'bg-teal-50'">
+                                <svg class="w-8 h-8" :class="isDark ? 'text-teal-400' : 'text-teal-500'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-base font-semibold" :class="isDark ? 'text-white' : 'text-slate-800'">
+                                    Members only
+                                </p>
+                                <p class="text-sm mt-1" :class="isDark ? 'text-gray-400' : 'text-slate-500'">
+                                    You need to join this group to view messages.
+                                </p>
+                            </div>
+                            <button
+                                @click="joinGroup(currentGroupConv?.id)"
+                                :disabled="joiningGroupId === currentGroupConv?.id"
+                                class="px-5 py-2 rounded-xl text-sm font-semibold text-white transition-opacity"
+                                :class="joiningGroupId === currentGroupConv?.id ? 'opacity-60 cursor-not-allowed' : ''"
+                                style="background: linear-gradient(135deg, #006970, #00a9b4)"
+                            >
+                                {{ joiningGroupId === currentGroupConv?.id ? 'Joining…' : 'Join Group' }}
+                            </button>
+                        </div>
+
                         <!-- Loading -->
-                        <div v-if="loadingMessages" class="flex justify-center pt-8">
+                        <div v-else-if="loadingMessages" class="flex justify-center pt-8">
                             <svg class="w-6 h-6 animate-spin text-teal-500" fill="none" viewBox="0 0 24 24">
                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
                                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>

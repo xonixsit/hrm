@@ -376,9 +376,14 @@ class TeamMessagingController extends Controller
     {
         $user = Auth::user();
 
-        $canAccess = $user->hasRole('Admin') ||
-            $this->messaging->isParticipant($conversation->id, $user->id);
-        abort_unless($canAccess, 403);
+        $isMember = $this->messaging->isParticipant($conversation->id, $user->id);
+
+        // For group conversations, require membership — even admins must join first
+        if ($conversation->type === 'group') {
+            abort_unless($isMember, 403, 'You must join this group to view messages.');
+        } else {
+            abort_unless($isMember, 403);
+        }
 
         // Mark read in one bulk insert — returns newly read message IDs
         $newlyRead = $this->messaging->markConversationRead(
@@ -1084,7 +1089,7 @@ class TeamMessagingController extends Controller
     {
         $user = Auth::user();
         abort_unless(
-            $user->hasRole('Admin') || $this->messaging->isParticipant($conversation->id, $user->id),
+            $this->messaging->isParticipant($conversation->id, $user->id),
             403
         );
 
