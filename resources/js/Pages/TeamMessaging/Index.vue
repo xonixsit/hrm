@@ -2052,7 +2052,7 @@ watch(messages, () => {
                                     </div>
                                     <p class="text-xs truncate mt-0.5" :class="isDark ? 'text-gray-400' : 'text-slate-500'">
                                         {{ conv.participant_count }} members
-                                        <template v-if="conv.last_message"> Â· {{ conv.last_message.message }}</template>
+                                        <template v-if="conv.last_message"> · {{ conv.last_message.message?.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim().slice(0, 40) }}</template>
                                     </p>
                                 </div>
                                 <!-- Unread badge + mark unread -->
