@@ -693,6 +693,45 @@ const currentUserCanManageGroup = computed(() =>
     currentUserIsAdmin.value || currentUserIsGroupAdmin.value
 );
 
+// Is the current user a member of the current group conversation?
+const currentUserIsMember = computed(() => {
+    if (!currentGroupConv.value) return false;
+    return groupMembers.value.some(m => m.id === page.props.auth.user.id);
+});
+
+const joiningGroup  = ref(false);
+const leavingGroup  = ref(false);
+
+const joinGroup = async () => {
+    if (!currentGroupConv.value || joiningGroup.value) return;
+    joiningGroup.value = true;
+    try {
+        await axios.post(route('team-messaging.groups.join', currentGroupConv.value.id));
+        await loadGroupMembers(currentGroupConv.value.id);
+        router.reload({ only: ['conversations'] });
+    } catch (e) {
+        console.error('joinGroup error', e);
+    } finally {
+        joiningGroup.value = false;
+    }
+};
+
+const leaveGroup = async () => {
+    if (!currentGroupConv.value || leavingGroup.value) return;
+    if (!confirm(`Leave group "${currentGroupConv.value.name}"?`)) return;
+    leavingGroup.value = true;
+    try {
+        await axios.delete(route('team-messaging.groups.leave', currentGroupConv.value.id));
+        selectedConversation.value = null;
+        showGroupPanel.value = false;
+        router.reload({ only: ['conversations'] });
+    } catch (e) {
+        console.error('leaveGroup error', e);
+    } finally {
+        leavingGroup.value = false;
+    }
+};
+
 // Users not yet in the group (for "add member" list)
 const availableToAdd = computed(() => {
     const memberIds = new Set(groupMembers.value.map(m => m.id));
@@ -1222,6 +1261,7 @@ const isSending = ref(false);
 
 const sendMessage = async () => {
     if (!selectedConversation.value || isSending.value || isUserBlocked.value) return;
+    if (currentConvIsGroup.value && !currentUserIsMember.value) return;
 
     // Check if RichTextEditor has pending files that need to be uploaded first
     if (richEditorRef.value?.pendingFiles?.length > 0) {
@@ -3004,7 +3044,7 @@ watch(messages, () => {
                     <Transition name="slide-panel">
                         <div
                             v-if="showGroupPanel && currentConvIsGroup"
-                            class="w-72 flex-shrink-0 flex flex-col border-l overflow-y-auto group-panel-scroll"
+                            class="w-72 flex-shrink-0 flex flex-col border-l overflow-y-auto overflow-x-hidden group-panel-scroll"
                             :class="isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-slate-100'"
                         >
                             <!-- Panel header -->
@@ -3204,6 +3244,40 @@ watch(messages, () => {
                                         </p>
                                     </div>
                                 </div>
+                            </div>
+
+                            <!-- Join / Leave group (admin self-management) -->
+                            <div v-if="currentUserIsAdmin && !currentGroupConv?.is_default" class="px-4 pb-2">
+                                <!-- Join -->
+                                <button
+                                    v-if="!currentUserIsMember"
+                                    @click="joinGroup"
+                                    :disabled="joiningGroup"
+                                    class="w-full flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-colors"
+                                    :class="isDark
+                                        ? 'text-teal-400 border border-teal-700 hover:bg-teal-900/20'
+                                        : 'text-teal-700 border border-teal-300 hover:bg-teal-50'"
+                                >
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                                    </svg>
+                                    {{ joiningGroup ? 'Joining…' : 'Join Group' }}
+                                </button>
+                                <!-- Leave -->
+                                <button
+                                    v-else
+                                    @click="leaveGroup"
+                                    :disabled="leavingGroup"
+                                    class="w-full flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-colors"
+                                    :class="isDark
+                                        ? 'text-orange-400 border border-orange-700 hover:bg-orange-900/20'
+                                        : 'text-orange-600 border border-orange-200 hover:bg-orange-50'"
+                                >
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                                    </svg>
+                                    {{ leavingGroup ? 'Leaving…' : 'Leave Group' }}
+                                </button>
                             </div>
 
                             <!-- Delete group (admin or group admin, not for default group) -->
@@ -3464,6 +3538,33 @@ watch(messages, () => {
                                 @click="unblockUser()"
                                 class="flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors text-white bg-red-500 hover:bg-red-600"
                             >Unblock</button>
+                        </div>
+
+                        <!-- Not-a-member notice — replaces input for group non-members -->
+                        <div v-else-if="currentConvIsGroup && !currentUserIsMember"
+                            class="rounded-2xl border px-4 py-4 flex items-center gap-3"
+                            :class="isDark ? 'bg-gray-800/60 border-gray-700' : 'bg-teal-50 border-teal-100'"
+                        >
+                            <div class="flex-shrink-0 w-8 h-8 rounded-full bg-teal-100 flex items-center justify-center">
+                                <svg class="w-4 h-4 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                </svg>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-medium" :class="isDark ? 'text-teal-300' : 'text-teal-700'">
+                                    You're not a member of this group
+                                </p>
+                                <p class="text-xs mt-0.5" :class="isDark ? 'text-gray-500' : 'text-slate-400'">
+                                    Join the group to send and receive messages
+                                </p>
+                            </div>
+                            <button
+                                v-if="currentUserIsAdmin"
+                                @click="joinGroup"
+                                :disabled="joiningGroup"
+                                class="flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors text-white"
+                                style="background: linear-gradient(135deg, #006970, #00a9b4)"
+                            >{{ joiningGroup ? 'Joining…' : 'Join Group' }}</button>
                         </div>
 
                         <!-- Rich text input card -->

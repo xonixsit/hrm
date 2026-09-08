@@ -63,16 +63,32 @@ class TeamMessagingController extends Controller
     public function index()
     {
         $user            = Auth::user();
-        $conversationIds = $this->messaging->conversationIdsFor($user->id);
-        $unreadMap       = $this->messaging->bulkUnreadCounts($conversationIds, $user->id);
+        $isAdmin         = $user->hasRole('Admin');
+
+        // Admins see all group conversations + their own DMs
+        // Regular users only see conversations they are members of
+        $memberConvIds   = $this->messaging->conversationIdsFor($user->id);
+
+        if ($isAdmin) {
+            $allGroupIds = Conversation::where('type', 'group')
+                ->whereNull('deleted_at')
+                ->pluck('id')
+                ->toArray();
+            $conversationIds = array_unique(array_merge($memberConvIds, $allGroupIds));
+        } else {
+            $conversationIds = $memberConvIds;
+        }
+
+        $unreadMap       = $this->messaging->bulkUnreadCounts($memberConvIds, $user->id);
 
         $conversations = Conversation::whereIn('id', $conversationIds)
             ->get()
             // Pin the default group first, then the rest by latest message
             ->sortByDesc(fn ($c) => [$c->is_default ? 1 : 0])
             ->values()
-            ->map(function (Conversation $conv) use ($user, $unreadMap) {
-                $isGroup = $conv->type === 'group';
+            ->map(function (Conversation $conv) use ($user, $unreadMap, $memberConvIds) {
+                $isGroup  = $conv->type === 'group';
+                $isMember = in_array($conv->id, $memberConvIds);
 
                 if ($isGroup) {
                     $participantCount = DB::table('conversation_users')
@@ -96,6 +112,7 @@ class TeamMessagingController extends Controller
                     'is_group'          => $isGroup,
                     'is_default'        => (bool) $conv->is_default,
                     'is_creator'        => $conv->user_id === $user->id,
+                    'is_member'         => $isMember,
                     'participant_count' => $participantCount,
                     'other_user'        => !$isGroup && $otherUser ? [
                         'id'              => $otherUser->id,
@@ -286,7 +303,11 @@ class TeamMessagingController extends Controller
 
     public function groupMembers(Conversation $conversation)
     {
-        abort_unless($this->messaging->isParticipant($conversation->id, Auth::id()), 403);
+        $user = Auth::user();
+        // Admin can view any group's members; others must be participants
+        $canAccess = $user->hasRole('Admin') ||
+            $this->messaging->isParticipant($conversation->id, $user->id);
+        abort_unless($canAccess, 403);
 
         $members = DB::table('conversation_users')
             ->join('users', 'users.id', '=', 'conversation_users.user_id')
@@ -355,7 +376,9 @@ class TeamMessagingController extends Controller
     {
         $user = Auth::user();
 
-        abort_unless($this->messaging->isParticipant($conversation->id, $user->id), 403);
+        $canAccess = $user->hasRole('Admin') ||
+            $this->messaging->isParticipant($conversation->id, $user->id);
+        abort_unless($canAccess, 403);
 
         // Mark read in one bulk insert — returns newly read message IDs
         $newlyRead = $this->messaging->markConversationRead(
@@ -935,6 +958,45 @@ class TeamMessagingController extends Controller
         ];
     }
 
+    // ─── Join / Leave group (admin self-management) ───────────────────────────
+
+    public function joinGroup(Conversation $conversation)
+    {
+        abort_unless($conversation->type === 'group', 400);
+        $user = Auth::user();
+        abort_unless($user->hasRole('Admin'), 403);
+
+        $exists = DB::table('conversation_users')
+            ->where('conversation_id', $conversation->id)
+            ->where('user_id', $user->id)
+            ->exists();
+
+        if (!$exists) {
+            DB::table('conversation_users')->insert([
+                'user_id'         => $user->id,
+                'conversation_id' => $conversation->id,
+                'is_admin'        => false,
+                'created_at'      => now(),
+                'updated_at'      => now(),
+            ]);
+        }
+
+        return response()->json(['ok' => true, 'is_member' => true]);
+    }
+
+    public function leaveGroup(Conversation $conversation)
+    {
+        abort_unless($conversation->type === 'group', 400);
+        $user = Auth::user();
+
+        DB::table('conversation_users')
+            ->where('conversation_id', $conversation->id)
+            ->where('user_id', $user->id)
+            ->delete();
+
+        return response()->json(['ok' => true, 'is_member' => false]);
+    }
+
     // ─── Toggle group admin status ────────────────────────────────────────────
 
     public function toggleGroupAdmin(Conversation $conversation, \App\Models\User $user)
@@ -1014,7 +1076,9 @@ class TeamMessagingController extends Controller
     public function pinnedMessages(Conversation $conversation)
     {
         $user = Auth::user();
-        abort_unless($this->messaging->isParticipant($conversation->id, $user->id), 403);
+        $canAccess = $user->hasRole('Admin') ||
+            $this->messaging->isParticipant($conversation->id, $user->id);
+        abort_unless($canAccess, 403);
 
         $pins = PinnedMessage::where('conversation_id', $conversation->id)
             ->with(['message', 'pinnedByUser'])
