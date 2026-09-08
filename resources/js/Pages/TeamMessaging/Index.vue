@@ -693,44 +693,7 @@ const currentUserCanManageGroup = computed(() =>
     currentUserIsAdmin.value || currentUserIsGroupAdmin.value
 );
 
-// Is the current user a member of the current group conversation?
-const currentUserIsMember = computed(() => {
-    if (!currentGroupConv.value) return false;
-    return groupMembers.value.some(m => m.id === page.props.auth.user.id);
-});
 
-const joiningGroup  = ref(false);
-const leavingGroup  = ref(false);
-
-const joinGroup = async () => {
-    if (!currentGroupConv.value || joiningGroup.value) return;
-    joiningGroup.value = true;
-    try {
-        await axios.post(route('team-messaging.groups.join', currentGroupConv.value.id));
-        await loadGroupMembers(currentGroupConv.value.id);
-        router.reload({ only: ['conversations'] });
-    } catch (e) {
-        console.error('joinGroup error', e);
-    } finally {
-        joiningGroup.value = false;
-    }
-};
-
-const leaveGroup = async () => {
-    if (!currentGroupConv.value || leavingGroup.value) return;
-    if (!confirm(`Leave group "${currentGroupConv.value.name}"?`)) return;
-    leavingGroup.value = true;
-    try {
-        await axios.delete(route('team-messaging.groups.leave', currentGroupConv.value.id));
-        selectedConversation.value = null;
-        showGroupPanel.value = false;
-        router.reload({ only: ['conversations'] });
-    } catch (e) {
-        console.error('leaveGroup error', e);
-    } finally {
-        leavingGroup.value = false;
-    }
-};
 
 // Users not yet in the group (for "add member" list)
 const availableToAdd = computed(() => {
@@ -780,6 +743,49 @@ const createGroup = async () => {
         creatingGroup.value = false;
     }
 };
+
+// ── Join / Leave group (admin self-management) ───────────────────────────────
+const joiningGroupId = ref(null);
+
+const joinGroup = async (conversationId) => {
+    if (joiningGroupId.value) return;
+    joiningGroupId.value = conversationId;
+    try {
+        await axios.post(route('team-messaging.groups.join', conversationId));
+        if (currentGroupConv.value?.id === conversationId) {
+            await loadGroupMembers(conversationId);
+        }
+        router.reload({ only: ['conversations'] });
+    } catch (e) {
+        alert(e.response?.data?.message || 'Failed to join group.');
+    } finally {
+        joiningGroupId.value = null;
+    }
+};
+
+const leaveGroup = async (conversationId) => {
+    if (!confirm('Leave this group?')) return;
+    try {
+        await axios.delete(route('team-messaging.groups.leave', conversationId));
+        if (selectedConversation.value === conversationId) {
+            selectedConversation.value = null;
+            showGroupPanel.value = false;
+            messages.value = [];
+        }
+        router.reload({ only: ['conversations'] });
+    } catch (e) {
+        alert(e.response?.data?.message || 'Failed to leave group.');
+    }
+};
+
+// Is current user a member of the selected conversation?
+const currentUserIsMember = computed(() => {
+    const conv = (props.conversations || []).find(c => c.id === selectedConversation.value);
+    if (!conv) return false;
+    // Non-group or not yet loaded — treat as member
+    if (!conv.is_group) return true;
+    return conv.is_member !== false; // default true for backwards compat
+});
 
 const toggleGroupAdmin = async (userId) => {
     if (!currentGroupConv.value || togglingAdminId.value) return;
@@ -2055,9 +2061,12 @@ watch(messages, () => {
                             <div v-for="conv in groupConversations" :key="'gtab-'+conv.id"
                                 @click="selectConversation(conv.id)"
                                 class="group flex items-center gap-3 px-3 py-2.5 cursor-pointer transition-colors border-l-[3px] rounded-lg mx-1"
-                                :class="selectedConversation === conv.id
-                                    ? isDark ? 'bg-teal-900/40 border-teal-500' : 'bg-teal-50 border-teal-500'
-                                    : isDark ? 'border-transparent hover:bg-gray-700' : 'border-transparent hover:bg-slate-50'">
+                                :class="[
+                                    selectedConversation === conv.id
+                                        ? isDark ? 'bg-teal-900/40 border-teal-500' : 'bg-teal-50 border-teal-500'
+                                        : isDark ? 'border-transparent hover:bg-gray-700' : 'border-transparent hover:bg-slate-50',
+                                    conv.is_member === false ? 'opacity-70' : ''
+                                ]">
                                 <!-- Avatar -->
                                 <div class="w-9 h-9 rounded-full flex items-center justify-center text-white shrink-0 relative"
                                     :style="conv.is_default
@@ -2089,29 +2098,48 @@ watch(messages, () => {
                                             :class="isDark ? 'bg-amber-900/40 text-amber-400' : 'bg-amber-100 text-amber-700'">
                                             Company
                                         </span>
+                                        <!-- Not a member badge -->
+                                        <span v-if="conv.is_member === false"
+                                            class="flex-shrink-0 text-[9px] px-1.5 py-0.5 rounded-full font-bold uppercase"
+                                            :class="isDark ? 'bg-gray-600 text-gray-300' : 'bg-slate-200 text-slate-500'">
+                                            Not joined
+                                        </span>
                                     </div>
                                     <p class="text-xs truncate mt-0.5" :class="isDark ? 'text-gray-400' : 'text-slate-500'">
                                         {{ conv.participant_count }} members
                                         <template v-if="conv.last_message"> · {{ conv.last_message.message?.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim().slice(0, 40) }}</template>
                                     </p>
                                 </div>
-                                <!-- Unread badge + mark unread -->
+                                <!-- Actions -->
                                 <div class="flex items-center gap-1 shrink-0">
-                                    <span v-if="getUnreadCount(conv.id) > 0 && !isConvRead(conv.id)"
-                                        class="w-5 h-5 rounded-full bg-teal-500 text-white text-[10px] font-bold flex items-center justify-center">
-                                        {{ getUnreadCount(conv.id) }}
-                                    </span>
-                                    <button v-else
-                                        @click.stop="markAsUnread(conv.id)"
-                                        :disabled="markingUnread === conv.id"
-                                        class="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-md"
-                                        :class="isDark ? 'text-gray-400 hover:text-blue-400 hover:bg-gray-700' : 'text-slate-400 hover:text-blue-500 hover:bg-slate-100'"
-                                        title="Mark as unread">
-                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                                        </svg>
+                                    <!-- Join button (admin only, not a member) -->
+                                    <button v-if="currentUserIsAdmin && conv.is_member === false"
+                                        @click.stop="joinGroup(conv.id)"
+                                        :disabled="joiningGroupId === conv.id"
+                                        class="px-2 py-1 rounded-md text-[11px] font-semibold text-white transition-opacity hover:opacity-90"
+                                        style="background:linear-gradient(135deg,#006970,#00a9b4)"
+                                        title="Join group">
+                                        {{ joiningGroupId === conv.id ? '...' : 'Join' }}
                                     </button>
+
+                                    <!-- Unread badge / mark unread (members only) -->
+                                    <template v-else-if="conv.is_member !== false">
+                                        <span v-if="getUnreadCount(conv.id) > 0 && !isConvRead(conv.id)"
+                                            class="w-5 h-5 rounded-full bg-teal-500 text-white text-[10px] font-bold flex items-center justify-center">
+                                            {{ getUnreadCount(conv.id) }}
+                                        </span>
+                                        <button v-else
+                                            @click.stop="markAsUnread(conv.id)"
+                                            :disabled="markingUnread === conv.id"
+                                            class="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-md"
+                                            :class="isDark ? 'text-gray-400 hover:text-blue-400 hover:bg-gray-700' : 'text-slate-400 hover:text-blue-500 hover:bg-slate-100'"
+                                            title="Mark as unread">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                                            </svg>
+                                        </button>
+                                    </template>
                                 </div>
                             </div>
                         </div>
@@ -3251,8 +3279,8 @@ watch(messages, () => {
                                 <!-- Join -->
                                 <button
                                     v-if="!currentUserIsMember"
-                                    @click="joinGroup"
-                                    :disabled="joiningGroup"
+                                    @click="joinGroup(currentGroupConv.id)"
+                                    :disabled="joiningGroupId === currentGroupConv?.id"
                                     class="w-full flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-colors"
                                     :class="isDark
                                         ? 'text-teal-400 border border-teal-700 hover:bg-teal-900/20'
@@ -3261,13 +3289,13 @@ watch(messages, () => {
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                                     </svg>
-                                    {{ joiningGroup ? 'Joining…' : 'Join Group' }}
+                                    {{ joiningGroupId === currentGroupConv?.id ? 'Joining…' : 'Join Group' }}
                                 </button>
                                 <!-- Leave -->
                                 <button
                                     v-else
-                                    @click="leaveGroup"
-                                    :disabled="leavingGroup"
+                                    @click="leaveGroup(currentGroupConv.id)"
+                                    :disabled="joiningGroupId === currentGroupConv?.id"
                                     class="w-full flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-colors"
                                     :class="isDark
                                         ? 'text-orange-400 border border-orange-700 hover:bg-orange-900/20'
@@ -3276,7 +3304,7 @@ watch(messages, () => {
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
                                     </svg>
-                                    {{ leavingGroup ? 'Leaving…' : 'Leave Group' }}
+                                    Leave Group
                                 </button>
                             </div>
 
@@ -3560,11 +3588,11 @@ watch(messages, () => {
                             </div>
                             <button
                                 v-if="currentUserIsAdmin"
-                                @click="joinGroup"
-                                :disabled="joiningGroup"
+                                @click="joinGroup(currentGroupConv?.id)"
+                                :disabled="joiningGroupId === currentGroupConv?.id"
                                 class="flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors text-white"
                                 style="background: linear-gradient(135deg, #006970, #00a9b4)"
-                            >{{ joiningGroup ? 'Joining…' : 'Join Group' }}</button>
+                            >{{ joiningGroupId === currentGroupConv?.id ? 'Joining…' : 'Join Group' }}</button>
                         </div>
 
                         <!-- Rich text input card -->

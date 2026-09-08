@@ -9,7 +9,7 @@ use Binkode\ChatSystem\Models\Conversation;
 
 class PinnedMessage extends Model
 {
-    protected $fillable = ['conversation_id', 'message_id', 'pinned_by'];
+    protected $fillable = ['conversation_id', 'message_id', 'pinned_by', 'user_id'];
 
     public function conversation(): BelongsTo
     {

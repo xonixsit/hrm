@@ -1021,23 +1021,32 @@ class TeamMessagingController extends Controller
 
     // ─── Pin / Unpin message ──────────────────────────────────────────────────
 
+    /**
+     * For GROUP conversations: pins are shared (all members see them), user_id = null.
+     * For PRIVATE conversations: pins are personal (only the pinner sees them), user_id = current user.
+     */
     public function pinMessage(Conversation $conversation, Message $message)
     {
         $user = Auth::user();
         abort_unless($this->messaging->isParticipant($conversation->id, $user->id), 403);
         abort_unless($message->conversation_id === $conversation->id, 404);
 
-        // Only admins, group creators, or the message author can pin
-        $canPin = $user->hasRole('Admin')
-            || $message->user_id === $user->id
-            || ($conversation->type === 'group' && $conversation->user_id === $user->id);
+        $isPrivate = $conversation->type !== 'group';
 
-        abort_unless($canPin, 403, 'You do not have permission to pin messages.');
+        $match = [
+            'conversation_id' => $conversation->id,
+            'message_id'      => $message->id,
+        ];
 
-        PinnedMessage::firstOrCreate(
-            ['conversation_id' => $conversation->id, 'message_id' => $message->id],
-            ['pinned_by' => $user->id]
-        );
+        // Private pins are scoped to the individual user
+        if ($isPrivate) {
+            $match['user_id'] = $user->id;
+        }
+
+        PinnedMessage::firstOrCreate($match, [
+            'pinned_by' => $user->id,
+            'user_id'   => $isPrivate ? $user->id : null,
+        ]);
 
         return response()->json([
             'success'    => true,
@@ -1052,19 +1061,17 @@ class TeamMessagingController extends Controller
         abort_unless($this->messaging->isParticipant($conversation->id, $user->id), 403);
         abort_unless($message->conversation_id === $conversation->id, 404);
 
-        $pin = PinnedMessage::where('conversation_id', $conversation->id)
-            ->where('message_id', $message->id)
-            ->first();
+        $isPrivate = $conversation->type !== 'group';
 
-        if ($pin) {
-            $canUnpin = $user->hasRole('Admin')
-                || $pin->pinned_by === $user->id
-                || $message->user_id === $user->id
-                || ($conversation->type === 'group' && $conversation->user_id === $user->id);
+        $query = PinnedMessage::where('conversation_id', $conversation->id)
+            ->where('message_id', $message->id);
 
-            abort_unless($canUnpin, 403, 'You do not have permission to unpin this message.');
-            $pin->delete();
+        // For private chats, only delete the current user's own pin
+        if ($isPrivate) {
+            $query->where('user_id', $user->id);
         }
+
+        $query->delete();
 
         return response()->json([
             'success'    => true,
@@ -1076,21 +1083,30 @@ class TeamMessagingController extends Controller
     public function pinnedMessages(Conversation $conversation)
     {
         $user = Auth::user();
-        $canAccess = $user->hasRole('Admin') ||
-            $this->messaging->isParticipant($conversation->id, $user->id);
-        abort_unless($canAccess, 403);
+        abort_unless(
+            $user->hasRole('Admin') || $this->messaging->isParticipant($conversation->id, $user->id),
+            403
+        );
 
-        $pins = PinnedMessage::where('conversation_id', $conversation->id)
+        $isPrivate = $conversation->type !== 'group';
+
+        $query = PinnedMessage::where('conversation_id', $conversation->id)
             ->with(['message', 'pinnedByUser'])
-            ->orderBy('created_at', 'desc')
-            ->get()
+            ->orderBy('created_at', 'desc');
+
+        // For private chats, each user only sees their own pins
+        if ($isPrivate) {
+            $query->where('user_id', $user->id);
+        }
+
+        $pins = $query->get()
             ->filter(fn ($p) => $p->message !== null)   // guard deleted messages
             ->map(fn ($p) => [
                 'id'           => $p->message->id,
                 'message'      => $p->message->message,
                 'sender_id'    => $p->message->user_id,
                 'created_at'   => $p->message->created_at,
-                'pinned_by'    => $p->pinnedByUser?->name,
+                'pinned_by'    => $isPrivate ? 'You' : $p->pinnedByUser?->name,
                 'pinned_at'    => $p->created_at,
             ])
             ->values();

@@ -157,10 +157,19 @@ class MessagingService
             ->flip()
             ->toArray();
 
-        // Pinned message IDs for this conversation
-        $pinnedMsgIds = DB::table('pinned_messages')
-            ->where('conversation_id', $conversationId)
-            ->pluck('message_id')
+        // Pinned message IDs for this conversation.
+        // For private (non-group) conversations, pins are personal — scope to current user.
+        $conversation = \Binkode\ChatSystem\Models\Conversation::find($conversationId);
+        $isPrivate    = $conversation && $conversation->type !== 'group';
+
+        $pinnedQuery = DB::table('pinned_messages')
+            ->where('conversation_id', $conversationId);
+
+        if ($isPrivate) {
+            $pinnedQuery->where('user_id', auth()->id());
+        }
+
+        $pinnedMsgIds = $pinnedQuery->pluck('message_id')
             ->flip()
             ->toArray();
 
