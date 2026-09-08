@@ -874,7 +874,8 @@ const removeMember = async (userId) => {
 };
 
 const deleteGroup = async () => {
-    if (!currentGroupConv.value || !currentUserIsCreator.value) return;
+    // Backend requires platform Admin role — align frontend guard to match
+    if (!currentGroupConv.value || !currentUserIsAdmin.value) return;
     if (!confirm(`Delete group "${currentGroupConv.value.name}"? This cannot be undone.`)) return;
     try {
         await axios.delete(route('team-messaging.groups.delete', currentGroupConv.value.id));
@@ -882,6 +883,7 @@ const deleteGroup = async () => {
         showGroupPanel.value = false;
         router.reload({ only: ['conversations'] });
     } catch (e) {
+        alert(e.response?.data?.message || 'Failed to delete group.');
         console.error('[Group] delete failed:', e);
     }
 };
@@ -3308,8 +3310,8 @@ watch(messages, () => {
                                 </button>
                             </div>
 
-                            <!-- Delete group (admin or group admin, not for default group) -->
-                            <div v-if="currentUserCanManageGroup && !currentGroupConv?.is_default" class="px-4 pb-4">
+                            <!-- Delete group (platform Admin only, not for default group) -->
+                            <div v-if="currentUserIsAdmin && !currentGroupConv?.is_default" class="px-4 pb-4">
                                 <button
                                     @click="deleteGroup"
                                     class="w-full flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium text-red-600 border border-red-200 hover:bg-red-50 transition-colors"
