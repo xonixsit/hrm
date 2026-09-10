@@ -166,7 +166,7 @@
                                                         :class="isDark 
                                                             ? 'border-gray-600 text-gray-200' 
                                                             : 'border-gray-300 text-gray-700'">
-                                                        {{ cell || '' }}
+                                                        {{ cell ?? '' }}
                                                     </th>
                                                 </tr>
                                             </thead>
@@ -182,7 +182,7 @@
                                                         :class="isDark 
                                                             ? 'border-gray-700 text-gray-300' 
                                                             : 'border-gray-300 text-gray-700'">
-                                                        {{ cell || '' }}
+                                                        {{ cell ?? '' }}
                                                     </td>
                                                 </tr>
                                             </tbody>
