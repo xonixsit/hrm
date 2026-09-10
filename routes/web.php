@@ -109,10 +109,10 @@ Route::middleware('auth')->group(function () {
         return Inertia::render('AnimationDemo');
     })->name('animation.demo');
     Route::get('my-profile', [EmployeeController::class, 'myProfile'])->name('employees.my-profile');
-Route::get('/training', [TrainingPageController::class, 'index'])->middleware(['auth'])->name('training.page');
+Route::get('/training', [TrainingPageController::class, 'index'])->middleware(['auth', 'feature:training'])->name('training.page');
     
     // E-Tax Planner Training Module
-    Route::prefix('training')->name('training.')->group(function () {
+    Route::prefix('training')->name('training.')->middleware('feature:training')->group(function () {
         Route::get('/', [\App\Http\Controllers\TrainingController::class, 'index'])->name('index');
         Route::post('/review', [\App\Http\Controllers\TrainingController::class, 'saveReview'])->name('review');
         Route::post('/reset', [\App\Http\Controllers\TrainingController::class, 'resetProgress'])->name('reset');
@@ -144,7 +144,7 @@ Route::get('/training', [TrainingPageController::class, 'index'])->middleware(['
     })->name('debug.messaging');
 
     // Team Messaging Routes
-    Route::prefix('team-messaging')->group(function () {
+    Route::prefix('team-messaging')->middleware('feature:messaging')->group(function () {
         Route::get('/', [TeamMessagingController::class, 'index'])->name('team-messaging.index');
         Route::get('/online-users', [TeamMessagingController::class, 'getOnlineUsers'])->name('team-messaging.online-users');
         Route::post('/heartbeat', [TeamMessagingController::class, 'heartbeat'])->name('team-messaging.heartbeat');
@@ -219,7 +219,7 @@ Route::get('/training', [TrainingPageController::class, 'index'])->middleware(['
     });
     
     // Employee Management Routes - Restricted to Admin, HR, and Manager roles
-    Route::middleware(['role:Admin|HR|Manager'])->group(function () {
+    Route::middleware(['role:Admin|HR|Manager', 'feature:employees'])->group(function () {
         Route::resource('employees', EmployeeController::class)->except(['show']);
         Route::get('employees-trash', [EmployeeController::class, 'trash'])->name('employees.trash');
         Route::post('employees/{employee}/reset-password', [EmployeeController::class, 'resetPassword'])->name('employees.reset-password');
@@ -241,7 +241,7 @@ Route::get('/training', [TrainingPageController::class, 'index'])->middleware(['
     Route::resource('departments', DepartmentController::class);
     Route::resource('projects', ProjectController::class);
     Route::resource('tasks', TaskController::class);
-    Route::resource('timesheets', TimesheetController::class);
+    Route::resource('timesheets', TimesheetController::class)->middleware('feature:timesheets');
     Route::post('timesheets/{timesheet}/approve', [TimesheetController::class, 'approve'])->name('timesheets.approve');
     Route::post('timesheets/{timesheet}/reject', [TimesheetController::class, 'reject'])->name('timesheets.reject');
     Route::post('timesheets/bulk-approve', [TimesheetController::class, 'bulkApprove'])->name('timesheets.bulk-approve');
@@ -250,8 +250,8 @@ Route::get('/training', [TrainingPageController::class, 'index'])->middleware(['
     Route::post('timesheets/{timesheet}/sync-attendance', [TimesheetController::class, 'syncWithAttendance'])->name('timesheets.sync-attendance');
     Route::get('timesheets/{timesheet}/attendance-data', [TimesheetController::class, 'getAttendanceData'])->name('timesheets.attendance-data');
     Route::get('work-reports/leaderboard', [WorkReportController::class, 'leaderboard'])->name('work-reports.leaderboard');
-    Route::resource('work-reports', WorkReportController::class);
-    Route::resource('attendances', AttendanceController::class);
+    Route::resource('work-reports', WorkReportController::class)->middleware('feature:work_reports');
+    Route::resource('attendances', AttendanceController::class)->middleware('feature:time_tracking');
     Route::post('attendances/clock-in', [AttendanceController::class, 'clockIn'])->name('attendances.clockIn');
     Route::post('attendances/clock-out', [AttendanceController::class, 'clockOut'])->name('attendances.clockOut');
     Route::get('attendances-export', [App\Http\Controllers\AttendanceExportController::class, 'exportAttendanceReport'])->name('attendances.export');
@@ -386,13 +386,13 @@ Route::get('/training', [TrainingPageController::class, 'index'])->middleware(['
         Route::get('current', [App\Http\Controllers\Api\WeatherProxyController::class, 'getWeather']);
         Route::get('timezone', [App\Http\Controllers\Api\WeatherProxyController::class, 'getTimezone']);
     });
-    Route::resource('leaves', LeaveController::class)->parameters(['leaves' => 'leave']);
+    Route::resource('leaves', LeaveController::class)->parameters(['leaves' => 'leave'])->middleware('feature:leave');
     Route::post('leaves/{leave}/approve', [LeaveController::class, 'approve'])->name('leaves.approve');
     Route::post('leaves/{leave}/reject', [LeaveController::class, 'reject'])->name('leaves.reject');
     Route::put('leaves/{leave}/update-and-approve', [LeaveController::class, 'updateAndApprove'])->name('leaves.update-and-approve');
     
     // Leave Types (Leave Policies) Management
-    Route::resource('leave-types', LeaveTypeController::class)->parameters(['leave-types' => 'leaveType']);
+    Route::resource('leave-types', LeaveTypeController::class)->parameters(['leave-types' => 'leaveType'])->middleware('feature:leave_policies');
     Route::post('leave-types/{leaveType}/toggle-status', [LeaveTypeController::class, 'toggleStatus'])->name('leave-types.toggle-status');
     
     // Debug route to test data passing
@@ -434,15 +434,17 @@ Route::get('/training', [TrainingPageController::class, 'index'])->middleware(['
         
         return response()->json($result);
     })->name('debug.chat.images');
-    Route::resource('feedbacks', FeedbackController::class);
+    Route::resource('feedbacks', FeedbackController::class)->middleware('feature:feedback');
     
     // Ideas / Brainstorm
-    Route::get('ideas', [App\Http\Controllers\IdeaController::class, 'index'])->name('ideas.index');
-    Route::post('ideas', [App\Http\Controllers\IdeaController::class, 'store'])->name('ideas.store');
-    Route::patch('ideas/{idea}', [App\Http\Controllers\IdeaController::class, 'update'])->name('ideas.update');
-    Route::post('ideas/{idea}/vote', [App\Http\Controllers\IdeaController::class, 'vote'])->name('ideas.vote');
-    Route::patch('ideas/{idea}/status', [App\Http\Controllers\IdeaController::class, 'updateStatus'])->name('ideas.status');
-    Route::delete('ideas/{idea}', [App\Http\Controllers\IdeaController::class, 'destroy'])->name('ideas.destroy');
+    Route::middleware('feature:ideas')->group(function () {
+        Route::get('ideas', [App\Http\Controllers\IdeaController::class, 'index'])->name('ideas.index');
+        Route::post('ideas', [App\Http\Controllers\IdeaController::class, 'store'])->name('ideas.store');
+        Route::patch('ideas/{idea}', [App\Http\Controllers\IdeaController::class, 'update'])->name('ideas.update');
+        Route::post('ideas/{idea}/vote', [App\Http\Controllers\IdeaController::class, 'vote'])->name('ideas.vote');
+        Route::patch('ideas/{idea}/status', [App\Http\Controllers\IdeaController::class, 'updateStatus'])->name('ideas.status');
+        Route::delete('ideas/{idea}', [App\Http\Controllers\IdeaController::class, 'destroy'])->name('ideas.destroy');
+    });
 
     Route::get('/reports/attendance/pdf', [ReportController::class, 'attendancePdf'])->name('reports.attendance.pdf');
     Route::get('/reports/attendance/excel', [ReportController::class, 'attendanceExcel'])->name('reports.attendance.excel');
@@ -454,14 +456,16 @@ Route::get('/training', [TrainingPageController::class, 'index'])->middleware(['
     Route::get('/reports/feedbacks/excel', [ReportController::class, 'feedbacksExcel'])->name('reports.feedbacks.excel');
     
     // Reports Dashboard Routes
-    Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
-    Route::get('/reports/stats', [ReportController::class, 'stats'])->name('reports.stats');
-    Route::post('/reports/generate', [ReportController::class, 'generate'])->name('reports.generate');
-    Route::post('/reports/schedule', [ReportController::class, 'schedule'])->name('reports.schedule');
-    Route::post('/reports/custom', [ReportController::class, 'custom'])->name('reports.custom');
-    Route::get('/reports/recent', [ReportController::class, 'recent'])->name('reports.recent');
-    Route::get('/reports/{id}/download', [ReportController::class, 'download'])->name('reports.download');
-    Route::delete('/reports/{id}', [ReportController::class, 'destroy'])->name('reports.destroy');
+    Route::middleware('feature:reports')->group(function () {
+        Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+        Route::get('/reports/stats', [ReportController::class, 'stats'])->name('reports.stats');
+        Route::post('/reports/generate', [ReportController::class, 'generate'])->name('reports.generate');
+        Route::post('/reports/schedule', [ReportController::class, 'schedule'])->name('reports.schedule');
+        Route::post('/reports/custom', [ReportController::class, 'custom'])->name('reports.custom');
+        Route::get('/reports/recent', [ReportController::class, 'recent'])->name('reports.recent');
+        Route::get('/reports/{id}/download', [ReportController::class, 'download'])->name('reports.download');
+        Route::delete('/reports/{id}', [ReportController::class, 'destroy'])->name('reports.destroy');
+    });
 
     // Scheduled Reports (admin only)
     Route::prefix('reports/schedules')->middleware('auth')->group(function () {
@@ -484,7 +488,7 @@ Route::get('/training', [TrainingPageController::class, 'index'])->middleware(['
     Route::get('competencies/export', [CompetencyController::class, 'export'])->name('competencies.export');
     
     // Competency Assessment routes
-    Route::get('assessment-dashboard', [CompetencyAssessmentController::class, 'dashboard'])->name('assessment-dashboard');
+    Route::get('assessment-dashboard', [CompetencyAssessmentController::class, 'dashboard'])->name('assessment-dashboard')->middleware('feature:assessment_dashboard');
     Route::get('assessment-form', [CompetencyAssessmentController::class, 'createForm'])->name('assessment-form');
     Route::get('my-self-assessment', [CompetencyAssessmentController::class, 'createSelfAssessment'])->name('my-self-assessment');
     
@@ -668,7 +672,7 @@ Route::get('/training', [TrainingPageController::class, 'index'])->middleware(['
         }
     })->name('test-assessment-creation');
     
-    Route::resource('competency-assessments', CompetencyAssessmentController::class);
+    Route::resource('competency-assessments', CompetencyAssessmentController::class)->middleware('feature:my_assessments');
     Route::post('competency-assessments/{competencyAssessment}/submit', [CompetencyAssessmentController::class, 'submit'])->name('competency-assessments.submit');
     Route::post('competency-assessments/{competencyAssessment}/approve', [CompetencyAssessmentController::class, 'approve'])->name('competency-assessments.approve');
     Route::post('competency-assessments/{competencyAssessment}/reject', [CompetencyAssessmentController::class, 'reject'])->name('competency-assessments.reject');
@@ -780,8 +784,16 @@ Route::get('/training', [TrainingPageController::class, 'index'])->middleware(['
         
         // Role Management
         Route::get('roles', [RoleController::class, 'index'])->name('roles.index');
+        Route::post('roles', [RoleController::class, 'createRole'])->name('roles.create');
         Route::post('roles/{user}/assign', [RoleController::class, 'assignRole'])->name('roles.assign');
         Route::post('roles/{user}/remove', [RoleController::class, 'removeRole'])->name('roles.remove');
+        Route::patch('roles/role/{role}', [RoleController::class, 'renameRole'])->name('roles.rename');
+        Route::delete('roles/role/{role}', [RoleController::class, 'deleteRole'])->name('roles.delete');
+
+        // Feature Permissions Management
+        Route::get('feature-permissions', [\App\Http\Controllers\Admin\FeaturePermissionsController::class, 'index'])->name('feature-permissions.index');
+        Route::post('feature-permissions/save', [\App\Http\Controllers\Admin\FeaturePermissionsController::class, 'save'])->name('feature-permissions.save');
+        Route::post('feature-permissions/toggle', [\App\Http\Controllers\Admin\FeaturePermissionsController::class, 'toggle'])->name('feature-permissions.toggle');
         
         // Message Monitor (Admin)
         Route::get('message-monitor', [App\Http\Controllers\Admin\MessageMonitorController::class, 'index'])->name('message-monitor.index');
@@ -915,7 +927,7 @@ Route::get('/training', [TrainingPageController::class, 'index'])->middleware(['
     });
 
     // Organizational Analytics routes
-    Route::prefix('organizational-analytics')->name('organizational-analytics.')->group(function () {
+    Route::prefix('organizational-analytics')->name('organizational-analytics.')->middleware('feature:analytics')->group(function () {
         Route::get('/', [OrganizationalAnalyticsController::class, 'index'])->name('index');
         Route::post('/export', [OrganizationalAnalyticsController::class, 'export'])->name('export');
         Route::get('/download/{filename}', [OrganizationalAnalyticsController::class, 'download'])->name('download');
@@ -933,7 +945,7 @@ Route::get('/training', [TrainingPageController::class, 'index'])->middleware(['
     Route::patch('/support/{supportRequest}/status', [App\Http\Controllers\SupportController::class, 'updateStatus'])->name('support.update-status');
     
     // Skill Testing routes
-    Route::prefix('skill-tests')->name('skill-tests.')->group(function () {
+    Route::prefix('skill-tests')->name('skill-tests.')->middleware('feature:skill_tests')->group(function () {
         Route::get('/', [SkillTestController::class, 'index'])->name('index');
         Route::get('/my-tests', [SkillTestController::class, 'myTests'])->name('my-tests');
         Route::get('/create', [SkillTestController::class, 'create'])->name('create');

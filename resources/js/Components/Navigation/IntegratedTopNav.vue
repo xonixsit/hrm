@@ -445,6 +445,7 @@ import { router, usePage } from '@inertiajs/vue3'
 import { useAuth } from '@/composables/useAuth.js'
 import { useTheme } from '@/composables/useTheme.js'
 import { unreadTotal } from '@/composables/useChatNotifications'
+import { useFeature } from '@/composables/useFeature.js'
 
 const props = defineProps({
   currentRoute: {
@@ -455,6 +456,7 @@ const props = defineProps({
 
 const page = usePage()
 const { isDark } = useTheme()
+const { can } = useFeature()
 
 // Use page.props for reactive user data
 const user = computed(() => page.props.auth?.user)
@@ -472,13 +474,12 @@ const userInitials = computed(() => {
 
 // Main navigation items
 const mainNavItems = computed(() => {
-  const items = [
-    { route: 'dashboard', label: 'Dashboard' },
-    { route: 'attendances.index', label: 'Time Tracking' },
-    { route: 'leaves.index', label: 'Leave Applications' },
-    { route: 'training.index', label: 'Training' },
-    { route: 'team-messaging.index', label: 'Messages' },
-  ]
+  const items = []
+  items.push({ route: 'dashboard', label: 'Dashboard' })
+  if (can('time_tracking'))  items.push({ route: 'attendances.index',    label: 'Time Tracking' })
+  if (can('leave'))          items.push({ route: 'leaves.index',          label: 'Leave Applications' })
+  if (can('training'))       items.push({ route: 'training.index',        label: 'Training' })
+  if (can('messaging'))      items.push({ route: 'team-messaging.index',  label: 'Messages' })
   const ziggyRoutes = window?.Ziggy?.routes ?? {}
   if (ziggyRoutes['taxgpt.index']) {
     items.push({ route: 'taxgpt.index', label: 'TaxGPT' })
@@ -490,23 +491,31 @@ const mainNavItems = computed(() => {
 const assessmentMenuItems = computed(() => {
   const roles = userRoles.value || []
   const rolesArray = Array.isArray(roles) ? roles : []
-  const isManagement = rolesArray.includes('Admin') || rolesArray.includes('Manager') || rolesArray.includes('HR')
+  const roleNames = rolesArray.map(r => (typeof r === 'string' ? r : r?.name)).filter(Boolean)
+  const isManagement = roleNames.includes('Admin') || roleNames.includes('Manager') || roleNames.includes('HR')
+  const isAdmin = roleNames.includes('Admin')
 
-  const items = [
-    { route: 'competency-assessments.my-assessments', label: 'My Assessments' }
-  ]
+  const items = []
+  if (can('my_assessments'))
+    items.push({ route: 'competency-assessments.my-assessments', label: 'My Assessments' })
 
   if (isManagement) {
-    items.push(
-      { route: 'competency-assessments.index', label: 'All Assessments' },
-      { route: 'assessment-dashboard', label: 'Assessment Dashboard' },
-      { route: 'competency-assessments.pending', label: 'Pending Assessments' },
-      { route: 'assessment-cycle-manager', label: 'Assessment Cycles' },
-      { route: 'competencies.index', label: 'Competency Setup' }
-    )
+    if (can('all_assessments'))
+      items.push({ route: 'competency-assessments.index', label: 'All Assessments' })
+    if (can('assessment_dashboard'))
+      items.push({ route: 'assessment-dashboard', label: 'Assessment Dashboard' })
+    if (can('pending_assessments'))
+      items.push({ route: 'competency-assessments.pending', label: 'Pending Assessments' })
   }
 
-  // Return all items without filtering - routes are validated server-side
+  // Assessment Cycles and Competency Setup are admin-only operations
+  if (isAdmin) {
+    if (can('assessment_cycles'))
+      items.push({ route: 'assessment-cycle-manager', label: 'Assessment Cycles' })
+    if (can('competency_setup'))
+      items.push({ route: 'competencies.index', label: 'Competency Setup' })
+  }
+
   return items
 })
 
@@ -515,43 +524,35 @@ const moreNavItems = computed(() => {
   try {
     const roles = userRoles.value || []
     const rolesArray = Array.isArray(roles) ? roles : []
-    
-    const items = [
-      { route: 'skill-tests.my-tests', label: 'My Tests', category: 'regular' },
-      { route: 'work-reports.index', label: 'Work Reports', category: 'regular' },
-      { route: 'ideas.index', label: 'Share Ideas', category: 'regular' },
-      { route: 'feedbacks.index', label: 'Feedback', category: 'regular' },
-      { route: 'employee-handbook', label: 'Employee Handbook', category: 'regular' },
-      { route: 'support.index', label: 'Support', category: 'regular' }
-    ]
+    // Normalise — Inertia may deliver role objects or plain strings
+    const roleNames = rolesArray.map(r => (typeof r === 'string' ? r : r?.name)).filter(Boolean)
+    const isAdmin = roleNames.includes('Admin')
 
-    const isManagement = rolesArray.includes('Admin') || rolesArray.includes('Manager') || rolesArray.includes('HR')
-    const isAdmin = rolesArray.includes('Admin')
+    const items = []
 
-    if (isManagement) {
-      items.push(
-        { route: 'employees.index', label: 'Employee Management', category: 'management' },
-        { route: 'leave-types.index', label: 'Leave Policies', category: 'management' },
-        { route: 'support.index', label: 'Support Management', category: 'management' }
-      )
-    }
+    // Regular items — visible to any role that has the feature enabled
+    if (can('skill_tests') && !isAdmin) items.push({ route: 'skill-tests.my-tests', label: 'My Tests',          category: 'regular' })
+    if (can('work_reports'))            items.push({ route: 'work-reports.index',   label: 'Work Reports',      category: 'regular' })
+    if (can('ideas'))                   items.push({ route: 'ideas.index',          label: 'Share Ideas',       category: 'regular' })
+    if (can('feedback'))                items.push({ route: 'feedbacks.index',      label: 'Feedback',          category: 'regular' })
+    if (can('employee_handbook'))       items.push({ route: 'employee-handbook',    label: 'Employee Handbook', category: 'regular' })
+    if (can('support'))                 items.push({ route: 'support.index',        label: isAdmin ? 'Support Management' : 'Support', category: 'regular' })
 
-    if (isAdmin) {
-      items.push(
-        { route: 'admin.whistleblower.index', label: 'Whistleblower Reports', category: 'admin' },
-        { route: 'skill-tests.index', label: 'Skill Tests', category: 'admin' },
-        { route: 'skill-tests.reviews.index', label: 'Test Reviews', category: 'admin' },
-        { route: 'admin.message-monitor.index', label: 'Message Center', category: 'admin' },
-        { route: 'admin.roles.index', label: 'Role Management', category: 'admin' },
-        { route: 'admin.system-settings.index', label: 'System Settings', category: 'admin' },
-        { route: 'leave-types.index', label: 'Leave Policies', category: 'admin' },
-        { route: 'organizational-analytics.index', label: 'Analytics', category: 'admin' },
-        { route: 'reports.index', label: 'View Reports', category: 'admin' },
-        { route: 'support.index', label: 'Support Management', category: 'admin' }
-      )
-    }
+    // Management items — driven purely by feature permissions, no role guard needed
+    if (can('employees'))      items.push({ route: 'employees.index',                label: 'Employee Management', category: 'management' })
+    if (can('leave_policies')) items.push({ route: 'leave-types.index',              label: 'Leave Policies',      category: 'management' })
+    if (can('analytics'))      items.push({ route: 'organizational-analytics.index', label: 'Analytics',           category: 'management' })
+    if (can('reports'))        items.push({ route: 'reports.index',                  label: 'View Reports',        category: 'management' })
 
-    // Return all items without filtering - routes are validated server-side
+    // Admin-only items — shown when feature is enabled (Admin always passes, others only if granted)
+    if (can('whistleblower_reports')) items.push({ route: 'admin.whistleblower.index',       label: 'Whistleblower Reports', category: 'admin' })
+    if (can('skill_tests_admin'))     items.push({ route: 'skill-tests.index',               label: 'Skill Tests',           category: 'admin' })
+    if (can('skill_tests_reviews'))   items.push({ route: 'skill-tests.reviews.index',       label: 'Test Reviews',          category: 'admin' })
+    if (can('message_center'))        items.push({ route: 'admin.message-monitor.index',     label: 'Message Center',        category: 'admin' })
+    if (can('role_management'))       items.push({ route: 'admin.roles.index',               label: 'Role Management',       category: 'admin' })
+    if (can('system_settings'))       items.push({ route: 'admin.system-settings.index',     label: 'System Settings',       category: 'admin' })
+    if (can('feature_permissions'))   items.push({ route: 'admin.feature-permissions.index', label: 'Feature Permissions',   category: 'admin' })
+
     return items
   } catch (error) {
     console.error('Error computing moreNavItems:', error)

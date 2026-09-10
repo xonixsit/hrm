@@ -366,6 +366,7 @@ import { computed, ref, onMounted, onUnmounted, h } from 'vue';
 import { router } from '@inertiajs/vue3';
 import { useAuth } from '@/composables/useAuth.js';
 import { useTheme } from '@/composables/useTheme.js';
+import { useFeature } from '@/composables/useFeature.js';
 import { conflictDetector } from '@/services/NavigationConflictDetector.js';
 
 
@@ -385,6 +386,7 @@ const emit = defineEmits(['navigate', 'collapse-change']);
 // Composables
 const { user, roles: userRoles } = useAuth();
 const { isDark } = useTheme();
+const { can } = useFeature();
 
 // Desktop-only detection - simplified for desktop-only component
 const isDesktop = ref(false);
@@ -407,211 +409,83 @@ const appTagline = 'Streamline your workforce';
 
 // Navigation items
 const navigationItems = computed(() => {
-  const roles = userRoles.value;
+  const rawRoles = userRoles.value || [];
+  // Normalise — handle both plain strings and role objects
+  const roles = rawRoles.map(r => (typeof r === 'string' ? r : r?.name)).filter(Boolean);
   const items = [];
 
-  items.push({
-    id: 'dashboard',
-    label: 'Dashboard',
-    icon: 'home',
-    route: 'dashboard',
-  });
+  items.push({ id: 'dashboard', label: 'Dashboard', icon: 'home', route: 'dashboard' });
+  items.push({ id: 'my-profile', label: 'My Profile', icon: 'user', route: 'profile.edit' });
 
-  // My Profile - available to all authenticated users
-  items.push({
-    id: 'my-profile',
-    label: 'My Profile',
-    icon: 'user',
-    route: 'profile.edit',
-  });
+  if (can('employees'))
+    items.push({ id: 'employees', label: 'Employee Management', icon: 'users', route: 'employees.index' });
 
-  if (roles.includes('Admin') || roles.includes('Manager') || roles.includes('HR')) {
-    items.push({
-      id: 'employees',
-      label: 'Employee Management',
-      icon: 'users',
-      route: 'employees.index',
-    });
+  if (can('time_tracking'))
+    items.push({ id: 'attendance', label: 'Time Tracking', icon: 'clock', route: 'attendances.index' });
+
+  if (can('leave'))
+    items.push({ id: 'leaves', label: 'Leave Management', icon: 'calendar', route: 'leaves.index' });
+
+  if (can('leave_policies'))
+    items.push({ id: 'leave-types', label: 'Leave Policies', icon: 'clipboard-document-list', route: 'leave-types.index' });
+
+  if (can('feedback'))
+    items.push({ id: 'feedbacks', label: 'Feedback System', icon: 'chat', route: 'feedbacks.index' });
+
+  if (can('work_reports')) {
+    items.push({ id: 'work-reports', label: 'Work Reports', icon: 'document-text', route: 'work-reports.index' });
+    items.push({ id: 'leaderboard', label: 'Performance Leaderboard', icon: 'trophy', route: 'work-reports.leaderboard' });
   }
 
-  items.push({
-    id: 'attendance',
-    label: 'Time Tracking',
-    icon: 'clock',
-    route: 'attendances.index',
-  });
+  if (can('employee_handbook'))
+    items.push({ id: 'employee-handbook', label: 'Employee Handbook', icon: 'book-open', route: 'employee-handbook' });
 
-  items.push({
-    id: 'leaves',
-    label: 'Leave Management',
-    icon: 'calendar',
-    route: 'leaves.index',
-  });
+  if (can('analytics'))
+    items.push({ id: 'organizational-analytics', label: 'Organizational Analytics', icon: 'chart-bar-square', route: 'organizational-analytics.index' });
 
-  // Add Leave Policies for Admin and HR roles
-  if (roles.includes('Admin') || roles.includes('HR')) {
-    items.push({
-      id: 'leave-types',
-      label: 'Leave Policies',
-      icon: 'clipboard-document-list',
-      route: 'leave-types.index',
-    });
-  }
-
-  /*items.push({
-    id: 'projects',
-    label: 'Project Management',
-    icon: 'folder',
-    route: 'projects.index',
-  });*/
-
-  items.push({
-    id: 'feedbacks',
-    label: 'Feedback System',
-    icon: 'chat',
-    route: 'feedbacks.index',
-  });
-
-  items.push({
-    id: 'work-reports',
-    label: 'Work Reports',
-    icon: 'document-text',
-    route: 'work-reports.index',
-  });
-
-  items.push({
-    id: 'leaderboard',
-    label: 'Performance Leaderboard',
-    icon: 'trophy',
-    route: 'work-reports.leaderboard',
-  });
-
-  // Employee Handbook - available to all users
-  items.push({
-    id: 'employee-handbook',
-    label: 'Employee Handbook',
-    icon: 'book-open',
-    route: 'employee-handbook',
-  });
-
-  // Add Organizational Analytics for Admin and Manager roles
-  if (roles.includes('Admin') || roles.includes('Manager')) {
-    items.push({
-      id: 'organizational-analytics',
-      label: 'Organizational Analytics',
-      icon: 'chart-bar-square',
-      route: 'organizational-analytics.index',
-    });
-  }
+  if (can('reports'))
+    items.push({ id: 'reports', label: 'View Reports', icon: 'document-chart-bar', route: 'reports.index' });
 
   // Competency Management Section (Accordion)
-  items.push({
-    id: 'competency-section',
-    label: 'Competency Management',
-    icon: 'academic-cap',
-    type: 'accordion',
-    children: [
-      // For all users
-      {
-        id: 'my-assessments',
-        label: 'My Assessments',
-        icon: 'clipboard-document-check',
-        route: 'competency-assessments.my-assessments',
-      },
-      // For Managers and Admins
-      ...(roles.includes('Admin') || roles.includes('Manager') ? [
-        {
-          id: 'assessment-dashboard',
-          label: 'Assessment Dashboard',
-          icon: 'chart-pie',
-          route: 'assessment-dashboard',
-        },
-        {
-          id: 'all-assessments',
-          label: 'All Assessments',
-          icon: 'clipboard-document-list',
-          route: 'competency-assessments.index',
-        },
-        {
-          id: 'pending-assessments',
-          label: 'Pending Assessments',
-          icon: 'clipboard-document-check',
-          route: 'competency-assessments.pending',
-        }
-      ] : []),
-      // For Admins only
-      ...(roles.includes('Admin') ? [
-        {
-          id: 'assessment-cycles',
-          label: 'Assessment Cycles',
-          icon: 'calendar',
-          route: 'assessment-cycle-manager',
-        },
-        {
-          id: 'competency-setup',
-          label: 'Competency Setup',
-          icon: 'cog-6-tooth',
-          route: 'competencies.index',
-        },
-        {
-          id: 'competency-reports',
-          label: 'Reports & Analytics',
-          icon: 'chart-bar',
-          route: 'competency-analytics.reports',
-        }
-      ] : [])
-    ]
-  });
+  const competencyChildren = [];
+  if (can('my_assessments'))
+    competencyChildren.push({ id: 'my-assessments', label: 'My Assessments', icon: 'clipboard-document-check', route: 'competency-assessments.my-assessments' });
+  if (can('assessment_dashboard'))
+    competencyChildren.push({ id: 'assessment-dashboard', label: 'Assessment Dashboard', icon: 'chart-pie', route: 'assessment-dashboard' });
+  if (can('all_assessments'))
+    competencyChildren.push({ id: 'all-assessments', label: 'All Assessments', icon: 'clipboard-document-list', route: 'competency-assessments.index' });
+  if (can('pending_assessments'))
+    competencyChildren.push({ id: 'pending-assessments', label: 'Pending Assessments', icon: 'clipboard-document-check', route: 'competency-assessments.pending' });
+  if (can('assessment_cycles'))
+    competencyChildren.push({ id: 'assessment-cycles', label: 'Assessment Cycles', icon: 'calendar', route: 'assessment-cycle-manager' });
+  if (can('competency_setup'))
+    competencyChildren.push({ id: 'competency-setup', label: 'Competency Setup', icon: 'cog-6-tooth', route: 'competencies.index' });
+  if (can('competency_reports'))
+    competencyChildren.push({ id: 'competency-reports', label: 'Reports & Analytics', icon: 'chart-bar', route: 'competency-analytics.reports' });
 
-  // Approvals Section (for Managers and Admins)
-  if (roles.includes('Admin') || roles.includes('Manager')) {
+  if (competencyChildren.length > 0)
+    items.push({ id: 'competency-section', label: 'Competency Management', icon: 'academic-cap', type: 'accordion', children: competencyChildren });
+
+  // Approvals Section
+  if (can('timesheets'))
     items.push({
-      id: 'approvals-section',
-      label: 'Approvals',
-      icon: 'check-circle',
-      type: 'accordion',
-      children: [
-        {
-          id: 'pending-timesheets',
-          label: 'Timesheet Approvals',
-          icon: 'clock',
-          route: 'timesheets.pending-approvals',
-        }
-      ]
+      id: 'approvals-section', label: 'Approvals', icon: 'check-circle', type: 'accordion',
+      children: [{ id: 'pending-timesheets', label: 'Timesheet Approvals', icon: 'clock', route: 'timesheets.pending-approvals' }]
     });
-  }
 
-  // Support - available to all users
-  items.push({
-    id: 'support',
-    label: 'Support',
-    icon: 'question-mark-circle',
-    route: 'support.index',
-  });
+  if (can('support'))
+    items.push({ id: 'support', label: 'Support', icon: 'question-mark-circle', route: 'support.index' });
 
-  // Administration Section (for Admins only)
-  if (roles.includes('Admin')) {
-    items.push({
-      id: 'administration-section',
-      label: 'Administration',
-      icon: 'cog-6-tooth',
-      type: 'accordion',
-      children: [
-        {
-          id: 'role-management',
-          label: 'Role Management',
-          icon: 'shield-check',
-          route: 'admin.roles.index',
-        },
-        {
-          id: 'system-settings',
-          label: 'System Settings',
-          icon: 'adjustments-horizontal',
-          route: 'system-settings.index',
-        }
-      ]
-    });
-  }
+  // Administration Section — always shown to Admin; shown to others if they have any admin features
+  const adminChildren = [];
+  if (can('role_management'))     adminChildren.push({ id: 'role-management',     label: 'Role Management',     icon: 'shield-check',           route: 'admin.roles.index' });
+  if (can('feature_permissions')) adminChildren.push({ id: 'feature-permissions', label: 'Feature Permissions', icon: 'key',                    route: 'admin.feature-permissions.index' });
+  if (can('system_settings'))     adminChildren.push({ id: 'system-settings',     label: 'System Settings',     icon: 'adjustments-horizontal', route: 'admin.system-settings.index' });
+  if (can('message_center'))      adminChildren.push({ id: 'message-center',      label: 'Message Center',      icon: 'chat-bubble-left-right', route: 'admin.message-monitor.index' });
+  if (can('whistleblower_reports')) adminChildren.push({ id: 'whistleblower',     label: 'Whistleblower',       icon: 'exclamation-triangle',   route: 'admin.whistleblower.index' });
+
+  if (adminChildren.length > 0)
+    items.push({ id: 'administration-section', label: 'Administration', icon: 'cog-6-tooth', type: 'accordion', children: adminChildren });
 
   return items;
 });
