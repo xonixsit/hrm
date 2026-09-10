@@ -417,36 +417,34 @@ class OrganizationalAnalyticsService
     public function getSkillTestAnalytics(string $timeRange = '30d'): array
     {
         try {
-            if (!Schema::hasTable('skill_tests') || !Schema::hasTable('test_sessions')) return $this->emptySkillTests();
+            if (!Schema::hasTable('skill_tests') || !Schema::hasTable('test_responses')) return $this->emptySkillTests();
             $start = $this->startDate($timeRange);
 
-            // Overall stats
-            $stats = DB::table('test_sessions')
-                ->where('created_at', '>=', $start)
+            // Overall stats — from test_responses (submitted results)
+            $stats = DB::table('test_responses')
+                ->where('submitted_at', '>=', $start)
                 ->select(
                     DB::raw('COUNT(*) as total_attempts'),
-                    DB::raw('SUM(CASE WHEN status = "completed" THEN 1 ELSE 0 END) as completed'),
-                    DB::raw('AVG(CASE WHEN status = "completed" THEN score ELSE NULL END) as avg_score'),
+                    DB::raw('AVG(percentage_score) as avg_score'),
                     DB::raw('SUM(CASE WHEN passed = 1 THEN 1 ELSE 0 END) as passed_count')
                 )
                 ->first();
 
-            $completed   = (int)($stats->completed ?? 0);
+            $total       = (int)($stats->total_attempts ?? 0);
             $passedCount = (int)($stats->passed_count ?? 0);
-            $passRate    = $completed > 0 ? round(($passedCount / $completed) * 100, 1) : 0;
+            $passRate    = $total > 0 ? round(($passedCount / $total) * 100, 1) : 0;
 
             // Per-test performance
-            $testPerformance = DB::table('test_sessions')
-                ->join('skill_tests', 'skill_tests.id', '=', 'test_sessions.skill_test_id')
-                ->where('test_sessions.created_at', '>=', $start)
-                ->where('test_sessions.status', 'completed')
+            $testPerformance = DB::table('test_responses')
+                ->join('skill_tests', 'skill_tests.id', '=', 'test_responses.skill_test_id')
+                ->where('test_responses.submitted_at', '>=', $start)
                 ->select(
                     'skill_tests.name',
                     'skill_tests.category',
                     'skill_tests.difficulty_level',
                     DB::raw('COUNT(*) as attempts'),
-                    DB::raw('AVG(test_sessions.score) as avg_score'),
-                    DB::raw('SUM(CASE WHEN test_sessions.passed = 1 THEN 1 ELSE 0 END) as passed')
+                    DB::raw('AVG(test_responses.percentage_score) as avg_score'),
+                    DB::raw('SUM(CASE WHEN test_responses.passed = 1 THEN 1 ELSE 0 END) as passed')
                 )
                 ->groupBy('skill_tests.id', 'skill_tests.name', 'skill_tests.category', 'skill_tests.difficulty_level')
                 ->orderByDesc('attempts')
@@ -461,55 +459,51 @@ class OrganizationalAnalyticsService
                     'pass_rate'  => $r->attempts > 0 ? round(($r->passed / $r->attempts) * 100, 1) : 0,
                 ]);
 
-            // Score distribution buckets
-            $scoreDist = DB::table('test_sessions')
-                ->where('created_at', '>=', $start)
-                ->where('status', 'completed')
+            // Score distribution buckets using percentage_score
+            $scoreDist = DB::table('test_responses')
+                ->where('submitted_at', '>=', $start)
                 ->select(DB::raw('
-                    SUM(CASE WHEN score >= 90 THEN 1 ELSE 0 END) as s90,
-                    SUM(CASE WHEN score >= 75 AND score < 90 THEN 1 ELSE 0 END) as s75,
-                    SUM(CASE WHEN score >= 60 AND score < 75 THEN 1 ELSE 0 END) as s60,
-                    SUM(CASE WHEN score < 60 THEN 1 ELSE 0 END) as s_fail
+                    SUM(CASE WHEN percentage_score >= 90 THEN 1 ELSE 0 END) as s90,
+                    SUM(CASE WHEN percentage_score >= 75 AND percentage_score < 90 THEN 1 ELSE 0 END) as s75,
+                    SUM(CASE WHEN percentage_score >= 60 AND percentage_score < 75 THEN 1 ELSE 0 END) as s60,
+                    SUM(CASE WHEN percentage_score < 60 THEN 1 ELSE 0 END) as s_fail
                 '))
                 ->first();
 
             // Top scorers
-            $topScorers = DB::table('test_sessions')
-                ->join('employees', 'employees.id', '=', 'test_sessions.employee_id')
+            $topScorers = DB::table('test_responses')
+                ->join('employees', 'employees.id', '=', 'test_responses.employee_id')
                 ->join('users', 'users.id', '=', 'employees.user_id')
-                ->join('skill_tests', 'skill_tests.id', '=', 'test_sessions.skill_test_id')
-                ->where('test_sessions.created_at', '>=', $start)
-                ->where('test_sessions.status', 'completed')
+                ->join('skill_tests', 'skill_tests.id', '=', 'test_responses.skill_test_id')
+                ->where('test_responses.submitted_at', '>=', $start)
                 ->whereNull('employees.deleted_at')
-                ->select('users.name', 'skill_tests.name as test_name', 'test_sessions.score')
-                ->orderByDesc('test_sessions.score')
+                ->select('users.name', 'skill_tests.name as test_name', 'test_responses.percentage_score as score')
+                ->orderByDesc('test_responses.percentage_score')
                 ->limit(5)
                 ->get();
 
             // Monthly trend
-            $monthlyTrend = DB::table('test_sessions')
-                ->where('created_at', '>=', Carbon::now()->subMonths(6)->startOfMonth())
-                ->where('status', 'completed')
+            $monthlyTrend = DB::table('test_responses')
+                ->where('submitted_at', '>=', Carbon::now()->subMonths(6)->startOfMonth())
                 ->select(
-                    DB::raw('DATE_FORMAT(created_at, "%b %Y") as month'),
+                    DB::raw('DATE_FORMAT(submitted_at, "%b %Y") as month'),
                     DB::raw('COUNT(*) as attempts'),
-                    DB::raw('AVG(score) as avg_score'),
+                    DB::raw('AVG(percentage_score) as avg_score'),
                     DB::raw('SUM(CASE WHEN passed = 1 THEN 1 ELSE 0 END) as passed')
                 )
-                ->groupBy(DB::raw('DATE_FORMAT(created_at, "%b %Y")'), DB::raw('DATE_FORMAT(created_at, "%Y%m")'))
-                ->orderBy(DB::raw('DATE_FORMAT(created_at, "%Y%m")'))
+                ->groupBy(DB::raw('DATE_FORMAT(submitted_at, "%b %Y")'), DB::raw('DATE_FORMAT(submitted_at, "%Y%m")'))
+                ->orderBy(DB::raw('DATE_FORMAT(submitted_at, "%Y%m")'))
                 ->get();
 
             // Category breakdown
-            $categoryBreakdown = DB::table('test_sessions')
-                ->join('skill_tests', 'skill_tests.id', '=', 'test_sessions.skill_test_id')
-                ->where('test_sessions.created_at', '>=', $start)
-                ->where('test_sessions.status', 'completed')
+            $categoryBreakdown = DB::table('test_responses')
+                ->join('skill_tests', 'skill_tests.id', '=', 'test_responses.skill_test_id')
+                ->where('test_responses.submitted_at', '>=', $start)
                 ->select(
                     'skill_tests.category',
                     DB::raw('COUNT(*) as attempts'),
-                    DB::raw('AVG(test_sessions.score) as avg_score'),
-                    DB::raw('SUM(CASE WHEN test_sessions.passed = 1 THEN 1 ELSE 0 END) as passed')
+                    DB::raw('AVG(test_responses.percentage_score) as avg_score'),
+                    DB::raw('SUM(CASE WHEN test_responses.passed = 1 THEN 1 ELSE 0 END) as passed')
                 )
                 ->groupBy('skill_tests.category')
                 ->orderByDesc('attempts')
@@ -517,16 +511,16 @@ class OrganizationalAnalyticsService
 
             return [
                 'overview' => [
-                    'total_attempts' => (int)($stats->total_attempts ?? 0),
-                    'completed'      => $completed,
+                    'total_attempts' => $total,
+                    'completed'      => $total, // all test_responses are completed submissions
                     'avg_score'      => round((float)($stats->avg_score ?? 0), 1),
                     'pass_rate'      => $passRate,
                     'passed'         => $passedCount,
                 ],
                 'score_distribution' => [
-                    'excellent' => (int)($scoreDist->s90  ?? 0),
-                    'good'      => (int)($scoreDist->s75  ?? 0),
-                    'pass'      => (int)($scoreDist->s60  ?? 0),
+                    'excellent' => (int)($scoreDist->s90   ?? 0),
+                    'good'      => (int)($scoreDist->s75   ?? 0),
+                    'pass'      => (int)($scoreDist->s60   ?? 0),
                     'fail'      => (int)($scoreDist->s_fail ?? 0),
                 ],
                 'test_performance'   => $testPerformance,
