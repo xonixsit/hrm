@@ -2,608 +2,778 @@
 
 namespace App\Services;
 
-use App\Models\User;
-use App\Models\Employee;
-use App\Models\WorkReport;
-use App\Models\CompetencyAssessment;
-use App\Models\Department;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Collection;
 
 class OrganizationalAnalyticsService
 {
-    public function getEmployeeGrowthTrends($startDate = null, $endDate = null)
+    // ─── Employee Growth ──────────────────────────────────────────────────────
+
+    public function getEmployeeGrowthTrends($startDate = null, $endDate = null): array
     {
         $startDate = $startDate ?? Carbon::now()->subYear();
-        $endDate = $endDate ?? Carbon::now();
-
-        $monthlyData = [];
-        $current = $startDate->copy()->startOfMonth();
+        $endDate   = $endDate   ?? Carbon::now();
+        $monthly   = [];
+        $current   = $startDate->copy()->startOfMonth();
 
         while ($current <= $endDate) {
             $monthEnd = $current->copy()->endOfMonth();
-            
             try {
-                // Count employees (not users with admin role)
-                $totalEmployees = DB::table('employees')
-                    ->where('employees.created_at', '<=', $monthEnd)
-                    ->whereNull('employees.deleted_at')
-                    ->count();
-                    
-                $newHires = DB::table('employees')
-                    ->whereBetween('employees.created_at', [$current, $monthEnd])
-                    ->whereNull('employees.deleted_at')
-                    ->count();
+                $total    = DB::table('employees')->where('created_at', '<=', $monthEnd)->whereNull('deleted_at')->count();
+                $newHires = DB::table('employees')->whereBetween('created_at', [$current, $monthEnd])->whereNull('deleted_at')->count();
             } catch (\Exception $e) {
-                $totalEmployees = 0;
-                $newHires = 0;
+                $total = $newHires = 0;
             }
-
-            $monthlyData[] = [
-                'month' => $current->format('M Y'),
-                'total_employees' => $totalEmployees,
-                'new_hires' => $newHires,
-                'date' => $current->toDateString()
-            ];
-
+            $monthly[] = ['month' => $current->format('M Y'), 'total_employees' => $total, 'new_hires' => $newHires, 'date' => $current->toDateString()];
             $current->addMonth();
         }
-
-        return $monthlyData;
+        return $monthly;
     }
 
-    public function getPerformanceMetrics($timeRange = '30d')
+    // ─── Performance Metrics (Competency Assessments) ─────────────────────────
+
+    public function getPerformanceMetrics(string $timeRange = '30d'): array
     {
         try {
-            // Check if competency_assessments table exists
-            if (!Schema::hasTable('competency_assessments')) {
-                return $this->getEmptyPerformanceMetrics();
-            }
-            
-            $startDate = $this->getStartDateFromRange($timeRange);
-            
-            $assessments = CompetencyAssessment::whereIn('status', ['approved', 'submitted'])
-                ->where('created_at', '>=', $startDate)
-                ->with(['employee.department', 'competency'])
+            if (!Schema::hasTable('competency_assessments')) return $this->emptyPerformance();
+            $start = $this->startDate($timeRange);
+
+            $rows = DB::table('competency_assessments')
+                ->join('employees', 'employees.id', '=', 'competency_assessments.employee_id')
+                ->leftJoin('departments', 'departments.id', '=', 'employees.department_id')
+                ->leftJoin('competencies', 'competencies.id', '=', 'competency_assessments.competency_id')
+                ->whereIn('competency_assessments.status', ['approved', 'submitted'])
+                ->where('competency_assessments.created_at', '>=', $start)
+                ->whereNull('employees.deleted_at')
+                ->select(
+                    'competency_assessments.rating',
+                    DB::raw('COALESCE(departments.name, "Unassigned") as dept'),
+                    DB::raw('COALESCE(competencies.name, "Unknown") as skill')
+                )
                 ->get();
 
-            $performanceDistribution = [
-                'excellent' => 0,
-                'good' => 0,
-                'average' => 0,
-                'needs_improvement' => 0
-            ];
+            $dist = ['excellent' => 0, 'good' => 0, 'average' => 0, 'needs_improvement' => 0];
+            $deptData = [];
+            $skillData = [];
+            $totalScore = 0;
 
-            $departmentPerformance = [];
-            $skillsAnalysis = [];
+            foreach ($rows as $row) {
+                $pct = ($row->rating ?? 0) * 20; // 1-5 → 20-100
+                $totalScore += $pct;
 
-            foreach ($assessments as $assessment) {
-                $score = $assessment->rating; // Use the rating field directly
-                $percentage = $score * 20; // Convert to percentage (1-5 scale to 20-100)
+                if ($pct >= 80) $dist['excellent']++;
+                elseif ($pct >= 60) $dist['good']++;
+                elseif ($pct >= 40) $dist['average']++;
+                else $dist['needs_improvement']++;
 
-                // Performance distribution
-                if ($percentage >= 80) { // Rating 4-5
-                    $performanceDistribution['excellent']++;
-                } elseif ($percentage >= 60) { // Rating 3
-                    $performanceDistribution['good']++;
-                } elseif ($percentage >= 40) { // Rating 2
-                    $performanceDistribution['average']++;
-                } else { // Rating 1
-                    $performanceDistribution['needs_improvement']++;
-                }
+                $deptData[$row->dept]['sum']   = ($deptData[$row->dept]['sum']   ?? 0) + $pct;
+                $deptData[$row->dept]['total'] = ($deptData[$row->dept]['total'] ?? 0) + 1;
 
-                // Department performance
-                $department = $assessment->employee->department->name ?? 'Unassigned';
-                if (!isset($departmentPerformance[$department])) {
-                    $departmentPerformance[$department] = ['total' => 0, 'sum' => 0];
-                }
-                $departmentPerformance[$department]['total']++;
-                $departmentPerformance[$department]['sum'] += $percentage;
-
-                // Skills analysis
-                $competencyName = $assessment->competency->name;
-                if (!isset($skillsAnalysis[$competencyName])) {
-                    $skillsAnalysis[$competencyName] = ['total' => 0, 'sum' => 0];
-                }
-                $skillsAnalysis[$competencyName]['total']++;
-                $skillsAnalysis[$competencyName]['sum'] += $score;
+                $skillData[$row->skill]['sum']   = ($skillData[$row->skill]['sum']   ?? 0) + $pct;
+                $skillData[$row->skill]['total'] = ($skillData[$row->skill]['total'] ?? 0) + 1;
             }
 
-            // Calculate averages
-            foreach ($departmentPerformance as $dept => &$data) {
-                $data['average'] = $data['total'] > 0 ? $data['sum'] / $data['total'] : 0;
+            $deptPerf = [];
+            foreach ($deptData as $name => $d) {
+                $deptPerf[$name] = ['total' => $d['total'], 'sum' => $d['sum'], 'average' => $d['total'] > 0 ? round($d['sum'] / $d['total'], 1) : 0];
             }
 
-            foreach ($skillsAnalysis as $skill => &$data) {
-                $data['average'] = $data['total'] > 0 ? $data['sum'] / $data['total'] : 0;
-            }
-
+            $total = $rows->count();
             return [
-                'distribution' => $performanceDistribution,
-                'department_performance' => $departmentPerformance,
-                'skills_analysis' => $skillsAnalysis
+                'distribution'         => $dist,
+                'department_performance' => $deptPerf,
+                'skills_analysis'      => $skillData,
+                'avg_score'            => $total > 0 ? round($totalScore / $total, 1) : 0,
+                'total_assessments'    => $total,
             ];
         } catch (\Exception $e) {
-            // Log the error and return empty data structure
-            \Log::error('Performance metrics query failed: ' . $e->getMessage());
-            return [
-                'distribution' => [
-                    'excellent' => 0,
-                    'good' => 0,
-                    'average' => 0,
-                    'needs_improvement' => 0
-                ],
-                'department_performance' => [],
-                'skills_analysis' => []
-            ];
+            \Log::error('PerformanceMetrics: ' . $e->getMessage());
+            return $this->emptyPerformance();
         }
     }
 
-    public function getAttendanceAnalytics($timeRange = '30d')
+    // ─── Attendance Analytics ─────────────────────────────────────────────────
+
+    public function getAttendanceAnalytics(string $timeRange = '30d'): array
     {
         try {
-            $startDate = $this->getStartDateFromRange($timeRange);
-            
-            // Get real attendance data for the last 4 weeks
-            $weeklyAttendance = [];
-            $departmentAttendance = [];
-            
-            // Calculate weekly attendance patterns
-            for ($week = 3; $week >= 0; $week--) {
-                $weekStart = Carbon::now()->subWeeks($week)->startOfWeek();
-                $weekEnd = Carbon::now()->subWeeks($week)->endOfWeek();
-                
-                $dailyRates = [];
-                for ($day = 0; $day < 5; $day++) { // Monday to Friday
-                    $currentDay = $weekStart->copy()->addDays($day);
-                    
-                    // Total employees who should be present
-                    $totalEmployees = DB::table('employees')
-                        ->where('status', 'active')
-                        ->whereNull('deleted_at')
-                        ->count();
-                    
-                    // Employees who clocked in on this day
-                    $presentEmployees = DB::table('attendances')
-                        ->whereDate('date', $currentDay->toDateString())
-                        ->whereNotNull('clock_in')
-                        ->distinct('employee_id')
-                        ->count();
-                    
-                    $attendanceRate = $totalEmployees > 0 ? ($presentEmployees / $totalEmployees) * 100 : 0;
-                    $dailyRates[] = round($attendanceRate, 1);
+            $start         = $this->startDate($timeRange);
+            $totalActive   = DB::table('employees')->where('status', 'active')->whereNull('deleted_at')->count();
+            $workingDays   = max(1, $start->diffInWeekdays(Carbon::now()));
+            $expectedTotal = $totalActive * $workingDays;
+
+            // Overall rate
+            $actual      = DB::table('attendances')->where('date', '>=', $start)->whereNotNull('clock_in')->count();
+            $overallRate = $expectedTotal > 0 ? round(($actual / $expectedTotal) * 100, 1) : 0;
+
+            // Trend vs previous period
+            $prevStart  = $start->copy()->subDays($start->diffInDays(Carbon::now()));
+            $prevActual = DB::table('attendances')->whereBetween('date', [$prevStart, $start])->whereNotNull('clock_in')->count();
+            $prevRate   = $expectedTotal > 0 ? round(($prevActual / $expectedTotal) * 100, 1) : 0;
+            $trend      = round($overallRate - $prevRate, 1);
+
+            // Weekly heatmap — last 4 weeks, Mon–Fri
+            $weekly = [];
+            for ($w = 3; $w >= 0; $w--) {
+                $weekStart = Carbon::now()->subWeeks($w)->startOfWeek();
+                $rates = [];
+                for ($d = 0; $d < 5; $d++) {
+                    $day     = $weekStart->copy()->addDays($d);
+                    $present = DB::table('attendances')->whereDate('date', $day)->whereNotNull('clock_in')->distinct('employee_id')->count();
+                    $rates[] = $totalActive > 0 ? round(($present / $totalActive) * 100, 1) : 0;
                 }
-                
-                $weeklyAttendance['week' . (4 - $week)] = $dailyRates;
+                $weekly['week' . (4 - $w)] = $rates;
             }
-            
-            // Calculate department-wise attendance
-            $departments = DB::table('departments')->get();
-            foreach ($departments as $department) {
-                $deptEmployees = DB::table('employees')
-                    ->where('department_id', $department->id)
-                    ->where('status', 'active')
-                    ->whereNull('deleted_at')
+
+            // Avg hours worked per day
+            $avgMinutes = DB::table('attendances')
+                ->where('date', '>=', $start)
+                ->whereNotNull('clock_out')
+                ->whereNotNull('work_minutes')
+                ->avg('work_minutes');
+            $avgHours = $avgMinutes ? round($avgMinutes / 60, 1) : 0;
+
+            // Today's present count
+            $presentToday = DB::table('attendances')->whereDate('date', today())->whereNotNull('clock_in')->distinct('employee_id')->count();
+
+            // Dept breakdown
+            $deptRates = [];
+            $depts = DB::table('departments')->select('id', 'name')->get();
+            foreach ($depts as $dept) {
+                $deptCount = DB::table('employees')->where('department_id', $dept->id)->where('status', 'active')->whereNull('deleted_at')->count();
+                if ($deptCount === 0) continue;
+                $deptActual = DB::table('attendances')
+                    ->join('employees', 'employees.id', '=', 'attendances.employee_id')
+                    ->where('employees.department_id', $dept->id)
+                    ->where('attendances.date', '>=', $start)
+                    ->whereNotNull('attendances.clock_in')
                     ->count();
-                
-                if ($deptEmployees > 0) {
-                    $deptAttendance = DB::table('attendances')
-                        ->join('employees', 'attendances.employee_id', '=', 'employees.id')
-                        ->where('employees.department_id', $department->id)
-                        ->where('attendances.date', '>=', $startDate)
-                        ->whereNotNull('attendances.clock_in')
-                        ->count();
-                    
-                    $workingDays = $startDate->diffInWeekdays(Carbon::now());
-                    $expectedAttendance = $deptEmployees * $workingDays;
-                    
-                    $rate = $expectedAttendance > 0 ? ($deptAttendance / $expectedAttendance) * 100 : 0;
-                    $departmentAttendance[$department->name] = round($rate, 1);
-                }
+                $deptExp    = $deptCount * $workingDays;
+                $deptRates[$dept->name] = $deptExp > 0 ? round(($deptActual / $deptExp) * 100, 1) : 0;
             }
-            
-            // Calculate overall attendance rate
-            $totalPossibleAttendance = DB::table('employees')
-                ->where('status', 'active')
-                ->whereNull('deleted_at')
-                ->count() * $startDate->diffInWeekdays(Carbon::now());
-            
-            $actualAttendance = DB::table('attendances')
-                ->where('date', '>=', $startDate)
-                ->whereNotNull('clock_in')
-                ->count();
-            
-            $overallRate = $totalPossibleAttendance > 0 ? ($actualAttendance / $totalPossibleAttendance) * 100 : 0;
-            
-            // Calculate trend (compare with previous period)
-            $previousPeriodStart = $startDate->copy()->sub($startDate->diffInDays(Carbon::now()), 'days');
-            $previousAttendance = DB::table('attendances')
-                ->whereBetween('date', [$previousPeriodStart, $startDate])
-                ->whereNotNull('clock_in')
-                ->count();
-            
-            $previousPossible = DB::table('employees')
-                ->where('status', 'active')
-                ->whereNull('deleted_at')
-                ->count() * $previousPeriodStart->diffInWeekdays($startDate);
-            
-            $previousRate = $previousPossible > 0 ? ($previousAttendance / $previousPossible) * 100 : 0;
-            $trend = $previousRate > 0 ? $overallRate - $previousRate : 0;
-            
-            return [
-                'weekly_patterns' => $weeklyAttendance,
-                'department_rates' => $departmentAttendance,
-                'overall_rate' => round($overallRate, 1),
-                'trend' => round($trend, 1)
-            ];
-            
+
+            return compact('weekly', 'deptRates', 'overallRate', 'trend', 'avgHours', 'presentToday', 'totalActive') + ['weekly_patterns' => $weekly, 'department_rates' => $deptRates, 'overall_rate' => $overallRate];
         } catch (\Exception $e) {
-            \Log::error('Attendance analytics query failed: ' . $e->getMessage());
-            
-            // Fallback to mock data if queries fail
-            return [
-                'weekly_patterns' => [
-                    'week1' => [95, 97, 94, 96, 92],
-                    'week2' => [93, 95, 96, 94, 90],
-                    'week3' => [96, 94, 95, 97, 93],
-                    'week4' => [94, 96, 93, 95, 91]
-                ],
-                'department_rates' => [
-                    'Engineering' => 94.5,
-                    'Sales' => 96.2,
-                    'Marketing' => 93.8,
-                    'HR' => 97.1,
-                    'Finance' => 95.3
-                ],
-                'overall_rate' => 94.2,
-                'trend' => -1.3
+            \Log::error('AttendanceAnalytics: ' . $e->getMessage());
+            return ['weekly_patterns' => [], 'department_rates' => [], 'overall_rate' => 0, 'trend' => 0, 'avgHours' => 0, 'presentToday' => 0, 'totalActive' => 0];
+        }
+    }
+
+    // ─── Attrition Analysis ────────────────────────────────────────────────────
+
+    public function getAttritionAnalysis(string $timeRange = '1y'): array
+    {
+        try {
+            $start = $this->startDate($timeRange);
+
+            $departed = DB::table('employees')
+                ->leftJoin('departments', 'departments.id', '=', 'employees.department_id')
+                ->where('employees.exit_date', '>=', $start)
+                ->whereNotNull('employees.exit_date')
+                ->select('employees.exit_reason', DB::raw('COALESCE(departments.name,"Unassigned") as dept'))
+                ->get();
+
+            $totalActive = DB::table('employees')->where('status', 'active')->whereNull('deleted_at')->count();
+            $rate = ($totalActive + $departed->count()) > 0
+                ? round(($departed->count() / ($totalActive + $departed->count())) * 100, 2)
+                : 0;
+
+            // Categorise exit reasons from real data
+            $voluntary = $involuntary = $retirement = $other = 0;
+            foreach ($departed as $e) {
+                $r = strtolower($e->exit_reason ?? '');
+                if (str_contains($r, 'resign') || str_contains($r, 'personal') || str_contains($r, 'better')) $voluntary++;
+                elseif (str_contains($r, 'terminat') || str_contains($r, 'dismiss') || str_contains($r, 'layoff')) $involuntary++;
+                elseif (str_contains($r, 'retire')) $retirement++;
+                else $other++;
+            }
+            $total = max(1, $departed->count());
+            $reasons = [
+                'voluntary'   => round(($voluntary / $total) * 100),
+                'involuntary' => round(($involuntary / $total) * 100),
+                'retirement'  => round(($retirement / $total) * 100),
+                'other'       => round(($other / $total) * 100),
             ];
+
+            // Dept breakdown
+            $deptBreakdown = [];
+            foreach ($departed as $e) {
+                $deptBreakdown[$e->dept] = ($deptBreakdown[$e->dept] ?? 0) + 1;
+            }
+
+            // Trend: compare this period vs prior
+            $prevDeparted = DB::table('employees')
+                ->where('exit_date', '>=', $start->copy()->sub($start->diffInDays(Carbon::now()), 'days'))
+                ->where('exit_date', '<', $start)
+                ->whereNotNull('exit_date')
+                ->count();
+            $trend = $prevDeparted > 0 ? round((($departed->count() - $prevDeparted) / $prevDeparted) * 100, 1) : 0;
+
+            return [
+                'rate'             => $rate,
+                'total_departures' => $departed->count(),
+                'reasons_breakdown'=> $reasons,
+                'department_breakdown' => $deptBreakdown,
+                'trend'            => $trend,
+            ];
+        } catch (\Exception $e) {
+            \Log::error('AttritionAnalysis: ' . $e->getMessage());
+            return ['rate' => 0, 'total_departures' => 0, 'reasons_breakdown' => [], 'department_breakdown' => [], 'trend' => 0];
         }
     }
 
-    public function getAttritionAnalysis($timeRange = '1y')
+    // ─── Onboarding Metrics ────────────────────────────────────────────────────
+
+    public function getOnboardingMetrics(string $timeRange = '90d'): array
     {
-        $startDate = $this->getStartDateFromRange($timeRange);
-        
-        // Get employees who left during the period (using exit_date)
-        $leftEmployees = DB::table('employees')
-            ->leftJoin('departments', 'employees.department_id', '=', 'departments.id')
-            ->where('employees.exit_date', '>=', $startDate)
-            ->whereNotNull('employees.exit_date')
-            ->select('employees.*', 'departments.name as department_name')
-            ->get();
+        try {
+            $start    = $this->startDate($timeRange);
+            $newHires = DB::table('employees')->where('created_at', '>=', $start)->whereNull('deleted_at')->get();
 
-        $totalEmployees = DB::table('employees')
-            ->whereNull('deleted_at')
-            ->where('status', 'active')
-            ->count();
-            
-        $attritionRate = $totalEmployees > 0 ? ($leftEmployees->count() / $totalEmployees) * 100 : 0;
+            $succeeded = 0;
+            $daysSum   = 0;
+            $daysCount = 0;
 
-        $reasonsBreakdown = [
-            'voluntary' => 68,
-            'involuntary' => 22,
-            'retirement' => 10
-        ];
+            // Weekly completion timeline: how many had first assessment by week 1..6
+            $weekBuckets = array_fill(0, 6, 0);
 
-        $departmentAttrition = [];
-        foreach ($leftEmployees as $employee) {
-            $dept = $employee->department_name ?? 'Unassigned';
-            $departmentAttrition[$dept] = ($departmentAttrition[$dept] ?? 0) + 1;
-        }
-
-        return [
-            'rate' => round($attritionRate, 2),
-            'total_departures' => $leftEmployees->count(),
-            'reasons_breakdown' => $reasonsBreakdown,
-            'department_breakdown' => $departmentAttrition,
-            'trend' => -2.1 // improvement percentage
-        ];
-    }
-
-    public function getOnboardingMetrics($timeRange = '90d')
-    {
-        $startDate = $this->getStartDateFromRange($timeRange);
-        
-        $newHires = DB::table('employees')
-            ->join('users', 'employees.user_id', '=', 'users.id')
-            ->where('employees.created_at', '>=', $startDate)
-            ->whereNull('employees.deleted_at')
-            ->select('employees.*', 'users.created_at as user_created_at')
-            ->get();
-
-        // Count employees who have completed assessments and are still active after 30 days
-        $successfulOnboarding = $newHires->filter(function($employee) {
-            $hasAssessments = DB::table('competency_assessments')
-                ->where('employee_id', $employee->id)
-                ->exists();
-                
-            $daysSinceJoin = Carbon::parse($employee->created_at)->diffInDays(Carbon::now());
-            
-            return $hasAssessments && $daysSinceJoin > 30;
-        });
-
-        $successRate = $newHires->count() > 0 
-            ? ($successfulOnboarding->count() / $newHires->count()) * 100 
-            : 0;
-
-        // Calculate average days to first assessment
-        $avgOnboardingDays = 14; // Default value
-        if ($newHires->count() > 0) {
-            $totalDays = 0;
-            $validCount = 0;
-            
-            foreach ($newHires as $employee) {
-                $firstAssessment = DB::table('competency_assessments')
-                    ->where('employee_id', $employee->id)
+            foreach ($newHires as $emp) {
+                $first = DB::table('competency_assessments')
+                    ->where('employee_id', $emp->id)
                     ->orderBy('created_at')
-                    ->first();
-                    
-                if ($firstAssessment) {
-                    $days = Carbon::parse($employee->created_at)->diffInDays(Carbon::parse($firstAssessment->created_at));
-                    $totalDays += $days;
-                    $validCount++;
+                    ->value('created_at');
+
+                if ($first) {
+                    $days = Carbon::parse($emp->created_at)->diffInDays(Carbon::parse($first));
+                    $daysSum++;
+                    $daysCount++;
+                    $weekIdx = min(5, (int) floor($days / 7));
+                    for ($i = $weekIdx; $i < 6; $i++) $weekBuckets[$i]++;
+                    if ($days <= 90 && Carbon::parse($emp->created_at)->diffInDays(Carbon::now()) > 30) $succeeded++;
                 }
             }
-            
-            if ($validCount > 0) {
-                $avgOnboardingDays = $totalDays / $validCount;
-            }
-        }
 
-        return [
-            'success_rate' => round($successRate, 1),
-            'avg_days' => round($avgOnboardingDays, 0),
-            'total_new_hires' => $newHires->count(),
-            'completion_timeline' => [45, 70, 85, 92, 95, 97] // Weekly progression
-        ];
+            $total = max(1, $newHires->count());
+            $timeline = array_map(fn($v) => $total > 0 ? round(($v / $total) * 100) : 0, $weekBuckets);
+
+            return [
+                'success_rate'       => round(($succeeded / $total) * 100, 1),
+                'avg_days'           => $daysCount > 0 ? round($daysSum / $daysCount) : 0,
+                'total_new_hires'    => $newHires->count(),
+                'completion_timeline'=> $timeline,
+            ];
+        } catch (\Exception $e) {
+            \Log::error('OnboardingMetrics: ' . $e->getMessage());
+            return ['success_rate' => 0, 'avg_days' => 0, 'total_new_hires' => 0, 'completion_timeline' => [0, 0, 0, 0, 0, 0]];
+        }
     }
 
-    public function getWorkforceForecast()
-    {
-        $historicalData = $this->getEmployeeGrowthTrends(Carbon::now()->subYear());
-        
-        // Simple linear regression for prediction
-        $recentData = array_slice($historicalData, -6); // Last 6 months
-        $growthRates = [];
-        
-        for ($i = 1; $i < count($recentData); $i++) {
-            $prev = $recentData[$i-1]['total_employees'];
-            $current = $recentData[$i]['total_employees'];
-            if ($prev > 0) {
-                $growthRates[] = (($current - $prev) / $prev) * 100;
-            }
-        }
+    // ─── Skills Matrix (Competency-based) ─────────────────────────────────────
 
-        $avgGrowthRate = count($growthRates) > 0 ? array_sum($growthRates) / count($growthRates) : 0;
-        $currentCount = end($historicalData)['total_employees'];
-        
+    public function getSkillsMatrix(): array
+    {
+        try {
+            if (!Schema::hasTable('competencies') || !Schema::hasTable('competency_assessments')) return $this->emptySkillsMatrix();
+
+            $rows = DB::table('competencies')
+                ->join('competency_assessments', 'competencies.id', '=', 'competency_assessments.competency_id')
+                ->whereIn('competency_assessments.status', ['approved', 'submitted'])
+                ->select('competencies.name', 'competency_assessments.rating')
+                ->get();
+
+            $buckets = [];
+            foreach ($rows as $r) {
+                $cat = $this->categorizeSkill($r->name);
+                $buckets[$cat][] = $r->rating;
+            }
+
+            $matrix = [];
+            $allCats = ['Technical Skills', 'Leadership', 'Communication', 'Project Management', 'Problem Solving', 'Teamwork', 'Innovation', 'Customer Focus'];
+            foreach ($allCats as $cat) {
+                $ratings = $buckets[$cat] ?? [];
+                if (empty($ratings)) { $matrix[$cat] = ['expert' => 0, 'proficient' => 0, 'needs_development' => 0]; continue; }
+                $n       = count($ratings);
+                $expert  = count(array_filter($ratings, fn($r) => $r >= 4));
+                $prof    = count(array_filter($ratings, fn($r) => $r >= 3 && $r < 4));
+                $nd      = count(array_filter($ratings, fn($r) => $r < 3));
+                $matrix[$cat] = ['expert' => round($expert / $n * 100), 'proficient' => round($prof / $n * 100), 'needs_development' => round($nd / $n * 100)];
+            }
+            return $matrix;
+        } catch (\Exception $e) {
+            \Log::error('SkillsMatrix: ' . $e->getMessage());
+            return $this->emptySkillsMatrix();
+        }
+    }
+
+    // ─── Work Report Analytics ─────────────────────────────────────────────────
+
+    public function getWorkReportAnalytics(string $timeRange = '30d'): array
+    {
+        try {
+            if (!Schema::hasTable('work_reports')) return $this->emptyWorkReports();
+            $start = $this->startDate($timeRange);
+
+            // Totals for the period
+            $totals = DB::table('work_reports')
+                ->where('date', '>=', $start)
+                ->select(
+                    DB::raw('COUNT(*) as report_count'),
+                    DB::raw('SUM(calls) as total_calls'),
+                    DB::raw('SUM(emails) as total_emails'),
+                    DB::raw('SUM(whatsapp) as total_whatsapp'),
+                    DB::raw('SUM(follow_up_calls) as total_followups'),
+                    DB::raw('SUM(interested_count) as total_interested'),
+                    DB::raw('SUM(not_interested_count) as total_not_interested'),
+                    DB::raw('SUM(voice_mails) as total_voicemails'),
+                    DB::raw('SUM(calls_not_received) as total_missed')
+                )
+                ->first();
+
+            // Daily trend for the period (calls per day)
+            $dailyTrend = DB::table('work_reports')
+                ->where('date', '>=', $start)
+                ->select('date', DB::raw('SUM(calls) as calls'), DB::raw('SUM(interested_count) as interested'))
+                ->groupBy('date')
+                ->orderBy('date')
+                ->get()
+                ->map(fn($r) => ['date' => $r->date, 'calls' => (int)$r->calls, 'interested' => (int)$r->interested]);
+
+            // Top performers by total calls
+            $topPerformers = DB::table('work_reports')
+                ->join('employees', 'employees.id', '=', 'work_reports.employee_id')
+                ->join('users', 'users.id', '=', 'employees.user_id')
+                ->where('work_reports.date', '>=', $start)
+                ->whereNull('employees.deleted_at')
+                ->select(
+                    'users.name',
+                    DB::raw('SUM(work_reports.calls) as total_calls'),
+                    DB::raw('SUM(work_reports.interested_count) as interested'),
+                    DB::raw('COUNT(work_reports.id) as days_reported')
+                )
+                ->groupBy('employees.id', 'users.name')
+                ->orderByDesc('total_calls')
+                ->limit(5)
+                ->get();
+
+            // Department breakdown
+            $deptBreakdown = DB::table('work_reports')
+                ->join('employees', 'employees.id', '=', 'work_reports.employee_id')
+                ->leftJoin('departments', 'departments.id', '=', 'employees.department_id')
+                ->where('work_reports.date', '>=', $start)
+                ->whereNull('employees.deleted_at')
+                ->select(
+                    DB::raw('COALESCE(departments.name,"Unassigned") as dept'),
+                    DB::raw('SUM(work_reports.calls) as calls'),
+                    DB::raw('SUM(work_reports.interested_count) as interested')
+                )
+                ->groupBy('dept')
+                ->orderByDesc('calls')
+                ->get();
+
+            // Monthly trend (last 6 months)
+            $monthlyTrend = DB::table('work_reports')
+                ->where('date', '>=', Carbon::now()->subMonths(6)->startOfMonth())
+                ->select(
+                    DB::raw('DATE_FORMAT(date, "%b %Y") as month'),
+                    DB::raw('SUM(calls) as calls'),
+                    DB::raw('SUM(interested_count) as interested'),
+                    DB::raw('COUNT(DISTINCT employee_id) as active_reporters')
+                )
+                ->groupBy(DB::raw('DATE_FORMAT(date, "%b %Y")'), DB::raw('DATE_FORMAT(date, "%Y%m")'))
+                ->orderBy(DB::raw('DATE_FORMAT(date, "%Y%m")'))
+                ->get();
+
+            $totalCalls     = (int)($totals->total_calls ?? 0);
+            $totalInterested = (int)($totals->total_interested ?? 0);
+            $conversionRate  = $totalCalls > 0 ? round(($totalInterested / $totalCalls) * 100, 1) : 0;
+
+            return [
+                'totals'           => [
+                    'calls'         => $totalCalls,
+                    'emails'        => (int)($totals->total_emails ?? 0),
+                    'whatsapp'      => (int)($totals->total_whatsapp ?? 0),
+                    'followups'     => (int)($totals->total_followups ?? 0),
+                    'interested'    => $totalInterested,
+                    'not_interested'=> (int)($totals->total_not_interested ?? 0),
+                    'voicemails'    => (int)($totals->total_voicemails ?? 0),
+                    'missed'        => (int)($totals->total_missed ?? 0),
+                    'report_count'  => (int)($totals->report_count ?? 0),
+                ],
+                'conversion_rate'  => $conversionRate,
+                'daily_trend'      => $dailyTrend,
+                'monthly_trend'    => $monthlyTrend,
+                'top_performers'   => $topPerformers,
+                'dept_breakdown'   => $deptBreakdown,
+            ];
+        } catch (\Exception $e) {
+            \Log::error('WorkReportAnalytics: ' . $e->getMessage());
+            return $this->emptyWorkReports();
+        }
+    }
+
+    // ─── Skill Test Analytics ──────────────────────────────────────────────────
+
+    public function getSkillTestAnalytics(string $timeRange = '30d'): array
+    {
+        try {
+            if (!Schema::hasTable('skill_tests') || !Schema::hasTable('test_sessions')) return $this->emptySkillTests();
+            $start = $this->startDate($timeRange);
+
+            // Overall stats
+            $stats = DB::table('test_sessions')
+                ->where('created_at', '>=', $start)
+                ->select(
+                    DB::raw('COUNT(*) as total_attempts'),
+                    DB::raw('SUM(CASE WHEN status = "completed" THEN 1 ELSE 0 END) as completed'),
+                    DB::raw('AVG(CASE WHEN status = "completed" THEN score ELSE NULL END) as avg_score'),
+                    DB::raw('SUM(CASE WHEN passed = 1 THEN 1 ELSE 0 END) as passed_count')
+                )
+                ->first();
+
+            $completed   = (int)($stats->completed ?? 0);
+            $passedCount = (int)($stats->passed_count ?? 0);
+            $passRate    = $completed > 0 ? round(($passedCount / $completed) * 100, 1) : 0;
+
+            // Per-test performance
+            $testPerformance = DB::table('test_sessions')
+                ->join('skill_tests', 'skill_tests.id', '=', 'test_sessions.skill_test_id')
+                ->where('test_sessions.created_at', '>=', $start)
+                ->where('test_sessions.status', 'completed')
+                ->select(
+                    'skill_tests.name',
+                    'skill_tests.category',
+                    'skill_tests.difficulty_level',
+                    DB::raw('COUNT(*) as attempts'),
+                    DB::raw('AVG(test_sessions.score) as avg_score'),
+                    DB::raw('SUM(CASE WHEN test_sessions.passed = 1 THEN 1 ELSE 0 END) as passed')
+                )
+                ->groupBy('skill_tests.id', 'skill_tests.name', 'skill_tests.category', 'skill_tests.difficulty_level')
+                ->orderByDesc('attempts')
+                ->limit(10)
+                ->get()
+                ->map(fn($r) => [
+                    'name'       => $r->name,
+                    'category'   => $r->category,
+                    'difficulty' => $r->difficulty_level,
+                    'attempts'   => (int)$r->attempts,
+                    'avg_score'  => round((float)$r->avg_score, 1),
+                    'pass_rate'  => $r->attempts > 0 ? round(($r->passed / $r->attempts) * 100, 1) : 0,
+                ]);
+
+            // Score distribution buckets
+            $scoreDist = DB::table('test_sessions')
+                ->where('created_at', '>=', $start)
+                ->where('status', 'completed')
+                ->select(DB::raw('
+                    SUM(CASE WHEN score >= 90 THEN 1 ELSE 0 END) as s90,
+                    SUM(CASE WHEN score >= 75 AND score < 90 THEN 1 ELSE 0 END) as s75,
+                    SUM(CASE WHEN score >= 60 AND score < 75 THEN 1 ELSE 0 END) as s60,
+                    SUM(CASE WHEN score < 60 THEN 1 ELSE 0 END) as s_fail
+                '))
+                ->first();
+
+            // Top scorers
+            $topScorers = DB::table('test_sessions')
+                ->join('employees', 'employees.id', '=', 'test_sessions.employee_id')
+                ->join('users', 'users.id', '=', 'employees.user_id')
+                ->join('skill_tests', 'skill_tests.id', '=', 'test_sessions.skill_test_id')
+                ->where('test_sessions.created_at', '>=', $start)
+                ->where('test_sessions.status', 'completed')
+                ->whereNull('employees.deleted_at')
+                ->select('users.name', 'skill_tests.name as test_name', 'test_sessions.score')
+                ->orderByDesc('test_sessions.score')
+                ->limit(5)
+                ->get();
+
+            // Monthly trend
+            $monthlyTrend = DB::table('test_sessions')
+                ->where('created_at', '>=', Carbon::now()->subMonths(6)->startOfMonth())
+                ->where('status', 'completed')
+                ->select(
+                    DB::raw('DATE_FORMAT(created_at, "%b %Y") as month'),
+                    DB::raw('COUNT(*) as attempts'),
+                    DB::raw('AVG(score) as avg_score'),
+                    DB::raw('SUM(CASE WHEN passed = 1 THEN 1 ELSE 0 END) as passed')
+                )
+                ->groupBy(DB::raw('DATE_FORMAT(created_at, "%b %Y")'), DB::raw('DATE_FORMAT(created_at, "%Y%m")'))
+                ->orderBy(DB::raw('DATE_FORMAT(created_at, "%Y%m")'))
+                ->get();
+
+            // Category breakdown
+            $categoryBreakdown = DB::table('test_sessions')
+                ->join('skill_tests', 'skill_tests.id', '=', 'test_sessions.skill_test_id')
+                ->where('test_sessions.created_at', '>=', $start)
+                ->where('test_sessions.status', 'completed')
+                ->select(
+                    'skill_tests.category',
+                    DB::raw('COUNT(*) as attempts'),
+                    DB::raw('AVG(test_sessions.score) as avg_score'),
+                    DB::raw('SUM(CASE WHEN test_sessions.passed = 1 THEN 1 ELSE 0 END) as passed')
+                )
+                ->groupBy('skill_tests.category')
+                ->orderByDesc('attempts')
+                ->get();
+
+            return [
+                'overview' => [
+                    'total_attempts' => (int)($stats->total_attempts ?? 0),
+                    'completed'      => $completed,
+                    'avg_score'      => round((float)($stats->avg_score ?? 0), 1),
+                    'pass_rate'      => $passRate,
+                    'passed'         => $passedCount,
+                ],
+                'score_distribution' => [
+                    'excellent' => (int)($scoreDist->s90  ?? 0),
+                    'good'      => (int)($scoreDist->s75  ?? 0),
+                    'pass'      => (int)($scoreDist->s60  ?? 0),
+                    'fail'      => (int)($scoreDist->s_fail ?? 0),
+                ],
+                'test_performance'   => $testPerformance,
+                'category_breakdown' => $categoryBreakdown,
+                'top_scorers'        => $topScorers,
+                'monthly_trend'      => $monthlyTrend,
+            ];
+        } catch (\Exception $e) {
+            \Log::error('SkillTestAnalytics: ' . $e->getMessage());
+            return $this->emptySkillTests();
+        }
+    }
+
+    // ─── Leave Analytics ──────────────────────────────────────────────────────
+
+    public function getLeaveAnalytics(string $timeRange = '30d'): array
+    {
+        try {
+            if (!Schema::hasTable('leaves')) return $this->emptyLeave();
+            $start = $this->startDate($timeRange);
+
+            // Overall counts
+            $overview = DB::table('leaves')
+                ->where('created_at', '>=', $start)
+                ->select(
+                    DB::raw('COUNT(*) as total'),
+                    DB::raw('SUM(CASE WHEN status = "approved" THEN 1 ELSE 0 END) as approved'),
+                    DB::raw('SUM(CASE WHEN status = "pending" THEN 1 ELSE 0 END) as pending'),
+                    DB::raw('SUM(CASE WHEN status = "rejected" THEN 1 ELSE 0 END) as rejected'),
+                    DB::raw('SUM(CASE WHEN status = "cancelled" THEN 1 ELSE 0 END) as cancelled'),
+                    DB::raw('AVG(DATEDIFF(to_date, from_date) + 1) as avg_days_per_request')
+                )
+                ->first();
+
+            $approvalRate = ($overview->total ?? 0) > 0
+                ? round((($overview->approved ?? 0) / $overview->total) * 100, 1)
+                : 0;
+
+            // By leave type
+            $byType = DB::table('leaves')
+                ->join('leave_types', 'leave_types.id', '=', 'leaves.leave_type_id')
+                ->where('leaves.created_at', '>=', $start)
+                ->select(
+                    'leave_types.name as type',
+                    DB::raw('COUNT(*) as requests'),
+                    DB::raw('SUM(DATEDIFF(to_date, from_date) + 1) as total_days'),
+                    DB::raw('SUM(CASE WHEN leaves.status = "approved" THEN 1 ELSE 0 END) as approved')
+                )
+                ->groupBy('leave_types.id', 'leave_types.name')
+                ->orderByDesc('requests')
+                ->get();
+
+            // By department
+            $byDept = DB::table('leaves')
+                ->join('employees', 'employees.id', '=', 'leaves.employee_id')
+                ->leftJoin('departments', 'departments.id', '=', 'employees.department_id')
+                ->where('leaves.created_at', '>=', $start)
+                ->whereNull('employees.deleted_at')
+                ->select(
+                    DB::raw('COALESCE(departments.name,"Unassigned") as dept'),
+                    DB::raw('COUNT(*) as requests'),
+                    DB::raw('SUM(DATEDIFF(to_date, from_date) + 1) as total_days')
+                )
+                ->groupBy('dept')
+                ->orderByDesc('requests')
+                ->get();
+
+            // Monthly trend
+            $monthlyTrend = DB::table('leaves')
+                ->where('created_at', '>=', Carbon::now()->subMonths(6)->startOfMonth())
+                ->select(
+                    DB::raw('DATE_FORMAT(from_date, "%b %Y") as month'),
+                    DB::raw('COUNT(*) as requests'),
+                    DB::raw('SUM(DATEDIFF(to_date, from_date) + 1) as total_days'),
+                    DB::raw('SUM(CASE WHEN status = "approved" THEN 1 ELSE 0 END) as approved')
+                )
+                ->groupBy(DB::raw('DATE_FORMAT(from_date, "%b %Y")'), DB::raw('DATE_FORMAT(from_date, "%Y%m")'))
+                ->orderBy(DB::raw('DATE_FORMAT(from_date, "%Y%m")'))
+                ->get();
+
+            // Avg approval time (days from created_at to approved_at)
+            $avgApprovalDays = DB::table('leaves')
+                ->where('created_at', '>=', $start)
+                ->where('status', 'approved')
+                ->whereNotNull('approved_at')
+                ->avg(DB::raw('DATEDIFF(approved_at, created_at)'));
+
+            return [
+                'overview' => [
+                    'total'           => (int)($overview->total ?? 0),
+                    'approved'        => (int)($overview->approved ?? 0),
+                    'pending'         => (int)($overview->pending ?? 0),
+                    'rejected'        => (int)($overview->rejected ?? 0),
+                    'cancelled'       => (int)($overview->cancelled ?? 0),
+                    'avg_days'        => round((float)($overview->avg_days_per_request ?? 0), 1),
+                    'approval_rate'   => $approvalRate,
+                    'avg_approval_days' => round((float)($avgApprovalDays ?? 0), 1),
+                ],
+                'by_type'     => $byType,
+                'by_dept'     => $byDept,
+                'monthly_trend' => $monthlyTrend,
+            ];
+        } catch (\Exception $e) {
+            \Log::error('LeaveAnalytics: ' . $e->getMessage());
+            return $this->emptyLeave();
+        }
+    }
+
+    // ─── Workforce Forecast ────────────────────────────────────────────────────
+
+    public function getWorkforceForecast(): array
+    {
+        $history   = $this->getEmployeeGrowthTrends(Carbon::now()->subYear());
+        $recent    = array_slice($history, -6);
+        $rates     = [];
+        for ($i = 1; $i < count($recent); $i++) {
+            $prev = $recent[$i - 1]['total_employees'];
+            $curr = $recent[$i]['total_employees'];
+            if ($prev > 0) $rates[] = (($curr - $prev) / $prev) * 100;
+        }
+        $avgRate = count($rates) > 0 ? array_sum($rates) / count($rates) : 0;
+        $current = end($history)['total_employees'] ?? 0;
+
         $predictions = [];
         for ($i = 1; $i <= 6; $i++) {
-            $predicted = $currentCount * pow(1 + ($avgGrowthRate / 100), $i);
-            $predictions[] = round($predicted);
+            $predictions[] = round($current * pow(1 + ($avgRate / 100), $i));
         }
 
-        return [
-            'current_count' => $currentCount,
-            'growth_rate' => round($avgGrowthRate, 2),
-            'predictions' => $predictions,
-            'confidence' => 75 // Mock confidence level
-        ];
+        // Confidence based on data consistency (lower std-dev = higher confidence)
+        $stdDev     = count($rates) > 1 ? sqrt(array_sum(array_map(fn($r) => pow($r - $avgRate, 2), $rates)) / count($rates)) : 50;
+        $confidence = max(30, min(95, round(90 - ($stdDev * 2))));
+
+        return ['current_count' => $current, 'growth_rate' => round($avgRate, 2), 'predictions' => $predictions, 'confidence' => $confidence];
     }
 
-    public function getRiskAssessment()
+    // ─── Risk Assessment ──────────────────────────────────────────────────────
+
+    public function getRiskAssessment(): array
     {
         try {
-            // Check if required tables exist
-            if (!Schema::hasTable('competency_assessments') || !Schema::hasTable('employees')) {
-                $highAttritionRisk = 0;
-            } else {
-                // High attrition risk employees - those with low performance ratings
-                $highAttritionRisk = DB::table('employees')
+            $attritionRisk = Schema::hasTable('competency_assessments')
+                ? DB::table('employees')
                     ->join('competency_assessments', 'employees.id', '=', 'competency_assessments.employee_id')
                     ->where('competency_assessments.rating', '<', 3)
                     ->where('competency_assessments.created_at', '>=', Carbon::now()->subMonths(6))
                     ->whereNull('employees.deleted_at')
-                    ->where('employees.status', '=', 'active')
-                    ->distinct('employees.id')
-                    ->count();
-            }
-        } catch (\Exception $e) {
-            $highAttritionRisk = 0;
-        }
+                    ->where('employees.status', 'active')
+                    ->distinct('employees.id')->count()
+                : 0;
 
-        try {
-            // Check if table exists
-            if (!Schema::hasTable('competency_assessments')) {
-                $performanceConcerns = 0;
-            } else {
-                // Performance concerns - employees with consistently low ratings
-                $performanceConcerns = DB::table('competency_assessments')
+            $perfConcerns = Schema::hasTable('competency_assessments')
+                ? DB::table('competency_assessments')
                     ->where('rating', '<', 3)
                     ->whereIn('status', ['approved', 'submitted'])
                     ->where('created_at', '>=', Carbon::now()->subMonths(3))
-                    ->distinct('employee_id')
-                    ->count();
-            }
-        } catch (\Exception $e) {
-            $performanceConcerns = 0;
-        }
+                    ->distinct('employee_id')->count()
+                : 0;
 
-        try {
-            // Check if required tables exist
-            if (!Schema::hasTable('competencies') || !Schema::hasTable('competency_assessments')) {
-                $skillGaps = 0;
-            } else {
-                // Skill gaps - competencies with low average ratings across organization
-                $skillGapsQuery = DB::table('competencies')
+            $skillGaps = (Schema::hasTable('competencies') && Schema::hasTable('competency_assessments'))
+                ? DB::table('competencies')
                     ->join('competency_assessments', 'competencies.id', '=', 'competency_assessments.competency_id')
                     ->whereIn('competency_assessments.status', ['approved', 'submitted'])
                     ->select('competencies.id', DB::raw('AVG(competency_assessments.rating) as avg_rating'))
                     ->groupBy('competencies.id')
                     ->having('avg_rating', '<', 3)
-                    ->get();
-                
-                $skillGaps = $skillGapsQuery->count();
-            }
-        } catch (\Exception $e) {
-            $skillGaps = 0;
-        }
+                    ->get()->count()
+                : 0;
 
-        return [
-            'high_attrition_risk' => $highAttritionRisk,
-            'performance_concerns' => $performanceConcerns,
-            'skill_gaps' => $skillGaps,
-            'overall_risk_score' => $this->calculateOverallRiskScore($highAttritionRisk, $performanceConcerns, $skillGaps)
-        ];
-    }
+            // Leave-based risk: employees with many pending leaves
+            $leaveRisk = Schema::hasTable('leaves')
+                ? DB::table('leaves')
+                    ->where('status', 'pending')
+                    ->where('created_at', '>=', Carbon::now()->subMonths(3))
+                    ->distinct('employee_id')->count()
+                : 0;
 
-    public function getSkillsMatrix()
-    {
-        try {
-            // Check if required tables exist
-            if (!Schema::hasTable('competencies') || !Schema::hasTable('competency_assessments')) {
-                return $this->getEmptySkillsMatrix();
-            }
-            
-            $competencies = DB::table('competencies')
-                ->join('competency_assessments', 'competencies.id', '=', 'competency_assessments.competency_id')
-                ->whereIn('competency_assessments.status', ['approved', 'submitted'])
-                ->select('competencies.name', 'competency_assessments.rating')
-                ->get();
-        } catch (\Exception $e) {
-            \Log::warning('Skills matrix query failed: ' . $e->getMessage());
-            return $this->getEmptySkillsMatrix();
-        }
+            $total    = DB::table('employees')->where('status', 'active')->whereNull('deleted_at')->count();
+            $overall  = $total > 0 ? round((($attritionRisk + $perfConcerns + $leaveRisk) / ($total * 3)) * 100, 1) : 0;
 
-        $skillCategories = [
-            'Technical Skills' => [],
-            'Leadership' => [],
-            'Communication' => [],
-            'Project Management' => [],
-            'Problem Solving' => [],
-            'Teamwork' => [],
-            'Innovation' => [],
-            'Customer Focus' => []
-        ];
-
-        foreach ($competencies as $competency) {
-            $rating = $competency->rating;
-            
-            // Categorize skills based on keywords
-            $category = $this->categorizeSkill($competency->name);
-            if (isset($skillCategories[$category])) {
-                $skillCategories[$category][] = $rating;
-            }
-        }
-
-        $matrix = [];
-        foreach ($skillCategories as $category => $ratings) {
-            if (empty($ratings)) {
-                $matrix[$category] = [
-                    'expert' => 25,
-                    'proficient' => 35,
-                    'needs_development' => 40
-                ];
-                continue;
-            }
-
-            $expert = count(array_filter($ratings, fn($r) => $r >= 4));
-            $proficient = count(array_filter($ratings, fn($r) => $r >= 3 && $r < 4));
-            $needsDev = count(array_filter($ratings, fn($r) => $r < 3));
-            
-            $total = count($ratings);
-            $matrix[$category] = [
-                'expert' => $total > 0 ? round(($expert / $total) * 100) : 0,
-                'proficient' => $total > 0 ? round(($proficient / $total) * 100) : 0,
-                'needs_development' => $total > 0 ? round(($needsDev / $total) * 100) : 0
+            return compact('attritionRisk', 'perfConcerns', 'skillGaps', 'leaveRisk', 'overall') + [
+                'high_attrition_risk'  => $attritionRisk,
+                'performance_concerns' => $perfConcerns,
+                'skill_gaps'           => $skillGaps,
+                'overall_risk_score'   => $overall,
             ];
+        } catch (\Exception $e) {
+            \Log::error('RiskAssessment: ' . $e->getMessage());
+            return ['high_attrition_risk' => 0, 'performance_concerns' => 0, 'skill_gaps' => 0, 'leaveRisk' => 0, 'overall_risk_score' => 0];
         }
-
-        return $matrix;
     }
 
-    private function getStartDateFromRange($range)
+    // ─── Helpers ──────────────────────────────────────────────────────────────
+
+    private function startDate(string $range): Carbon
     {
         return match($range) {
-            '7d' => Carbon::now()->subDays(7),
+            '7d'  => Carbon::now()->subDays(7),
             '30d' => Carbon::now()->subDays(30),
             '90d' => Carbon::now()->subDays(90),
-            '1y' => Carbon::now()->subYear(),
-            default => Carbon::now()->subDays(30)
+            '1y'  => Carbon::now()->subYear(),
+            default => Carbon::now()->subDays(30),
         };
     }
 
-    private function calculateOverallRiskScore($attrition, $performance, $skills)
+    // Keep old method name for backward compat
+    private function getStartDateFromRange(string $range): Carbon { return $this->startDate($range); }
+
+    private function categorizeSkill(string $name): string
     {
-        // Simple risk scoring algorithm
-        $totalEmployees = DB::table('employees')
-            ->whereNull('deleted_at')
-            ->where('status', 'active')
-            ->count();
-        
-        $attritionScore = $totalEmployees > 0 ? ($attrition / $totalEmployees) * 100 : 0;
-        $performanceScore = $totalEmployees > 0 ? ($performance / $totalEmployees) * 100 : 0;
-        $skillsScore = $skills * 2; // Weight skills gaps more heavily
-        
-        $overallScore = ($attritionScore + $performanceScore + $skillsScore) / 3;
-        
-        return round($overallScore, 1);
+        $n = strtolower($name);
+        $map = [
+            'Technical Skills'   => ['programming','coding','development','technical','software','database','system'],
+            'Leadership'         => ['leadership','management','leading','supervising','mentoring'],
+            'Communication'      => ['communication','presentation','writing','speaking','negotiation'],
+            'Project Management' => ['project','planning','coordination','organization','scheduling'],
+            'Problem Solving'    => ['problem','analytical','critical','troubleshooting','debugging'],
+            'Teamwork'           => ['teamwork','collaboration','cooperation','team','interpersonal'],
+            'Innovation'         => ['innovation','creativity','creative','design','improvement'],
+            'Customer Focus'     => ['customer','client','service','support','satisfaction'],
+        ];
+        foreach ($map as $cat => $kws) foreach ($kws as $kw) if (str_contains($n, $kw)) return $cat;
+        return 'Technical Skills';
     }
 
-    private function categorizeSkill($skillName)
+    private function emptyPerformance(): array
     {
-        $skillName = strtolower($skillName);
-        
-        $categories = [
-            'Technical Skills' => ['programming', 'coding', 'development', 'technical', 'software', 'database', 'system'],
-            'Leadership' => ['leadership', 'management', 'leading', 'supervising', 'mentoring'],
-            'Communication' => ['communication', 'presentation', 'writing', 'speaking', 'negotiation'],
-            'Project Management' => ['project', 'planning', 'coordination', 'organization', 'scheduling'],
-            'Problem Solving' => ['problem', 'analytical', 'critical', 'troubleshooting', 'debugging'],
-            'Teamwork' => ['teamwork', 'collaboration', 'cooperation', 'team', 'interpersonal'],
-            'Innovation' => ['innovation', 'creativity', 'creative', 'design', 'improvement'],
-            'Customer Focus' => ['customer', 'client', 'service', 'support', 'satisfaction']
-        ];
-
-        foreach ($categories as $category => $keywords) {
-            foreach ($keywords as $keyword) {
-                if (strpos($skillName, $keyword) !== false) {
-                    return $category;
-                }
-            }
-        }
-
-        return 'Technical Skills'; // Default category
+        return ['distribution' => ['excellent' => 0, 'good' => 0, 'average' => 0, 'needs_improvement' => 0], 'department_performance' => [], 'skills_analysis' => [], 'avg_score' => 0, 'total_assessments' => 0];
     }
-    
-    private function getEmptyPerformanceMetrics()
+
+    private function emptySkillsMatrix(): array
     {
-        return [
-            'distribution' => [
-                'excellent' => 0,
-                'good' => 0,
-                'average' => 0,
-                'needs_improvement' => 0
-            ],
-            'department_performance' => [],
-            'skills_analysis' => []
-        ];
+        $cats = ['Technical Skills','Leadership','Communication','Project Management','Problem Solving','Teamwork','Innovation','Customer Focus'];
+        return array_fill_keys($cats, ['expert' => 0, 'proficient' => 0, 'needs_development' => 0]);
     }
-    
-    private function getEmptySkillsMatrix()
+
+    private function emptyWorkReports(): array
     {
-        return [
-            'Technical Skills' => ['expert' => 0, 'proficient' => 0, 'needs_development' => 0],
-            'Leadership' => ['expert' => 0, 'proficient' => 0, 'needs_development' => 0],
-            'Communication' => ['expert' => 0, 'proficient' => 0, 'needs_development' => 0],
-            'Project Management' => ['expert' => 0, 'proficient' => 0, 'needs_development' => 0],
-            'Problem Solving' => ['expert' => 0, 'proficient' => 0, 'needs_development' => 0],
-            'Teamwork' => ['expert' => 0, 'proficient' => 0, 'needs_development' => 0],
-            'Innovation' => ['expert' => 0, 'proficient' => 0, 'needs_development' => 0],
-            'Customer Focus' => ['expert' => 0, 'proficient' => 0, 'needs_development' => 0]
-        ];
+        return ['totals' => ['calls' => 0, 'emails' => 0, 'whatsapp' => 0, 'followups' => 0, 'interested' => 0, 'not_interested' => 0, 'voicemails' => 0, 'missed' => 0, 'report_count' => 0], 'conversion_rate' => 0, 'daily_trend' => [], 'monthly_trend' => [], 'top_performers' => [], 'dept_breakdown' => []];
+    }
+
+    private function emptySkillTests(): array
+    {
+        return ['overview' => ['total_attempts' => 0, 'completed' => 0, 'avg_score' => 0, 'pass_rate' => 0, 'passed' => 0], 'score_distribution' => ['excellent' => 0, 'good' => 0, 'pass' => 0, 'fail' => 0], 'test_performance' => [], 'category_breakdown' => [], 'top_scorers' => [], 'monthly_trend' => []];
+    }
+
+    private function emptyLeave(): array
+    {
+        return ['overview' => ['total' => 0, 'approved' => 0, 'pending' => 0, 'rejected' => 0, 'cancelled' => 0, 'avg_days' => 0, 'approval_rate' => 0, 'avg_approval_days' => 0], 'by_type' => [], 'by_dept' => [], 'monthly_trend' => []];
     }
 }

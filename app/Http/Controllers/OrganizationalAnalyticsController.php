@@ -18,30 +18,31 @@ class OrganizationalAnalyticsController extends Controller
 
     public function index(Request $request)
     {
-        $timeRange = $request->get('timeRange', '30d');
+        $timeRange        = $request->get('timeRange', '30d');
         $performanceFilter = $request->get('performanceFilter', 'all');
-        $skillsFilter = $request->get('skillsFilter', 'all');
-        
+        $skillsFilter     = $request->get('skillsFilter', 'all');
+
         $analytics = [
-            'employeeGrowth' => $this->analyticsService->getEmployeeGrowthTrends(),
-            'performanceMetrics' => $this->analyticsService->getPerformanceMetrics($timeRange),
-            'attendanceAnalytics' => $this->analyticsService->getAttendanceAnalytics($timeRange),
-            'attritionAnalysis' => $this->analyticsService->getAttritionAnalysis('1y'),
-            'onboardingMetrics' => $this->analyticsService->getOnboardingMetrics('90d'),
-            'skillsMatrix' => $this->analyticsService->getSkillsMatrix(),
+            'employeeGrowth'    => $this->analyticsService->getEmployeeGrowthTrends(),
+            'performanceMetrics'=> $this->analyticsService->getPerformanceMetrics($timeRange),
+            'attendanceAnalytics'=> $this->analyticsService->getAttendanceAnalytics($timeRange),
+            'attritionAnalysis' => $this->analyticsService->getAttritionAnalysis($timeRange),
+            'onboardingMetrics' => $this->analyticsService->getOnboardingMetrics($timeRange),
+            'skillsMatrix'      => $this->analyticsService->getSkillsMatrix(),
             'workforceForecast' => $this->analyticsService->getWorkforceForecast(),
-            'riskAssessment' => $this->analyticsService->getRiskAssessment()
+            'riskAssessment'    => $this->analyticsService->getRiskAssessment(),
+            // ── New data stories ──────────────────────────────────────────
+            'workReports'       => $this->analyticsService->getWorkReportAnalytics($timeRange),
+            'skillTests'        => $this->analyticsService->getSkillTestAnalytics($timeRange),
+            'leaveAnalytics'    => $this->analyticsService->getLeaveAnalytics($timeRange),
         ];
 
-        // Debug: Log the analytics data
-        \Log::info('Analytics Data Generated:', $analytics);
-
         return Inertia::render('Analytics/OrganizationalDashboard', [
-            'analytics' => $analytics,
-            'timeRange' => $timeRange,
-            'performanceFilter' => $performanceFilter,
-            'skillsFilter' => $skillsFilter,
-            'lastUpdated' => now()->toISOString()
+            'analytics'        => $analytics,
+            'timeRange'        => $timeRange,
+            'performanceFilter'=> $performanceFilter,
+            'skillsFilter'     => $skillsFilter,
+            'lastUpdated'      => now()->toISOString(),
         ]);
     }
 
@@ -50,81 +51,62 @@ class OrganizationalAnalyticsController extends Controller
     public function export(Request $request)
     {
         try {
-            \Log::info('Export started', $request->all());
-            
             $timeRange = $request->get('timeRange', '30d');
-            $format = $request->get('format', 'pdf');
-            $filters = $request->get('filters', []);
-            
-            \Log::info('Export parameters', ['timeRange' => $timeRange, 'format' => $format]);
-            
-            // Simple test data first
-            $exportData = [
-                'title' => 'Organizational Analytics Report',
-                'generated_at' => now()->format('Y-m-d H:i:s'),
-                'time_range' => $timeRange,
-                'filters' => $filters,
-                'summary' => [
-                    'total_employees' => 274,
-                    'total_assessments' => 149,
-                    'attendance_rate' => 94.2,
-                    'attrition_rate' => 12.8,
-                ],
-                'data' => [
-                    'performanceMetrics' => [
-                        'distribution' => [
-                            'excellent' => 35,
-                            'good' => 45,
-                            'average' => 15,
-                            'needs_improvement' => 5
-                        ]
-                    ]
-                ]
+            $format    = $request->get('format', 'pdf');
+            $filters   = $request->get('filters', []);
+
+            // Use real analytics data
+            $analytics = [
+                'employeeGrowth'     => $this->analyticsService->getEmployeeGrowthTrends(),
+                'performanceMetrics' => $this->analyticsService->getPerformanceMetrics($timeRange),
+                'attendanceAnalytics'=> $this->analyticsService->getAttendanceAnalytics($timeRange),
+                'attritionAnalysis'  => $this->analyticsService->getAttritionAnalysis($timeRange),
+                'workReports'        => $this->analyticsService->getWorkReportAnalytics($timeRange),
+                'skillTests'         => $this->analyticsService->getSkillTestAnalytics($timeRange),
+                'leaveAnalytics'     => $this->analyticsService->getLeaveAnalytics($timeRange),
+                'riskAssessment'     => $this->analyticsService->getRiskAssessment(),
             ];
-            
-            \Log::info('Export data prepared');
-            
-            // Create filename
+
+            $growth  = $analytics['employeeGrowth'];
+            $lastMonth = end($growth) ?: [];
+
+            $exportData = [
+                'title'       => 'Organizational Analytics Report',
+                'generated_at'=> now()->format('Y-m-d H:i:s'),
+                'time_range'  => $timeRange,
+                'filters'     => $filters,
+                'summary'     => [
+                    'total_employees'  => $lastMonth['total_employees'] ?? 0,
+                    'total_assessments'=> $analytics['performanceMetrics']['total_assessments'] ?? 0,
+                    'attendance_rate'  => $analytics['attendanceAnalytics']['overall_rate'] ?? 0,
+                    'attrition_rate'   => $analytics['attritionAnalysis']['rate'] ?? 0,
+                    'total_calls'      => $analytics['workReports']['totals']['calls'] ?? 0,
+                    'skill_test_pass_rate' => $analytics['skillTests']['overview']['pass_rate'] ?? 0,
+                    'leave_approval_rate'  => $analytics['leaveAnalytics']['overview']['approval_rate'] ?? 0,
+                ],
+                'data' => $analytics,
+            ];
+
             $actualFormat = $format === 'pdf' ? 'html' : $format;
-            $filename = 'organizational-analytics-' . date('Y-m-d-H-i-s') . '.' . $actualFormat;
-            $filePath = storage_path('app/exports/' . $filename);
-            
-            \Log::info('File path', ['path' => $filePath]);
-            
-            // Ensure directory exists
-            $exportDir = dirname($filePath);
-            if (!file_exists($exportDir)) {
-                mkdir($exportDir, 0755, true);
-                \Log::info('Created export directory', ['dir' => $exportDir]);
-            }
-            
-            // Generate file based on format
+            $filename     = 'organizational-analytics-' . date('Y-m-d-H-i-s') . '.' . $actualFormat;
+            $filePath     = storage_path('app/exports/' . $filename);
+
+            if (!file_exists(dirname($filePath))) mkdir(dirname($filePath), 0755, true);
+
             if ($format === 'pdf') {
                 $this->generateHTML($exportData, $filePath);
             } else {
                 $this->generateCSV($exportData, $filePath);
             }
-            
-            \Log::info('File generated', ['exists' => file_exists($filePath), 'size' => file_exists($filePath) ? filesize($filePath) : 0]);
-            
+
             return response()->json([
-                'success' => true,
-                'message' => 'Analytics dashboard exported successfully',
-                'download_url' => route('organizational-analytics.download', ['filename' => $filename])
+                'success'      => true,
+                'message'      => 'Analytics dashboard exported successfully',
+                'download_url' => route('organizational-analytics.download', ['filename' => $filename]),
             ]);
-            
         } catch (\Exception $e) {
-            \Log::error('Export failed', [
-                'message' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            
-            return response()->json([
-                'success' => false,
-                'message' => 'Export failed: ' . $e->getMessage()
-            ], 500);
+            \Log::error('Export failed: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Export failed: ' . $e->getMessage()], 500);
         }
     }
 

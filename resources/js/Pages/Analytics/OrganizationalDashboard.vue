@@ -1,961 +1,665 @@
 <template>
   <AuthenticatedLayout>
-    <div class="min-h-screen bg-gray-50">
-      <!-- Header -->
-      <div class="bg-white border-b border-gray-200">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div class="py-6">
-            <nav class="flex mb-4" aria-label="Breadcrumb">
-              <ol class="flex items-center space-x-2 text-sm">
-                <li>
-                  <Link :href="route('dashboard')" class="text-gray-500 hover:text-gray-700">
-                    Dashboard
-                  </Link>
-                </li>
-                <li class="flex items-center">
-                  <ChevronRightIcon class="w-4 h-4 text-gray-400 mx-2" />
-                  <span class="text-gray-900 font-medium">Organizational Analytics</span>
-                </li>
-              </ol>
-            </nav>
+    <div class="min-h-screen" :class="isDark ? 'bg-gray-900' : 'bg-gray-50'">
 
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-              <div class="mb-4 sm:mb-0">
-                <h1 class="text-3xl font-bold text-gray-900">Organizational Analytics</h1>
-                <p class="mt-1 text-sm text-gray-600">Comprehensive visual insights across all organizational aspects</p>
+      <!-- Header -->
+      <div class="border-b" :class="isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <nav class="flex mb-3 text-sm">
+            <Link :href="route('dashboard')" :class="isDark?'text-gray-400 hover:text-gray-200':'text-gray-500 hover:text-gray-700'">Dashboard</Link>
+            <span class="mx-2 text-gray-400">/</span>
+            <span class="font-medium" :class="isDark?'text-white':'text-gray-900'">Organizational Analytics</span>
+          </nav>
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h1 class="text-3xl font-bold" :class="isDark?'text-white':'text-gray-900'">Organizational Analytics</h1>
+              <p class="mt-1 text-sm" :class="isDark?'text-gray-400':'text-gray-500'">Live insights — attendance, performance, work activity, skill tests, leave</p>
+            </div>
+            <div class="flex items-center gap-3 flex-wrap">
+              <div class="flex items-center gap-2 px-3 py-1 rounded-lg" :class="isDark?'bg-green-900/40':'bg-green-50'">
+                <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span class="text-xs font-medium" :class="isDark?'text-green-400':'text-green-700'">Live · {{ formatTime(props.lastUpdated) }}</span>
               </div>
-              <div class="flex items-center space-x-3">
-                <!-- Real-time indicator -->
-                <div class="flex items-center space-x-2 px-3 py-1 bg-green-50 rounded-lg">
-                  <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                  <div class="text-xs text-green-700">
-                    <div class="font-medium">Live Data</div>
-                    <div v-if="lastUpdated" class="text-green-600">{{ formatTime(lastUpdated) }}</div>
-                  </div>
-                </div>
-                <select v-model="selectedTimeRange" @change="updateTimeRange" class="rounded-lg border-gray-300 text-sm">
-                  <option value="7d">Last 7 days</option>
-                  <option value="30d">Last 30 days</option>
-                  <option value="90d">Last 3 months</option>
-                  <option value="1y">Last year</option>
-                </select>
-                <SecondaryButton @click="exportDashboard" data-export-btn>
-                  <ArrowDownTrayIcon class="w-4 h-4 mr-2" />
-                  Export
-                </SecondaryButton>
-                <PrimaryButton @click="refreshData">
-                  <ArrowPathIcon class="w-4 h-4 mr-2" />
-                  Refresh
-                </PrimaryButton>
-              </div>
+              <select v-model="selectedTimeRange" @change="updateFilters"
+                class="rounded-lg border text-sm px-3 py-1.5"
+                :class="isDark?'bg-gray-700 border-gray-600 text-white':'bg-white border-gray-300 text-gray-700'">
+                <option value="7d">Last 7 days</option>
+                <option value="30d">Last 30 days</option>
+                <option value="90d">Last 3 months</option>
+                <option value="1y">Last year</option>
+              </select>
+              <button @click="refreshData" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-white" style="background:linear-gradient(135deg,#006970,#00a9b4)">
+                <ArrowPathIcon class="w-4 h-4" /> Refresh
+              </button>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Main Content -->
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        
-        <!-- Key Performance Indicators -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-            <div class="flex items-center justify-between">
-              <div>
-                <p class="text-sm font-medium text-gray-600">Total Employees</p>
-                <p class="text-3xl font-bold text-gray-900">{{ kpis.totalEmployees }}</p>
-                <div class="flex items-center mt-2">
-                  <ArrowTrendingUpIcon class="w-4 h-4 text-green-500 mr-1" />
-                  <span class="text-sm text-green-600">+{{ kpis.employeeGrowth }}% this month</span>
-                </div>
-              </div>
-              <div class="p-3 bg-teal-100 rounded-xl">
-                <UsersIcon class="w-8 h-8 text-teal-600" />
-              </div>
-            </div>
-          </div>
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
 
-          <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+        <!-- KPI Cards -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div v-for="k in kpiCards" :key="k.title" class="rounded-2xl p-5 shadow-sm border" :class="cardClass">
             <div class="flex items-center justify-between">
               <div>
-                <p class="text-sm font-medium text-gray-600">Avg Performance</p>
-                <p class="text-3xl font-bold text-gray-900">{{ kpis.avgPerformance }}%</p>
-                <div class="flex items-center mt-2">
-                  <ArrowTrendingUpIcon class="w-4 h-4 text-green-500 mr-1" />
-                  <span class="text-sm text-green-600">+{{ kpis.performanceChange }}% vs last period</span>
+                <p class="text-sm font-medium" :class="isDark?'text-gray-400':'text-gray-600'">{{ k.title }}</p>
+                <p class="text-3xl font-bold mt-1" :class="isDark?'text-white':'text-gray-900'">{{ k.value }}</p>
+                <div class="flex items-center gap-1 mt-2 text-sm">
+                  <ArrowTrendingUpIcon v-if="k.up" class="w-4 h-4 text-green-500" />
+                  <ArrowTrendingDownIcon v-else class="w-4 h-4" :class="k.lowerBetter ? 'text-green-500' : 'text-red-500'" />
+                  <span :class="k.up ? 'text-green-600' : (k.lowerBetter ? 'text-green-600' : 'text-red-600')">{{ k.change }}</span>
                 </div>
               </div>
-              <div class="p-3 bg-green-100 rounded-xl">
-                <ChartBarIcon class="w-8 h-8 text-green-600" />
-              </div>
-            </div>
-          </div>
-
-          <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-            <div class="flex items-center justify-between">
-              <div>
-                <p class="text-sm font-medium text-gray-600">Attendance Rate</p>
-                <p class="text-3xl font-bold text-gray-900">{{ kpis.attendanceRate }}%</p>
-                <div class="flex items-center mt-2">
-                  <ArrowTrendingDownIcon class="w-4 h-4 text-red-500 mr-1" />
-                  <span class="text-sm text-red-600">{{ kpis.attendanceChange }}% vs last period</span>
-                </div>
-              </div>
-              <div class="p-3 bg-purple-100 rounded-xl">
-                <ClockIcon class="w-8 h-8 text-purple-600" />
-              </div>
-            </div>
-          </div>
-
-          <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-            <div class="flex items-center justify-between">
-              <div>
-                <p class="text-sm font-medium text-gray-600">Attrition Rate</p>
-                <p class="text-3xl font-bold text-gray-900">{{ kpis.attritionRate }}%</p>
-                <div class="flex items-center mt-2">
-                  <ArrowTrendingDownIcon class="w-4 h-4 text-green-500 mr-1" />
-                  <span class="text-sm text-green-600">{{ kpis.attritionChange }}% improvement</span>
-                </div>
-              </div>
-              <div class="p-3 bg-orange-100 rounded-xl">
-                <UserMinusIcon class="w-8 h-8 text-orange-600" />
+              <div class="p-3 rounded-xl" :class="k.bg">
+                <component :is="k.icon" class="w-7 h-7" :class="k.iconColor" />
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Employee Growth & Performance Trends -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          <!-- Employee Growth Chart -->
-          <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-            <div class="flex items-center justify-between mb-6">
-              <h3 class="text-lg font-semibold text-gray-900">Employee Growth Trend</h3>
-              <div class="flex items-center space-x-2">
-                <div class="flex items-center">
-                  <div class="w-3 h-3 bg-teal-500 rounded-full mr-2"></div>
-                  <span class="text-sm text-gray-600">Headcount</span>
-                </div>
-                <div class="flex items-center">
-                  <div class="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
-                  <span class="text-sm text-gray-600">New Hires</span>
-                </div>
+        <!-- Row 1: Employee Growth + Performance Distribution -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+          <!-- Employee Growth -->
+          <div class="rounded-2xl p-6 shadow-sm border" :class="cardClass">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-lg font-semibold" :class="isDark?'text-white':'text-gray-900'">Employee Growth Trend</h3>
+              <div class="flex gap-3 text-xs">
+                <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 bg-teal-500 rounded-sm"></span><span :class="isDark?'text-gray-400':'text-gray-500'">Headcount</span></span>
+                <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 bg-green-400 rounded-sm"></span><span :class="isDark?'text-gray-400':'text-gray-500'">New Hires</span></span>
               </div>
             </div>
-            
-            <!-- Stats Summary -->
-            <div class="grid grid-cols-3 gap-4 mb-4 p-4 bg-gray-50 rounded-lg">
-              <div class="text-center">
-                <div class="text-2xl font-bold text-teal-600">{{ employeeGrowthStats.currentTotal }}</div>
-                <div class="text-xs text-gray-600">Current Total</div>
-              </div>
-              <div class="text-center">
-                <div class="text-2xl font-bold text-green-600">{{ employeeGrowthStats.totalNewHires }}</div>
-                <div class="text-xs text-gray-600">New Hires (Period)</div>
-              </div>
-              <div class="text-center">
-                <div class="text-2xl font-bold text-purple-600">{{ employeeGrowthStats.avgMonthlyGrowth }}</div>
-                <div class="text-xs text-gray-600">Avg Monthly Growth</div>
-              </div>
+            <div class="grid grid-cols-3 gap-3 mb-4 p-3 rounded-lg text-center" :class="isDark?'bg-gray-700/50':'bg-gray-50'">
+              <div><div class="text-xl font-bold text-teal-500">{{ growthStats.current }}</div><div class="text-xs mt-0.5" :class="isDark?'text-gray-400':'text-gray-500'">Current Total</div></div>
+              <div><div class="text-xl font-bold text-green-500">{{ growthStats.newHires }}</div><div class="text-xs mt-0.5" :class="isDark?'text-gray-400':'text-gray-500'">Period New Hires</div></div>
+              <div><div class="text-xl font-bold text-purple-500">{{ growthStats.avgMonthly }}</div><div class="text-xs mt-0.5" :class="isDark?'text-gray-400':'text-gray-500'">Avg/Month</div></div>
             </div>
-            
-            <div class="h-64 flex items-end justify-between space-x-2 p-4">
-              <div v-for="(month, index) in employeeGrowthData" :key="index" class="flex-1 flex flex-col items-center">
-                <div class="w-full bg-gray-200 rounded-t relative" :style="{ height: '160px' }">
-                  <div 
-                    class="bg-teal-500 rounded-t absolute bottom-0 w-full transition-all duration-500"
-                    :style="{ height: `${(month.total_employees / Math.max(...employeeGrowthData.map(m => m.total_employees))) * 100}%` }"
-                  ></div>
-                  <div 
-                    class="bg-green-500 rounded-t absolute bottom-0 w-1/2 transition-all duration-500"
-                    :style="{ height: `${(month.new_hires / Math.max(...employeeGrowthData.map(m => m.new_hires))) * 80}%` }"
-                  ></div>
+            <!-- Bar chart -->
+            <div class="h-40 flex items-end gap-1 pt-2">
+              <div v-for="(m,i) in employeeGrowthData" :key="i" class="flex-1 flex flex-col items-center gap-0.5">
+                <div class="w-full relative" style="height:120px">
+                  <div class="bg-teal-500 absolute bottom-0 w-full rounded-t transition-all duration-500"
+                    :style="{ height: maxEmpTotal>0 ? (m.total_employees/maxEmpTotal*100)+'%' : '0%' }"></div>
+                  <div class="bg-green-400 absolute bottom-0 w-1/2 rounded-t transition-all duration-500"
+                    :style="{ height: maxNewHires>0 ? (m.new_hires/maxNewHires*80)+'%' : '0%' }"></div>
                 </div>
-                <span class="text-xs text-gray-600 mt-2">{{ month.month.substring(0, 3) }}</span>
+                <span class="text-[10px] truncate w-full text-center" :class="isDark?'text-gray-500':'text-gray-400'">{{ m.month.split(' ')[0] }}</span>
               </div>
             </div>
           </div>
 
           <!-- Performance Distribution -->
-          <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-            <div class="flex items-center justify-between mb-6">
-              <h3 class="text-lg font-semibold text-gray-900">Performance Distribution</h3>
-              <select v-model="performanceFilter" class="text-sm border-gray-300 rounded-lg">
-                <option value="all">All Departments</option>
-                <option value="engineering">Engineering</option>
-                <option value="sales">Sales</option>
-                <option value="marketing">Marketing</option>
-                <option value="hr">HR</option>
-              </select>
-            </div>
-            
-            <!-- Performance Stats -->
-            <div class="grid grid-cols-4 gap-3 mb-4">
-              <div class="text-center p-3 bg-green-50 rounded-lg">
-                <div class="text-lg font-bold text-green-600">{{ performanceData.excellent }}</div>
-                <div class="text-xs text-green-700">Excellent</div>
-                <div class="text-xs text-gray-500">90-100%</div>
-              </div>
-              <div class="text-center p-3 bg-teal-50 rounded-lg">
-                <div class="text-lg font-bold text-teal-600">{{ performanceData.good }}</div>
-                <div class="text-xs text-teal-700">Good</div>
-                <div class="text-xs text-gray-500">80-89%</div>
-              </div>
-              <div class="text-center p-3 bg-yellow-50 rounded-lg">
-                <div class="text-lg font-bold text-yellow-600">{{ performanceData.average }}</div>
-                <div class="text-xs text-yellow-700">Average</div>
-                <div class="text-xs text-gray-500">70-79%</div>
-              </div>
-              <div class="text-center p-3 bg-red-50 rounded-lg">
-                <div class="text-lg font-bold text-red-600">{{ performanceData.needs_improvement }}</div>
-                <div class="text-xs text-red-700">Needs Work</div>
-                <div class="text-xs text-gray-500">&lt;70%</div>
+          <div class="rounded-2xl p-6 shadow-sm border" :class="cardClass">
+            <h3 class="text-lg font-semibold mb-4" :class="isDark?'text-white':'text-gray-900'">Assessment Performance Distribution</h3>
+            <div class="grid grid-cols-4 gap-2 mb-4">
+              <div v-for="b in perfBadges" :key="b.label" class="text-center p-2 rounded-lg" :class="b.bg">
+                <div class="text-lg font-bold" :class="b.text">{{ b.value }}</div>
+                <div class="text-xs font-medium" :class="b.text">{{ b.label }}</div>
+                <div class="text-[10px] text-gray-400 mt-0.5">{{ b.sub }}</div>
               </div>
             </div>
-            
-            <div class="h-64 flex items-center justify-center">
-              <div class="relative w-48 h-48">
-                <!-- Donut Chart using CSS -->
-                <div class="w-full h-full rounded-full relative overflow-hidden" :style="performanceChartStyle">
-                  <div class="absolute inset-6 bg-white rounded-full flex items-center justify-center">
-                    <div class="text-center">
-                      <div class="text-xl font-bold text-gray-900">{{ performanceData.total || 0 }}</div>
-                      <div class="text-xs text-gray-600">Total Assessments</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Attendance & Attrition Analysis -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          <!-- Attendance Heatmap -->
-          <div class="lg:col-span-2 bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-            <div class="flex items-center justify-between mb-6">
-              <h3 class="text-lg font-semibold text-gray-900">Attendance Flow Heatmap</h3>
-              <div class="text-right">
-                <div class="text-lg font-bold text-gray-900">{{ kpis.attendanceRate }}%</div>
-                <div class="text-xs text-gray-500">Overall Rate</div>
-              </div>
-            </div>
-            
-            <!-- Attendance Stats -->
-            <div class="grid grid-cols-4 gap-3 mb-4 p-3 bg-gray-50 rounded-lg">
-              <div class="text-center">
-                <div class="text-lg font-bold text-teal-600">{{ attendanceStats.totalRecords }}</div>
-                <div class="text-xs text-gray-600">Total Records</div>
-              </div>
-              <div class="text-center">
-                <div class="text-lg font-bold text-green-600">{{ attendanceStats.presentToday }}</div>
-                <div class="text-xs text-gray-600">Present Today</div>
-              </div>
-              <div class="text-center">
-                <div class="text-lg font-bold text-yellow-600">{{ attendanceStats.avgWeekly }}%</div>
-                <div class="text-xs text-gray-600">Weekly Avg</div>
-              </div>
-              <div class="text-center">
-                <div class="text-lg font-bold" :class="kpis.attendanceChange >= 0 ? 'text-green-600' : 'text-red-600'">
-                  {{ kpis.attendanceChange > 0 ? '+' : '' }}{{ kpis.attendanceChange }}%
-                </div>
-                <div class="text-xs text-gray-600">Trend</div>
-              </div>
-            </div>
-            <div class="h-80 p-4">
-              <div class="grid grid-cols-5 gap-2 h-full">
-                <div v-for="(day, dayIndex) in ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']" :key="dayIndex" class="flex flex-col space-y-1">
-                  <div class="text-xs font-medium text-gray-600 text-center mb-2">{{ day }}</div>
-                  <div v-for="week in 4" :key="week" class="flex-1 rounded" :class="getAttendanceColor(getWeeklyAttendanceRate(week, dayIndex))">
-                    <div class="w-full h-full rounded flex items-center justify-center text-xs text-white font-medium">
-                      {{ getWeeklyAttendanceRate(week, dayIndex) }}%
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <!-- Legend -->
-              <div class="mt-4 flex justify-center space-x-4 text-xs">
-                <div class="flex items-center">
-                  <div class="w-3 h-3 bg-green-500 rounded mr-1"></div>
-                  <span>95%+ (Excellent)</span>
-                </div>
-                <div class="flex items-center">
-                  <div class="w-3 h-3 bg-yellow-500 rounded mr-1"></div>
-                  <span>90-94% (Good)</span>
-                </div>
-                <div class="flex items-center">
-                  <div class="w-3 h-3 bg-red-500 rounded mr-1"></div>
-                  <span>&lt;90% (Needs Attention)</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Attrition Breakdown -->
-          <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-            <h3 class="text-lg font-semibold text-gray-900 mb-6">Attrition Analysis</h3>
-            
-            <!-- Attrition Stats -->
-            <div class="grid grid-cols-2 gap-3 mb-4">
-              <div class="text-center p-3 bg-red-50 rounded-lg">
-                <div class="text-xl font-bold text-red-600">{{ attritionStats.totalDepartures }}</div>
-                <div class="text-xs text-red-700">Total Departures</div>
-              </div>
-              <div class="text-center p-3 bg-teal-50 rounded-lg">
-                <div class="text-xl font-bold text-teal-600">{{ kpis.attritionRate }}%</div>
-                <div class="text-xs text-teal-700">Attrition Rate</div>
-              </div>
-            </div>
-            
-            <div class="h-48 flex items-center justify-center mb-4">
+            <!-- Donut chart CSS -->
+            <div class="flex items-center justify-center my-4">
               <div class="relative w-40 h-40">
-                <!-- Simple Pie Chart -->
-                <div class="w-full h-full rounded-full relative overflow-hidden" style="background: conic-gradient(#EF4444 0deg 245deg, #F59E0B 245deg 324deg, #6B7280 324deg 360deg);">
-                  <div class="absolute inset-4 bg-white rounded-full flex items-center justify-center">
+                <div class="w-full h-full rounded-full" :style="perfDonutStyle">
+                  <div class="absolute inset-6 rounded-full flex items-center justify-center" :class="isDark?'bg-gray-800':'bg-white'">
                     <div class="text-center">
-                      <div class="text-lg font-bold text-gray-900">{{ attritionStats.totalDepartures }}</div>
-                      <div class="text-xs text-gray-600">Departures</div>
+                      <div class="text-xl font-bold" :class="isDark?'text-white':'text-gray-900'">{{ perfData.total }}</div>
+                      <div class="text-xs" :class="isDark?'text-gray-400':'text-gray-500'">Total</div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-            
-            <div class="space-y-3">
-              <div class="flex justify-between items-center text-sm p-2 bg-red-50 rounded">
-                <span class="text-gray-700 flex items-center">
-                  <div class="w-3 h-3 bg-red-500 rounded mr-2"></div>
-                  Voluntary
-                </span>
-                <div class="text-right">
-                  <div class="font-bold text-red-600">{{ Math.round(attritionStats.totalDepartures * attritionData.voluntary / 100) }}</div>
-                  <div class="text-xs text-gray-500">{{ attritionData.voluntary }}%</div>
+            <p class="text-center text-sm" :class="isDark?'text-gray-400':'text-gray-500'">
+              Avg score: <span class="font-semibold" :class="isDark?'text-white':'text-gray-800'">{{ kpis.avgPerformance }}%</span>
+              &nbsp;·&nbsp; {{ perfData.total }} assessments
+            </p>
+          </div>
+        </div>
+
+        <!-- Row 2: Attendance Heatmap + Attrition -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+          <!-- Attendance Heatmap -->
+          <div class="lg:col-span-2 rounded-2xl p-6 shadow-sm border" :class="cardClass">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-lg font-semibold" :class="isDark?'text-white':'text-gray-900'">Attendance Heatmap (Last 4 Weeks)</h3>
+              <div class="text-right"><div class="text-xl font-bold text-teal-500">{{ attendanceData.overall_rate }}%</div><div class="text-xs" :class="isDark?'text-gray-400':'text-gray-500'">Overall Rate</div></div>
+            </div>
+            <div class="grid grid-cols-4 gap-3 mb-4 p-3 rounded-lg text-center" :class="isDark?'bg-gray-700/50':'bg-gray-50'">
+              <div><div class="text-lg font-bold text-teal-500">{{ attendanceData.totalActive }}</div><div class="text-xs mt-0.5" :class="isDark?'text-gray-400':'text-gray-500'">Active Staff</div></div>
+              <div><div class="text-lg font-bold text-green-500">{{ attendanceData.presentToday }}</div><div class="text-xs mt-0.5" :class="isDark?'text-gray-400':'text-gray-500'">Present Today</div></div>
+              <div><div class="text-lg font-bold text-purple-500">{{ attendanceData.avgHours }}h</div><div class="text-xs mt-0.5" :class="isDark?'text-gray-400':'text-gray-500'">Avg Daily Hours</div></div>
+              <div><div class="text-lg font-bold" :class="(attendanceData.trend??0)>=0?'text-green-500':'text-red-500'">{{ (attendanceData.trend??0)>=0?'+':'' }}{{ attendanceData.trend }}%</div><div class="text-xs mt-0.5" :class="isDark?'text-gray-400':'text-gray-500'">Trend</div></div>
+            </div>
+            <table class="w-full text-xs">
+              <thead>
+                <tr :class="isDark?'text-gray-400':'text-gray-500'">
+                  <th class="pb-2 text-left w-10">Wk</th>
+                  <th v-for="d in ['Mon','Tue','Wed','Thu','Fri']" :key="d" class="pb-2 text-center">{{ d }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="w in 4" :key="w">
+                  <td class="pr-2 py-1 font-medium" :class="isDark?'text-gray-400':'text-gray-500'">W{{ w }}</td>
+                  <td v-for="d in 5" :key="d" class="p-0.5">
+                    <div class="h-9 rounded flex items-center justify-center text-white text-[11px] font-semibold" :class="heatColor(weekRate(w,d-1))">{{ weekRate(w,d-1) }}%</div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="flex gap-4 mt-3 text-xs justify-center" :class="isDark?'text-gray-400':'text-gray-500'">
+              <span class="flex items-center gap-1"><span class="w-3 h-3 bg-green-500 rounded"></span>95%+ Excellent</span>
+              <span class="flex items-center gap-1"><span class="w-3 h-3 bg-yellow-500 rounded"></span>90–94% Good</span>
+              <span class="flex items-center gap-1"><span class="w-3 h-3 bg-red-500 rounded"></span>&lt;90% Attention</span>
+            </div>
+          </div>
+
+          <!-- Attrition -->
+          <div class="rounded-2xl p-6 shadow-sm border" :class="cardClass">
+            <h3 class="text-lg font-semibold mb-4" :class="isDark?'text-white':'text-gray-900'">Attrition Analysis</h3>
+            <div class="grid grid-cols-2 gap-3 mb-4">
+              <div class="text-center p-3 rounded-lg bg-red-50"><div class="text-xl font-bold text-red-600">{{ attrition.total_departures }}</div><div class="text-xs text-red-700">Departures</div></div>
+              <div class="text-center p-3 rounded-lg bg-teal-50"><div class="text-xl font-bold text-teal-600">{{ attrition.rate }}%</div><div class="text-xs text-teal-700">Rate</div></div>
+            </div>
+            <div class="flex items-center justify-center mb-4">
+              <div class="relative w-32 h-32">
+                <div class="w-full h-full rounded-full" :style="attritionDonutStyle">
+                  <div class="absolute inset-4 rounded-full flex items-center justify-center" :class="isDark?'bg-gray-800':'bg-white'">
+                    <div class="text-center"><div class="text-lg font-bold" :class="isDark?'text-white':'text-gray-900'">{{ attrition.total_departures }}</div><div class="text-xs" :class="isDark?'text-gray-400':'text-gray-500'">Total</div></div>
+                  </div>
                 </div>
               </div>
-              <div class="flex justify-between items-center text-sm p-2 bg-yellow-50 rounded">
-                <span class="text-gray-700 flex items-center">
-                  <div class="w-3 h-3 bg-yellow-500 rounded mr-2"></div>
-                  Involuntary
+            </div>
+            <div class="space-y-2">
+              <div v-for="seg in attritionSegments" :key="seg.label" class="flex justify-between items-center text-sm p-2 rounded" :class="isDark?'bg-gray-700/50':'bg-gray-50'">
+                <span class="flex items-center gap-2" :class="isDark?'text-gray-200':'text-gray-700'">
+                  <span class="w-3 h-3 rounded-sm" :style="{ background: seg.color }"></span>{{ seg.label }}
                 </span>
-                <div class="text-right">
-                  <div class="font-bold text-yellow-600">{{ Math.round(attritionStats.totalDepartures * attritionData.involuntary / 100) }}</div>
-                  <div class="text-xs text-gray-500">{{ attritionData.involuntary }}%</div>
-                </div>
+                <span class="font-semibold" :class="isDark?'text-white':'text-gray-800'">{{ seg.value }}%</span>
               </div>
-              <div class="flex justify-between items-center text-sm p-2 bg-gray-50 rounded">
-                <span class="text-gray-700 flex items-center">
-                  <div class="w-3 h-3 bg-gray-500 rounded mr-2"></div>
-                  Retirement
-                </span>
-                <div class="text-right">
-                  <div class="font-bold text-gray-600">{{ Math.round(attritionStats.totalDepartures * attritionData.retirement / 100) }}</div>
-                  <div class="text-xs text-gray-500">{{ attritionData.retirement }}%</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Row 3: Work Reports -->
+        <div class="rounded-2xl p-6 shadow-sm border" :class="cardClass">
+          <div class="flex items-center justify-between mb-5">
+            <h3 class="text-lg font-semibold" :class="isDark?'text-white':'text-gray-900'">Work Reports — Activity Overview</h3>
+            <span class="text-xs px-2.5 py-1 rounded-full font-medium bg-teal-100 text-teal-700">{{ selectedTimeRange }}</span>
+          </div>
+          <div class="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-9 gap-3 mb-6">
+            <div v-for="m in workReportMetrics" :key="m.label" class="text-center p-2.5 rounded-xl" :class="isDark?'bg-gray-700/50':'bg-gray-50'">
+              <div class="text-xl font-bold" :class="m.color">{{ m.value }}</div>
+              <div class="text-[10px] mt-0.5 font-medium" :class="isDark?'text-gray-400':'text-gray-500'">{{ m.label }}</div>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="flex flex-col items-center justify-center p-6 rounded-xl" :class="isDark?'bg-gray-700/50':'bg-gray-50'">
+              <div class="text-5xl font-extrabold text-teal-500">{{ workReports.conversion_rate }}%</div>
+              <div class="text-sm mt-2 font-medium" :class="isDark?'text-gray-300':'text-gray-600'">Conversion Rate</div>
+              <div class="text-xs mt-1" :class="isDark?'text-gray-500':'text-gray-400'">(Interested / Total Calls)</div>
+            </div>
+            <div class="lg:col-span-2">
+              <p class="text-sm font-medium mb-3" :class="isDark?'text-gray-300':'text-gray-600'">Monthly Calls Trend</p>
+              <div class="h-28 flex items-end gap-1">
+                <div v-for="(m,i) in (workReports.monthly_trend||[])" :key="i" class="flex-1 flex flex-col items-center gap-0.5">
+                  <div class="w-full relative rounded-t overflow-hidden" style="height:96px">
+                    <div class="bg-teal-400 absolute bottom-0 w-full rounded-t transition-all"
+                      :style="{ height: maxWrCalls>0 ? (m.calls/maxWrCalls*100)+'%' : '0%' }"></div>
+                    <div class="bg-green-400 absolute bottom-0 w-1/2 rounded-t transition-all"
+                      :style="{ height: maxWrCalls>0 ? (m.interested/maxWrCalls*100)+'%' : '0%' }"></div>
+                  </div>
+                  <span class="text-[9px] truncate w-full text-center" :class="isDark?'text-gray-500':'text-gray-400'">{{ (m.month||'').split(' ')[0] }}</span>
+                </div>
+                <div v-if="!(workReports.monthly_trend||[]).length" class="flex-1 text-center text-xs py-8" :class="isDark?'text-gray-500':'text-gray-400'">No data</div>
+              </div>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+            <div>
+              <p class="text-sm font-semibold mb-3" :class="isDark?'text-gray-200':'text-gray-700'">Top Performers</p>
+              <div v-if="!(workReports.top_performers||[]).length" class="text-sm py-6 text-center" :class="isDark?'text-gray-500':'text-gray-400'">No data for this period</div>
+              <div v-for="(p,i) in (workReports.top_performers||[])" :key="i" class="flex items-center gap-3 mb-2 p-2.5 rounded-lg" :class="isDark?'bg-gray-700/50':'bg-gray-50'">
+                <span class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0" :style="{ background: ['#14B8A6','#10B981','#6366F1','#F59E0B','#EF4444'][i] }">{{ i+1 }}</span>
+                <div class="flex-1 min-w-0"><div class="text-sm font-medium truncate" :class="isDark?'text-white':'text-gray-800'">{{ p.name }}</div><div class="text-xs" :class="isDark?'text-gray-400':'text-gray-500'">{{ p.days_reported }} days reported</div></div>
+                <div class="text-right"><div class="text-sm font-bold text-teal-500">{{ p.total_calls }}</div><div class="text-xs" :class="isDark?'text-gray-400':'text-gray-500'">calls</div></div>
+              </div>
+            </div>
+            <div>
+              <p class="text-sm font-semibold mb-3" :class="isDark?'text-gray-200':'text-gray-700'">Department Breakdown</p>
+              <div v-if="!(workReports.dept_breakdown||[]).length" class="text-sm py-6 text-center" :class="isDark?'text-gray-500':'text-gray-400'">No data for this period</div>
+              <div v-for="d in (workReports.dept_breakdown||[])" :key="d.dept" class="mb-2.5">
+                <div class="flex justify-between text-xs mb-1"><span :class="isDark?'text-gray-300':'text-gray-600'">{{ d.dept }}</span><span class="font-semibold" :class="isDark?'text-white':'text-gray-800'">{{ d.calls }}</span></div>
+                <div class="w-full h-2 rounded-full" :class="isDark?'bg-gray-700':'bg-gray-200'">
+                  <div class="h-2 rounded-full bg-teal-500 transition-all" :style="{ width: maxDeptCalls>0 ? (d.calls/maxDeptCalls*100)+'%' : '0%' }"></div>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Department Performance & Onboarding -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          <!-- Department Performance Radar -->
-          <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-            <div class="flex items-center justify-between mb-6">
-              <h3 class="text-lg font-semibold text-gray-900">Department Performance Radar</h3>
-              <select v-model="radarMetric" class="text-sm border-gray-300 rounded-lg">
-                <option value="overall">Overall Performance</option>
-                <option value="productivity">Productivity</option>
-                <option value="quality">Quality</option>
-                <option value="collaboration">Collaboration</option>
-              </select>
+        <!-- Row 4: Skill Tests -->
+        <div class="rounded-2xl p-6 shadow-sm border" :class="cardClass">
+          <div class="flex items-center justify-between mb-5">
+            <h3 class="text-lg font-semibold" :class="isDark?'text-white':'text-gray-900'">Skill Test Analytics</h3>
+            <span class="text-xs px-2.5 py-1 rounded-full font-medium bg-purple-100 text-purple-700">{{ selectedTimeRange }}</span>
+          </div>
+          <div class="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-6">
+            <div v-for="b in skillTestBadges" :key="b.label" class="text-center p-3 rounded-xl" :class="b.bg">
+              <div class="text-2xl font-bold" :class="b.text">{{ b.value }}</div>
+              <div class="text-xs font-medium mt-0.5" :class="b.text">{{ b.label }}</div>
             </div>
-            <div class="h-80 p-4">
-              <div class="space-y-4">
-                <div v-for="dept in departmentList" :key="dept.name" class="flex items-center">
-                  <div class="w-24 text-sm text-gray-600">{{ dept.name }}</div>
-                  <div class="flex-1 mx-4">
-                    <div class="w-full bg-gray-200 rounded-full h-4 relative">
-                      <div 
-                        class="bg-teal-500 h-4 rounded-full transition-all duration-500"
-                        :style="{ width: `${dept.score}%` }"
-                      ></div>
-                      <span class="absolute right-2 top-0 text-xs text-white font-medium leading-4">{{ dept.score }}%</span>
-                    </div>
+          </div>
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div>
+              <p class="text-sm font-semibold mb-3" :class="isDark?'text-gray-200':'text-gray-700'">Score Distribution</p>
+              <div class="space-y-2.5">
+                <div v-for="s in scoreDistBars" :key="s.label">
+                  <div class="flex justify-between text-xs mb-1"><span :class="isDark?'text-gray-300':'text-gray-600'">{{ s.label }}</span><span class="font-semibold" :class="isDark?'text-white':'text-gray-800'">{{ s.value }}</span></div>
+                  <div class="w-full h-3 rounded-full" :class="isDark?'bg-gray-700':'bg-gray-200'">
+                    <div class="h-3 rounded-full transition-all" :class="s.color" :style="{ width: skillTests.overview.completed>0 ? (s.value/skillTests.overview.completed*100)+'%' : '0%' }"></div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-
-          <!-- Onboarding Success Rate -->
-          <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-            <h3 class="text-lg font-semibold text-gray-900 mb-6">Onboarding Success Metrics</h3>
-            <div class="h-80 flex items-end justify-between space-x-2 p-4">
-              <div v-for="(week, index) in onboardingProgress" :key="index" class="flex-1 flex flex-col items-center">
-                <div class="w-full bg-gray-200 rounded-t relative" style="height: 200px;">
-                  <div 
-                    class="bg-green-500 rounded-t absolute bottom-0 w-full transition-all duration-500"
-                    :style="{ height: `${week}%` }"
-                  ></div>
-                </div>
-                <span class="text-xs text-gray-600 mt-2">Week {{ index + 1 }}</span>
+            <div class="lg:col-span-2">
+              <p class="text-sm font-semibold mb-3" :class="isDark?'text-gray-200':'text-gray-700'">Test Performance</p>
+              <div v-if="!(skillTests.test_performance||[]).length" class="text-sm py-6 text-center" :class="isDark?'text-gray-500':'text-gray-400'">No test data for this period</div>
+              <div v-else class="overflow-x-auto">
+                <table class="w-full text-sm">
+                  <thead>
+                    <tr class="text-xs uppercase tracking-wider border-b" :class="[isDark?'text-gray-400 border-gray-700':'text-gray-500 border-gray-200']">
+                      <th class="text-left py-2">Test</th>
+                      <th class="text-center py-2">Attempts</th>
+                      <th class="text-center py-2">Avg Score</th>
+                      <th class="text-center py-2">Pass Rate</th>
+                      <th class="text-left py-2">Level</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="t in (skillTests.test_performance||[])" :key="t.name" class="border-b" :class="isDark?'border-gray-700':'border-gray-100'">
+                      <td class="py-2 pr-2 font-medium max-w-[130px] truncate" :class="isDark?'text-white':'text-gray-800'" :title="t.name">{{ t.name }}</td>
+                      <td class="py-2 text-center" :class="isDark?'text-gray-300':'text-gray-600'">{{ t.attempts }}</td>
+                      <td class="py-2 text-center font-semibold" :class="t.avg_score>=75?'text-green-500':t.avg_score>=60?'text-yellow-500':'text-red-500'">{{ t.avg_score }}%</td>
+                      <td class="py-2 text-center font-semibold" :class="t.pass_rate>=70?'text-teal-500':'text-orange-500'">{{ t.pass_rate }}%</td>
+                      <td class="py-2"><span class="px-1.5 py-0.5 rounded text-xs font-medium" :class="t.difficulty==='hard'?'bg-red-100 text-red-700':t.difficulty==='medium'?'bg-yellow-100 text-yellow-700':'bg-green-100 text-green-700'">{{ t.difficulty }}</span></td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             </div>
-            <div class="mt-4 grid grid-cols-2 gap-4">
-              <div class="text-center">
-                <p class="text-2xl font-bold text-green-600">{{ onboardingData.success_rate }}%</p>
-                <p class="text-sm text-gray-600">Success Rate</p>
+          </div>
+          <div class="mt-6">
+            <p class="text-sm font-medium mb-2" :class="isDark?'text-gray-300':'text-gray-600'">Monthly Test Activity (Attempts vs Passed)</p>
+            <div class="h-24 flex items-end gap-1">
+              <div v-for="(m,i) in (skillTests.monthly_trend||[])" :key="i" class="flex-1 flex flex-col items-center gap-0.5">
+                <div class="w-full relative rounded-t overflow-hidden" style="height:80px">
+                  <div class="bg-indigo-400 absolute bottom-0 w-full rounded-t transition-all" :style="{ height: maxStAttempts>0 ? (m.attempts/maxStAttempts*100)+'%' : '0%' }"></div>
+                  <div class="bg-green-400 absolute bottom-0 w-1/2 rounded-t transition-all" :style="{ height: maxStAttempts>0 ? (m.passed/maxStAttempts*100)+'%' : '0%' }"></div>
+                </div>
+                <span class="text-[9px] truncate w-full text-center" :class="isDark?'text-gray-500':'text-gray-400'">{{ (m.month||'').split(' ')[0] }}</span>
               </div>
-              <div class="text-center">
-                <p class="text-2xl font-bold text-teal-600">{{ onboardingData.avg_days }}</p>
-                <p class="text-sm text-gray-600">Avg Days</p>
+              <div v-if="!(skillTests.monthly_trend||[]).length" class="flex-1 text-center text-xs py-8" :class="isDark?'text-gray-500':'text-gray-400'">No data</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Row 5: Leave Analytics -->
+        <div class="rounded-2xl p-6 shadow-sm border" :class="cardClass">
+          <div class="flex items-center justify-between mb-5">
+            <h3 class="text-lg font-semibold" :class="isDark?'text-white':'text-gray-900'">Leave Analytics</h3>
+            <span class="text-xs px-2.5 py-1 rounded-full font-medium bg-orange-100 text-orange-700">{{ selectedTimeRange }}</span>
+          </div>
+          <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 mb-6">
+            <div v-for="b in leaveBadges" :key="b.label" class="text-center p-2.5 rounded-xl" :class="b.bg">
+              <div class="text-xl font-bold" :class="b.text">{{ b.value }}</div>
+              <div class="text-[11px] font-medium mt-0.5" :class="b.text">{{ b.label }}</div>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div>
+              <p class="text-sm font-semibold mb-3" :class="isDark?'text-gray-200':'text-gray-700'">By Leave Type</p>
+              <div v-if="!(leave.by_type||[]).length" class="text-sm py-6 text-center" :class="isDark?'text-gray-500':'text-gray-400'">No leave data</div>
+              <div v-for="lt in (leave.by_type||[])" :key="lt.type" class="mb-2.5">
+                <div class="flex justify-between text-xs mb-1"><span :class="isDark?'text-gray-300':'text-gray-600'">{{ lt.type }}</span><span class="font-semibold" :class="isDark?'text-white':'text-gray-800'">{{ lt.requests }} req</span></div>
+                <div class="w-full h-2 rounded-full" :class="isDark?'bg-gray-700':'bg-gray-200'">
+                  <div class="h-2 rounded-full bg-orange-400 transition-all" :style="{ width: maxLeaveType>0 ? (lt.requests/maxLeaveType*100)+'%' : '0%' }"></div>
+                </div>
+              </div>
+            </div>
+            <div>
+              <p class="text-sm font-semibold mb-3" :class="isDark?'text-gray-200':'text-gray-700'">By Department</p>
+              <div v-if="!(leave.by_dept||[]).length" class="text-sm py-6 text-center" :class="isDark?'text-gray-500':'text-gray-400'">No department data</div>
+              <div v-for="d in (leave.by_dept||[])" :key="d.dept" class="mb-2.5">
+                <div class="flex justify-between text-xs mb-1"><span :class="isDark?'text-gray-300':'text-gray-600'">{{ d.dept }}</span><span class="font-semibold" :class="isDark?'text-white':'text-gray-800'">{{ d.requests }}</span></div>
+                <div class="w-full h-2 rounded-full" :class="isDark?'bg-gray-700':'bg-gray-200'">
+                  <div class="h-2 rounded-full bg-indigo-400 transition-all" :style="{ width: maxLeaveDept>0 ? (d.requests/maxLeaveDept*100)+'%' : '0%' }"></div>
+                </div>
+              </div>
+            </div>
+            <div>
+              <p class="text-sm font-semibold mb-3" :class="isDark?'text-gray-200':'text-gray-700'">Monthly Leave Trend</p>
+              <div class="h-32 flex items-end gap-1">
+                <div v-for="(m,i) in (leave.monthly_trend||[])" :key="i" class="flex-1 flex flex-col items-center gap-0.5">
+                  <div class="w-full relative rounded-t overflow-hidden" style="height:100px">
+                    <div class="bg-orange-400 absolute bottom-0 w-full rounded-t transition-all" :style="{ height: maxLeaveMonthly>0 ? (m.requests/maxLeaveMonthly*100)+'%' : '0%' }"></div>
+                    <div class="bg-green-400 absolute bottom-0 w-1/2 rounded-t transition-all" :style="{ height: maxLeaveMonthly>0 ? (m.approved/maxLeaveMonthly*100)+'%' : '0%' }"></div>
+                  </div>
+                  <span class="text-[9px] truncate w-full text-center" :class="isDark?'text-gray-500':'text-gray-400'">{{ (m.month||'').split(' ')[0] }}</span>
+                </div>
+                <div v-if="!(leave.monthly_trend||[]).length" class="flex-1 text-center text-xs py-8" :class="isDark?'text-gray-500':'text-gray-400'">No data</div>
+              </div>
+              <div class="flex gap-3 mt-2 text-xs justify-center" :class="isDark?'text-gray-400':'text-gray-500'">
+                <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 bg-orange-400 rounded-sm"></span>Requests</span>
+                <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 bg-green-400 rounded-sm"></span>Approved</span>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Skills & Competency Matrix -->
-        <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm mb-8">
-          <div class="flex items-center justify-between mb-6">
-            <h3 class="text-lg font-semibold text-gray-900">Skills & Competency Heatmap</h3>
-            <div class="flex items-center space-x-4">
-              <select v-model="skillsFilter" class="text-sm border-gray-300 rounded-lg">
-                <option value="all">All Skills</option>
-                <option value="technical">Technical Skills</option>
-                <option value="soft">Soft Skills</option>
-                <option value="leadership">Leadership</option>
-              </select>
-            </div>
-          </div>
-          
-          <!-- Skills Summary Stats -->
-          <div class="grid grid-cols-4 gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
-            <div class="text-center">
-              <div class="text-2xl font-bold text-green-600">{{ skillsStats.totalExperts }}</div>
-              <div class="text-xs text-gray-600">Total Experts</div>
-            </div>
-            <div class="text-center">
-              <div class="text-2xl font-bold text-yellow-600">{{ skillsStats.totalProficient }}</div>
-              <div class="text-xs text-gray-600">Proficient</div>
-            </div>
-            <div class="text-center">
-              <div class="text-2xl font-bold text-red-600">{{ skillsStats.needsDevelopment }}</div>
-              <div class="text-xs text-gray-600">Need Development</div>
-            </div>
-            <div class="text-center">
-              <div class="text-2xl font-bold text-teal-600">{{ skillsStats.avgCompetencyScore }}%</div>
-              <div class="text-xs text-gray-600">Avg Score</div>
-            </div>
-          </div>
-          
-          <!-- Legend -->
-          <div class="flex justify-center mb-4 text-sm text-gray-600">
-            <span class="inline-block w-3 h-3 bg-green-500 rounded mr-1"></span>Expert
-            <span class="inline-block w-3 h-3 bg-yellow-500 rounded mx-1 ml-4"></span>Proficient
-            <span class="inline-block w-3 h-3 bg-red-500 rounded ml-4 mr-1"></span>Needs Development
-          </div>
-          
-          <div class="h-80 p-4">
-            <div class="space-y-3">
-              <div v-for="skill in skillsList" :key="skill.name" class="flex items-center">
-                <div class="w-32 text-sm text-gray-600">{{ skill.name }}</div>
-                <div class="flex-1 mx-4">
-                  <div class="flex w-full h-6 bg-gray-200 rounded-full overflow-hidden">
-                    <div 
-                      class="bg-green-500 flex items-center justify-center text-xs text-white font-medium"
-                      :style="{ width: `${skill.expert}%` }"
-                    >
-                      {{ skill.expert > 15 ? skill.expert + '%' : '' }}
-                    </div>
-                    <div 
-                      class="bg-yellow-500 flex items-center justify-center text-xs text-white font-medium"
-                      :style="{ width: `${skill.proficient}%` }"
-                    >
-                      {{ skill.proficient > 15 ? skill.proficient + '%' : '' }}
-                    </div>
-                    <div 
-                      class="bg-red-500 flex items-center justify-center text-xs text-white font-medium"
-                      :style="{ width: `${skill.needs_development}%` }"
-                    >
-                      {{ skill.needs_development > 15 ? skill.needs_development + '%' : '' }}
-                    </div>
-                  </div>
-                </div>
-                <div class="w-16 text-right text-sm text-gray-600">
-                  {{ skill.expert + skill.proficient + skill.needs_development }}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Predictive Analytics -->
+        <!-- Row 6: Skills Matrix + Dept Performance -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <!-- Workforce Forecast -->
-          <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-            <h3 class="text-lg font-semibold text-gray-900 mb-6">Workforce Forecast</h3>
-            <div class="h-80 flex items-end justify-between space-x-2 p-4">
-              <div v-for="(month, index) in forecastMonths" :key="index" class="flex-1 flex flex-col items-center">
-                <div class="w-full bg-gray-200 rounded-t relative" style="height: 200px;">
-                  <div 
-                    class="rounded-t absolute bottom-0 w-full transition-all duration-500"
-                    :class="index < 6 ? 'bg-teal-500' : 'bg-purple-500 opacity-70'"
-                    :style="{ height: `${(month.count / Math.max(...forecastMonths.map(m => m.count))) * 100}%` }"
-                  ></div>
-                </div>
-                <span class="text-xs text-gray-600 mt-2">{{ month.label }}</span>
-                <span v-if="index >= 6" class="text-xs text-purple-600 font-medium">Predicted</span>
-              </div>
+          <div class="rounded-2xl p-6 shadow-sm border" :class="cardClass">
+            <h3 class="text-lg font-semibold mb-4" :class="isDark?'text-white':'text-gray-900'">Competency Skills Matrix</h3>
+            <div class="flex gap-4 text-xs mb-4 justify-center">
+              <span class="flex items-center gap-1"><span class="w-3 h-3 bg-green-500 rounded-sm"></span><span :class="isDark?'text-gray-400':'text-gray-500'">Expert</span></span>
+              <span class="flex items-center gap-1"><span class="w-3 h-3 bg-yellow-500 rounded-sm"></span><span :class="isDark?'text-gray-400':'text-gray-500'">Proficient</span></span>
+              <span class="flex items-center gap-1"><span class="w-3 h-3 bg-red-500 rounded-sm"></span><span :class="isDark?'text-gray-400':'text-gray-500'">Needs Dev</span></span>
             </div>
-            <div class="mt-4 p-4 bg-teal-50 rounded-lg">
-              <p class="text-sm text-teal-800">
-                <strong>Prediction:</strong> Based on current trends, expect {{ forecastData.growth_rate }}% workforce growth in the next quarter.
-              </p>
+            <div class="space-y-3">
+              <div v-for="(vals, skill) in (props.analytics.skillsMatrix||{})" :key="skill">
+                <div class="flex justify-between text-xs mb-1"><span class="font-medium" :class="isDark?'text-gray-300':'text-gray-700'">{{ skill }}</span></div>
+                <div class="flex h-5 rounded-full overflow-hidden" :class="isDark?'bg-gray-700':'bg-gray-200'">
+                  <div v-if="vals.expert" class="bg-green-500 flex items-center justify-center text-[10px] text-white font-semibold" :style="{ width: vals.expert+'%' }">{{ vals.expert>12 ? vals.expert+'%' : '' }}</div>
+                  <div v-if="vals.proficient" class="bg-yellow-500 flex items-center justify-center text-[10px] text-white font-semibold" :style="{ width: vals.proficient+'%' }">{{ vals.proficient>12 ? vals.proficient+'%' : '' }}</div>
+                  <div v-if="vals.needs_development" class="bg-red-500 flex items-center justify-center text-[10px] text-white font-semibold" :style="{ width: vals.needs_development+'%' }">{{ vals.needs_development>12 ? vals.needs_development+'%' : '' }}</div>
+                  <div v-if="!vals.expert && !vals.proficient && !vals.needs_development" class="flex-1 flex items-center justify-center text-[10px]" :class="isDark?'text-gray-600':'text-gray-400'">No data</div>
+                </div>
+              </div>
             </div>
           </div>
 
-          <!-- Risk Assessment -->
-          <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-            <h3 class="text-lg font-semibold text-gray-900 mb-6">Risk Assessment Dashboard</h3>
-            <div class="space-y-4">
-              <div class="flex items-center justify-between p-4 bg-red-50 rounded-lg">
-                <div>
-                  <p class="font-medium text-red-800">High Attrition Risk</p>
-                  <p class="text-sm text-red-600">{{ riskData.high_attrition_risk }} employees</p>
+          <div class="rounded-2xl p-6 shadow-sm border" :class="cardClass">
+            <h3 class="text-lg font-semibold mb-4" :class="isDark?'text-white':'text-gray-900'">Department Assessment Scores</h3>
+            <div v-if="deptPerformance.length===0" class="flex items-center justify-center h-40 text-sm" :class="isDark?'text-gray-500':'text-gray-400'">No department data available</div>
+            <div v-else class="space-y-3">
+              <div v-for="d in deptPerformance" :key="d.name">
+                <div class="flex justify-between text-sm mb-1">
+                  <span :class="isDark?'text-gray-300':'text-gray-700'">{{ d.name }}</span>
+                  <span class="font-semibold" :class="d.score>=80?'text-green-500':d.score>=60?'text-yellow-500':'text-red-500'">{{ d.score }}%</span>
                 </div>
-                <ExclamationTriangleIcon class="w-8 h-8 text-red-500" />
-              </div>
-              <div class="flex items-center justify-between p-4 bg-yellow-50 rounded-lg">
-                <div>
-                  <p class="font-medium text-yellow-800">Performance Concerns</p>
-                  <p class="text-sm text-yellow-600">{{ riskData.performance_concerns }} employees</p>
+                <div class="w-full h-4 rounded-full overflow-hidden" :class="isDark?'bg-gray-700':'bg-gray-200'">
+                  <div class="h-full rounded-full transition-all duration-500" :class="d.score>=80?'bg-teal-500':d.score>=60?'bg-yellow-500':'bg-red-500'" :style="{ width: d.score+'%' }"></div>
                 </div>
-                <ExclamationTriangleIcon class="w-8 h-8 text-yellow-500" />
-              </div>
-              <div class="flex items-center justify-between p-4 bg-teal-50 rounded-lg">
-                <div>
-                  <p class="font-medium text-teal-800">Skill Gaps</p>
-                  <p class="text-sm text-teal-600">{{ riskData.skill_gaps }} critical areas</p>
-                </div>
-                <AcademicCapIcon class="w-8 h-8 text-teal-500" />
               </div>
             </div>
           </div>
         </div>
+
+        <!-- Row 7: Forecast + Risk -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div class="rounded-2xl p-6 shadow-sm border" :class="cardClass">
+            <h3 class="text-lg font-semibold mb-4" :class="isDark?'text-white':'text-gray-900'">Workforce Forecast</h3>
+            <div class="h-48 flex items-end gap-1 mb-4">
+              <div v-for="(m,i) in forecastBars" :key="i" class="flex-1 flex flex-col items-center gap-0.5">
+                <div class="w-full relative rounded-t overflow-hidden" style="height:140px">
+                  <div class="absolute bottom-0 w-full rounded-t transition-all duration-500" :class="m.predicted ? 'bg-purple-400 opacity-70' : 'bg-teal-500'" :style="{ height: maxForecast>0 ? (m.count/maxForecast*100)+'%' : '0%' }"></div>
+                </div>
+                <span class="text-[9px] truncate w-full text-center" :class="isDark?'text-gray-500':'text-gray-400'">{{ m.label }}</span>
+                <span v-if="m.predicted" class="text-[8px] text-purple-400 font-medium">pred</span>
+              </div>
+            </div>
+            <div class="p-3 rounded-lg text-sm" :class="isDark?'bg-teal-900/30 text-teal-300':'bg-teal-50 text-teal-800'">
+              <strong>Prediction:</strong> Based on current trends ({{ forecast.growth_rate }}% avg monthly growth),
+              expect <strong>{{ forecast.predictions?.[2] ?? '—' }}</strong> employees in 3 months.
+              Confidence: <strong>{{ forecast.confidence }}%</strong>
+            </div>
+          </div>
+
+          <div class="rounded-2xl p-6 shadow-sm border" :class="cardClass">
+            <h3 class="text-lg font-semibold mb-4" :class="isDark?'text-white':'text-gray-900'">Risk Assessment Dashboard</h3>
+            <div class="space-y-4">
+              <div v-for="r in riskItems" :key="r.label" class="flex items-center justify-between p-4 rounded-xl" :class="r.bg">
+                <div>
+                  <p class="font-semibold text-sm" :class="r.title">{{ r.label }}</p>
+                  <p class="text-sm mt-0.5" :class="r.sub">{{ r.value }} {{ r.unit }}</p>
+                </div>
+                <ExclamationTriangleIcon class="w-8 h-8 flex-shrink-0" :class="r.icon" />
+              </div>
+              <div class="p-4 rounded-xl" :class="isDark?'bg-gray-700/50':'bg-gray-100'">
+                <div class="flex justify-between items-center">
+                  <span class="font-semibold text-sm" :class="isDark?'text-gray-200':'text-gray-800'">Overall Risk Score</span>
+                  <span class="text-2xl font-extrabold" :class="risk.overall_risk_score<30?'text-green-500':risk.overall_risk_score<60?'text-yellow-500':'text-red-500'">{{ risk.overall_risk_score }}%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   </AuthenticatedLayout>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, nextTick, computed, watch } from 'vue'
+import { ref, computed } from 'vue'
 import { Link, router } from '@inertiajs/vue3'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
-import PrimaryButton from '@/Components/PrimaryButton.vue'
-import SecondaryButton from '@/Components/SecondaryButton.vue'
+import { useTheme } from '@/composables/useTheme.js'
 import {
-  ChevronRightIcon,
-  ArrowPathIcon,
-  ArrowDownTrayIcon,
-  UsersIcon,
-  ChartBarIcon,
-  ClockIcon,
-  UserMinusIcon,
-  ArrowTrendingUpIcon,
-  ArrowTrendingDownIcon,
-  ExclamationTriangleIcon,
-  AcademicCapIcon
+  ArrowPathIcon, ArrowTrendingUpIcon, ArrowTrendingDownIcon,
+  UsersIcon, ChartBarIcon, ClockIcon, UserMinusIcon, ExclamationTriangleIcon,
 } from '@heroicons/vue/24/outline'
 
-// Props
 const props = defineProps({
-  analytics: {
-    type: Object,
-    default: () => ({})
-  },
-  timeRange: {
-    type: String,
-    default: '30d'
-  },
-  performanceFilter: {
-    type: String,
-    default: 'all'
-  },
-  skillsFilter: {
-    type: String,
-    default: 'all'
-  },
-  lastUpdated: {
-    type: String,
-    default: ''
-  }
+  analytics:         { type: Object, default: () => ({}) },
+  timeRange:         { type: String, default: '30d' },
+  performanceFilter: { type: String, default: 'all' },
+  skillsFilter:      { type: String, default: 'all' },
+  lastUpdated:       { type: String, default: '' },
 })
 
-// Debug: Log all analytics data
-//console.log('Analytics Props:', props.analytics)
-//console.log('Last Updated:', props.lastUpdated)
+const { isDark } = useTheme()
+const selectedTimeRange = ref(props.timeRange)
 
-// Reactive data - Initialize from props to preserve URL state
-const selectedTimeRange = ref(props.timeRange || '30d')
-const performanceFilter = ref(props.performanceFilter || 'all')
-const radarMetric = ref('overall')
-const skillsFilter = ref(props.skillsFilter || 'all')
+const cardClass = computed(() =>
+  isDark.value ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'
+)
 
-// Computed data for CSS charts - REAL DATA
-const employeeGrowthData = computed(() => {
-  const data = props.analytics.employeeGrowth || []
-  //console.log('Real Employee Growth Data:', data) // Debug log
-  return data.length > 0 ? data.slice(-12) : [
-    { month: 'Jan 2024', total_employees: 220, new_hires: 8 },
-    { month: 'Feb 2024', total_employees: 225, new_hires: 5 },
-    { month: 'Mar 2024', total_employees: 235, new_hires: 10 },
-    { month: 'Apr 2024', total_employees: 240, new_hires: 5 },
-    { month: 'May 2024', total_employees: 248, new_hires: 8 },
-    { month: 'Jun 2024', total_employees: 255, new_hires: 7 },
-    { month: 'Jul 2024', total_employees: 260, new_hires: 5 },
-    { month: 'Aug 2024', total_employees: 265, new_hires: 5 },
-    { month: 'Sep 2024', total_employees: 270, new_hires: 5 },
-    { month: 'Oct 2024', total_employees: 274, new_hires: 4 }
-  ]
-})
+// ── Helpers ──────────────────────────────────────────────────────────────────
+const formatTime = (ts) => ts ? new Date(ts).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : ''
+const safeNum    = (v, fallback = 0) => (v !== null && v !== undefined && !isNaN(v)) ? Number(v) : fallback
 
-const performanceData = computed(() => {
-  const dist = props.analytics.performanceMetrics?.distribution || {}
-  //console.log('Real Performance Data:', dist) // Debug log
-  return {
-    excellent: dist.excellent || 35,
-    good: dist.good || 45,
-    average: dist.average || 15,
-    needs_improvement: dist.needs_improvement || 5,
-    total: (dist.excellent || 35) + (dist.good || 45) + (dist.average || 15) + (dist.needs_improvement || 5)
-  }
-})
+// ── Data shortcuts ────────────────────────────────────────────────────────────
+const workReports = computed(() => props.analytics.workReports ?? {})
+const skillTests  = computed(() => ({
+  overview:          props.analytics.skillTests?.overview          ?? { total_attempts:0, completed:0, avg_score:0, pass_rate:0, passed:0 },
+  score_distribution:props.analytics.skillTests?.score_distribution ?? { excellent:0, good:0, pass:0, fail:0 },
+  test_performance:  props.analytics.skillTests?.test_performance  ?? [],
+  monthly_trend:     props.analytics.skillTests?.monthly_trend     ?? [],
+  category_breakdown:props.analytics.skillTests?.category_breakdown ?? [],
+}))
+const leave       = computed(() => ({
+  overview:      props.analytics.leaveAnalytics?.overview      ?? { total:0, approved:0, pending:0, rejected:0, cancelled:0, avg_days:0, approval_rate:0, avg_approval_days:0 },
+  by_type:       props.analytics.leaveAnalytics?.by_type       ?? [],
+  by_dept:       props.analytics.leaveAnalytics?.by_dept       ?? [],
+  monthly_trend: props.analytics.leaveAnalytics?.monthly_trend ?? [],
+}))
+const attrition  = computed(() => props.analytics.attritionAnalysis ?? { rate:0, total_departures:0, reasons_breakdown:{}, trend:0 })
+const forecast   = computed(() => props.analytics.workforceForecast ?? { current_count:0, growth_rate:0, predictions:[], confidence:0 })
+const risk       = computed(() => props.analytics.riskAssessment ?? { high_attrition_risk:0, performance_concerns:0, skill_gaps:0, leaveRisk:0, overall_risk_score:0 })
+const attendanceData = computed(() => props.analytics.attendanceAnalytics ?? { weekly_patterns:{}, overall_rate:0, trend:0, avgHours:0, presentToday:0, totalActive:0 })
 
-const attendanceData = computed(() => {
-  const patterns = props.analytics.attendanceAnalytics?.weekly_patterns || {}
-  //console.log('Real Attendance Data:', patterns) // Debug log
-  
-  // Get the most recent week's data, or use fallback
-  const latestWeek = patterns.week4 || patterns.week3 || patterns.week2 || patterns.week1 || [95, 97, 94, 96, 92]
-  return latestWeek
-})
-
-const departmentList = computed(() => {
-  const deptPerf = props.analytics.performanceMetrics?.department_performance || {}
-  return Object.keys(deptPerf).length > 0 
-    ? Object.entries(deptPerf).map(([name, data]) => ({ name, score: Math.round(data.average) }))
-    : [
-        { name: 'Engineering', score: 85 },
-        { name: 'Sales', score: 92 },
-        { name: 'Marketing', score: 78 },
-        { name: 'HR', score: 88 },
-        { name: 'Finance', score: 82 }
-      ]
-})
-
-const onboardingProgress = computed(() => [45, 70, 85, 92, 95, 97])
-
-const skillsList = computed(() => {
-  const matrix = props.analytics.skillsMatrix || {}
-  return Object.keys(matrix).length > 0
-    ? Object.entries(matrix).map(([name, data]) => ({ name, ...data }))
-    : [
-        { name: 'JavaScript', expert: 45, proficient: 35, needs_development: 20 },
-        { name: 'Leadership', expert: 28, proficient: 45, needs_development: 27 },
-        { name: 'Communication', expert: 52, proficient: 30, needs_development: 18 },
-        { name: 'Project Mgmt', expert: 35, proficient: 40, needs_development: 25 },
-        { name: 'Data Analysis', expert: 25, proficient: 35, needs_development: 40 },
-        { name: 'Design', expert: 18, proficient: 25, needs_development: 57 }
-      ]
-})
-
-const forecastMonths = computed(() => {
-  const forecast = props.analytics.workforceForecast || {}
-  const current = kpis.value.totalEmployees || 274
-  return [
-    { label: 'Jul', count: current - 20 },
-    { label: 'Aug', count: current - 15 },
-    { label: 'Sep', count: current - 10 },
-    { label: 'Oct', count: current - 5 },
-    { label: 'Nov', count: current },
-    { label: 'Dec', count: current + 2 },
-    { label: 'Jan', count: current + 5 },
-    { label: 'Feb', count: current + 8 },
-    { label: 'Mar', count: current + 12 }
-  ]
-})
-
-// Additional computed stats
-const employeeGrowthStats = computed(() => {
-  const data = employeeGrowthData.value
-  const totalNewHires = data.reduce((sum, month) => sum + month.new_hires, 0)
-  const avgMonthlyGrowth = data.length > 1 ? Math.round(totalNewHires / data.length) : 0
-  
-  return {
-    currentTotal: data.length > 0 ? data[data.length - 1].total_employees : 0,
-    totalNewHires,
-    avgMonthlyGrowth
-  }
-})
-
-const performanceChartStyle = computed(() => {
-  const data = performanceData.value
-  const total = data.total || 1
-  
-  const excellentDeg = (data.excellent / total) * 360
-  const goodDeg = (data.good / total) * 360
-  const averageDeg = (data.average / total) * 360
-  const needsImprovementDeg = (data.needs_improvement / total) * 360
-  
-  let currentDeg = 0
-  const segments = []
-  
-  if (data.excellent > 0) {
-    segments.push(`#10B981 ${currentDeg}deg ${currentDeg + excellentDeg}deg`)
-    currentDeg += excellentDeg
-  }
-  if (data.good > 0) {
-    segments.push(`#3B82F6 ${currentDeg}deg ${currentDeg + goodDeg}deg`)
-    currentDeg += goodDeg
-  }
-  if (data.average > 0) {
-    segments.push(`#F59E0B ${currentDeg}deg ${currentDeg + averageDeg}deg`)
-    currentDeg += averageDeg
-  }
-  if (data.needs_improvement > 0) {
-    segments.push(`#EF4444 ${currentDeg}deg ${currentDeg + needsImprovementDeg}deg`)
-  }
-  
-  return `background: conic-gradient(${segments.join(', ')})`
-})
-
-const attendanceStats = computed(() => {
-  const analytics = props.analytics.attendanceAnalytics || {}
-  const patterns = analytics.weekly_patterns || {}
-  
-  // Calculate average weekly attendance
-  const allRates = Object.values(patterns).flat()
-  const avgWeekly = allRates.length > 0 ? Math.round(allRates.reduce((sum, rate) => sum + rate, 0) / allRates.length) : 95
-  
-  return {
-    totalRecords: 101, // From your actual data
-    presentToday: Math.round(kpis.value.totalEmployees * (kpis.value.attendanceRate / 100)),
-    avgWeekly
-  }
-})
-
-const attritionStats = computed(() => {
-  const analytics = props.analytics.attritionAnalysis || {}
-  const totalEmployees = kpis.value.totalEmployees || 274
-  const attritionRate = kpis.value.attritionRate || 0
-  
-  return {
-    totalDepartures: Math.round(totalEmployees * (attritionRate / 100)),
-    avgTenure: '2.3 years', // Could be calculated from real data
-    topReason: 'Better Opportunity'
-  }
-})
-
-const skillsStats = computed(() => {
-  const skills = skillsList.value
-  
-  let totalExperts = 0
-  let totalProficient = 0
-  let needsDevelopment = 0
-  let totalAssessments = 0
-  let totalScore = 0
-  
-  skills.forEach(skill => {
-    const total = skill.expert + skill.proficient + skill.needs_development
-    totalExperts += Math.round(total * skill.expert / 100)
-    totalProficient += Math.round(total * skill.proficient / 100)
-    needsDevelopment += Math.round(total * skill.needs_development / 100)
-    totalAssessments += total
-    
-    // Calculate weighted score (Expert=100%, Proficient=75%, Needs Dev=25%)
-    const skillScore = (skill.expert * 100 + skill.proficient * 75 + skill.needs_development * 25) / 100
-    totalScore += skillScore
-  })
-  
-  const avgCompetencyScore = skills.length > 0 ? Math.round(totalScore / skills.length) : 0
-  
-  return {
-    totalExperts,
-    totalProficient,
-    needsDevelopment,
-    avgCompetencyScore
-  }
-})
-
-// Computed KPIs from analytics data
+// ── KPIs ──────────────────────────────────────────────────────────────────────
 const kpis = computed(() => {
-  const employeeGrowth = props.analytics.employeeGrowth || []
-  const currentEmployees = employeeGrowth.length > 0 ? employeeGrowth[employeeGrowth.length - 1]?.total_employees || 0 : 0
-  const previousEmployees = employeeGrowth.length > 1 ? employeeGrowth[employeeGrowth.length - 2]?.total_employees || 0 : 0
-  const growthRate = previousEmployees > 0 ? ((currentEmployees - previousEmployees) / previousEmployees) * 100 : 0
-  
-  const performanceMetrics = props.analytics.performanceMetrics || {}
-  const attendanceAnalytics = props.analytics.attendanceAnalytics || {}
-  const attritionAnalysis = props.analytics.attritionAnalysis || {}
-  
+  const growth  = props.analytics.employeeGrowth ?? []
+  const current = growth.at(-1)?.total_employees ?? 0
+  const prev    = growth.at(-2)?.total_employees ?? 0
+  const growthRate = prev > 0 ? +(((current - prev) / prev) * 100).toFixed(1) : 0
+  const perf    = props.analytics.performanceMetrics ?? {}
+  const att     = props.analytics.attendanceAnalytics ?? {}
+  const attr    = props.analytics.attritionAnalysis ?? {}
+  const avgScore = safeNum(perf.avg_score, 0)
   return {
-    totalEmployees: currentEmployees,
-    employeeGrowth: Math.round(growthRate * 10) / 10,
-    avgPerformance: 87.3, // Will be calculated from performance metrics
-    performanceChange: 4.2,
-    attendanceRate: attendanceAnalytics.overall_rate || 94.2,
-    attendanceChange: attendanceAnalytics.trend || -1.3,
-    attritionRate: attritionAnalysis.rate || 0,
-    attritionChange: attritionAnalysis.trend || 0
+    totalEmployees:   current,
+    employeeGrowth:   `${growthRate >= 0 ? '+' : ''}${growthRate}% this month`,
+    avgPerformance:   avgScore,
+    performanceChange:`${avgScore > 0 ? '+' : ''}${avgScore}% score`,
+    attendanceRate:   safeNum(att.overall_rate, 0),
+    attendanceChange: `${safeNum(att.trend, 0) >= 0 ? '+' : ''}${safeNum(att.trend, 0)}% trend`,
+    attritionRate:    safeNum(attr.rate, 0),
+    attritionTrend:   `${safeNum(attr.trend, 0) >= 0 ? '+' : ''}${safeNum(attr.trend, 0)}% vs prior`,
   }
 })
 
-const attritionData = computed(() => props.analytics.attritionAnalysis?.reasons_breakdown || {
-  voluntary: 68,
-  involuntary: 22,
-  retirement: 10
-})
+const kpiCards = computed(() => [
+  { title:'Total Employees',      value:kpis.value.totalEmployees,      change:kpis.value.employeeGrowth,    up:true,  bg:'bg-teal-100',   iconColor:'text-teal-600',   icon:UsersIcon,    lowerBetter:false },
+  { title:'Avg Assessment Score', value:kpis.value.avgPerformance+'%',  change:kpis.value.performanceChange, up:true,  bg:'bg-green-100',  iconColor:'text-green-600',  icon:ChartBarIcon, lowerBetter:false },
+  { title:'Attendance Rate',      value:kpis.value.attendanceRate+'%',  change:kpis.value.attendanceChange,  up:kpis.value.attendanceRate >= 90,  bg:'bg-purple-100', iconColor:'text-purple-600', icon:ClockIcon, lowerBetter:false },
+  { title:'Attrition Rate',       value:kpis.value.attritionRate+'%',   change:kpis.value.attritionTrend,   up:false, bg:'bg-orange-100', iconColor:'text-orange-600', icon:UserMinusIcon, lowerBetter:true },
+])
 
-const onboardingData = computed(() => props.analytics.onboardingMetrics || {
-  success_rate: 92,
-  avg_days: 14
-})
-
-const forecastData = computed(() => props.analytics.workforceForecast || {
-  growth_rate: 12.5
-})
-
-const riskData = computed(() => props.analytics.riskAssessment || {
-  high_attrition_risk: 23,
-  performance_concerns: 15,
-  skill_gaps: 8
-})
-
-// Methods
-const updateTimeRange = () => {
-  router.get(route('organizational-analytics.index'), { 
-    timeRange: selectedTimeRange.value,
-    performanceFilter: performanceFilter.value,
-    skillsFilter: skillsFilter.value 
-  }, {
-    preserveState: true,
-    preserveScroll: true
-  })
-}
-
-const refreshData = async () => {
-  //console.log('Refreshing analytics data...')
-  router.reload({ 
-    only: ['analytics'],
-    data: {
-      timeRange: selectedTimeRange.value,
-      performanceFilter: performanceFilter.value,
-      skillsFilter: skillsFilter.value
-    }
-  })
-}
-
-const exportDashboard = async () => {
-  try {
-    //console.log('Exporting dashboard...')
-    
-    // Show loading state
-    const exportButton = document.querySelector('[data-export-btn]')
-    if (exportButton) {
-      exportButton.disabled = true
-      exportButton.innerHTML = '<svg class="animate-spin w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Exporting...'
-    }
-    
-    // Call export API
-    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
-    
-    if (!csrfToken) {
-      throw new Error('CSRF token not found')
-    }
-    
-    const response = await fetch(route('organizational-analytics.export'), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRF-TOKEN': csrfToken,
-        'Accept': 'application/json'
-      },
-      body: JSON.stringify({
-        timeRange: selectedTimeRange.value,
-        format: 'pdf',
-        filters: {
-          performance: performanceFilter.value,
-          skills: skillsFilter.value
-        }
-      })
-    })
-    
-    if (!response.ok) {
-      const errorText = await response.text()
-      console.error('Export response error:', errorText)
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`)
-    }
-    
-    const result = await response.json()
-    //console.log('Export result:', result)
-    
-    if (result.success) {
-      // Create download link
-      const link = document.createElement('a')
-      link.href = result.download_url || '#'
-      link.download = `organizational-analytics-${new Date().toISOString().split('T')[0]}.html`
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      
-      // Show success message
-      alert('Dashboard exported successfully!')
-    } else {
-      throw new Error(result.message || 'Export failed')
-    }
-    
-  } catch (error) {
-    console.error('Export failed:', error)
-    alert('Export failed. Please try again.')
-  } finally {
-    // Reset button state
-    const exportButton = document.querySelector('[data-export-btn]')
-    if (exportButton) {
-      exportButton.disabled = false
-      exportButton.innerHTML = '<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>Export'
-    }
+// ── Employee Growth ───────────────────────────────────────────────────────────
+const employeeGrowthData = computed(() => (props.analytics.employeeGrowth ?? []).slice(-12))
+const maxEmpTotal   = computed(() => Math.max(1, ...employeeGrowthData.value.map(m => m.total_employees)))
+const maxNewHires   = computed(() => Math.max(1, ...employeeGrowthData.value.map(m => m.new_hires)))
+const growthStats   = computed(() => {
+  const data = employeeGrowthData.value
+  return {
+    current:    data.at(-1)?.total_employees ?? 0,
+    newHires:   data.reduce((s, m) => s + m.new_hires, 0),
+    avgMonthly: data.length > 1 ? Math.round(data.reduce((s, m) => s + m.new_hires, 0) / data.length) : 0,
   }
-}
-
-const getAttendanceColor = (rate) => {
-  if (rate >= 95) return 'bg-green-500'
-  if (rate >= 90) return 'bg-yellow-500'
-  return 'bg-red-500'
-}
-
-const getWeeklyAttendanceRate = (week, dayIndex) => {
-  const patterns = props.analytics.attendanceAnalytics?.weekly_patterns || {}
-  const weekKey = `week${week}`
-  const weekData = patterns[weekKey] || [95, 97, 94, 96, 92] // fallback
-  return weekData[dayIndex] || 95
-}
-
-const formatTime = (timestamp) => {
-  if (!timestamp) return ''
-  const date = new Date(timestamp)
-  return date.toLocaleTimeString('en-US', { 
-    hour: '2-digit', 
-    minute: '2-digit',
-    hour12: true 
-  })
-}
-
-// Watch for filter changes and update URL
-watch([performanceFilter, skillsFilter], () => {
-  // Debounce the update to avoid too many requests
-  clearTimeout(window.filterUpdateTimeout)
-  window.filterUpdateTimeout = setTimeout(() => {
-    updateTimeRange()
-  }, 500)
 })
 
-// No Chart.js initialization needed - using CSS charts
+// ── Performance ───────────────────────────────────────────────────────────────
+const perfData = computed(() => {
+  const d = props.analytics.performanceMetrics?.distribution ?? {}
+  const e = safeNum(d.excellent), g = safeNum(d.good), a = safeNum(d.average), n = safeNum(d.needs_improvement)
+  return { excellent:e, good:g, average:a, needs_improvement:n, total:e+g+a+n }
+})
+const perfBadges = computed(() => [
+  { label:'Excellent', value:perfData.value.excellent,         bg:'bg-green-50',  text:'text-green-700',  sub:'Rating 4-5' },
+  { label:'Good',      value:perfData.value.good,              bg:'bg-teal-50',   text:'text-teal-700',   sub:'Rating 3' },
+  { label:'Average',   value:perfData.value.average,           bg:'bg-yellow-50', text:'text-yellow-700', sub:'Rating 2' },
+  { label:'Needs Work',value:perfData.value.needs_improvement, bg:'bg-red-50',    text:'text-red-700',    sub:'Rating 1' },
+])
+const perfDonutStyle = computed(() => {
+  const { excellent:e, good:g, average:a, needs_improvement:n, total } = perfData.value
+  if (total === 0) return 'background:#e5e7eb'
+  let deg = 0
+  const seg = (v, c) => { const d = (v/total)*360; const s = `${c} ${deg}deg ${deg+d}deg`; deg+=d; return s }
+  return `background:conic-gradient(${seg(e,'#10B981')},${seg(g,'#14B8A6')},${seg(a,'#F59E0B')},${seg(n,'#EF4444')})`
+})
+
+// ── Attendance ────────────────────────────────────────────────────────────────
+const heatColor = (r) => r >= 95 ? 'bg-green-500' : r >= 90 ? 'bg-yellow-500' : r > 0 ? 'bg-red-500' : 'bg-gray-300'
+const weekRate  = (w, d) => (attendanceData.value.weekly_patterns?.[`week${w}`]?.[d]) ?? 0
+
+// ── Attrition ─────────────────────────────────────────────────────────────────
+const attritionSegments = computed(() => {
+  const rb = attrition.value.reasons_breakdown ?? {}
+  const colors = { voluntary:'#EF4444', involuntary:'#F59E0B', retirement:'#6B7280', other:'#94A3B8' }
+  return Object.entries(rb).filter(([,v]) => v > 0).map(([k, v]) => ({ label: k.charAt(0).toUpperCase()+k.slice(1), value: v, color: colors[k]??'#94A3B8' }))
+})
+const attritionDonutStyle = computed(() => {
+  if (!attritionSegments.value.length) return 'background:#e5e7eb'
+  let deg = 0
+  const segs = attritionSegments.value.map(s => { const d = s.value/100*360; const r = `${s.color} ${deg}deg ${deg+d}deg`; deg+=d; return r })
+  return `background:conic-gradient(${segs.join(',')})`
+})
+
+// ── Work Reports ──────────────────────────────────────────────────────────────
+const workReportMetrics = computed(() => {
+  const t = workReports.value.totals ?? {}
+  return [
+    { label:'Total Calls',   value:safeNum(t.calls),          color:'text-teal-500' },
+    { label:'Follow-ups',    value:safeNum(t.followups),       color:'text-blue-500' },
+    { label:'Emails',        value:safeNum(t.emails),          color:'text-purple-500' },
+    { label:'WhatsApp',      value:safeNum(t.whatsapp),        color:'text-green-500' },
+    { label:'Interested',    value:safeNum(t.interested),      color:'text-emerald-500' },
+    { label:'Not Interested',value:safeNum(t.not_interested),  color:'text-red-500' },
+    { label:'Missed',        value:safeNum(t.missed),          color:'text-orange-500' },
+    { label:'Voicemails',    value:safeNum(t.voicemails),      color:'text-indigo-500' },
+    { label:'Reports Filed', value:safeNum(t.report_count),    color:'text-slate-500' },
+  ]
+})
+const maxDeptCalls    = computed(() => Math.max(1, ...(workReports.value.dept_breakdown??[]).map(d => d.calls)))
+const maxWrCalls      = computed(() => Math.max(1, ...(workReports.value.monthly_trend??[]).map(m => m.calls)))
+
+// ── Skill Tests ───────────────────────────────────────────────────────────────
+const skillTestBadges = computed(() => [
+  { label:'Attempts',  value:skillTests.value.overview.total_attempts, bg:'bg-indigo-50', text:'text-indigo-700' },
+  { label:'Completed', value:skillTests.value.overview.completed,      bg:'bg-teal-50',   text:'text-teal-700' },
+  { label:'Avg Score', value:skillTests.value.overview.avg_score+'%',  bg:'bg-green-50',  text:'text-green-700' },
+  { label:'Pass Rate', value:skillTests.value.overview.pass_rate+'%',  bg:'bg-blue-50',   text:'text-blue-700' },
+  { label:'Passed',    value:skillTests.value.overview.passed,         bg:'bg-emerald-50',text:'text-emerald-700' },
+])
+const scoreDistBars = computed(() => {
+  const s = skillTests.value.score_distribution
+  return [
+    { label:'Excellent (90%+)', value:s.excellent, color:'bg-green-500' },
+    { label:'Good (75–89%)',    value:s.good,      color:'bg-teal-500' },
+    { label:'Pass (60–74%)',    value:s.pass,      color:'bg-yellow-500' },
+    { label:'Fail (<60%)',      value:s.fail,      color:'bg-red-500' },
+  ]
+})
+const maxStAttempts = computed(() => Math.max(1, ...(skillTests.value.monthly_trend??[]).map(m => m.attempts)))
+
+// ── Leave ─────────────────────────────────────────────────────────────────────
+const leaveBadges = computed(() => {
+  const o = leave.value.overview
+  return [
+    { label:'Total',         value:o.total,             bg:'bg-blue-50',   text:'text-blue-700' },
+    { label:'Approved',      value:o.approved,          bg:'bg-green-50',  text:'text-green-700' },
+    { label:'Pending',       value:o.pending,           bg:'bg-yellow-50', text:'text-yellow-700' },
+    { label:'Rejected',      value:o.rejected,          bg:'bg-red-50',    text:'text-red-700' },
+    { label:'Approval Rate', value:o.approval_rate+'%', bg:'bg-teal-50',   text:'text-teal-700' },
+    { label:'Avg Days/Req',  value:o.avg_days,          bg:'bg-purple-50', text:'text-purple-700' },
+    { label:'Avg Approval',  value:o.avg_approval_days+'d', bg:'bg-indigo-50', text:'text-indigo-700' },
+    { label:'Cancelled',     value:o.cancelled,         bg:'bg-gray-100',  text:'text-gray-600' },
+  ]
+})
+const maxLeaveType    = computed(() => Math.max(1, ...(leave.value.by_type??[]).map(t => t.requests)))
+const maxLeaveDept    = computed(() => Math.max(1, ...(leave.value.by_dept??[]).map(d => d.requests)))
+const maxLeaveMonthly = computed(() => Math.max(1, ...(leave.value.monthly_trend??[]).map(m => m.requests)))
+
+// ── Department Performance ────────────────────────────────────────────────────
+const deptPerformance = computed(() => {
+  const dp = props.analytics.performanceMetrics?.department_performance ?? {}
+  return Object.entries(dp).map(([name, d]) => ({ name, score: Math.round(d.average ?? 0) })).sort((a,b) => b.score-a.score)
+})
+
+// ── Forecast ──────────────────────────────────────────────────────────────────
+const forecastBars = computed(() => {
+  const growth  = props.analytics.employeeGrowth ?? []
+  const current = forecast.value.current_count ?? 0
+  const preds   = forecast.value.predictions ?? []
+  const hist    = growth.slice(-6).map((m, i) => ({ label: m.month.split(' ')[0], count: m.total_employees, predicted: false }))
+  const future  = preds.slice(0, 3).map((c, i) => {
+    const d = new Date(); d.setMonth(d.getMonth() + i + 1)
+    return { label: d.toLocaleString('default',{month:'short'}), count: c, predicted: true }
+  })
+  return [...hist, ...future]
+})
+const maxForecast = computed(() => Math.max(1, ...forecastBars.value.map(m => m.count)))
+
+// ── Risk ──────────────────────────────────────────────────────────────────────
+const riskItems = computed(() => [
+  { label:'High Attrition Risk',   value:risk.value.high_attrition_risk,  unit:'employees', bg:isDark.value?'bg-red-900/30':'bg-red-50',    title:isDark.value?'text-red-300':'text-red-800',    sub:isDark.value?'text-red-400':'text-red-600',    icon:'text-red-500' },
+  { label:'Performance Concerns',  value:risk.value.performance_concerns, unit:'employees', bg:isDark.value?'bg-yellow-900/30':'bg-yellow-50',title:isDark.value?'text-yellow-300':'text-yellow-800',sub:isDark.value?'text-yellow-400':'text-yellow-600',icon:'text-yellow-500' },
+  { label:'Skill Gaps',            value:risk.value.skill_gaps,           unit:'competencies',bg:isDark.value?'bg-teal-900/30':'bg-teal-50',  title:isDark.value?'text-teal-300':'text-teal-800',  sub:isDark.value?'text-teal-400':'text-teal-600',   icon:'text-teal-500' },
+  { label:'Pending Leave Risk',    value:risk.value.leaveRisk??0,         unit:'employees', bg:isDark.value?'bg-orange-900/30':'bg-orange-50',title:isDark.value?'text-orange-300':'text-orange-800',sub:isDark.value?'text-orange-400':'text-orange-600',icon:'text-orange-500' },
+])
+
+// ── Navigation ────────────────────────────────────────────────────────────────
+const updateFilters = () => {
+  router.get(route('organizational-analytics.index'), { timeRange: selectedTimeRange.value }, { preserveState: true, preserveScroll: true })
+}
+const refreshData = () => {
+  router.reload({ only: ['analytics'], data: { timeRange: selectedTimeRange.value } })
+}
 </script>
