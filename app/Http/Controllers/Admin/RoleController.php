@@ -66,12 +66,21 @@ class RoleController extends Controller
             'name.unique' => 'A role with that name already exists.',
         ]);
 
-        $role = Role::create(['name' => trim($request->name), 'guard_name' => 'web']);
+        $name = trim($request->name);
+
+        // Use raw insert to avoid schema introspection on older MySQL (< 5.7.6)
+        // which doesn't support the generation_expression column in information_schema.
+        DB::table('roles')->insert([
+            'name'       => $name,
+            'guard_name' => 'web',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
 
         // Bust feature permission caches so the new role appears in the matrix
         $this->bustFeatureCache();
 
-        return back()->with('success', "Role '{$role->name}' created successfully.");
+        return back()->with('success', "Role '{$name}' created successfully.");
     }
 
     // ─── Rename role ──────────────────────────────────────────────────────────
@@ -104,7 +113,11 @@ class RoleController extends Controller
             ->where('role_name', $old)
             ->update(['role_name' => $new]);
 
-        $role->update(['name' => $new]);
+        // Raw update to avoid schema introspection on older MySQL
+        DB::table('roles')->where('id', $role->id)->update([
+            'name'       => $new,
+            'updated_at' => now(),
+        ]);
 
         $this->bustFeatureCache();
 
@@ -135,7 +148,11 @@ class RoleController extends Controller
         // Remove from feature permissions
         DB::table('feature_role_permissions')->where('role_name', $role->name)->delete();
 
-        $role->delete();
+        // Raw delete to avoid schema introspection on older MySQL
+        DB::table('roles')->where('id', $role->id)->delete();
+
+        // Clear Spatie's permission cache
+        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
         $this->bustFeatureCache();
 
