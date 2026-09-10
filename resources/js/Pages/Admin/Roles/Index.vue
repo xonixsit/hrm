@@ -157,72 +157,76 @@
     </PageLayout>
 
     <!-- ── Create Role Modal ─────────────────────────────────────────────── -->
-    <Transition name="fade">
-      <div v-if="showCreateModal"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
-        @click.self="showCreateModal = false">
-        <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm mx-4 p-6">
-          <h2 class="text-lg font-bold text-slate-800 mb-1">Create New Role</h2>
-          <p class="text-sm text-slate-500 mb-4">Enter a name for the new role. You can assign feature permissions to it afterwards.</p>
+    <Teleport to="body">
+      <Transition name="fade">
+        <div v-if="showCreateModal"
+          class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 backdrop-blur-sm"
+          @click.self="showCreateModal = false">
+          <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm mx-4 p-6">
+            <h2 class="text-lg font-bold text-slate-800 mb-1">Create New Role</h2>
+            <p class="text-sm text-slate-500 mb-4">Enter a name for the new role. You can assign feature permissions to it afterwards.</p>
 
-          <label class="block text-sm font-medium text-slate-700 mb-1">Role Name</label>
-          <input
-            v-model="newRoleName"
-            @keyup.enter="submitCreate"
-            placeholder="e.g. Supervisor"
-            class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
-            :class="createError ? 'border-red-400' : ''"
-          />
-          <p v-if="createError" class="text-xs text-red-500 mt-1">{{ createError }}</p>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Role Name</label>
+            <input
+              v-model="newRoleName"
+              @keyup.enter="submitCreate"
+              placeholder="e.g. Supervisor"
+              class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
+              :class="createError ? 'border-red-400' : ''"
+            />
+            <p v-if="createError" class="text-xs text-red-500 mt-1">{{ createError }}</p>
 
-          <div class="flex justify-end gap-3 mt-5">
-            <button @click="showCreateModal = false; newRoleName = ''; createError = null"
-              class="px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors">
-              Cancel
-            </button>
-            <button @click="submitCreate" :disabled="creating"
-              class="px-4 py-2 rounded-lg text-sm font-semibold text-white transition-opacity"
-              :class="creating ? 'opacity-60 cursor-not-allowed' : ''"
-              style="background: linear-gradient(135deg, #006970, #00a9b4)">
-              {{ creating ? 'Creating…' : 'Create Role' }}
-            </button>
+            <div class="flex justify-end gap-3 mt-5">
+              <button @click="showCreateModal = false; newRoleName = ''; createError = null"
+                class="px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors">
+                Cancel
+              </button>
+              <button @click="submitCreate" :disabled="creating"
+                class="px-4 py-2 rounded-lg text-sm font-semibold text-white transition-opacity"
+                :class="creating ? 'opacity-60 cursor-not-allowed' : ''"
+                style="background: linear-gradient(135deg, #006970, #00a9b4)">
+                {{ creating ? 'Creating…' : 'Create Role' }}
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-    </Transition>
+      </Transition>
+    </Teleport>
 
     <!-- ── Delete Confirm Modal ──────────────────────────────────────────── -->
-    <Transition name="fade">
-      <div v-if="deletingRole"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
-        @click.self="deletingRole = null">
-        <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm mx-4 p-6">
-          <div class="flex items-center gap-3 mb-3">
-            <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
-              <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-              </svg>
+    <Teleport to="body">
+      <Transition name="fade">
+        <div v-if="deletingRole"
+          class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 backdrop-blur-sm"
+          @click.self="deletingRole = null">
+          <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm mx-4 p-6">
+            <div class="flex items-center gap-3 mb-3">
+              <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+              </div>
+              <h2 class="text-lg font-bold text-slate-800">Delete "{{ deletingRole }}"?</h2>
             </div>
-            <h2 class="text-lg font-bold text-slate-800">Delete "{{ deletingRole }}"?</h2>
-          </div>
-          <p class="text-sm text-slate-500 mb-5">
-            Users with only this role will be reassigned to <strong>Employee</strong>. This cannot be undone.
-          </p>
-          <div class="flex justify-end gap-3">
-            <button @click="deletingRole = null"
-              class="px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors">
-              Cancel
-            </button>
-            <button @click="submitDelete" :disabled="deleting"
-              class="px-4 py-2 rounded-lg text-sm font-semibold text-white bg-red-600 hover:bg-red-700 transition-colors"
-              :class="deleting ? 'opacity-60 cursor-not-allowed' : ''">
-              {{ deleting ? 'Deleting…' : 'Delete Role' }}
-            </button>
+            <p class="text-sm text-slate-500 mb-5">
+              Users with only this role will be reassigned to <strong>Employee</strong>. This cannot be undone.
+            </p>
+            <div class="flex justify-end gap-3">
+              <button @click="deletingRole = null"
+                class="px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors">
+                Cancel
+              </button>
+              <button @click="submitDelete" :disabled="deleting"
+                class="px-4 py-2 rounded-lg text-sm font-semibold text-white bg-red-600 hover:bg-red-700 transition-colors"
+                :class="deleting ? 'opacity-60 cursor-not-allowed' : ''">
+                {{ deleting ? 'Deleting…' : 'Delete Role' }}
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-    </Transition>
+      </Transition>
+    </Teleport>
 
   </AuthenticatedLayout>
 </template>
