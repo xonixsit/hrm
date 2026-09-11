@@ -898,7 +898,7 @@ const startTitleFlash = (senderName) => {
     if (titleFlashInterval) return; // already flashing
     let show = true;
     titleFlashInterval = setInterval(() => {
-        document.title = show ? `ðŸ’¬ New message from ${senderName}` : originalTitle;
+        document.title = show ? `\u{1F4AC} New message from ${senderName}` : originalTitle;
         show = !show;
     }, 1200);
 };
@@ -927,7 +927,7 @@ const showBrowserNotification = (senderName, messageText, avatar) => {
         : '/favicon.ico';
 
     try {
-        const notif = new Notification(`ðŸ’¬ ${senderName}`, {
+        const notif = new Notification(`\u{1F4AC} ${senderName}`, {
             body: messageText.length > 80 ? messageText.slice(0, 80) + '¦' : messageText,
             icon: iconUrl,
             tag: 'team-message',

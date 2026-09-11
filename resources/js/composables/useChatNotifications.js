@@ -85,9 +85,25 @@ if (typeof window !== 'undefined') {
 }
 
 // ── Notification dispatcher ───────────────────────────────────────────────────
+function stripHtml(html) {
+    // Remove HTML tags and decode basic entities for plain-text display
+    return (html || '')
+        .replace(/<br\s*\/?>/gi, ' ')
+        .replace(/<[^>]+>/g, '')
+        .replace(/&amp;/g, '&')
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'")
+        .replace(/&nbsp;/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
 function notify(senderName, message, avatar, convId, senderId) {
     const title  = `💬 ${senderName}`;
-    const body   = message.length > 80 ? message.slice(0, 80) + '…' : message;
+    const plain  = stripHtml(message);
+    const body   = plain.length > 80 ? plain.slice(0, 80) + '…' : plain;
     const tag    = `chat-conv-${convId}`;
     const iconUrl = avatar
         ? (avatar.startsWith('http') || avatar.startsWith('/') ? avatar : '/' + avatar)
