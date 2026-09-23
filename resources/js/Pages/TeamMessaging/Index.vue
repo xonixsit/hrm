@@ -4,9 +4,7 @@ import { ref, computed, onMounted, onUnmounted, nextTick, watch, TransitionGroup
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { useTheme } from '@/composables/useTheme';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import Icon from '@/Components/Base/Icon.vue';
-import BaseButton from '@/Components/Base/BaseButton.vue';
-import BaseInput from '@/Components/Base/BaseInput.vue';
+
 import axios from 'axios';
 import data from '@emoji-mart/data';
 import { Picker } from 'emoji-mart';

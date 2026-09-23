@@ -91,6 +91,11 @@ Route::get('/reset-birthday', function () {
 Route::get('/employee-handbook', function () {
     return Inertia::render('EmployeeHandbook');
 })->middleware(['auth', 'verified'])->name('employee-handbook');
+
+// Employee Directory — Inertia.js with editorial magazine-style layout
+Route::get('/employee-directory', [App\Http\Controllers\EmployeeDirectoryController::class, 'index'])
+    ->middleware(['auth', 'verified'])
+    ->name('employee-directory');
 Route::get('/dashboard-test', [App\Http\Controllers\DashboardTestController::class, 'test'])->middleware(['auth', 'verified'])->name('dashboard.test');
 
 Route::middleware('auth')->group(function () {

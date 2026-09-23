@@ -133,7 +133,7 @@
       
       <div 
         ref="scrollContainer"
-        class="max-h-64 overflow-y-auto custom-scrollbar"
+        class="max-h-[520px] overflow-y-auto custom-scrollbar"
         @scroll="handleScroll"
       >
         <!-- Clocked In Employees -->

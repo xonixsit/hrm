@@ -29,6 +29,11 @@
                         <QuestionMarkCircleIcon class="nav-icon" />
                         <span>Get Support</span>
                     </a>
+                    <!-- Employee Directory Flipbook -->
+                    <Link :href="route('employee-directory')" class="nav-card">
+                        <BookOpenIcon class="nav-icon" />
+                        <span>Employee Directory</span>
+                    </Link>
                 </div>
             </div>
 
@@ -459,7 +464,7 @@
 </template>
 
 <script setup>
-    import { router } from '@inertiajs/vue3'
+    import { Link, router } from '@inertiajs/vue3'
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
     import {
         ClockIcon,

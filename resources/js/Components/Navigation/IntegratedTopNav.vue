@@ -273,17 +273,18 @@
                       ? 'text-gray-300 hover:text-white hover:bg-gray-700/50' 
                       : 'text-white/90 hover:text-white hover:bg-white/15 backdrop-blur-sm hover:shadow-md')
               ]">
-              <div v-if="user?.employee?.profile_pic" class="w-9 h-9 rounded-lg overflow-hidden flex-shrink-0 border-2 border-white/30">
+              <div v-if="user?.employee?.profile_pic" class="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 border-2 border-white/50 shadow-md" style="border-radius: 9999px;">
                 <img 
                   :src="`/${user.employee.profile_pic}`" 
                   :alt="user?.name"
                   class="w-full h-full object-cover"
+                  style="border-radius: 9999px;"
                 />
               </div>
               <div v-else :class="[
-                'w-9 h-9 rounded-lg flex items-center justify-center text-sm font-bold flex-shrink-0',
+                'w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0',
                 isDark ? 'bg-teal-600 text-white' : 'bg-teal-500 text-white'
-              ]">
+              ]" style="border-radius: 9999px;">
                 {{ userInitials }}
               </div>
               <div class="hidden lg:block text-left">
@@ -536,6 +537,7 @@ const moreNavItems = computed(() => {
     if (can('ideas'))                   items.push({ route: 'ideas.index',          label: 'Share Ideas',       category: 'regular' })
     if (can('feedback'))                items.push({ route: 'feedbacks.index',      label: 'Feedback',          category: 'regular' })
     if (can('employee_handbook'))       items.push({ route: 'employee-handbook',    label: 'Employee Handbook', category: 'regular' })
+    items.push({ route: 'employee-directory', label: 'Employee Directory', category: 'regular' })
     if (can('support'))                 items.push({ route: 'support.index',        label: isAdmin ? 'Support Management' : 'Support', category: 'regular' })
 
     // Management items — driven purely by feature permissions, no role guard needed
