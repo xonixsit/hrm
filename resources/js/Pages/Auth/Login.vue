@@ -1,6 +1,6 @@
 <script setup>
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import BaseButton from '@/Components/Base/BaseButton.vue';
 import BaseInput from '@/Components/Base/BaseInput.vue';
@@ -9,61 +9,74 @@ import BaseSelect from '@/Components/Base/BaseSelect.vue';
 import Icon from '@/Components/Base/Icon.vue';
 
 const props = defineProps({
-    canResetPassword: {
-        type: Boolean,
-    },
-    status: {
-        type: String,
-    },
-    departments: {
-        type: Array,
-        default: () => []
-    },
+    canResetPassword: { type: Boolean },
+    status:           { type: String },
+    departments:      { type: Array, default: () => [] },
 });
 
-// Toggle between login and signup
-const isSignup = ref(false);
+const isSignup    = ref(false);
+const gpsStatus   = ref('pending'); // pending | granted | denied | unavailable
 
-// Login form
+// Login form — includes optional GPS coords
 const loginForm = useForm({
-    email: '',
-    password: '',
-    remember: false,
+    email:         '',
+    password:      '',
+    remember:      false,
+    gps_latitude:  null,
+    gps_longitude: null,
 });
 
-// Signup form
 const signupForm = useForm({
-    name: '',
-    email: '',
-    password: '',
+    name:                  '',
+    email:                 '',
+    password:              '',
     password_confirmation: '',
 });
 
-// Department options for signup - use dynamic departments from database
 const departmentOptions = computed(() => {
     if (props.departments && props.departments.length > 0) {
-        return props.departments.map(dept => ({
-            value: dept.id,
-            label: dept.name
-        }));
+        return props.departments.map(dept => ({ value: dept.id, label: dept.name }));
     }
-    
-    // Fallback to static options if no departments are loaded
     return [
         { value: 'engineering', label: 'Engineering' },
-        { value: 'marketing', label: 'Marketing' },
-        { value: 'sales', label: 'Sales' },
-        { value: 'hr', label: 'Human Resources' },
-        { value: 'finance', label: 'Finance' },
-        { value: 'operations', label: 'Operations' },
-        { value: 'support', label: 'Customer Support' },
-        { value: 'management', label: 'Management' }
+        { value: 'marketing',   label: 'Marketing' },
+        { value: 'sales',       label: 'Sales' },
+        { value: 'hr',          label: 'Human Resources' },
+        { value: 'finance',     label: 'Finance' },
+        { value: 'operations',  label: 'Operations' },
+        { value: 'support',     label: 'Customer Support' },
+        { value: 'management',  label: 'Management' },
     ];
 });
 
 const isLoading = ref(false);
 
-// Login submission
+// ── GPS location capture ───────────────────────────────────────────────────────
+const requestGps = () => {
+    if (!navigator.geolocation) {
+        gpsStatus.value = 'unavailable';
+        return;
+    }
+    navigator.geolocation.getCurrentPosition(
+        (pos) => {
+            loginForm.gps_latitude  = pos.coords.latitude;
+            loginForm.gps_longitude = pos.coords.longitude;
+            gpsStatus.value         = 'granted';
+        },
+        () => {
+            // Denied or timed-out — still allow the form to submit;
+            // the server will rely on IP check alone.
+            gpsStatus.value = 'denied';
+        },
+        { timeout: 8000, maximumAge: 60000 }
+    );
+};
+
+onMounted(() => {
+    requestGps();
+});
+
+// ── Form submissions ───────────────────────────────────────────────────────────
 const submitLogin = () => {
     isLoading.value = true;
     loginForm.post(route('login'), {
@@ -74,7 +87,6 @@ const submitLogin = () => {
     });
 };
 
-// Signup submission
 const submitSignup = () => {
     isLoading.value = true;
     signupForm.post(route('register'), {
@@ -85,23 +97,26 @@ const submitSignup = () => {
     });
 };
 
-// Toggle between forms
 const toggleForm = () => {
     isSignup.value = !isSignup.value;
-    // Reset forms when switching
     loginForm.reset();
     signupForm.reset();
 };
 
-// Signup form validation
-const isSignupFormValid = computed(() => {
-    return signupForm.name.trim() && 
-           signupForm.email.trim() && 
-           signupForm.password && 
-           signupForm.password_confirmation && 
-           signupForm.password === signupForm.password_confirmation;
-});
+const isSignupFormValid = computed(() =>
+    signupForm.name.trim() &&
+    signupForm.email.trim() &&
+    signupForm.password &&
+    signupForm.password_confirmation &&
+    signupForm.password === signupForm.password_confirmation
+);
 
+const gpsStatusLabel = computed(() => {
+    if (gpsStatus.value === 'granted')     return { text: 'Location detected',      color: 'text-green-600',  icon: 'check-circle' };
+    if (gpsStatus.value === 'denied')      return { text: 'Location access denied', color: 'text-amber-500',  icon: 'exclamation-triangle' };
+    if (gpsStatus.value === 'unavailable') return { text: 'Location unavailable',   color: 'text-neutral-400', icon: 'map-pin' };
+    return { text: 'Detecting location…', color: 'text-neutral-400', icon: 'map-pin' };
+});
 </script>
 
 <template>
@@ -246,6 +261,18 @@ const isSignupFormValid = computed(() => {
                         </Link>
                     </div>
                     
+                    <!-- GPS location status indicator -->
+                    <div v-if="!isSignup" class="flex items-center gap-2 text-xs py-2 px-3 rounded-lg bg-neutral-100 border border-neutral-200">
+                        <Icon :name="gpsStatusLabel.icon" class="w-4 h-4 flex-shrink-0" :class="gpsStatusLabel.color" />
+                        <span :class="gpsStatusLabel.color" class="font-medium">{{ gpsStatusLabel.text }}</span>
+                        <button
+                            v-if="gpsStatus === 'denied' || gpsStatus === 'unavailable'"
+                            type="button"
+                            @click="requestGps"
+                            class="ml-auto text-teal-600 hover:text-teal-500 underline"
+                        >Retry</button>
+                    </div>
+
                     <!-- Submit Button -->
                     <BaseButton
                         type="submit"

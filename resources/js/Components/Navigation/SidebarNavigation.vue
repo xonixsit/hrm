@@ -481,6 +481,7 @@ const navigationItems = computed(() => {
   if (can('role_management'))     adminChildren.push({ id: 'role-management',     label: 'Role Management',     icon: 'shield-check',           route: 'admin.roles.index' });
   if (can('feature_permissions')) adminChildren.push({ id: 'feature-permissions', label: 'Feature Permissions', icon: 'key',                    route: 'admin.feature-permissions.index' });
   if (can('system_settings'))     adminChildren.push({ id: 'system-settings',     label: 'System Settings',     icon: 'adjustments-horizontal', route: 'admin.system-settings.index' });
+  if (can('system_settings'))     adminChildren.push({ id: 'geofence',            label: 'Geofence Settings',   icon: 'map-pin',                route: 'admin.geofence.index' });
   if (can('message_center'))      adminChildren.push({ id: 'message-center',      label: 'Message Center',      icon: 'chat-bubble-left-right', route: 'admin.message-monitor.index' });
   if (can('whistleblower_reports')) adminChildren.push({ id: 'whistleblower',     label: 'Whistleblower',       icon: 'exclamation-triangle',   route: 'admin.whistleblower.index' });
 

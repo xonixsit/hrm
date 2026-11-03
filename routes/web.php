@@ -18,6 +18,7 @@ use App\Http\Controllers\WorkReportController;
 use App\Http\Controllers\BroadcastController;
 use App\Http\Controllers\Admin\CompetencyController;
 use App\Http\Controllers\Admin\RoleController;
+use App\Http\Controllers\Admin\GeofenceController;
 use App\Http\Controllers\EmployeeCompetencyController;
 use App\Http\Controllers\CompetencyAssessmentController;
 use App\Http\Controllers\CompetencyDevelopmentPlanController;
@@ -804,6 +805,10 @@ Route::get('/training', [TrainingPageController::class, 'index'])->middleware(['
         Route::get('message-monitor', [App\Http\Controllers\Admin\MessageMonitorController::class, 'index'])->name('message-monitor.index');
         Route::get('message-monitor/export', [App\Http\Controllers\Admin\MessageMonitorController::class, 'export'])->name('message-monitor.export');
         Route::delete('message-monitor/messages/{message}', [App\Http\Controllers\Admin\MessageMonitorController::class, 'destroyMessage'])->name('message-monitor.destroy');
+
+        // Geofence Settings
+        Route::get('geofence', [GeofenceController::class, 'index'])->name('geofence.index');
+        Route::post('geofence', [GeofenceController::class, 'save'])->name('geofence.save');
 
         // Broadcast Management
         Route::resource('broadcasts', BroadcastController::class);

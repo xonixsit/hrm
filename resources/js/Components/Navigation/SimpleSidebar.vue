@@ -200,8 +200,9 @@ const navigationItems = computed(() => {
   if (roles.includes('Admin')) {
     items.push(
       { type: 'section', label: 'Administration' },
-      { id: 'roles', label: 'Role Management', route: 'admin.roles.index', icon: 'ShieldCheckIcon' },
-      { id: 'settings', label: 'System Settings', route: 'system-settings.index', icon: 'CogIcon' }
+      { id: 'roles',     label: 'Role Management',   route: 'admin.roles.index',       icon: 'ShieldCheckIcon' },
+      { id: 'settings', label: 'System Settings',   route: 'system-settings.index',   icon: 'CogIcon' },
+      { id: 'geofence', label: 'Geofence Settings', route: 'admin.geofence.index',    icon: 'MapPinIcon' }
     )
   }
 

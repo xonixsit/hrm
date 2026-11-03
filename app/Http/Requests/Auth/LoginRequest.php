@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Services\GeofenceService;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
@@ -27,8 +28,10 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email' => ['required', 'string', 'email'],
-            'password' => ['required', 'string'],
+            'email'         => ['required', 'string', 'email'],
+            'password'      => ['required', 'string'],
+            'gps_latitude'  => ['nullable', 'numeric'],
+            'gps_longitude' => ['nullable', 'numeric'],
         ];
     }
 
@@ -46,6 +49,22 @@ class LoginRequest extends FormRequest
 
             throw ValidationException::withMessages([
                 'email' => trans('auth.failed'),
+            ]);
+        }
+
+        // ── Geofence check (runs after credentials are verified) ──────────────
+        $user    = Auth::user();
+        $isAdmin = $user && $user->hasRole('admin');
+
+        $geofenceError = app(GeofenceService::class)->check($this, $isAdmin);
+
+        if ($geofenceError) {
+            // Log the user back out before throwing the error
+            Auth::logout();
+            RateLimiter::hit($this->throttleKey());
+
+            throw ValidationException::withMessages([
+                'email' => $geofenceError,
             ]);
         }
 

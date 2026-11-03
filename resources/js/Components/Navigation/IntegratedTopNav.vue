@@ -553,6 +553,7 @@ const moreNavItems = computed(() => {
     if (can('message_center'))        items.push({ route: 'admin.message-monitor.index',     label: 'Message Center',        category: 'admin' })
     if (can('role_management'))       items.push({ route: 'admin.roles.index',               label: 'Role Management',       category: 'admin' })
     if (can('system_settings'))       items.push({ route: 'admin.system-settings.index',     label: 'System Settings',       category: 'admin' })
+    if (can('system_settings'))       items.push({ route: 'admin.geofence.index',            label: 'Geofence Settings',     category: 'admin' })
     if (can('feature_permissions'))   items.push({ route: 'admin.feature-permissions.index', label: 'Feature Permissions',   category: 'admin' })
 
     return items
