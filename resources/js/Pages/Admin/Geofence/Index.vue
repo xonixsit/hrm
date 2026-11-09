@@ -135,7 +135,7 @@ const mapsLink = computed(() => {
                         <textarea
                             v-model="form.allowed_ips"
                             rows="4"
-                            placeholder="103.160.27.213&#10;103.160.27.245"
+                            placeholder="103.160.27.0/24&#10;103.160.27.213&#10;103.160.27.*"
                             class="w-full rounded-lg border-neutral-300 border px-3 py-2 text-sm font-mono focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none resize-none"
                         ></textarea>
                         <p v-if="form.errors.allowed_ips" class="text-xs text-red-600 mt-1">{{ form.errors.allowed_ips }}</p>

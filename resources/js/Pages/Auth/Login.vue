@@ -208,6 +208,23 @@ const gpsStatusLabel = computed(() => {
                         <p class="text-sm font-medium text-success-800">{{ status }}</p>
                     </div>
                 </div>
+
+                <!-- Geofence Block Alert -->
+                <div
+                    v-if="loginForm.errors.geofence"
+                    class="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg"
+                >
+                    <div class="flex items-start gap-3">
+                        <svg class="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+                        </svg>
+                        <div>
+                            <p class="text-sm font-semibold text-red-800">Access Restricted</p>
+                            <p class="text-sm text-red-700 mt-0.5">{{ loginForm.errors.geofence }}</p>
+                            <p class="text-xs text-red-500 mt-1">Contact your administrator if you believe this is an error.</p>
+                        </div>
+                    </div>
+                </div>
                 
                 <!-- Login Form -->
                 <form v-if="!isSignup" @submit.prevent="submitLogin" class="space-y-6">

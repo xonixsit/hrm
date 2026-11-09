@@ -31,11 +31,11 @@ class GeofenceService
 
         // ── IP check ──────────────────────────────────────────────────────────
         if ($setting->ip_enabled && !empty($setting->allowed_ips)) {
-            $clientIp = $this->getClientIp($request);
-            $ipAllowed = in_array($clientIp, $setting->allowed_ips, true);
+            $clientIp  = $this->getClientIp($request);
+            $ipAllowed = $this->ipMatchesAny($clientIp, $setting->allowed_ips);
         } else {
-            // IP check disabled OR no IPs configured → skip this check
-            $ipAllowed = !$setting->ip_enabled; // only pass if explicitly disabled, not just empty
+            // IP check disabled OR no IPs configured → only pass if explicitly disabled
+            $ipAllowed = !$setting->ip_enabled;
         }
 
         // ── GPS check ─────────────────────────────────────────────────────────
@@ -65,6 +65,57 @@ class GeofenceService
         }
 
         return 'Access denied. You must be connected to the office network or located at the office to log in.';
+    }
+
+    /**
+     * Check if a client IP matches any entry in the allowed list.
+     * Supports:
+     *   - Exact IP:      "103.160.27.213"
+     *   - CIDR range:    "103.160.27.0/24"
+     *   - Wildcard:      "103.160.27.*"
+     */
+    public function ipMatchesAny(string $clientIp, array $entries): bool
+    {
+        foreach ($entries as $entry) {
+            $entry = trim($entry);
+
+            if ($entry === '') continue;
+
+            // Wildcard: 103.160.27.*
+            if (str_contains($entry, '*')) {
+                $pattern = '/^' . str_replace(['.', '*'], ['\.', '\d{1,3}'], $entry) . '$/';
+                if (preg_match($pattern, $clientIp)) return true;
+                continue;
+            }
+
+            // CIDR: 103.160.27.0/24
+            if (str_contains($entry, '/')) {
+                if ($this->ipInCidr($clientIp, $entry)) return true;
+                continue;
+            }
+
+            // Exact match
+            if ($clientIp === $entry) return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if an IP address falls within a CIDR range.
+     */
+    public function ipInCidr(string $ip, string $cidr): bool
+    {
+        [$subnet, $bits] = explode('/', $cidr);
+
+        $ipLong     = ip2long($ip);
+        $subnetLong = ip2long($subnet);
+
+        if ($ipLong === false || $subnetLong === false) return false;
+
+        $mask = $bits == 0 ? 0 : (~0 << (32 - (int) $bits));
+
+        return ($ipLong & $mask) === ($subnetLong & $mask);
     }
 
     /**
