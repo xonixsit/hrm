@@ -47,13 +47,24 @@ class FilterProfilePictures
         return $response;
     }
 
-    private function filterPics(mixed $node, int $selfUserId, string $parentKey = ''): mixed
+    private function filterPics(mixed $node, int $selfUserId, string $parentKey = '', bool $inBirthdayData = false): mixed
     {
         if (!is_array($node)) return $node;
 
-        // Never filter profile pics inside birthdayData — everyone should see
-        // birthday colleague photos since names are already visible there
-        if ($parentKey === 'birthdayData') return $node;
+        // Once we're inside birthdayData, skip all filtering at every depth
+        if ($parentKey === 'birthdayData') {
+            $inBirthdayData = true;
+        }
+
+        if ($inBirthdayData) {
+            // Still recurse to keep structure intact, but never null any pics
+            foreach ($node as $key => $value) {
+                if (is_array($value)) {
+                    $node[$key] = $this->filterPics($value, $selfUserId, (string) $key, true);
+                }
+            }
+            return $node;
+        }
 
         // If this node looks like a user/employee object with an id
         // and it's NOT the current user, null out their pic
@@ -68,7 +79,7 @@ class FilterProfilePictures
         // Recurse into child arrays
         foreach ($node as $key => $value) {
             if (is_array($value)) {
-                $node[$key] = $this->filterPics($value, $selfUserId, (string) $key);
+                $node[$key] = $this->filterPics($value, $selfUserId, (string) $key, false);
             }
         }
 
