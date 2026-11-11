@@ -69,12 +69,12 @@ class DashboardController extends Controller
                     'todaysBirthdays' => $todaysBirthdays->map(function ($employee) {
                         return [
                             'id' => $employee->id,
-                            'user_id' => $employee->user_id, // Add user_id
+                            'user_id' => $employee->user_id,
                             'user' => [
-                                'id' => $employee->user->id, // Add user id here too
+                                'id' => $employee->user->id,
                                 'name' => $employee->user->name,
                                 'email' => $employee->user->email,
-                                'profile_pic' => $employee->user->profile_pic ?? null,
+                                'profile_pic' => $employee->profile_pic ?? null,
                             ],
                             'job_title' => $employee->job_title,
                             'department' => $employee->department ? $employee->department->name : null,
@@ -90,7 +90,7 @@ class DashboardController extends Controller
                                     'id' => $birthday['employee']->user->id,
                                     'name' => $birthday['employee']->user->name,
                                     'email' => $birthday['employee']->user->email,
-                                    'profile_pic' => $birthday['employee']->user->profile_pic ?? null,
+                                    'profile_pic' => $birthday['employee']->profile_pic ?? null,
                                 ],
                                 'job_title' => $birthday['employee']->job_title,
                                 'department' => $birthday['employee']->department ? $birthday['employee']->department->name : null,
