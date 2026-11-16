@@ -6,6 +6,7 @@ use App\Models\Referral;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
@@ -36,6 +37,25 @@ class ReferralSubmitted extends Mailable implements ShouldQueue
 
     public function attachments(): array
     {
-        return [];
+        if (!$this->referral->resume_path) {
+            return [];
+        }
+
+        $fullPath = storage_path('app/public/' . $this->referral->resume_path);
+
+        // Fallback: check public path directly
+        if (!file_exists($fullPath)) {
+            $fullPath = public_path($this->referral->resume_path);
+        }
+
+        if (!file_exists($fullPath)) {
+            return [];
+        }
+
+        $filename = $this->referral->candidate_name . '_CV.' . pathinfo($fullPath, PATHINFO_EXTENSION);
+
+        return [
+            Attachment::fromPath($fullPath)->as($filename),
+        ];
     }
 }
