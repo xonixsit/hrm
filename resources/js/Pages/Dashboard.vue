@@ -318,11 +318,11 @@
     <div v-else class="employee-layout">
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-        <!-- Idea Box floating trigger -->
+        <!-- Idea Box + Refer Someone floating triggers -->
         <div class="lg:col-span-3">
-          <div class="flex justify-end mb-2 pt-0">
+          <div class="flex justify-end mb-2 pt-0 gap-3">
+            <!-- Share an Idea button -->
             <div class="relative inline-flex items-end">
-              <!-- Cartoon freely outside button — no size restriction -->
               <img src="/images/getanidea.svg" alt="Get an Idea"
                 class="absolute transition-transform group-hover:scale-105 pointer-events-none z-10"
                 style="width:90px;height:90px;bottom:0;left:-70px;" />
@@ -330,6 +330,17 @@
                 class="group flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white shadow-md hover:shadow-lg transition-all hover:-translate-y-0.5"
                 style="background:linear-gradient(135deg,#006970,#00a9b4)">
                 Share an Idea
+              </button>
+            </div>
+            <!-- Refer Someone button -->
+            <div class="relative inline-flex items-end">
+              <button @click="$inertia.visit(route('referrals.create'))"
+                class="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white shadow-md hover:shadow-lg transition-all hover:-translate-y-0.5"
+                style="background:linear-gradient(135deg,#7c3aed,#a855f7)">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+                </svg>
+                Refer Someone
               </button>
             </div>
           </div>
@@ -690,22 +701,15 @@
   });
 
   const headerActions = computed(() => {
-    const actions = [
-      {
-        id: 'guide',
-        label: 'Watch Training Video',
-        icon: 'QuestionMarkCircleIcon',
-        handler: () => showVideoModal.value = true
-      }
-    ];
+    const actions = [];
 
     if (isAdmin.value) {
       actions.push({
-        id: 'whistleblower',
-        label: 'Whistleblower Reports',
-        icon: 'ShieldExclamationIcon',
-        handler: () => router.visit(route('admin.whistleblower.index')),
-        color: 'amber'
+        id: 'referrals',
+        label: 'Employee Referrals',
+        icon: 'UserGroupIcon',
+        handler: () => router.visit(route('referrals.index')),
+        color: 'purple'
       });
       actions.unshift(
         {

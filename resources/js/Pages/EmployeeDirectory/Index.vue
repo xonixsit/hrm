@@ -150,7 +150,6 @@
                     <div class="text-xs text-amber-500 mt-0.5">Operations Start</div>
                   </div>
                 </div>
-
               </div>
 
               <!-- Right: wall image -->

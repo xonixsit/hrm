@@ -19,6 +19,7 @@ use App\Http\Controllers\BroadcastController;
 use App\Http\Controllers\Admin\CompetencyController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\GeofenceController;
+use App\Http\Controllers\ReferralController;
 use App\Http\Controllers\EmployeeCompetencyController;
 use App\Http\Controllers\CompetencyAssessmentController;
 use App\Http\Controllers\CompetencyDevelopmentPlanController;
@@ -396,6 +397,10 @@ Route::get('/training', [TrainingPageController::class, 'index'])->middleware(['
     Route::post('leaves/{leave}/approve', [LeaveController::class, 'approve'])->name('leaves.approve');
     Route::post('leaves/{leave}/reject', [LeaveController::class, 'reject'])->name('leaves.reject');
     Route::put('leaves/{leave}/update-and-approve', [LeaveController::class, 'updateAndApprove'])->name('leaves.update-and-approve');
+
+    // Employee Referrals
+    Route::resource('referrals', ReferralController::class)->only(['index', 'create', 'store', 'show', 'destroy']);
+    Route::patch('referrals/{referral}/update-status', [ReferralController::class, 'updateStatus'])->name('referrals.update-status');
     
     // Leave Types (Leave Policies) Management
     Route::resource('leave-types', LeaveTypeController::class)->parameters(['leave-types' => 'leaveType'])->middleware('feature:leave_policies');

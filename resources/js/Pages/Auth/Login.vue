@@ -290,6 +290,12 @@ const gpsStatusLabel = computed(() => {
                         >Retry</button>
                     </div>
 
+                    <!-- Guide when location is blocked -->
+                    <div v-if="!isSignup && gpsStatus === 'denied'" class="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 space-y-1">
+                        <p class="font-semibold">Location access is blocked</p>
+                        <p>To enable it: click the 🔒 lock icon in your browser address bar → Site settings → Location → Allow, then refresh the page.</p>
+                    </div>
+
                     <!-- Submit Button -->
                     <BaseButton
                         type="submit"
